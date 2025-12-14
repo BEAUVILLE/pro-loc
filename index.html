@@ -32,7 +32,7 @@
     .hint{font-size:12px;color:#fef9c3}
   </style>
 
-  <!-- ✅ SDK Supabase UNE SEULE FOIS -->
+  <!-- Supabase SDK (UNE SEULE FOIS) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -47,30 +47,31 @@
       </p>
 
       <div class="split">
+        <!-- OTP -->
         <div class="box">
           <div class="row">
             <div class="col">
               <label>Téléphone (format international)</label>
-              <input id="phone" placeholder="+221771342889" />
+              <input id="phone" placeholder="+221771342889" autocomplete="tel" />
             </div>
             <div class="col">
               <label>OTP (4-6 chiffres)</label>
-              <input id="otp" placeholder="ex: 4821" inputmode="numeric" />
+              <input id="otp" placeholder="ex: 4821" inputmode="numeric" autocomplete="one-time-code" />
             </div>
           </div>
 
-          <!-- ✅ type="button" pour éviter tout submit/reload -->
           <button class="btn primary" id="btnSendOtp" type="button">📩 Envoyer OTP</button>
           <button class="btn" id="btnVerifyOtp" type="button">✅ Valider OTP</button>
 
           <div class="tiny">Si réseau lent : l’OTP reste valable <b>10 minutes</b>.</div>
         </div>
 
+        <!-- PIN -->
         <div class="box">
           <div class="row">
             <div class="col">
               <label>Code PRO (4 chiffres)</label>
-              <input id="pin" placeholder="ex: 2889" inputmode="numeric" maxlength="4" />
+              <input id="pin" placeholder="ex: 2889" inputmode="numeric" maxlength="4" autocomplete="off" />
             </div>
           </div>
           <button class="btn primary" id="btnPin" type="button">🔓 Ouvrir avec mon code</button>
@@ -78,7 +79,6 @@
         </div>
       </div>
 
-      <!-- ✅ msg UNE SEULE FOIS -->
       <div class="msg" id="msg"></div>
 
       <div class="tiny">
@@ -89,6 +89,9 @@
   </div>
 
   <script>
+    // =========================
+    // CONFIG
+    // =========================
     const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
     const HUB_URL = "https://beauville.github.io/mon-espace-digiy/";
@@ -96,9 +99,12 @@
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
+
     const msg = (t, type="")=>{
-      $("msg").className = "msg " + (type==="err"?"err":type==="ok"?"ok":"");
-      $("msg").textContent = t || "";
+      const el = $("msg");
+      if(!el) return;
+      el.className = "msg " + (type==="err"?"err":type==="ok"?"ok":"");
+      el.textContent = t || "";
     };
 
     function getDeviceId(){
@@ -110,44 +116,39 @@
       return d;
     }
 
-    $("btnSendOtp").onclick = async ()=>{
+    // =========================
+    // OTP: SEND
+    // =========================
+    $("btnSendOtp").addEventListener("click", async ()=>{
       msg("");
-      const phone = $("phone").value.trim();
+      const phone = ($("phone").value || "").trim();
       if(!phone) return msg("Entre ton numéro au format +221...", "err");
+      if(!phone.startsWith("+")) return msg("Format requis : +2217xxxxxxx", "err");
 
       try{
-        // ✅ FORCER LE CANAL SMS (clé du fix)
         const { error } = await client.auth.signInWithOtp({
           phone,
-          options: { channel: "sms" }
+          options: { channel: "sms" } // ✅ FIX Unsupported provider
         });
 
         if(error) return msg("Erreur OTP : " + error.message, "err");
-        msg("OTP envoyé. Il est valable 10 minutes.", "ok");
+        msg("OTP envoyé ✅ (valable 10 minutes)", "ok");
+        $("otp").focus();
       } catch(e){
-        msg("Erreur inattendue OTP.", "err");
         console.error(e);
+        msg("Erreur inattendue OTP.", "err");
       }
-    };
+    });
 
-    $("btnVerifyOtp").onclick = async ()=>{
-  msg("");
-  const phone = $("phone").value.trim();
-  const token = $("otp").value.trim();
+    // =========================
+    // OTP: VERIFY
+    // =========================
+    $("btnVerifyOtp").addEventListener("click", async ()=>{
+      msg("");
+      const phone = ($("phone").value || "").trim();
+      const token = ($("otp").value || "").trim();
+      if(!phone || !token) return msg("Téléphone + OTP obligatoires.", "err");
 
-  const { error } = await client.auth.verifyOtp({
-    phone,
-    token,
-    type: "sms"
-  });
-
-  if(error) return msg("OTP invalide : " + error.message, "err");
-
-  msg("Connecté ✅ Redirection…", "ok");
-
-  // ✅ ICI
-  window.location.href = "https://beauville.github.io/mon-espace-digiy/";
-};
       try{
         const { error } = await client.auth.verifyOtp({ phone, token, type: "sms" });
         if(error) return msg("OTP invalide : " + error.message, "err");
@@ -155,41 +156,33 @@
         msg("Connecté ✅ Redirection…", "ok");
         window.location.href = HUB_URL;
       } catch(e){
-        msg("Erreur inattendue validation OTP.", "err");
         console.error(e);
+        msg("Erreur inattendue validation OTP.", "err");
       }
-    };
+    });
 
-    $("btnPin").onclick = async ()=>{
+    // =========================
+    // PIN: VERIFY (RPC)
+    // =========================
+    $("btnPin").addEventListener("click", async ()=>{
       msg("");
-      const pin = $("pin").value.trim();
+      const pin = ($("pin").value || "").trim();
       if(!/^[0-9]{4}$/.test(pin)) return msg("Code PRO = 4 chiffres.", "err");
-$("btnVerifyOtp").onclick = async ()=>{
-  msg("");
-  const phone = $("phone").value.trim();
-  const token = $("otp").value.trim();
 
-  const { error } = await client.auth.verifyOtp({
-    phone,
-    token,
-    type: "sms"
-  });
-
-  if(error) return msg("OTP invalide : " + error.message, "err");
-
-  msg("Connecté ✅ Redirection…", "ok");
-
-  // ✅ ICI
-  window.location.href = "https://beauville.github.io/mon-espace-digiy/";
-};
       try{
-        const { data: u } = await client.auth.getUser();
+        const { data: u, error: ue } = await client.auth.getUser();
+        if(ue) console.warn(ue);
+
         if(!u || !u.user){
           return msg("Première fois : fais l’OTP, puis ensuite le code PRO.", "err");
         }
 
         const deviceId = getDeviceId();
-        const { data: ok, error } = await client.rpc("verify_my_pin", { p_pin: pin, p_device_id: deviceId });
+        const { data: ok, error } = await client.rpc("verify_my_pin", {
+          p_pin: pin,
+          p_device_id: deviceId
+        });
+
         if(error) return msg("Erreur vérification PIN : " + error.message, "err");
 
         if(ok){
@@ -199,10 +192,10 @@ $("btnVerifyOtp").onclick = async ()=>{
           msg("Code incorrect. Si tu as un doute : refais OTP puis change ton code.", "err");
         }
       } catch(e){
-        msg("Erreur inattendue PIN.", "err");
         console.error(e);
+        msg("Erreur inattendue PIN.", "err");
       }
-    };
+    });
   </script>
 </body>
 </html>
