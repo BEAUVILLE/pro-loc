@@ -78,46 +78,53 @@
       <div class="msg" id="msg"></div>
     </div>
   </div>
-
 <script>
 (function(){
- const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY = "TON_ANON_KEY_ICI";
-  const client = supabase.createClient(eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA
-;
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  const $ = id => document.getElementById(id);
-  const msg = (t,c="")=>{
-    $("msg").className="msg "+c;
-    $("msg").textContent=t;
+  // ✅ Toujours utiliser window.supabase sur GitHub Pages
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id) => document.getElementById(id);
+  const msg = (t, c="") => {
+    $("msg").className = "msg " + c;
+    $("msg").textContent = t || "";
   };
 
-  $("sendOtp").onclick = async ()=>{
+  $("sendOtp").addEventListener("click", async () => {
     msg("");
-    const phone = $("phone").value.trim();
-    if(!phone.startsWith("+")) return msg("Numéro invalide", "err");
+    const phone = ($("phone").value || "").trim();
+    if(!phone.startsWith("+")) return msg("Numéro invalide (ex: +22177xxxxxxx)", "err");
 
-    const { error } = await client.auth.signInWithOtp({
-      phone,
-      options:{ channel:"sms" }
-    });
+    try{
+      const { error } = await client.auth.signInWithOtp({
+        phone,
+        options: { channel: "sms" }
+      });
+      if(error) return msg("Erreur OTP : " + error.message, "err");
+      msg("📲 Code envoyé par SMS", "ok");
+    }catch(e){
+      console.error(e);
+      msg("Erreur technique OTP (console).", "err");
+    }
+  });
 
-    if(error) msg(error.message,"err");
-    else msg("📲 Code envoyé par SMS","ok");
-  };
-
-  $("verifyOtp").onclick = async ()=>{
+  $("verifyOtp").addEventListener("click", async () => {
     msg("");
-    const phone = $("phone").value.trim();
-    const token = $("otp").value.trim();
+    const phone = ($("phone").value || "").trim();
+    const token = ($("otp").value || "").trim();
+    if(!phone || !token) return msg("Téléphone + code requis", "err");
 
-    const { error } = await client.auth.verifyOtp({
-      phone, token, type:"sms"
-    });
-
-    if(error) msg(error.message,"err");
-    else msg("✅ Connecté. Session active.","ok");
-  };
+    try{
+      const { error } = await client.auth.verifyOtp({ phone, token, type:"sms" });
+      if(error) return msg("OTP invalide/expiré : " + error.message, "err");
+      msg("✅ Connecté. Session active.", "ok");
+    }catch(e){
+      console.error(e);
+      msg("Erreur technique validation (console).", "err");
+    }
+  });
 })();
 </script>
 </body>
