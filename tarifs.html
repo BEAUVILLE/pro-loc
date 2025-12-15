@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DIGIY LOC • Tarifs</title>
+  <link rel="stylesheet" href="./ui.css">
+</head>
+
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="ico">🏠</div>
+      <div>
+        <div class="title">DIGIY LOC • PRO</div>
+        <div class="sub">Tarifs — finition intérieure</div>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="pill" onclick="location.href='index.html'">← Dashboard</div>
+      <div class="pill" onclick="location.href='https://beauville.github.io/mon-espace-digiy/?choose=1'">🦅 Menu</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a href="planning.html">📅 Planning</a>
+    <a href="reservations.html">🧾 Réservations</a>
+    <a href="encaissements.html">💸 Encaissements</a>
+    <a href="tarifs.html">🏷️ Tarifs</a>
+    <a href="medias.html">📸 Photos</a>
+    <a href="fiche.html">👤 Fiche</a>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Tarifs de base</h2>
+      <div class="muted">Ajuste tes prix. Plus tard on branche Supabase + historique.</div>
+
+      <div class="field">
+        <label>Prix / nuit (FCFA)</label>
+        <input type="number" placeholder="ex: 25000">
+      </div>
+
+      <div class="field">
+        <label>Prix / semaine (FCFA)</label>
+        <input type="number" placeholder="ex: 150000">
+      </div>
+
+      <div class="field">
+        <label>Prix / mois (FCFA)</label>
+        <input type="number" placeholder="ex: 450000">
+      </div>
+
+      <hr class="sep">
+
+      <h2>Options</h2>
+      <div class="field">
+        <label>Frais ménage (FCFA)</label>
+        <input type="number" placeholder="ex: 10000">
+      </div>
+
+      <div class="field">
+        <label>Caution (FCFA)</label>
+        <input type="number" placeholder="ex: 50000">
+      </div>
+
+      <button class="btn" onclick="alert('✅ Interface OK. Prochaine étape: sauvegarde Supabase.')">
+        💾 Enregistrer (à brancher)
+      </button>
+    </div>
+
+    <div class="card">
+      <h2>Conseil DIGIY</h2>
+      <div class="muted">
+        Fais simple pour commencer :
+        <div class="row">
+          <div class="chip">Nuit = base</div>
+          <div class="chip">Semaine = -10%</div>
+          <div class="chip">Mois = -20%</div>
+        </div>
+        <hr class="sep">
+        Prochaine phase : promo week-end, haute saison, prix par chambre.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./ui.js"></script>
+</body>
+</html>
