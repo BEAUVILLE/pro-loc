@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DIGIY LOC • Réservations</title>
+
+<style>
+:root{
+  --bg:#022c22;--bg2:#065f46;--card:#052e16;
+  --accent:#facc15;--text:#e5e7eb;--muted:#9ca3af;
+  --ok:#22c55e;--danger:#f97373;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto;
+  color:var(--text);
+  background:linear-gradient(135deg,var(--bg),var(--bg2));
+  padding:16px;
+}
+.wrap{max-width:980px;margin:0 auto}
+h1{
+  font-size:14px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:12px;
+  margin-bottom:10px;
+  font-size:13px;
+}
+.card b{display:block;margin-bottom:4px}
+.src{font-size:12px;color:var(--muted)}
+.ok{color:var(--ok)}
+.bad{color:var(--danger)}
+.btn{
+  margin-top:16px;
+  padding:12px;
+  width:100%;
+  border-radius:16px;
+  border:none;
+  font-weight:900;
+  background:rgba(250,204,21,.15);
+  color:var(--text);
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>🧾 Réservations LOC</h1>
+
+  <div class="card">
+    <b>Chez Baptiste — Studio</b>
+    02 → 05 Octobre<br>
+    <span class="src">Source : DIGIY</span><br>
+    <span class="ok">Payé</span>
+  </div>
+
+  <div class="card">
+    <b>Chez Baptiste — Chambre Double</b>
+    10 → 12 Octobre<br>
+    <span class="src">Source : Booking</span><br>
+    <span class="bad">À encaisser</span>
+  </div>
+
+  <button class="btn" onclick="history.back()">← Retour LOC PRO</button>
+</div>
+</body>
+</html>
