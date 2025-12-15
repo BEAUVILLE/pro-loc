@@ -207,10 +207,14 @@
     <div class="chip">Multi-modules OK</div>
   `;
 
-  // placeholders
-  document.getElementById("planning").onclick = ()=>alert("Planning LOC — on le branche juste après, frérot ✅");
-  document.getElementById("resas").onclick = ()=>alert("Réservations LOC — on le branche juste après ✅");
-})();
+document.getElementById("planning").onclick = () => {
+  window.location.href = "./planning.html";
+};
+
+document.getElementById("resas").onclick = () => {
+  window.location.href = "./reservations.html";
+};
+
 </script>
 </body>
 </html>
