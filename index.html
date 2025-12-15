@@ -96,7 +96,7 @@
         <div class="ico">🏠</div>
         <div>
           <h1>DIGIY LOC • PRO</h1>
-          <div class="sub">Accès sécurisé • zéro friction si déjà connecté</div>
+          <div class="sub">Entrée rapide • Si déjà connecté, on t’envoie direct au menu</div>
         </div>
       </div>
 
@@ -142,11 +142,8 @@
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  const LOGIN_URL = "https://beauville.github.io/login-otp-fix/";
   const MON_ESPACE_MENU = "https://beauville.github.io/mon-espace-digiy/?choose=1";
-
-  // ✅ cible après validation LOC
-  const LOC_DASHBOARD_URL = "https://beauville.github.io/digiy-loc-pro-/dashboard.html";
+  const LOGIN_URL = "https://beauville.github.io/login-otp-fix/";
 
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -194,14 +191,13 @@
   }
 
   // =========================
-  // ZÉRO FRICTION : si déjà connecté -> direct
+  // ZÉRO FRICTION : si déjà connecté -> menu direct
   // =========================
   const { data: sessData } = await client.auth.getSession();
   if (sessData?.session) {
-    // mémorise dernier module
+    // On ne redemande pas OTP
     localStorage.setItem("digiy_last_module", "loc");
-    // Option : tu peux aussi vérifier DB avant, mais pour UX on ouvre direct
-    return go(LOC_DASHBOARD_URL);
+    return go(MON_ESPACE_MENU);
   }
 
   // =========================
@@ -223,9 +219,10 @@
   };
 
   async function routeAfterLogin(){
-    // DB tranche LOC
+    // DB tranche (pro + module loc)
     const { data: userData } = await client.auth.getUser();
     const user = userData?.user;
+
     if(!user?.id){
       msg("Session invalide. Retour menu…", "err");
       return go(MON_ESPACE_MENU);
@@ -254,11 +251,11 @@
     }
 
     localStorage.setItem("digiy_last_module", "loc");
-    msg("Accès LOC validé ✅ Ouverture…", "ok");
-    return go(LOC_DASHBOARD_URL);
+    msg("✅ Connecté. Accès LOC validé. Menu…", "ok");
+    return go(MON_ESPACE_MENU);
   }
 
-  // Listener : redirect fiable quand session arrive
+  // Listener : fiable quand session arrive
   let redirectArmed = false;
   client.auth.onAuthStateChange(async (event, session) => {
     if(session && redirectArmed){
@@ -277,7 +274,7 @@
 
     currentPhone = phone;
     phoneEl.value = currentPhone;
-    phoneEl.setAttribute("readonly","readonly"); // ✅ fige
+    phoneEl.setAttribute("readonly","readonly"); // ✅ figé
 
     setLoading(btnSend, true);
 
@@ -337,6 +334,7 @@
         clearInterval(tick);
         resendLock = false;
         btnResend.disabled = false;
+        btnResend.textContent = "🔁 Renvoyer";
       }
     }, 1000);
   });
