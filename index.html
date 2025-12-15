@@ -80,48 +80,105 @@
     }
   </style>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+  <script>
+(async()=>{
+  const SUPABASE_URL="https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-<body>
-<div class="wrap">
-  <div class="topbar">
-    <div class="brand">
-      <div class="ico">🏠</div>
-      <div>
-        <div class="title">DIGIY LOC • PRO</div>
-        <div class="sub" id="who">Vérification accès…</div>
-      </div>
-    </div>
-    <div class="actions">
-      <div class="pill" id="backMenu">🦅 Retour Menu</div>
-      <div class="pill danger" id="logout">⏏ Déconnexion</div>
-    </div>
-  </div>
+  const MON_ESPACE_MENU="https://beauville.github.io/mon-espace-digiy/?choose=1";
+  const LOGIN_URL="https://beauville.github.io/login-otp-fix/";
 
-  <div class="grid">
-    <div class="card">
-      <h2>Vue rapide</h2>
-      <div class="muted" id="status">Chargement…</div>
-      <div class="row" id="chips"></div>
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      <button class="btn" id="planning">📅 Planning (à brancher)</button>
-      <button class="btn" id="resas">🧾 Réservations (à brancher)</button>
-    </div>
+  const whoEl = document.getElementById("who");
+  const statusEl = document.getElementById("status");
+  const chipsEl = document.getElementById("chips");
+  const metaEl = document.getElementById("meta");
 
-    <div class="card">
-      <h2>État</h2>
-      <div class="muted" id="meta">—</div>
-      <div class="row" style="margin-top:12px">
-        <div class="chip">0% commission</div>
-        <div class="chip">Paiement direct</div>
-        <div class="chip">Souveraineté</div>
-      </div>
-    </div>
-  </div>
-</div>
+  // ✅ HANDLERS POSÉS TOUT DE SUITE (AVANT LES RETURNS)
+  document.getElementById("planning").onclick = () => {
+    window.location.href = "./planning.html";
+  };
 
-<script>
+  document.getElementById("resas").onclick = () => {
+    window.location.href = "./reservations.html";
+  };
+
+  document.getElementById("backMenu").onclick = () => {
+    location.href = MON_ESPACE_MENU;
+  };
+
+  document.getElementById("logout").onclick = async () => {
+    try{ await client.auth.signOut(); }catch(e){}
+    location.href = LOGIN_URL;
+  };
+
+  // 1) session obligatoire
+  const { data:s } = await client.auth.getSession();
+  if(!s?.session){
+    whoEl.textContent = "Non connecté";
+    statusEl.innerHTML = "<span class='err'>Accès refusé.</span> Connecte-toi d’abord.";
+    chipsEl.innerHTML = `<div class="chip">Action: connexion</div>`;
+    metaEl.innerHTML = `Session: <span class="err">NON</span>`;
+    return;
+  }
+
+  // 2) user
+  const { data:u } = await client.auth.getUser();
+  const user = u?.user;
+  if(!user?.id){
+    whoEl.textContent = "Session invalide";
+    statusEl.innerHTML = "<span class='err'>Accès refusé.</span>";
+    return;
+  }
+
+  // 3) DB tranche : is_active + module loc
+  const { data:pro, error } = await client
+    .from("pros")
+    .select("display_name,business_name,is_active,modules")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if(error || !pro){
+    whoEl.textContent = "Profil PRO introuvable";
+    statusEl.innerHTML = "<span class='err'>Ton profil PRO n’est pas reconnu.</span>";
+    chipsEl.innerHTML = `<div class="chip">Retour menu</div>`;
+    metaEl.innerHTML = `Session: <span class="ok">OK</span> • DB: <span class="err">PRO introuvable</span>`;
+    return;
+  }
+
+  const name = pro.display_name || pro.business_name || "PRO";
+  whoEl.textContent = "Bienvenue, " + name;
+
+  const modules = (pro.modules || []).map(m=>String(m).toLowerCase());
+
+  metaEl.innerHTML =
+    `Session: <span class="ok">OK</span> • ` +
+    `Actif: <span class="${pro.is_active ? "ok":"err"}">${pro.is_active ? "OUI":"NON"}</span>`;
+
+  if(!pro.is_active){
+    statusEl.innerHTML = "<span class='err'>Compte en attente d’activation.</span> (Admin DIGIY)";
+    chipsEl.innerHTML = `<div class="chip">Statut: attente</div>`;
+    return;
+  }
+
+  if(!modules.includes("loc")){
+    statusEl.innerHTML = "<span class='err'>Accès LOC non autorisé.</span>";
+    chipsEl.innerHTML = `<div class="chip">Modules: ${modules.join(", ") || "—"}</div>`;
+    return;
+  }
+
+  // ✅ OK
+  localStorage.setItem("digiy_last_module","loc");
+  statusEl.innerHTML = "<span class='ok'>Accès LOC validé ✅</span> Tu es dans LOC PRO.";
+  chipsEl.innerHTML = `
+    <div class="chip">Module: LOC</div>
+    <div class="chip">Actif</div>
+    <div class="chip">Multi-modules OK</div>
+  `;
+})();
+</script>
+
 (async()=>{
   const SUPABASE_URL="https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
