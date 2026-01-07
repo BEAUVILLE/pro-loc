@@ -3,25 +3,157 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO</title>
+  <title>DIGIY LOC PRO — Location Courte Durée 0% Commission</title>
   <meta name="theme-color" content="#061b14"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #061b14 0%, #0a2820 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+    
+    /* STATUS GUARD */
+    #guard_status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 9999;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* APP CACHÉE PAR DÉFAUT */
+    .app {
+      display: none;
+    }
+    
+    html.access-ok .app {
+      display: block;
+    }
+    
+    /* STYLE SIMPLE */
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(135deg, #10b981, #06d6a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      color: #9ca3af;
+      font-size: 1rem;
+    }
+    
+    .content {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
 </head>
 <body>
-<script>
-(function(){
-  const path = location.pathname || "/";
-  const parts = path.split("/").filter(Boolean);
-  const BASE = (parts.length >= 1) ? ("/" + parts[0]) : "";
 
-  DIGIY_GUARD.boot({
-    module: "loc",
-    login: BASE + "/authentification-loc.html",
-    dashboard: BASE + "/planning.html",
-    pay: "https://beauville.github.io/commencer-a-payer/"
-  });
-})();
+<!-- ========================================== -->
+<!-- STATUS GUARD -->
+<!-- ========================================== -->
+<div id="guard_status">🔐 Vérification...</div>
+
+<!-- ========================================== -->
+<!-- GUARD SCRIPTS -->
+<!-- ========================================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./guard.js"></script>
+<script>
+  (async () => {
+    // ✅ MODULE = "LOC" (majuscule comme dans la DB)
+    const ok = await window.DIGIY.guardOrPay("LOC", "/digiy-loc/login.html");
+    if (!ok) return; // Redirigé
+    
+    // ✅ Accès OK
+    console.log("🦅 DIGIY LOC chargé avec succès");
+    console.log("📊 Access:", window.DIGIY_ACCESS);
+    
+    // Masquer le status
+    setTimeout(() => {
+      const s = document.getElementById("guard_status");
+      if (s) s.style.display = "none";
+    }, 1200);
+    
+    // Initialiser l'app si besoin
+    initLocApp();
+  })();
+  
+  function initLocApp() {
+    console.log("🏠 Initialisation DIGIY LOC...");
+    // Ton code d'initialisation ici
+  }
 </script>
+
+<!-- ========================================== -->
+<!-- APP DIGIY LOC -->
+<!-- ========================================== -->
+<div class="app">
+  <div class="header">
+    <h1>🏠 DIGIY LOC PRO</h1>
+    <p class="subtitle">Location Courte Durée • 0% Commission • Made in Sénégal</p>
+  </div>
+  
+  <div class="content">
+    <h2>🎉 Bienvenue dans DIGIY LOC !</h2>
+    <p>Tu as accès à la plateforme de location courte durée.</p>
+    
+    <div style="margin-top: 2rem;">
+      <p><strong>📱 Phone:</strong> <span id="userPhone">Chargement...</span></p>
+      <p><strong>📦 Module:</strong> LOC</p>
+      <p><strong>✅ Status:</strong> Actif</p>
+    </div>
+    
+    <div style="margin-top: 2rem;">
+      <h3>🚀 Fonctionnalités à venir :</h3>
+      <ul>
+        <li>📅 Calendrier de disponibilité</li>
+        <li>💰 Gestion des réservations</li>
+        <li>📊 Dashboard statistiques</li>
+        <li>💳 Paiements directs Wave/Orange Money</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Afficher le phone dans l'UI
+  if (window.DIGIY_ACCESS?.phone) {
+    const el = document.getElementById("userPhone");
+    if (el) el.textContent = window.DIGIY_ACCESS.phone;
+  }
+</script>
+
 </body>
 </html>
