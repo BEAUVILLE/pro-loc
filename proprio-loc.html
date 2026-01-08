@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DIGIY LOC — PRO (Multi-logements)</title>
+  <meta name="theme-color" content="#16a34a"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --green:#16a34a; --bg:#061b14; --card:#0b2a1f;
+      --line:rgba(255,255,255,.14); --text:#eafff1; --muted:rgba(234,255,241,.78);
+      --danger:#ef4444; --warn:#f59e0b; --ok:#22c55e;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:radial-gradient(900px 500px at 10% -10%, rgba(34,197,94,.20), transparent 60%),
+                 radial-gradient(900px 500px at 90% 0%, rgba(250,204,21,.10), transparent 55%),
+                 var(--bg);
+      color:var(--text);
+      display:flex; justify-content:center;
+      padding:18px 12px;
+    }
+    .wrap{width:min(1100px,100%);}
+    .top{
+      padding:16px; border:1px solid var(--line); border-radius:22px;
+      background:linear-gradient(180deg, rgba(22,163,74,.14), rgba(11,42,31,.92));
+      box-shadow:0 10px 40px rgba(0,0,0,.35);
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    }
+    .title{margin:0; font-size:20px; font-weight:950}
+    .sub{margin:4px 0 0; color:var(--muted); font-size:13px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    input, select{
+      padding:12px 12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.22);
+      color:var(--text); outline:none;
+      font-size:14px;
+    }
+    button{
+      border:0; border-radius:14px; padding:12px 14px;
+      font-weight:950; cursor:pointer;
+      background:var(--green); color:#062016;
+      box-shadow:0 10px 20px rgba(22,163,74,.18);
+    }
+    button.secondary{
+      background:transparent; color:var(--text);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:none;
+    }
+    button.danger{background:var(--danger); color:#fff}
+    button:disabled{opacity:.55; cursor:not-allowed}
+
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    @media(min-width:980px){
+      .grid{grid-template-columns: 1.2fr .8fr;}
+    }
+    .card{
+      padding:16px; border:1px solid var(--line); border-radius:22px;
+      background:rgba(11,42,31,.86);
+      box-shadow:0 10px 40px rgba(0,0,0,.28);
+    }
+    .h2{margin:0 0 10px; font-size:16px; font-weight:950}
+    .muted{color:var(--muted); font-size:12px}
+
+    .dbg{
+      margin-top:10px; padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.16);
+      color:var(--muted);
+      white-space:pre-wrap;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      display:none;
+    }
+
+    .calTop{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+    .calNav{display:flex; gap:8px; align-items:center}
+    .pill{
+      display:inline-block; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18);
+      font-size:12px; font-weight:950;
+    }
+    .legend{display:flex; gap:8px; flex-wrap:wrap}
+    .cal{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+    }
+    .dow{
+      text-align:center;
+      font-size:11px; color:var(--muted); font-weight:900;
+      padding:6px 0;
+    }
+    .day{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      border-radius:16px;
+      padding:10px 10px 8px;
+      min-height:78px;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+    }
+    .day.disabled{opacity:.35; cursor:default}
+    .dnum{font-weight:950; font-size:13px}
+    .dmeta{margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+    .tag{
+      font-size:11px; font-weight:950;
+      padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.16);
+    }
+    .tag.open{border-color: rgba(34,197,94,.35)}
+    .tag.closed{border-color: rgba(245,158,11,.45)}
+    .tag.occupied{border-color: rgba(239,68,68,.45)}
+    .price{font-size:11px; color:var(--muted); font-weight:900}
+
+    .list{display:flex; flex-direction:column; gap:10px}
+    .item{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      border-radius:16px;
+      padding:12px;
+    }
+    .itemTop{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .itemTitle{font-weight:950}
+    .itemMeta{color:var(--muted); font-size:12px; margin-top:6px}
+    .itemBtns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+
+    /* modal */
+    .modalBack{
+      position:fixed; inset:0; background:rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(520px, 100%);
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(11,42,31,.96);
+      border-radius:22px;
+      padding:14px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .modalTop{display:flex; justify-content:space-between; align-items:center; gap:10px}
+    .modalTitle{margin:0; font-size:15px; font-weight:950}
+    .modalGrid{display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px}
+    .modalNote{font-size:12px; color:var(--muted); line-height:1.4}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1 class="title">DIGIY LOC — PRO</h1>
+      <div class="sub">Multi-logements (hôtel / chambres). Prix par jour + Open/Closed + Occupied auto.</div>
+    </div>
+
+    <div class="row" id="authBox">
+      <input id="email" placeholder="Email (OTP)" autocomplete="email">
+      <button id="btnOtp">Recevoir le code (OTP)</button>
+      <button id="btnLogout" class="secondary" style="display:none">Logout</button>
+    </div>
+  </div>
+
+  <div id="dbg" class="dbg"></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="calTop">
+  <div class="row">
+    <div>
+      <div class="muted">Logement</div>
+      <select id="selLogement"></select>
+    </div>
+
+    <div class="legend">
+      <span class="pill">open</span>
+      <span class="pill">closed</span>
+      <span class="pill">occupied (auto)</span>
+      <span class="pill">prix override</span>
+    </div>
+  </div>
+
+  <div class="calNav">
+    <button class="secondary" id="prevMonth">◀</button>
+    <span class="pill" id="monthLabel">—</span>
+    <button class="secondary" id="nextMonth">▶</button>
+
+    <!-- ✅ LE BOUTON EST ICI, POINT -->
+    <button class="secondary" id="btnBulk">📅 Appliquer sur une période</button>
+  </div>
+</div>
+      <div class="cal" id="cal">
+        <!-- calendar -->
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h2">Réservations en attente</div>
+      <div class="muted">Tu confirmes → ça bloque les dates + met occupied auto.</div>
+      <div style="height:10px"></div>
+      <div class="list" id="resaList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modalBack" id="modalBack">
+  <div class="modal">
+    <div class="modalTop">
+      <h3 class="modalTitle" id="mTitle">—</h3>
+      <button class="secondary" id="mClose">Fermer</button>
+    </div>
+
+    <div class="modalGrid">
+      <div>
+        <div class="muted">État du jour</div>
+        <select id="mState">
+          <option value="open">open (disponible)</option>
+          <option value="closed">closed (fermé)</option>
+          <option value="occupied" disabled>occupied (auto)</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="muted">Prix nuit (override)</div>
+        <input id="mPrice" placeholder="ex: 30000" inputmode="numeric">
+        <div class="modalNote">Vide = prix standard du logement. “occupied” est géré automatiquement par les réservations confirmées.</div>
+      </div>
+
+      <div class="row">
+        <button id="mSave">Enregistrer</button>
+        <button class="secondary" id="mClear">Effacer override</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   CONFIG SUPABASE (public)
+========================= */
+const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* =========================
+   Helpers
+========================= */
+const $ = (id)=>document.getElementById(id);
+const dbg = (msg)=>{
+  const el = $("dbg");
+  el.style.display = "block";
+  el.textContent += msg + "\n";
+};
+const dbgClear = ()=>{ $("dbg").textContent=""; $("dbg").style.display="none"; };
+
+function isoDate(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const da = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${da}`;
+}
+function monthLabel(d){
+  return d.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
+}
+function clampInt(v){
+  const n = Number(String(v||"").trim());
+  return Number.isFinite(n) ? Math.floor(n) : null;
+}
+
+let user = null;
+let logements = [];
+let selectedLogementId = null;
+let monthCursor = new Date();
+monthCursor.setDate(1);
+
+let dispoMap = new Map(); // key=YYYY-MM-DD -> row
+let logementPrix = null;  // prix_nuit standard
+
+/* =========================
+   Auth
+========================= */
+async function refreshAuth(){
+  const { data } = await sb.auth.getSession();
+  user = data?.session?.user || null;
+  $("btnLogout").style.display = user ? "inline-block" : "none";
+}
+
+$("btnOtp").addEventListener("click", async ()=>{
+  dbgClear();
+  try{
+    const email = String($("email").value||"").trim();
+    if(!email) throw new Error("Email requis.");
+    const { error } = await sb.auth.signInWithOtp({ email });
+    if(error) throw error;
+    dbg("OTP envoyé. Ouvre ta boîte mail et clique le lien.");
+    dbg("Ensuite reviens ici: ça se connecte automatiquement.");
+  }catch(e){
+    dbg("ERROR: " + (e.message || e));
+  }
+});
+
+$("btnLogout").addEventListener("click", async ()=>{
+  await sb.auth.signOut();
+  await refreshAuth();
+  dbg("Logout OK.");
+  resetUI();
+});
+
+/* =========================
+   Load logements (multi)
+========================= */
+async function loadLogements(){
+  if(!user) return;
+
+  const { data, error } = await sb
+    .from("digiy_logements")
+    .select("id, nom, prix_nuit, status")
+    .eq("owner_id", user.id)
+    .neq("status", "archive")
+    .order("created_at", { ascending:false });
+
+  if(error) throw error;
+  logements = data || [];
+
+  const sel = $("selLogement");
+  sel.innerHTML = "";
+  if(!logements.length){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Aucun logement";
+    sel.appendChild(opt);
+    selectedLogementId = null;
+    logementPrix = null;
+    return;
+  }
+
+  for(const l of logements){
+    const opt = document.createElement("option");
+    opt.value = l.id;
+    opt.textContent = l.nom;
+    sel.appendChild(opt);
+  }
+
+  selectedLogementId = sel.value;
+  logementPrix = logements.find(x=>x.id===selectedLogementId)?.prix_nuit ?? null;
+}
+
+$("selLogement").addEventListener("change", async ()=>{
+  selectedLogementId = $("selLogement").value || null;
+  logementPrix = logements.find(x=>x.id===selectedLogementId)?.prix_nuit ?? null;
+  await reloadAll();
+});
+
+/* =========================
+   Load disponibilités for month
+========================= */
+function monthRange(d){
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth()+1, 1);
+  return { start, end };
+}
+
+async function loadDispo(){
+  dispoMap.clear();
+  if(!selectedLogementId) return;
+
+  const { start, end } = monthRange(monthCursor);
+  const startISO = isoDate(start);
+  const endISO = isoDate(new Date(end.getTime()-86400000)); // last day
+  // fetch range inclusive
+  const { data, error } = await sb
+    .from("digiy_disponibilites")
+    .select("id, date, state, disponible, prix_nuit, notes, owner_id")
+    .eq("logement_id", selectedLogementId)
+    .gte("date", startISO)
+    .lte("date", endISO);
+
+  if(error) throw error;
+  (data||[]).forEach(r=> dispoMap.set(r.date, r));
+}
+
+/* =========================
+   Load reservations en_attente for logement
+========================= */
+async function loadResaEnAttente(){
+  const box = $("resaList");
+  box.innerHTML = "";
+  if(!selectedLogementId || !user) return;
+
+  const { data, error } = await sb
+    .from("digiy_reservations")
+    .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, mode_paiement, created_at")
+    .eq("logement_id", selectedLogementId)
+    .eq("status", "en_attente")
+    .order("created_at", { ascending:false });
+
+  if(error) throw error;
+
+  if(!data || !data.length){
+    const div = document.createElement("div");
+    div.className = "muted";
+    div.textContent = "Aucune réservation en attente.";
+    box.appendChild(div);
+    return;
+  }
+
+  for(const r of data){
+    const el = document.createElement("div");
+    el.className = "item";
+
+    el.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${escapeHtml(r.client_nom || "Client")} — <span class="pill">${r.tracking_code || "—"}</span></div>
+        <div class="pill">${r.montant_total ? (Number(r.montant_total).toLocaleString("fr-FR")+" F") : "—"}</div>
+      </div>
+      <div class="itemMeta">
+        📅 ${r.date_arrivee} → ${r.date_depart} (${r.nb_nuits} nuits) • 📞 ${r.client_phone || "—"} • 💳 ${r.mode_paiement || "—"}
+      </div>
+      <div class="itemBtns">
+        <button data-id="${r.id}" class="btnConfirm">Confirmer</button>
+      </div>
+    `;
+    box.appendChild(el);
+  }
+
+  box.querySelectorAll(".btnConfirm").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.getAttribute("data-id");
+      if(!confirm("Confirmer cette réservation ? (ça bloque les dates)")) return;
+      await confirmReservation(id);
+    });
+  });
+}
+
+async function confirmReservation(resaId){
+  dbgClear();
+  try{
+    const { error } = await sb
+      .from("digiy_reservations")
+      .update({ status: "confirmee" })
+      .eq("id", resaId);
+
+    if(error) throw error;
+    dbg("OK: réservation confirmée.");
+    await reloadAll(); // recharge list + calendrier (occupied auto)
+  }catch(e){
+    dbg("ERROR: " + (e.message || e));
+  }
+}
+
+/* =========================
+   Calendar render
+========================= */
+function renderCalendar(){
+  const cal = $("cal");
+  cal.innerHTML = "";
+
+  const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  for(const w of dows){
+    const el = document.createElement("div");
+    el.className = "dow";
+    el.textContent = w;
+    cal.appendChild(el);
+  }
+
+  $("monthLabel").textContent = monthLabel(monthCursor);
+
+  const { start, end } = monthRange(monthCursor);
+  const firstDay = new Date(start);
+  // JS: 0=Sun ... 6=Sat, we want Monday first
+  const jsDow = firstDay.getDay(); // 0..6
+  const offset = (jsDow + 6) % 7; // Mon=0, Sun=6
+  // blanks
+  for(let i=0;i<offset;i++){
+    const b = document.createElement("div");
+    b.className = "day disabled";
+    b.style.visibility = "hidden";
+    cal.appendChild(b);
+  }
+
+  const daysInMonth = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 0).getDate();
+
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), day);
+    const key = isoDate(d);
+    const row = dispoMap.get(key);
+
+    let state = row?.state || "open";
+    // default: open unless explicitly closed/occupied
+    if(row && row.state) state = row.state;
+
+    const overridePrice = row?.prix_nuit ?? null;
+
+    const el = document.createElement("div");
+    el.className = "day";
+    el.dataset.date = key;
+    el.dataset.state = state;
+
+    const tagClass = state;
+    const dispoText = state === "open" ? "open"
+                    : state === "closed" ? "closed"
+                    : "occupied";
+
+    const priceText = overridePrice != null
+      ? `override: ${Number(overridePrice).toLocaleString("fr-FR")} F`
+      : (logementPrix != null ? `prix: ${Number(logementPrix).toLocaleString("fr-FR")} F` : "prix: —");
+
+    el.innerHTML = `
+      <div class="dnum">${day}</div>
+      <div class="dmeta">
+        <span class="tag ${tagClass}">${dispoText}</span>
+        ${overridePrice != null ? `<span class="tag">prix*</span>` : ``}
+      </div>
+      <div class="price">${priceText}</div>
+    `;
+
+    // Occupied = lock editing (auto)
+    if(state === "occupied"){
+      el.style.cursor = "not-allowed";
+      el.title = "occupied (auto via réservations confirmées)";
+    } else {
+      el.addEventListener("click", ()=> openModal(key, row));
+    }
+
+    cal.appendChild(el);
+  }
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+
+/* =========================
+   Modal: set open/closed + price override
+========================= */
+let modalDate = null;
+let modalRow = null;
+
+function openModal(dateISO, row){
+  modalDate = dateISO;
+  modalRow = row || null;
+
+  $("mTitle").textContent = `Jour: ${dateISO}`;
+  $("mState").value = (row?.state && row.state !== "occupied") ? row.state : "open";
+  $("mPrice").value = (row?.prix_nuit ?? "") === null ? "" : String(row?.prix_nuit ?? "");
+
+  $("modalBack").style.display = "flex";
+}
+
+function closeModal(){
+  $("modalBack").style.display = "none";
+  modalDate = null;
+  modalRow = null;
+}
+
+$("mClose").addEventListener("click", closeModal);
+$("modalBack").addEventListener("click", (e)=>{
+  if(e.target === $("modalBack")) closeModal();
+});
+
+$("mClear").addEventListener("click", ()=>{
+  $("mPrice").value = "";
+});
+
+$("mSave").addEventListener("click", async ()=>{
+  dbgClear();
+  try{
+    if(!user) throw new Error("Non connecté.");
+    if(!selectedLogementId) throw new Error("Choisir un logement.");
+    if(!modalDate) throw new Error("Date manquante.");
+
+    const state = $("mState").value;
+    const price = clampInt($("mPrice").value);
+
+    // state -> disponible
+    // open => true, closed => false
+    const disponible = (state === "open");
+
+    const payload = {
+      logement_id: selectedLogementId,
+      owner_id: user.id,
+      date: modalDate,
+      state,
+      disponible,
+      prix_nuit: price, // null ok
+      notes: null
+    };
+
+    // upsert
+    const { error } = await sb
+      .from("digiy_disponibilites")
+      .upsert(payload, { onConflict: "logement_id,date" });
+
+    if(error) throw error;
+
+    dbg("OK: disponibilité mise à jour.");
+    closeModal();
+    await loadDispo();
+    renderCalendar();
+  }catch(e){
+    dbg("ERROR: " + (e.message || e));
+  }
+});
+
+/* =========================
+   Month nav + reload
+========================= */
+$("prevMonth").addEventListener("click", async ()=>{
+  monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth()-1, 1);
+  await reloadAll();
+});
+$("nextMonth").addEventListener("click", async ()=>{
+  monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth()+1, 1);
+  await reloadAll();
+});
+
+async function reloadAll(){
+  if(!user){
+    resetUI();
+    return;
+  }
+  await loadLogements();
+  if(!selectedLogementId){
+    renderCalendar();
+    $("resaList").innerHTML = `<div class="muted">Ajoute un logement pour gérer le calendrier.</div>`;
+    return;
+  }
+  await loadDispo();
+  renderCalendar();
+  await loadResaEnAttente();
+}
+
+function resetUI(){
+  $("selLogement").innerHTML = `<option value="">(connecte-toi)</option>`;
+  $("resaList").innerHTML = `<div class="muted">Connecte-toi pour voir tes réservations.</div>`;
+  dispoMap.clear();
+  renderCalendar();
+}
+
+/* =========================
+   Boot
+========================= */
+sb.auth.onAuthStateChange(async ()=>{
+  await refreshAuth();
+  await reloadAll();
+});
+
+(async function(){
+  await refreshAuth();
+  await reloadAll();
+})();
+</script>
+  <div class="modalBack" id="bulkBack">
+  <div class="modal">
+    <div class="modalTop">
+      <h3 class="modalTitle">Appliquer sur une période</h3>
+      <button class="secondary" onclick="closeBulk()">Fermer</button>
+    </div>
+
+    <div class="modalGrid">
+      <div>
+        <div class="muted">Du</div>
+        <input id="bStart" type="date">
+      </div>
+
+      <div>
+        <div class="muted">Au</div>
+        <input id="bEnd" type="date">
+      </div>
+
+      <div>
+        <div class="muted">État</div>
+        <select id="bState">
+          <option value="open">open (disponible)</option>
+          <option value="closed">closed (fermé)</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="muted">Prix nuit (optionnel)</div>
+        <input id="bPrice" placeholder="ex: 25000" inputmode="numeric">
+      </div>
+
+      <button onclick="applyBulk()">✅ Appliquer</button>
+
+      <div class="modalNote">
+        Les jours <b>occupied</b> (réservations confirmées) ne sont jamais modifiés.
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
