@@ -2,265 +2,287 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Location Courte Durée 0% Commission</title>
-  <meta name="theme-color" content="#061b14"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DIGIY LOC PRO — Gestion Location</title>
   
-  <!-- ============================================ -->
   <!-- SUPABASE -->
-  <!-- ============================================ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- ============================================ -->
-  <!-- GUARD INLINE (DIRECTEMENT DANS LE HTML) -->
-  <!-- ============================================ -->
+  <!-- GUARD INLINE -->
   <script>
     (function() {
       'use strict';
-      console.log('🔧 Chargement Guard INLINE...');
-
       const SUPABASE_CONFIG = {
         url: "https://wesqmwjjtsefyjnluosj.supabase.co",
         key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA"
       };
-
       const sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
       
-      const CACHE_KEY = 'digiy_guard_cache';
-      const CACHE_DURATION = 60000;
-
-      async function guardOrPay(moduleCode, loginPath = '/login.html') {
-        console.log(`🦅 [GUARD] Vérification module: ${moduleCode}`);
-
-        const statusEl = document.getElementById('guard_status');
-        if (statusEl) {
-          statusEl.textContent = '🔐 Vérification...';
-          statusEl.style.display = 'block';
-        }
-
-        try {
-          let phone = localStorage.getItem('digiy_auth_phone') 
-                   || sessionStorage.getItem('digiy_auth_phone');
-
-          if (!phone) {
-            console.log('❌ [GUARD] Aucun téléphone → Login');
-            window.location.href = loginPath;
-            return false;
-          }
-
-          console.log(`📱 [GUARD] Phone: ${phone}`);
-
-          const cached = checkCache(phone, moduleCode);
-          if (cached) {
-            console.log('✅ [GUARD] Cache valide');
-            if (statusEl) {
-              statusEl.textContent = '✅ Accès autorisé';
-              setTimeout(() => statusEl.style.display = 'none', 2000);
-            }
-            return true;
-          }
-
-          console.log(`🔍 [GUARD] Vérification BDD pour ${moduleCode}...`);
-          
-          const { data, error } = await sb
-            .from('digiy_subscriptions')
-            .select('*')
-            .eq('phone', phone)
-            .eq('module', moduleCode)
-            .eq('status', 'active')
-            .gt('current_period_end', new Date().toISOString())
-            .single();
-
-          if (error) {
-            if (error.code === 'PGRST116') {
-              console.log('❌ [GUARD] Pas d\'abonnement → Login');
-              if (statusEl) statusEl.textContent = '❌ Abonnement expiré';
-              setTimeout(() => window.location.href = loginPath, 1500);
-              return false;
-            }
-            throw error;
-          }
-
-          if (data) {
-            console.log('✅ [GUARD] Abonnement valide');
-            setCache(phone, moduleCode, data);
-            
-            if (statusEl) {
-              statusEl.textContent = '✅ Accès autorisé';
-              setTimeout(() => statusEl.style.display = 'none', 2000);
-            }
-            
-            return true;
-          }
-
-          console.log('❌ [GUARD] Pas d\'abonnement → Login');
-          if (statusEl) statusEl.textContent = '❌ Abonnement requis';
-          setTimeout(() => window.location.href = loginPath, 1500);
-          return false;
-
-        } catch (err) {
-          console.error('❌ [GUARD] Erreur:', err);
-          if (statusEl) statusEl.textContent = '⚠️ Erreur';
-          setTimeout(() => window.location.href = loginPath, 2000);
+      async function guardOrPay(moduleCode, loginPath) {
+        let phone = localStorage.getItem('digiy_auth_phone') || sessionStorage.getItem('digiy_auth_phone');
+        if (!phone) {
+          window.location.href = loginPath;
           return false;
         }
-      }
-
-      function getPhone() {
-        return localStorage.getItem('digiy_auth_phone') 
-            || sessionStorage.getItem('digiy_auth_phone')
-            || null;
-      }
-
-      function checkCache(phone, moduleCode) {
-        try {
-          const cacheStr = sessionStorage.getItem(CACHE_KEY);
-          if (!cacheStr) return null;
-          
-          const cache = JSON.parse(cacheStr);
-          const key = `${phone}_${moduleCode}`;
-          const entry = cache[key];
-          
-          if (!entry) return null;
-          
-          if (Date.now() - entry.timestamp > CACHE_DURATION) {
-            delete cache[key];
-            sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-            return null;
-          }
-          
-          return entry.data;
-        } catch (e) {
-          return null;
+        const { data, error } = await sb.from('digiy_subscriptions').select('*').eq('phone', phone).eq('module', moduleCode).eq('status', 'active').gt('current_period_end', new Date().toISOString()).single();
+        if (error || !data) {
+          window.location.href = loginPath;
+          return false;
         }
+        return true;
       }
-
-      function setCache(phone, moduleCode, data) {
-        try {
-          let cache = {};
-          const cacheStr = sessionStorage.getItem(CACHE_KEY);
-          if (cacheStr) cache = JSON.parse(cacheStr);
-          
-          const key = `${phone}_${moduleCode}`;
-          cache[key] = { data: data, timestamp: Date.now() };
-          
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-        } catch (e) {
-          console.warn('Cache write failed:', e);
-        }
-      }
-
+      
       window.DIGIY = {
         guardOrPay: guardOrPay,
-        getPhone: getPhone
+        getPhone: () => localStorage.getItem('digiy_auth_phone') || sessionStorage.getItem('digiy_auth_phone')
       };
-
-      console.log('✅ [GUARD] Guard INLINE chargé avec succès');
     })();
   </script>
   
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #061b14 0%, #0a2820 100%);
-      color: #fff;
-      min-height: 100vh;
+    :root{
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:#052e16;
+      --accent:#facc15;
+      --success:#22c55e;
+      --danger:#ef4444;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:rgba(148,163,184,0.2);
     }
     
-    #guard_status {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 14px;
-      z-index: 9999;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    *{box-sizing:border-box;margin:0;padding:0}
+    
+    body{
+      margin:0;
+      font-family:system-ui,sans-serif;
+      background:linear-gradient(135deg,var(--bg),var(--bg2));
+      color:var(--text);
+      min-height:100vh;
     }
     
-    .app {
-      display: none;
+    #guard_status{
+      position:fixed;
+      top:20px;
+      right:20px;
+      padding:12px 20px;
+      background:rgba(0,0,0,0.9);
+      color:white;
+      border-radius:10px;
+      font-weight:700;
+      font-size:14px;
+      z-index:9999;
+      border:1px solid rgba(255,255,255,0.1);
     }
     
-    html.access-ok .app {
-      display: block;
+    .app{display:none}
+    html.access-ok .app{display:block}
+    
+    .container{max-width:1400px;margin:0 auto;padding:1rem}
+    
+    .header{
+      background:rgba(255,255,255,0.05);
+      backdrop-filter:blur(20px);
+      padding:1.5rem;
+      border-radius:16px;
+      margin-bottom:1.5rem;
+      border:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:1rem;
     }
     
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
+    .header h1{
+      font-size:1.8rem;
+      margin:0;
+      background:linear-gradient(135deg,#10b981,#06d6a0);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
     
-    .header {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    .header-actions{
+      display:flex;
+      gap:0.5rem;
+      flex-wrap:wrap;
     }
     
-    h1 {
-      font-size: 2.5rem;
-      margin: 0 0 0.5rem;
-      background: linear-gradient(135deg, #10b981, #06d6a0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .tabs{
+      display:flex;
+      gap:0.5rem;
+      margin-bottom:1.5rem;
+      overflow-x:auto;
+      padding-bottom:0.5rem;
     }
     
-    .subtitle {
-      color: #9ca3af;
-      font-size: 1rem;
+    .tab{
+      padding:0.75rem 1.5rem;
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--border);
+      border-radius:12px;
+      cursor:pointer;
+      transition:all 0.2s;
+      white-space:nowrap;
+      font-weight:600;
+      font-size:0.9rem;
     }
     
-    .content {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    .tab:hover{
+      background:rgba(255,255,255,0.1);
+      border-color:var(--accent);
     }
     
-    .content h2 {
-      margin-top: 0;
-      color: #10b981;
+    .tab.active{
+      background:var(--accent);
+      color:#000;
+      border-color:var(--accent);
     }
     
-    .content h3 {
-      color: #06d6a0;
-      margin-top: 2rem;
+    .content{display:none}
+    .content.active{display:block}
+    
+    .card{
+      background:rgba(255,255,255,0.05);
+      backdrop-filter:blur(20px);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:1.5rem;
+      margin-bottom:1rem;
     }
     
-    .content ul {
-      list-style: none;
-      padding: 0;
+    .card h2{
+      font-size:1.3rem;
+      margin:0 0 1rem;
+      color:var(--accent);
     }
     
-    .content li {
-      padding: 0.5rem 0;
-      color: #9ca3af;
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:1rem;
+      margin-bottom:1.5rem;
     }
     
-    .info-box {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-top: 2rem;
+    .stat-card{
+      background:rgba(255,255,255,0.05);
+      padding:1.5rem;
+      border-radius:12px;
+      border:1px solid var(--border);
     }
     
-    .info-box p {
-      margin: 0.5rem 0;
+    .stat-label{
+      font-size:0.85rem;
+      color:var(--muted);
+      margin-bottom:0.5rem;
+      font-weight:600;
+      text-transform:uppercase;
     }
     
-    .info-box strong {
-      color: #10b981;
+    .stat-value{
+      font-size:2rem;
+      font-weight:900;
+      color:var(--accent);
+    }
+    
+    .btn{
+      padding:0.75rem 1.5rem;
+      border:none;
+      border-radius:10px;
+      font-size:0.9rem;
+      font-weight:700;
+      cursor:pointer;
+      transition:all 0.2s;
+      display:inline-flex;
+      align-items:center;
+      gap:0.5rem;
+    }
+    
+    .btn-primary{
+      background:var(--accent);
+      color:#000;
+    }
+    
+    .btn-primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 8px 16px rgba(250,204,21,0.3);
+    }
+    
+    .btn-success{background:var(--success);color:#fff}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-secondary{
+      background:rgba(255,255,255,0.1);
+      color:var(--text);
+      border:1px solid var(--border);
+    }
+    
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:1rem;text-align:left;border-bottom:1px solid var(--border)}
+    th{font-size:0.85rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+    td{font-size:0.95rem}
+    tr:hover{background:rgba(255,255,255,0.05)}
+    
+    .logement-card{
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:1.5rem;
+      margin-bottom:1rem;
+      display:grid;
+      grid-template-columns:200px 1fr auto;
+      gap:1.5rem;
+      align-items:start;
+    }
+    
+    .logement-img{
+      width:200px;
+      height:150px;
+      object-fit:cover;
+      border-radius:8px;
+      background:rgba(255,255,255,0.1);
+    }
+    
+    .logement-info h3{
+      margin:0 0 0.5rem;
+      color:var(--accent);
+      font-size:1.2rem;
+    }
+    
+    .logement-info p{
+      margin:0.25rem 0;
+      color:var(--muted);
+      font-size:0.9rem;
+    }
+    
+    .logement-actions{
+      display:flex;
+      flex-direction:column;
+      gap:0.5rem;
+    }
+    
+    .badge{
+      display:inline-block;
+      padding:0.25rem 0.75rem;
+      border-radius:6px;
+      font-size:0.75rem;
+      font-weight:700;
+    }
+    
+    .badge-success{
+      background:rgba(34,197,94,0.2);
+      color:var(--success);
+    }
+    
+    @media(max-width:768px){
+      .container{padding:0.5rem}
+      .header{padding:1rem}
+      .header h1{font-size:1.3rem}
+      .stats-grid{grid-template-columns:1fr}
+      .logement-card{grid-template-columns:1fr;gap:1rem}
+      .logement-img{width:100%;height:200px}
+      table{font-size:0.85rem}
+      th,td{padding:0.5rem}
     }
   </style>
 </head>
@@ -269,79 +291,160 @@
 <div id="guard_status">🔐 Vérification...</div>
 
 <div class="app">
-  <div class="header">
-    <h1>🏠 DIGIY LOC PRO</h1>
-    <p class="subtitle">Location Courte Durée • 0% Commission • Made in Sénégal 🇸🇳</p>
-  </div>
-  
-  <div class="content">
-    <h2>🎉 Bienvenue dans DIGIY LOC !</h2>
-    <p>Tu as accès à la plateforme de location courte durée sans commission.</p>
-    
-    <div class="info-box">
-      <p><strong>📱 Téléphone:</strong> <span id="userPhone">Chargement...</span></p>
-      <p><strong>📦 Module:</strong> LOC</p>
-      <p><strong>✅ Status:</strong> Actif</p>
-      <p><strong>💰 Abonnement:</strong> 9,900 FCFA/mois</p>
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <h1>🏠 DIGIY LOC PRO</h1>
+        <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
+          <span id="userName">Jean Baptiste Beauville</span> · 
+          <span id="userPhone">+221 77 134 28 89</span>
+        </p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="alert('Fonctionnalité à venir')">
+          ➕ Ajouter un logement
+        </button>
+        <button class="btn btn-secondary" onclick="logout()">
+          🚪 Déconnexion
+        </button>
+      </div>
     </div>
-    
-    <div>
-      <h3>🚀 Fonctionnalités disponibles :</h3>
-      <ul>
-        <li>📅 Gestion calendrier de disponibilité</li>
-        <li>🏠 Gestion des logements</li>
-        <li>💰 Réservations directes 0% commission</li>
-        <li>📊 Dashboard statistiques & revenus</li>
-        <li>💳 Paiements directs Wave/Orange Money</li>
-        <li>📱 Notifications réservations</li>
-        <li>⭐ Avis clients</li>
-        <li>📸 Galerie photos logements</li>
-      </ul>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+      <div class="tab" onclick="switchTab('logements')">🏠 Mes logements</div>
+      <div class="tab" onclick="switchTab('reservations')">📅 Réservations</div>
+      <div class="tab" onclick="switchTab('calendrier')">📆 Calendrier</div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="content active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Revenus ce mois</div>
+          <div class="stat-value">0 F</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Taux d'occupation</div>
+          <div class="stat-value">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Réservations actives</div>
+          <div class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Logements actifs</div>
+          <div class="stat-value">1</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Prochaines arrivées</h2>
+        <p style="color:var(--muted)">Aucune réservation à venir</p>
+      </div>
+    </div>
+
+    <!-- LOGEMENTS -->
+    <div id="logements" class="content">
+      <div class="card">
+        <h2>🏠 Mes logements</h2>
+        
+        <div class="logement-card">
+          <img src="https://via.placeholder.com/200x150?text=CHEZ+BAPTISTE" alt="CHEZ BAPTISTE" class="logement-img">
+          <div class="logement-info">
+            <h3>CHEZ BAPTISTE</h3>
+            <p>📍 Saly, Sénégal</p>
+            <p>👥 4 personnes max</p>
+            <p>Quartier calme · Sénélec en sus · Réservation directe</p>
+            <p style="margin-top:0.5rem">
+              <strong>Tarifs:</strong><br>
+              Nuit: 30,000 F · Semaine: 175,000 F · Mois: 550,000 F
+            </p>
+            <p style="margin-top:0.5rem">
+              <span class="badge badge-success">✅ Actif</span>
+            </p>
+          </div>
+          <div class="logement-actions">
+            <button class="btn btn-secondary" onclick="alert('Fonctionnalité à venir')">✏️ Modifier</button>
+            <button class="btn btn-secondary" onclick="alert('Fonctionnalité à venir')">📅 Calendrier</button>
+            <button class="btn btn-secondary" onclick="window.open('https://wa.me/221771342889', '_blank')">💬 WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RÉSERVATIONS -->
+    <div id="reservations" class="content">
+      <div class="card">
+        <h2>📅 Toutes les réservations</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Logement</th>
+              <th>Dates</th>
+              <th>Montant</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--muted)">Aucune réservation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CALENDRIER -->
+    <div id="calendrier" class="content">
+      <div class="card">
+        <h2>📆 Calendrier de disponibilité</h2>
+        <p style="color:var(--muted)">Calendrier à venir...</p>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  (async () => {
-    console.log('🚀 Démarrage DIGIY LOC PRO');
-    
-    // Vérifier immédiatement que Guard est chargé
-    if (!window.DIGIY) {
-      console.error('❌ ERREUR CRITIQUE : Guard non chargé !');
-      alert('Erreur système. Contactez le support.');
-      return;
-    }
-    
-    console.log('✅ Guard détecté immédiatement');
-    
-    // Vérifier l'accès
-    const ok = await window.DIGIY.guardOrPay("LOC", "./login.html");
-    
-    if (!ok) {
-      console.log('❌ Accès refusé');
-      return;
-    }
-    
-    console.log("🦅 DIGIY LOC OK");
-    
-    // Afficher l'app
-    document.documentElement.classList.add('access-ok');
-    
-    // Afficher le téléphone
-    const phone = window.DIGIY.getPhone();
-    if (phone) {
-      const phoneEl = document.getElementById("userPhone");
-      if (phoneEl) phoneEl.textContent = phone;
-    }
-    
-    // Masquer status
-    setTimeout(() => {
-      const statusEl = document.getElementById("guard_status");
-      if (statusEl) statusEl.style.display = "none";
-    }, 1200);
-    
-    console.log("✅ DIGIY LOC prêt");
-  })();
+(async () => {
+  if (!window.DIGIY) {
+    alert('Erreur. Rafraîchissez.');
+    return;
+  }
+  
+  const ok = await window.DIGIY.guardOrPay("LOC", "./login.html");
+  if (!ok) return;
+  
+  document.documentElement.classList.add('access-ok');
+  
+  const phone = window.DIGIY.getPhone();
+  if (phone) {
+    document.getElementById('userPhone').textContent = phone;
+  }
+  
+  setTimeout(() => {
+    document.getElementById('guard_status').style.display = 'none';
+  }, 1200);
+})();
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  document.getElementById(tabName).classList.add('active');
+}
+
+function logout() {
+  if (confirm('Se déconnecter ?')) {
+    localStorage.removeItem('digiy_auth_phone');
+    sessionStorage.removeItem('digiy_auth_phone');
+    window.location.href = 'login.html';
+  }
+}
 </script>
 
 </body>
