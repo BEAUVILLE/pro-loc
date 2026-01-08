@@ -21,13 +21,6 @@
       color: #fff;
       min-height: 100vh;
     }
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #061b14 0%, #0a2820 100%);
-      color: #fff;
-      min-height: 100vh;
-    }
     
     /* STATUS GUARD */
     #guard_status {
@@ -89,6 +82,42 @@
       padding: 2rem;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
+    
+    .content h2 {
+      margin-top: 0;
+      color: #10b981;
+    }
+    
+    .content h3 {
+      color: #06d6a0;
+      margin-top: 2rem;
+    }
+    
+    .content ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .content li {
+      padding: 0.5rem 0;
+      color: #9ca3af;
+    }
+    
+    .info-box {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .info-box p {
+      margin: 0.5rem 0;
+    }
+    
+    .info-box strong {
+      color: #10b981;
+    }
   </style>
 </head>
 <body>
@@ -99,72 +128,101 @@
 <div id="guard_status">🔐 Vérification...</div>
 
 <!-- ========================================== -->
-<!-- GUARD SCRIPTS -->
-<!-- ========================================== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js"></script>
-<script>
-  (async () => {
-    // ✅ MODULE = "LOC" (majuscule comme dans la DB)
-    const ok = await window.DIGIY.guardOrPay("LOC", "/digiy-loc/login.html");
-    if (!ok) return; // Redirigé
-    
-    // ✅ Accès OK
-    console.log("🦅 DIGIY LOC chargé avec succès");
-    console.log("📊 Access:", window.DIGIY_ACCESS);
-    
-    // Masquer le status
-    setTimeout(() => {
-      const s = document.getElementById("guard_status");
-      if (s) s.style.display = "none";
-    }, 1200);
-    
-    // Initialiser l'app si besoin
-    initLocApp();
-  })();
-  
-  function initLocApp() {
-    console.log("🏠 Initialisation DIGIY LOC...");
-    // Ton code d'initialisation ici
-  }
-</script>
-
-<!-- ========================================== -->
 <!-- APP DIGIY LOC -->
 <!-- ========================================== -->
 <div class="app">
   <div class="header">
     <h1>🏠 DIGIY LOC PRO</h1>
-    <p class="subtitle">Location Courte Durée • 0% Commission • Made in Sénégal</p>
+    <p class="subtitle">Location Courte Durée • 0% Commission • Made in Sénégal 🇸🇳</p>
   </div>
   
   <div class="content">
     <h2>🎉 Bienvenue dans DIGIY LOC !</h2>
-    <p>Tu as accès à la plateforme de location courte durée.</p>
+    <p>Tu as accès à la plateforme de location courte durée sans commission.</p>
     
-    <div style="margin-top: 2rem;">
-      <p><strong>📱 Phone:</strong> <span id="userPhone">Chargement...</span></p>
+    <div class="info-box">
+      <p><strong>📱 Téléphone:</strong> <span id="userPhone">Chargement...</span></p>
       <p><strong>📦 Module:</strong> LOC</p>
       <p><strong>✅ Status:</strong> Actif</p>
+      <p><strong>💰 Abonnement:</strong> 9,900 FCFA/mois</p>
     </div>
     
-    <div style="margin-top: 2rem;">
-      <h3>🚀 Fonctionnalités à venir :</h3>
+    <div>
+      <h3>🚀 Fonctionnalités disponibles :</h3>
       <ul>
-        <li>📅 Calendrier de disponibilité</li>
-        <li>💰 Gestion des réservations</li>
-        <li>📊 Dashboard statistiques</li>
+        <li>📅 Gestion calendrier de disponibilité</li>
+        <li>🏠 Gestion des logements</li>
+        <li>💰 Réservations directes 0% commission</li>
+        <li>📊 Dashboard statistiques & revenus</li>
         <li>💳 Paiements directs Wave/Orange Money</li>
+        <li>📱 Notifications réservations</li>
+        <li>⭐ Avis clients</li>
+        <li>📸 Galerie photos logements</li>
       </ul>
     </div>
   </div>
 </div>
 
+<!-- ========================================== -->
+<!-- INIT APP -->
+<!-- ========================================== -->
 <script>
-  // Afficher le phone dans l'UI
-  if (window.DIGIY_ACCESS?.phone) {
-    const el = document.getElementById("userPhone");
-    if (el) el.textContent = window.DIGIY_ACCESS.phone;
+  window.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Démarrage DIGIY LOC PRO');
+    
+    // Attendre que guard soit disponible (max 5 secondes)
+    let attempts = 0;
+    while (!window.DIGIY && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    if (!window.DIGIY) {
+      console.error('❌ Guard non chargé après 5 secondes');
+      alert('Erreur système. Rafraîchissez la page (F5).');
+      return;
+    }
+    
+    console.log('✅ Guard détecté');
+    
+    // Vérifier l'accès avec le guard
+    const ok = await window.DIGIY.guardOrPay("LOC", "./login.html");
+    
+    if (!ok) {
+      console.log('❌ Accès refusé - Redirection login');
+      return;
+    }
+    
+    // ✅ Accès autorisé
+    console.log("🦅 DIGIY LOC chargé avec succès");
+    
+    // Afficher l'app
+    document.documentElement.classList.add('access-ok');
+    
+    // Afficher le téléphone
+    const phone = window.DIGIY.getPhone();
+    if (phone) {
+      const phoneEl = document.getElementById("userPhone");
+      if (phoneEl) phoneEl.textContent = phone;
+    }
+    
+    // Masquer le status après 1.2s
+    setTimeout(() => {
+      const statusEl = document.getElementById("guard_status");
+      if (statusEl) statusEl.style.display = "none";
+    }, 1200);
+    
+    // Initialiser l'app
+    initLocApp();
+  });
+  
+  function initLocApp() {
+    console.log("🏠 Initialisation DIGIY LOC...");
+    
+    // Ici tu peux charger tes données
+    // Exemple : loadLogements(), loadReservations(), etc.
+    
+    console.log("✅ DIGIY LOC prêt à l'emploi");
   }
 </script>
 
