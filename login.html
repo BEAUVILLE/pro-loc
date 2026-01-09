@@ -129,8 +129,27 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 🔑 OBLIGATOIRE : consommer le magic link (?code=...)
+(async function consumeMagicLink(){
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get("code");
+  if (!code) return;
 
-  const $ = (id)=>document.getElementById(id);
+  msg.textContent = "Validation du lien…";
+
+  const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
+
+  if (error) {
+    msg.textContent = "Erreur validation: " + error.message;
+    return;
+  }
+
+  // Nettoyer l’URL
+  url.searchParams.delete("code");
+  window.history.replaceState({}, "", url.toString());
+
+  msg.textContent = "Connexion réussie ✅";
+})();  const $ = (id)=>document.getElementById(id);
   const emailInput = $("email");
   const phoneInput = $("phone");
   const msg = $("msg");
