@@ -114,7 +114,8 @@
         <div class="sep"></div>
 
         <div class="muted small">
-          Après clic sur le lien reçu, tu reviens automatiquement ici puis tu seras redirigé vers <code>planning.html</code>.
+          Après clic sur le lien reçu, tu reviens ici <b>1 seconde</b> (pour créer la session),
+          puis redirection automatique vers <code>planning.html</code>.
         </div>
       </div>
     </div>
@@ -124,42 +125,36 @@
 (function(){
   "use strict";
 
+  // =============================
+  // SUPABASE
+  // =============================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// 🔑 OBLIGATOIRE : consommer le magic link (?code=...)
-(async function consumeMagicLink(){
-  const url = new URL(window.location.href);
-  const code = url.searchParams.get("code");
-  if (!code) return;
 
-  msg.textContent = "Validation du lien…";
-
-  const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
-
-  if (error) {
-    msg.textContent = "Erreur validation: " + error.message;
-    return;
-  }
-
-  // Nettoyer l’URL
-  url.searchParams.delete("code");
-  window.history.replaceState({}, "", url.toString());
-
-  msg.textContent = "Connexion réussie ✅";
-})();  const $ = (id)=>document.getElementById(id);
+  // =============================
+  // UI
+  // =============================
+  const $ = (id)=>document.getElementById(id);
   const emailInput = $("email");
   const phoneInput = $("phone");
   const msg = $("msg");
   const authPill = $("authPill");
+  const btnSend = $("btnSend");
+  const btnLogout = $("btnLogout");
 
   function setPill(ok, text){
     authPill.className = "pill " + (ok ? "ok" : "bad");
     authPill.textContent = text;
   }
 
+  function goPlanning(){ location.replace("./planning.html"); }
+
+  // =============================
+  // PHONE CACHE (local)
+  // =============================
   function normPhone(p){
     p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
     if(p.startsWith("00221")) p = "+221" + p.slice(5);
@@ -167,31 +162,67 @@
     if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
     return p;
   }
-
   function savePhone(phone){
     const p = normPhone(phone);
     sessionStorage.setItem("digiy_phone", p);
-    localStorage.setItem("digiy_access_pin", JSON.stringify({ phone: p }));
+    sessionStorage.setItem("digiy_driver_phone", p);
+    try{
+      localStorage.setItem("digiy_access_pin", JSON.stringify({ phone: p }));
+      localStorage.setItem("digiy_driver_access_pin", JSON.stringify({ phone: p }));
+    }catch(_){}
     return p;
   }
-
   function loadPhone(){
+    const s = sessionStorage.getItem("digiy_phone") || sessionStorage.getItem("digiy_driver_phone");
+    if(s) return s;
     try{
       const a = JSON.parse(localStorage.getItem("digiy_access_pin")||"null");
       return a?.phone || "";
     }catch(_){ return ""; }
   }
 
+  // =============================
+  // MAGIC LINK: consume ?code=
+  // =============================
+  async function consumeMagicLinkIfAny(){
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    if(!code) return false;
+
+    msg.textContent = "Validation du lien…";
+    const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
+
+    if(error){
+      msg.textContent = "Erreur validation: " + error.message;
+      return false;
+    }
+
+    // Nettoie URL
+    url.searchParams.delete("code");
+    window.history.replaceState({}, "", url.toString());
+
+    msg.textContent = "Connexion réussie ✅";
+    return true;
+  }
+
+  // =============================
+  // SESSION CHECK
+  // =============================
   async function refreshAuth(){
     const { data } = await sb.auth.getSession();
     if(data?.session){
       setPill(true, "Auth: ✅ connecté");
-      setTimeout(()=>location.replace("./planning.html"), 400);
-      return;
+      msg.textContent = "Session OK. Redirection…";
+      setTimeout(goPlanning, 350);
+      return true;
     }
-    setPill(false, "Auth: ❌ non connecté");
+    setPill(false, "Auth: ❌ Auth session missing!");
+    return false;
   }
 
+  // =============================
+  // SEND MAGIC LINK
+  // =============================
   async function sendMagicLink(){
     const email = (emailInput.value || "").trim();
     const phoneRaw = (phoneInput.value || "").trim();
@@ -202,39 +233,47 @@
     const phone = savePhone(phoneRaw);
     msg.textContent = "Envoi du lien… (" + phone + ")";
 
+    btnSend.disabled = true;
+
     const { error } = await sb.auth.signInWithOtp({
       email,
       options: {
+        // ✅ Forcer le retour exact sur LOC PRO (GitHub Pages)
         emailRedirectTo: "https://beauville.github.io/digiy-loc-pro/login.html"
       }
     });
+
+    btnSend.disabled = false;
 
     if(error){
       msg.textContent = "Erreur: " + error.message;
       return;
     }
-
-    msg.textContent = "Lien envoyé. Ouvre ton email et clique.";
+    msg.textContent = "Lien envoyé ✅ Ouvre ton email et clique.";
   }
 
+  // =============================
+  // LOGOUT
+  // =============================
   async function logout(){
     await sb.auth.signOut();
     setPill(false, "Auth: ❌ déconnecté");
+    msg.textContent = "Déconnecté.";
   }
 
-  // 👉 LIGNE CLÉ : consomme automatiquement le token AU RETOUR
-  sb.auth.getSession().then(({ data })=>{
-    if(data?.session){
-      setPill(true, "Auth: ✅ connecté");
-      setTimeout(()=>location.replace("./planning.html"), 400);
-    }
-  });
-
-  $("btnSend").addEventListener("click", sendMagicLink);
-  $("btnLogout").addEventListener("click", logout);
+  // =============================
+  // INIT
+  // =============================
+  btnSend.addEventListener("click", sendMagicLink);
+  btnLogout.addEventListener("click", logout);
 
   phoneInput.value = loadPhone();
-  refreshAuth();
+
+  (async ()=>{
+    await consumeMagicLinkIfAny(); // crée la session si ?code=
+    await refreshAuth();           // redirige planning si session
+  })();
+
 })();
 </script>
 </body>
