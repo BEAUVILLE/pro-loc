@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DIGIY LOC — Health Check</title>
+  <meta name="theme-color" content="#16a34a" />
+  <style>
+    :root{--bg:#061b14;--card:#0b2a1f;--line:rgba(255,255,255,.14);--text:#eafff1;--muted:rgba(234,255,241,.75);--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(900px 500px at 10% -10%, rgba(34,197,94,.20), transparent 60%),var(--bg);color:var(--text);}
+    .wrap{max-width:860px;margin:0 auto;padding:18px;}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+    h1{margin:6px 0 2px;font-size:20px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .pill{padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.18);font-weight:700;font-size:12px}
+    .ok{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.12)}
+    .bad{border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.12)}
+    .warn{border-color:rgba(245,158,11,.55);background:rgba(245,158,11,.12)}
+    code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:8px}
+    .grid{display:grid;grid-template-columns:180px 1fr;gap:10px;margin-top:12px}
+    .k{color:var(--muted)}
+    .v{word-break:break-word}
+    button{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:10px 12px;border-radius:14px;font-weight:800}
+    button:hover{background:rgba(255,255,255,.09)}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>DIGIY LOC — Health Check</h1>
+      <div class="muted">Page de contrôle qualité (preuve “CLEAN”). Module: <b>LOC</b></div>
+      <div class="row" id="pills"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button id="btnRun">Re-tester</button>
+        <button id="btnClear">Clear cache phone</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="card muted">
+      Astuce: si tu veux tester “ABO OFF”, mets <code>current_period_end</code> dans le passé et recharge cette page.
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function normPhone(p){
+    p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if(p.startsWith("00221")) p = "+221" + p.slice(5);
+    if(!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
+  }
+
+  function getPhone(){
+    const s = sessionStorage.getItem("digiy_phone") || sessionStorage.getItem("digiy_driver_phone");
+    if (s) return s;
+
+    try{
+      const a = JSON.parse(localStorage.getItem("digiy_access_pin")||"null");
+      if(a?.phone) return a.phone;
+    }catch(_){}
+
+    try{
+      const b = JSON.parse(localStorage.getItem("digiy_driver_access_pin")||"null");
+      if(b?.phone) return b.phone;
+    }catch(_){}
+
+    return null;
+  }
+
+  function clearPhoneCache(){
+    sessionStorage.removeItem("digiy_phone");
+    sessionStorage.removeItem("digiy_driver_phone");
+    localStorage.removeItem("digiy_access_pin");
+    localStorage.removeItem("digiy_driver_access_pin");
+  }
+
+  function pill(text, kind){
+    const el = document.createElement("div");
+    el.className = "pill " + (kind||"");
+    el.textContent = text;
+    return el;
+  }
+
+  function setPills(items){
+    const host = document.getElementById("pills");
+    host.innerHTML = "";
+    items.forEach(x => host.appendChild(pill(x.text, x.kind)));
+  }
+
+  function setGrid(rows){
+    const g = document.getElementById("grid");
+    g.innerHTML = "";
+    rows.forEach(r=>{
+      const k = document.createElement("div");
+      k.className = "k";
+      k.textContent = r.k;
+      const v = document.createElement("div");
+      v.className = "v";
+      v.textContent = r.v;
+      g.appendChild(k); g.appendChild(v);
+    });
+  }
+
+  async function run(){
+    const rows = [];
+    const pills = [];
+
+    // Phone (local)
+    const rawPhone = getPhone();
+    const phone = rawPhone ? normPhone(rawPhone) : null;
+
+    rows.push({k:"Phone (local)", v: rawPhone || "—"});
+    rows.push({k:"Phone (normalisé)", v: phone || "—"});
+
+    // Auth user
+    let user = null;
+    try{
+      const { data, error } = await sb.auth.getUser();
+      if(error) throw error;
+      user = data?.user || null;
+    }catch(e){
+      rows.push({k:"Supabase Auth", v: "Erreur: " + (e?.message || e)});
+    }
+
+    if(user){
+      pills.push({text:"Auth ✅", kind:"ok"});
+      rows.push({k:"User ID", v: user.id});
+      rows.push({k:"Email", v: user.email || "—"});
+    }else{
+      pills.push({text:"Auth ❌", kind:"bad"});
+      rows.push({k:"User ID", v: "—"});
+    }
+
+    // Ensure profile phone
+    let ensured = false;
+    if(user && phone){
+      try{
+        const { error } = await sb.rpc("ensure_profile_phone", { p_phone: phone });
+        if(error) throw error;
+        ensured = true;
+      }catch(e){
+        rows.push({k:"ensure_profile_phone", v: "Erreur: " + (e?.message || e)});
+      }
+    }
+    pills.push({text: ensured ? "Profile ✅" : "Profile ⚠️", kind: ensured ? "ok" : "warn"});
+
+    // Check module
+    let active = null;
+    if(user){
+      try{
+        const { data, error } = await sb.rpc("is_module_active", {
+          p_user_id: user.id,
+          p_module: "LOC"
+        });
+        if(error) throw error;
+        active = !!data;
+      }catch(e){
+        rows.push({k:"is_module_active", v: "Erreur: " + (e?.message || e)});
+      }
+    }
+
+    if(active === true){
+      pills.push({text:"LOC ✅ ACTIVE", kind:"ok"});
+      pills.push({text:"CLEAN ✅", kind:"ok"});
+    }else if(active === false){
+      pills.push({text:"LOC ❌ INACTIVE", kind:"bad"});
+      pills.push({text:"BLOQUÉ ❌", kind:"bad"});
+    }else{
+      pills.push({text:"LOC ? (non testé)", kind:"warn"});
+    }
+
+    rows.push({k:"Module", v:"LOC"});
+    rows.push({k:"Active", v: active === null ? "—" : String(active)});
+    rows.push({k:"Date/heure", v: new Date().toString()});
+
+    setPills(pills);
+    setGrid(rows);
+  }
+
+  document.getElementById("btnRun").addEventListener("click", run);
+  document.getElementById("btnClear").addEventListener("click", function(){
+    clearPhoneCache();
+    alert("Cache phone effacé. Recharge / reconnecte.");
+  });
+
+  run();
+})();
+</script>
+</body>
+</html>
