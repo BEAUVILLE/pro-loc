@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>GO PIN — Création</title>
+  <meta name="theme-color" content="#16a34a" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    :root{--bg:#061b14;--card:#0b2a1f;--line:rgba(255,255,255,.14);--text:#eafff1;--muted:rgba(234,255,241,.78);--g:#16a34a;--r:18px}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px}
+    .wrap{max-width:820px;margin:0 auto}
+    .card{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+    h1{margin:0 0 12px;font-size:18px}
+    label{display:block;margin:10px 0 6px;color:var(--muted);font-size:12px}
+    input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);outline:none}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn{margin-top:12px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:var(--text);font-weight:800}
+    .row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:14px}
+    .qr{background:#fff;border-radius:14px;padding:10px}
+    .muted{color:var(--muted);font-size:12px}
+    pre{white-space:pre-wrap;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:12px;border-radius:14px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>GO PIN — création (DAK-XXXXX)</h1>
+      <div class="muted">⚠️ Auth requise (session Supabase). Si tu n’es pas connecté, la création sera refusée.</div>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <label>Nom / Titre</label>
+          <input id="title" placeholder="Chez Astou Boutique" />
+        </div>
+        <div>
+          <label>Catégorie</label>
+          <input id="category" placeholder="shop / food / stay / driver / service" value="shop" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Téléphone</label>
+          <input id="phone" placeholder="+221771234567" />
+        </div>
+        <div>
+          <label>WhatsApp</label>
+          <input id="whatsapp" placeholder="+221771234567" />
+        </div>
+      </div>
+
+      <label>Adresse (texte)</label>
+      <input id="address_label" placeholder="Saly Centre, près du marché" />
+
+      <div class="grid">
+        <div>
+          <label>Latitude</label>
+          <input id="lat" placeholder="14.4444" />
+        </div>
+        <div>
+          <label>Longitude</label>
+          <input id="lng" placeholder="-17.1111" />
+        </div>
+      </div>
+
+      <label>Slug (optionnel)</label>
+      <input id="slug" placeholder="chez-astou-saly (sinon auto)" />
+
+      <button class="btn" id="create">Créer le GO PIN</button>
+
+      <div id="out" style="margin-top:12px;display:none">
+        <div class="row">
+          <div style="flex:1;min-width:280px">
+            <div class="muted">Résultat</div>
+            <pre id="json"></pre>
+            <div class="muted">Lien public (à mettre dans le QR)</div>
+            <pre id="link"></pre>
+          </div>
+          <div>
+            <div class="muted">QR</div>
+            <div class="qr" id="qrcode"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="err" style="margin-top:12px;display:none;color:#ffd2d2"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ✅ Tes variables Supabase
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA".replace(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA"
+  );
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id)=>document.getElementById(id);
+
+  function numOrNull(v){
+    const t = String(v||"").trim();
+    if(!t) return null;
+    const n = Number(t);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  $("create").addEventListener("click", async ()=>{
+    $("err").style.display="none";
+    $("out").style.display="none";
+    $("qrcode").innerHTML = "";
+
+    const payload = {
+      p_title: $("title").value.trim(),
+      p_category: $("category").value.trim() || "service",
+      p_phone: $("phone").value.trim() || null,
+      p_whatsapp: $("whatsapp").value.trim() || null,
+      p_address_label: $("address_label").value.trim() || null,
+      p_lat: numOrNull($("lat").value),
+      p_lng: numOrNull($("lng").value),
+      p_slug: $("slug").value.trim() || null
+    };
+
+    if(!payload.p_title){
+      $("err").textContent = "Titre obligatoire.";
+      $("err").style.display="block";
+      return;
+    }
+
+    const { data, error } = await sb.rpc("create_go_pin", payload);
+
+    if(error){
+      $("err").textContent = "Erreur: " + (error.message || "inconnue") + " (vérifie que tu es connecté)";
+      $("err").style.display="block";
+      return;
+    }
+
+    $("out").style.display="block";
+    $("json").textContent = JSON.stringify(data, null, 2);
+
+    // Lien public vers pin.html
+    const base = location.href.replace(/create-pin\.html.*$/,'');
+    const publicLink = base + "pin.html?slug=" + encodeURIComponent(data.slug);
+    $("link").textContent = publicLink;
+
+    new QRCode($("qrcode"), {
+      text: publicLink,
+      width: 180,
+      height: 180
+    });
+  });
+})();
+</script>
+</body>
+</html>
