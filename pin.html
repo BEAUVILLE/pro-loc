@@ -33,20 +33,34 @@
       padding:16px;
       box-shadow:0 18px 40px rgba(0,0,0,.35);
     }
-    .title{font-size:24px;font-weight:800;margin:0 0 6px}
+    .title{font-size:24px;font-weight:900;margin:0 0 6px}
     .meta{color:var(--muted);margin:0 0 12px;line-height:1.35}
     .pin{display:inline-flex;gap:10px;align-items:center;margin:10px 0 14px}
-    .pin code{font-size:18px;font-weight:800;background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.22);
-      padding:10px 12px;border-radius:14px;color:var(--text);letter-spacing:1px}
+    .pin code{
+      font-size:18px;font-weight:900;background:rgba(250,204,21,.12);
+      border:1px solid rgba(250,204,21,.22); padding:10px 12px;border-radius:14px;
+      color:var(--text);letter-spacing:1px
+    }
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
     .btn{
       display:flex;align-items:center;justify-content:center;gap:10px;
       padding:12px 14px;border-radius:14px;border:1px solid var(--line);
       background:rgba(255,255,255,.03); color:var(--text); text-decoration:none;
-      font-weight:750;
+      font-weight:850;
     }
     .btn.primary{border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.12)}
     .btn.gold{border-color:rgba(250,204,21,.30); background:rgba(250,204,21,.10)}
+    .section{margin-top:16px}
+    .section h3{margin:0 0 10px;font-size:14px;letter-spacing:.4px;color:var(--muted)}
+    .links{display:grid;grid-template-columns:1fr;gap:10px}
+    .linkbtn{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:12px 14px;border-radius:14px;border:1px solid rgba(34,197,94,.28);
+      background:rgba(34,197,94,.08); color:var(--text); text-decoration:none;
+      font-weight:900;
+    }
+    .linkbtn span{opacity:.9}
+    .arrow{opacity:.7}
     .footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
     .err{color:#ffd2d2;background:rgba(255,0,0,.10);border:1px solid rgba(255,0,0,.22);padding:12px;border-radius:14px}
     .small{font-size:12px;color:var(--muted)}
@@ -62,6 +76,7 @@
 
     <div class="card">
       <p class="small" id="loading">Chargement du GO PIN…</p>
+
       <div id="content" style="display:none">
         <h2 class="title" id="title"></h2>
         <p class="meta" id="meta"></p>
@@ -71,11 +86,18 @@
           <code id="pin_code">DAK-XXXXX</code>
         </div>
 
+        <!-- Actions contact -->
         <div class="grid">
           <a class="btn primary" id="btn_call" href="#" rel="nofollow">📞 Appeler</a>
           <a class="btn primary" id="btn_wa" href="#" rel="nofollow">💬 WhatsApp</a>
           <a class="btn gold" id="btn_map" href="#" target="_blank" rel="nofollow">📍 Itinéraire</a>
           <a class="btn" id="btn_share" href="#" rel="nofollow">🔗 Partager</a>
+        </div>
+
+        <!-- GO LINKS (Market / Loc / Driver / etc.) -->
+        <div class="section" id="links_section" style="display:none">
+          <h3>Actions DIGIY</h3>
+          <div class="links" id="links"></div>
         </div>
 
         <div class="footer">0% commission • Contact direct • DIGIYLYFE</div>
@@ -89,7 +111,7 @@
 (function(){
   "use strict";
 
-  // ✅ Tes variables Supabase (déjà intégrées)
+  // ✅ Tes variables Supabase
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -100,7 +122,6 @@
     const u = new URL(location.href);
     let slug = u.searchParams.get("slug");
     if (slug) return slug.trim();
-    // fallback: /pin/chez-astou (si un jour tu mets un rewrite)
     const m = location.pathname.match(/\/pin\/([^\/]+)/);
     if (m && m[1]) return decodeURIComponent(m[1]);
     return "";
@@ -108,14 +129,60 @@
 
   function cleanPhone(p){
     if(!p) return "";
-    // enlève espaces, tirets
     return String(p).replace(/[^\d+]/g,'');
   }
 
   async function logEvent(pin_id, type, meta){
     try{
       await sb.rpc("log_go_pin_event", { p_pin_id: pin_id, p_event_type: type, p_meta: meta || {} });
-    }catch(e){ /* silencieux */ }
+    }catch(e){}
+  }
+
+  function isSafeUrl(url){
+    try{
+      const u = new URL(url, location.href);
+      // Autorise https/http + tel + whatsapp/wa.me
+      if (u.protocol === "https:" || u.protocol === "http:") return true;
+      return false;
+    }catch(e){
+      return false;
+    }
+  }
+
+  function renderLinks(pin, links){
+    if(!Array.isArray(links) || links.length === 0) return;
+
+    const box = $("links");
+    box.innerHTML = "";
+
+    links.forEach(l=>{
+      const a = document.createElement("a");
+      a.className = "linkbtn";
+      a.href = l.url;
+      a.target = "_blank";
+      a.rel = "nofollow";
+
+      // petite sécurité: si url chelou, on ne rend pas
+      if(!isSafeUrl(l.url)) return;
+
+      const left = document.createElement("span");
+      left.textContent = l.label;
+
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.textContent = "→";
+
+      a.appendChild(left);
+      a.appendChild(arrow);
+
+      a.addEventListener("click", ()=>{
+        logEvent(pin.id, "link_click", { slug: pin.slug, label: l.label, url: l.url });
+      });
+
+      box.appendChild(a);
+    });
+
+    $("links_section").style.display = "block";
   }
 
   async function main(){
@@ -127,6 +194,7 @@
       return;
     }
 
+    // 1) Récupérer le pin
     const { data: pin, error } = await sb
       .from("go_pins")
       .select("id, pin_code, slug, title, category, phone, whatsapp, address_label, lat, lng, is_active")
@@ -150,7 +218,7 @@
     if(pin.address_label) parts.push(pin.address_label);
     $("meta").textContent = parts.join(" • ");
 
-    // boutons
+    // 2) Contact buttons
     const phone = cleanPhone(pin.phone);
     const wa = cleanPhone(pin.whatsapp || pin.phone);
 
@@ -188,7 +256,17 @@
     $("btn_wa").addEventListener("click", ()=> logEvent(pin.id, "wa_click", { slug: pin.slug }));
     $("btn_map").addEventListener("click", ()=> logEvent(pin.id, "map_click", { slug: pin.slug }));
 
-    // log view (ou qr_scan si tu veux distinguer)
+    // 3) Charger les GO LINKS
+    const { data: links } = await sb
+      .from("go_pin_links")
+      .select("label, url, sort_order")
+      .eq("pin_id", pin.id)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    renderLinks(pin, links || []);
+
+    // 4) log view
     logEvent(pin.id, "view", { slug: pin.slug, pin_code: pin.pin_code });
   }
 
