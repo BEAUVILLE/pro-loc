@@ -37,9 +37,7 @@ a{color:inherit}
   padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03);
   box-shadow:var(--shadow);
 }
-.brand{
-  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-}
+.brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .logo{
   width:40px;height:40px;border-radius:14px;
   background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
@@ -48,7 +46,7 @@ a{color:inherit}
 }
 .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
 .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem}
-.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .pill{
   border:1px solid rgba(148,163,184,.35);
   padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
@@ -58,9 +56,7 @@ a{color:inherit}
 .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
 .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 
-.grid{
-  display:grid;grid-template-columns:1fr 1.1fr;gap:14px;margin-top:14px;
-}
+.grid{display:grid;grid-template-columns:1fr 1.1fr;gap:14px;margin-top:14px}
 @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
 
 .card{
@@ -96,6 +92,7 @@ hr.sep{border:none;border-top:1px solid rgba(148,163,184,.18);margin:12px 0}
 .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
 .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
 .btn.ghost{background:rgba(255,255,255,.02)}
+.btn.small{padding:9px 10px;border-radius:12px}
 
 .note{
   margin-top:10px;
@@ -109,9 +106,7 @@ hr.sep{border:none;border-top:1px solid rgba(148,163,184,.18);margin:12px 0}
 .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
 .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
 
-.fieldGrid{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-}
+.fieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width: 720px){ .fieldGrid{grid-template-columns:1fr} }
 
 label{display:block;font-size:.86rem;font-weight:950;color:#fff;margin:10px 0 6px}
@@ -134,9 +129,7 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
   font-weight:950;color:#e5e7eb;font-size:.8rem;
 }
 
-.list{
-  display:flex;flex-direction:column;gap:10px;
-}
+.list{display:flex;flex-direction:column;gap:10px}
 .item{
   border:1px solid rgba(148,163,184,.25);
   background:rgba(255,255,255,.02);
@@ -196,37 +189,37 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
 
 <body>
 <div class="wrap">
-
   <div class="top">
     <div class="brand">
       <div class="logo"></div>
       <div>
         <h1>DIGIY LOC PRO</h1>
-        <div class="sub">Cockpit propriétaire • publier une fiche qui donne envie</div>
+        <div class="sub">Cockpit propriétaire • créer / publier / cloner</div>
       </div>
     </div>
     <div class="pills">
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
       <div class="pill warn" id="pillState">🔒 Déconnecté</div>
-      <button class="btn ghost" id="btnLogout" style="display:none">Se déconnecter</button>
+      <button class="btn ghost small" id="btnLogout" style="display:none">Se déconnecter</button>
     </div>
   </div>
 
   <div class="grid">
-    <!-- LEFT: LISTE -->
+    <!-- LEFT -->
     <section class="card">
       <div class="cardHead">
         <div>
           <h2>🏡 Mes logements</h2>
-          <small>Crée, édite, publie. Simple et carré.</small>
+          <small>Éditer, dupliquer, publier.</small>
         </div>
         <div class="btnRow">
           <button class="btn gold" id="btnNew">+ Nouveau logement</button>
           <button class="btn" id="btnRefresh">↻ Actualiser</button>
         </div>
       </div>
+
       <div class="cardBody">
-        <!-- LOGIN -->
+        <!-- AUTH -->
         <div id="authBox">
           <div class="previewBox">
             <div style="font-weight:1000;font-size:1.05rem;margin-bottom:6px;">Connexion PRO</div>
@@ -235,14 +228,14 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
             </div>
 
             <label>Email PRO</label>
-            <input id="authEmail" type="email" placeholder="ex: proprio@exemple.com" />
+            <input id="authEmail" type="email" placeholder="ex: baptistejb24@gmail.com" />
 
             <div class="btnRow" style="margin-top:12px">
               <button class="btn primary" id="btnSendOtp">📩 Envoyer le lien</button>
               <button class="btn" id="btnDemoFill">⚡ Demo</button>
             </div>
-            <small class="hint">Astuce : ouvre ton email sur le même navigateur. Sinon, tu recopies le lien.</small>
 
+            <small class="hint">Astuce : ouvre ton email sur le même navigateur.</small>
             <div class="note" id="authNote"></div>
           </div>
         </div>
@@ -255,7 +248,7 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
       </div>
     </section>
 
-    <!-- RIGHT: EDITOR -->
+    <!-- RIGHT -->
     <section class="card">
       <div class="cardHead">
         <div>
@@ -316,7 +309,7 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
           <div>
             <label>Photo principale (URL)</label>
             <input id="f_photo" placeholder="https://..." />
-            <small class="hint">Astuce : URL directe image (jpg/png). Pas de placeholder du type <span class="kbd">800x600</span>.</small>
+            <small class="hint">Pas de placeholder du type <span class="kbd">800x600</span>.</small>
           </div>
           <div>
             <label>Vidéo (Drive / YouTube / Vimeo)</label>
@@ -357,7 +350,7 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
           <div>
             <label>Wave — Nom affiché</label>
             <input id="f_wave_name" placeholder="ex: JB BEAUVILLE" />
-            <small class="hint">Règle d’or : toujours afficher le nom (confiance).</small>
+            <small class="hint">Toujours afficher le nom (confiance).</small>
           </div>
         </div>
 
@@ -365,7 +358,7 @@ small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-
           <div>
             <label>Lien Wave (optionnel)</label>
             <input id="f_wave_link" placeholder="https://pay.wave.com/..." />
-            <small class="hint">Si tu as un lien de paiement Wave, mets-le ici (bouton “payer acompte”).</small>
+            <small class="hint">Si tu as un lien Wave, tu peux l’utiliser pour un acompte.</small>
           </div>
           <div>
             <label>Acompte (%)</label>
@@ -448,8 +441,7 @@ const f_status = document.getElementById("f_status");
    STATE
 ========================= */
 let sessionUser = null;
-let current = null; // current logement record
-
+let current = null;
 const FALLBACK_PHOTO = "https://digiylyfe.com/wp-content/uploads/2025/06/042-BAPTISTE.png";
 
 function showNote(el, msg, type){
@@ -459,24 +451,39 @@ function showNote(el, msg, type){
   el.textContent = msg;
 }
 function hideNote(el){ el.style.display="none"; el.textContent=""; el.classList.remove("ok","bad"); }
-function cleanPhone(p){ return String(p||"").replace(/\D/g,""); }
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
 function toEmbedUrl(u){
   const s = String(u||"").trim();
   if(!s) return "";
-  // YouTube
   let m = s.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
   if(m && m[1]) return "https://www.youtube.com/embed/" + m[1];
-  // Vimeo
   m = s.match(/vimeo\.com\/(\d+)/);
   if(m && m[1]) return "https://player.vimeo.com/video/" + m[1];
-  // Drive /file/d/ID/...
   m = s.match(/drive\.google\.com\/file\/d\/([^/]+)/);
   if(m && m[1]) return "https://drive.google.com/file/d/" + m[1] + "/preview";
-  // Drive open?id=ID
   m = s.match(/drive\.google\.com\/open\?id=([^&]+)/);
   if(m && m[1]) return "https://drive.google.com/file/d/" + m[1] + "/preview";
   return "";
+}
+
+function normalizeStatus(s){
+  const v = String(s||"").toLowerCase().trim();
+  if(["actif","active","published","online"].includes(v)) return "actif";
+  if(v==="brouillon" || v==="draft") return "brouillon";
+  return "brouillon";
+}
+
+function rowTag(status){
+  const s = normalizeStatus(status);
+  if(s==="actif") return `<span class="tag dot live">Actif</span>`;
+  return `<span class="tag dot draft">Brouillon</span>`;
 }
 
 function setConnectedUI(user){
@@ -489,11 +496,7 @@ function setConnectedUI(user){
     btnLogout.style.display = "inline-flex";
     authBox.style.display = "none";
     listBox.style.display = "block";
-    btnSave.disabled = false;
-    btnPublish.disabled = false;
-    btnDraft.disabled = false;
-    btnOpenPublic.disabled = false;
-    btnTestMedia.disabled = false;
+    [btnSave,btnPublish,btnDraft,btnOpenPublic,btnTestMedia].forEach(b=>b.disabled=false);
   }else{
     pillState.textContent = "🔒 Déconnecté";
     pillState.classList.remove("ok");
@@ -501,11 +504,7 @@ function setConnectedUI(user){
     btnLogout.style.display = "none";
     authBox.style.display = "block";
     listBox.style.display = "none";
-    btnSave.disabled = true;
-    btnPublish.disabled = true;
-    btnDraft.disabled = true;
-    btnOpenPublic.disabled = true;
-    btnTestMedia.disabled = true;
+    [btnSave,btnPublish,btnDraft,btnOpenPublic,btnTestMedia].forEach(b=>b.disabled=true);
   }
 }
 
@@ -516,24 +515,21 @@ async function refreshSession(){
 }
 
 btnDemoFill.onclick = ()=>{
-  authEmail.value = "jb@digiylyfe.com";
-  showNote(authNote, "Demo rempli. Mets ton vrai email PRO et clique “Envoyer le lien”.", "ok");
+  authEmail.value = "baptistejb24@gmail.com";
+  showNote(authNote, "Demo rempli. Clique “Envoyer le lien”.", "ok");
 };
 
 btnSendOtp.onclick = async ()=>{
   hideNote(authNote);
   const email = authEmail.value.trim();
   if(!email) return showNote(authNote, "Mets un email valide.", "bad");
-
   try{
     const { error } = await SB.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: location.origin + location.pathname
-      }
+      options: { emailRedirectTo: location.origin + location.pathname }
     });
     if(error) return showNote(authNote, "Erreur: " + error.message, "bad");
-    showNote(authNote, "Lien envoyé ✅ Va dans ton email et clique le lien pour te connecter.", "ok");
+    showNote(authNote, "Lien envoyé ✅ Va dans ton email et clique le lien.", "ok");
   }catch(e){
     showNote(authNote, "Erreur: " + (e?.message || e), "bad");
   }
@@ -549,40 +545,24 @@ btnLogout.onclick = async ()=>{
 btnRefresh.onclick = async ()=>{ await loadList(); };
 btnNew.onclick = ()=>{ newDraft(); };
 
-function rowTag(status){
-  const s = String(status||"").toLowerCase();
-  if(["actif","active","published","online"].includes(s)) return `<span class="tag dot live">Actif</span>`;
-  return `<span class="tag dot draft">Brouillon</span>`;
-}
-
 async function loadList(){
   hideNote(listNote);
   listEl.innerHTML = "";
-
   try{
-    // NOTE: pour filtrer par owner_id = user.id, il faut RLS + policy.
-    // Là on tente d'abord owner filter (si ton RLS est prêt).
     const uid = sessionUser?.id;
-
     let q = SB.from("digiy_logements")
       .select("id,nom,ville,status,updated_at,created_at,owner_id")
       .order("updated_at", { ascending:false })
       .limit(80);
 
-    // si owner_id existe et RLS ok, on filtre
+    // Filtre owner (RLS + security)
     if(uid) q = q.eq("owner_id", uid);
 
     const { data, error } = await q;
     if(error){
       console.error(error);
-      return showNote(listNote,
-        "Je n’ai pas pu charger la liste.\n" +
-        "➡️ Soit RLS bloque owner_id, soit la colonne n’existe pas.\n" +
-        "Détail: " + error.message,
-        "bad"
-      );
+      return showNote(listNote, "Impossible de charger la liste:\n" + error.message, "bad");
     }
-
     if(!data || data.length===0){
       return showNote(listNote, "Aucun logement. Clique “+ Nouveau logement”.", "ok");
     }
@@ -590,33 +570,36 @@ async function loadList(){
     data.forEach(item=>{
       const div = document.createElement("div");
       div.className = "item";
+      const dt = (item.updated_at || item.created_at || "").toString().slice(0,19).replace("T"," ");
       div.innerHTML = `
         <div class="itemLeft">
           <div class="itemTitle">${escapeHtml(item.nom || "Logement")}</div>
           <div class="itemMeta">${escapeHtml(item.ville || "")} • ${escapeHtml(item.id)}</div>
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
             ${rowTag(item.status)}
-            <span class="tag">🕒 ${escapeHtml((item.updated_at || item.created_at || "").toString().slice(0,19).replace("T"," "))}</span>
+            <span class="tag">🕒 ${escapeHtml(dt)}</span>
           </div>
         </div>
         <div class="itemBtns">
           <button class="btn" data-open="${item.id}">Éditer</button>
+          <button class="btn" data-dup="${item.id}">Dupliquer</button>
           <button class="btn ghost" data-view="${item.id}">Fiche</button>
         </div>
       `;
       listEl.appendChild(div);
     });
 
-    // bind buttons
     listEl.querySelectorAll("[data-open]").forEach(b=>{
       b.onclick = ()=> openOne(b.getAttribute("data-open"));
     });
     listEl.querySelectorAll("[data-view]").forEach(b=>{
       b.onclick = ()=> window.open("loc.html?id=" + encodeURIComponent(b.getAttribute("data-view")), "_blank");
     });
+    listEl.querySelectorAll("[data-dup]").forEach(b=>{
+      b.onclick = ()=> duplicateOne(b.getAttribute("data-dup"));
+    });
 
     showNote(listNote, `${data.length} logement(s) chargé(s).`, "ok");
-
   }catch(e){
     showNote(listNote, "Erreur: " + (e?.message || e), "bad");
   }
@@ -626,7 +609,7 @@ async function openOne(id){
   hideNote(editNote); hideNote(saveNote);
   const { data, error } = await SB
     .from("digiy_logements")
-    .select("id,owner_id,nom,ville,adresse,description,photo_url,video_url,prix_nuit,prix_semaine,prix_mois,frais_supplements,wave_phone,wave_name,wave_pay_link,deposit_percent,status,created_at,updated_at,proprietaire_phone,proprietaire_email")
+    .select("id,owner_id,nom,ville,adresse,description,photo_url,video_url,prix_nuit,prix_semaine,prix_mois,frais_supplements,wave_phone,wave_name,wave_pay_link,deposit_percent,status,created_at,updated_at")
     .eq("id", id)
     .single();
 
@@ -687,19 +670,18 @@ function paintEditor(x){
   f_prix_semaine.value = Number(x.prix_semaine || 0);
   f_prix_mois.value = Number(x.prix_mois || 0);
   f_frais.value = x.frais_supplements || "";
-  f_wave_phone.value = x.wave_phone || x.proprietaire_phone || "";
+  f_wave_phone.value = x.wave_phone || "";
   f_wave_name.value = x.wave_name || "";
   f_wave_link.value = x.wave_pay_link || "";
   f_deposit.value = Number(x.deposit_percent || 30);
   f_status.value = normalizeStatus(x.status);
 
-  // preview
   const imgUrl = (x.photo_url && String(x.photo_url).startsWith("http")) ? x.photo_url : FALLBACK_PHOTO;
   pvImg.src = imgUrl;
 
   pvVille.textContent = x.ville || "—";
   const wn = (x.wave_name || "").trim();
-  const wp = (x.wave_phone || x.proprietaire_phone || "").trim();
+  const wp = (x.wave_phone || "").trim();
   pvWave.textContent = (wn ? wn + " • " : "") + (wp || "—");
   pvStatus.textContent = normalizeStatus(x.status);
 
@@ -713,17 +695,8 @@ function paintEditor(x){
   }
 }
 
-function normalizeStatus(s){
-  const v = String(s||"").toLowerCase().trim();
-  if(["actif","active","published","online"].includes(v)) return "actif";
-  if(v==="brouillon" || v==="draft") return "brouillon";
-  return "brouillon";
-}
-
 function collectForm(){
   const uid = sessionUser?.id || null;
-  const status = normalizeStatus(f_status.value);
-
   return {
     owner_id: uid,
     nom: f_nom.value.trim(),
@@ -740,44 +713,28 @@ function collectForm(){
     wave_name: f_wave_name.value.trim(),
     wave_pay_link: f_wave_link.value.trim(),
     deposit_percent: Number(f_deposit.value || 30),
-    status
+    status: normalizeStatus(f_status.value)
   };
-}
-
-function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;")
-    .replaceAll(">","&gt;").replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
 }
 
 async function saveRecord(mode){
   hideNote(saveNote);
-
   if(!sessionUser) return showNote(saveNote, "Connecte-toi d’abord.", "bad");
 
   const payload = collectForm();
+  if(!payload.nom || !payload.ville) return showNote(saveNote, "Nom + ville obligatoires.", "bad");
+  if(payload.photo_url && !payload.photo_url.startsWith("http")) return showNote(saveNote, "Photo URL invalide (doit commencer par http).", "bad");
 
-  if(!payload.nom || !payload.ville){
-    return showNote(saveNote, "Nom + ville obligatoires.", "bad");
-  }
-  if(payload.photo_url && !payload.photo_url.startsWith("http")){
-    return showNote(saveNote, "Photo URL invalide (doit commencer par http).", "bad");
-  }
-
-  // mode: "save" | "publish" | "draft"
   if(mode==="publish") payload.status = "actif";
   if(mode==="draft") payload.status = "brouillon";
 
   try{
     if(!current || !current.id){
-      // insert
       const { data, error } = await SB
         .from("digiy_logements")
         .insert(payload)
         .select("id")
         .single();
-
       if(error){
         console.error(error);
         return showNote(saveNote, "Insert refusé:\n" + error.message, "bad");
@@ -785,12 +742,10 @@ async function saveRecord(mode){
       current.id = data.id;
       showNote(saveNote, "Créé ✅ ID: " + current.id, "ok");
     }else{
-      // update
       const { error } = await SB
         .from("digiy_logements")
         .update(payload)
         .eq("id", current.id);
-
       if(error){
         console.error(error);
         return showNote(saveNote, "Update refusé:\n" + error.message, "bad");
@@ -798,10 +753,8 @@ async function saveRecord(mode){
       showNote(saveNote, "Sauvegardé ✅", "ok");
     }
 
-    // refresh current view (re-open)
     await openOne(current.id);
     await loadList();
-
   }catch(e){
     showNote(saveNote, "Erreur: " + (e?.message || e), "bad");
   }
@@ -819,15 +772,13 @@ btnOpenPublic.onclick = ()=>{
 btnTestMedia.onclick = ()=>{
   if(!current) return;
   const payload = collectForm();
-  // quick preview test
-  const imgUrl = (payload.photo_url && payload.photo_url.startsWith("http")) ? payload.photo_url : FALLBACK_PHOTO;
-  pvImg.src = imgUrl;
+  pvImg.src = (payload.photo_url && payload.photo_url.startsWith("http")) ? payload.photo_url : FALLBACK_PHOTO;
 
   const embed = toEmbedUrl(payload.video_url);
   if(embed){
     pvVideo.src = embed;
     pvVideoWrap.style.display = "block";
-    showNote(editNote, "Médias OK ✅ (si Drive, vérifie partage “toute personne avec le lien”).", "ok");
+    showNote(editNote, "Médias OK ✅ (Drive: partage “toute personne avec le lien”).", "ok");
   }else{
     pvVideo.src = "";
     pvVideoWrap.style.display = "none";
@@ -841,13 +792,64 @@ btnTestMedia.onclick = ()=>{
   pvStatus.textContent = payload.status || "—";
 };
 
-// Live preview while typing (light)
 [f_nom,f_ville,f_photo,f_video,f_wave_phone,f_wave_name,f_status].forEach(el=>{
   el.addEventListener("input", ()=>btnTestMedia.click());
   el.addEventListener("change", ()=>btnTestMedia.click());
 });
 
-// Auth state listener
+/* ===== DUPLICATION ===== */
+async function duplicateOne(id){
+  hideNote(listNote);
+  if(!sessionUser) return showNote(listNote, "Connecte-toi d’abord.", "bad");
+
+  const { data: src, error: e1 } = await SB
+    .from("digiy_logements")
+    .select("nom,ville,adresse,description,photo_url,video_url,prix_nuit,prix_semaine,prix_mois,frais_supplements,wave_phone,wave_name,wave_pay_link,deposit_percent,status")
+    .eq("id", id)
+    .single();
+
+  if(e1 || !src){
+    console.error(e1);
+    return showNote(listNote, "Duplication impossible: " + (e1?.message || "introuvable"), "bad");
+  }
+
+  const copy = {
+    owner_id: sessionUser.id,
+    nom: (src.nom || "Logement") + " (copie)",
+    ville: src.ville || "",
+    adresse: src.adresse || "",
+    description: src.description || "",
+    photo_url: src.photo_url || "",
+    video_url: src.video_url || "",
+    prix_nuit: Number(src.prix_nuit || 0),
+    prix_semaine: Number(src.prix_semaine || 0),
+    prix_mois: Number(src.prix_mois || 0),
+    frais_supplements: src.frais_supplements || "",
+    wave_phone: src.wave_phone || "",
+    wave_name: src.wave_name || "",
+    wave_pay_link: src.wave_pay_link || "",
+    deposit_percent: Number(src.deposit_percent || 30),
+    status: "brouillon"
+  };
+
+  const { data: created, error: e2 } = await SB
+    .from("digiy_logements")
+    .insert(copy)
+    .select("id")
+    .single();
+
+  if(e2 || !created){
+    console.error(e2);
+    return showNote(listNote, "Duplication refusée: " + (e2?.message || ""), "bad");
+  }
+
+  showNote(listNote, "Dupliqué ✅ Nouveau logement: " + created.id, "ok");
+  await loadList();
+  await openOne(created.id);
+  showNote(editNote, "Copie prête. Renomme + ajuste puis Publier.", "ok");
+}
+
+/* ===== AUTH LISTENER ===== */
 SB.auth.onAuthStateChange((_event, session)=>{
   setConnectedUI(session?.user || null);
   if(session?.user){
@@ -858,9 +860,9 @@ SB.auth.onAuthStateChange((_event, session)=>{
   }
 });
 
-// init
 refreshSession();
 paintEditor(null);
 </script>
 </body>
 </html>
+
