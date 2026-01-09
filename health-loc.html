@@ -8,21 +8,23 @@
   <style>
     :root{--bg:#061b14;--card:#0b2a1f;--line:rgba(255,255,255,.14);--text:#eafff1;--muted:rgba(234,255,241,.75);--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(900px 500px at 10% -10%, rgba(34,197,94,.20), transparent 60%),var(--bg);color:var(--text);}
-    .wrap{max-width:860px;margin:0 auto;padding:18px;}
+    .wrap{max-width:900px;margin:0 auto;padding:18px;}
     .card{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
     h1{margin:6px 0 2px;font-size:20px}
     .muted{color:var(--muted)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .pill{padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.18);font-weight:700;font-size:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+    .pill{padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.18);font-weight:800;font-size:12px}
     .ok{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.12)}
     .bad{border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.12)}
     .warn{border-color:rgba(245,158,11,.55);background:rgba(245,158,11,.12)}
     code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:8px}
-    .grid{display:grid;grid-template-columns:180px 1fr;gap:10px;margin-top:12px}
+    .grid{display:grid;grid-template-columns:200px 1fr;gap:10px;margin-top:12px}
     .k{color:var(--muted)}
     .v{word-break:break-word}
-    button{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:10px 12px;border-radius:14px;font-weight:800}
+    button{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:10px 12px;border-radius:14px;font-weight:900}
     button:hover{background:rgba(255,255,255,.09)}
+    input{flex:1;min-width:220px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.18);color:#eafff1;font-weight:700}
+    input::placeholder{color:rgba(234,255,241,.55)}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -31,11 +33,21 @@
     <div class="card">
       <h1>DIGIY LOC — Health Check</h1>
       <div class="muted">Page de contrôle qualité (preuve “CLEAN”). Module: <b>LOC</b></div>
+
       <div class="row" id="pills"></div>
-      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+
+      <div class="row" style="margin-top:12px">
         <button id="btnRun">Re-tester</button>
         <button id="btnClear">Clear cache phone</button>
       </div>
+
+      <div class="row" style="margin-top:12px">
+        <input id="email" placeholder="Email pour login (magic link)"/>
+        <button id="btnLogin">Envoyer Magic Link</button>
+        <button id="btnLogout">Logout</button>
+      </div>
+
+      <div class="muted" id="msg" style="margin-top:10px"></div>
     </div>
 
     <div class="card">
@@ -43,7 +55,7 @@
     </div>
 
     <div class="card muted">
-      Astuce: si tu veux tester “ABO OFF”, mets <code>current_period_end</code> dans le passé et recharge cette page.
+      Astuce: pour tester “ABO OFF”, mets <code>current_period_end</code> dans le passé, puis recharge.
     </div>
   </div>
 
@@ -56,6 +68,9 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id)=>document.getElementById(id);
+  const msg = $("msg");
 
   function normPhone(p){
     p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
@@ -97,13 +112,13 @@
   }
 
   function setPills(items){
-    const host = document.getElementById("pills");
+    const host = $("pills");
     host.innerHTML = "";
     items.forEach(x => host.appendChild(pill(x.text, x.kind)));
   }
 
   function setGrid(rows){
-    const g = document.getElementById("grid");
+    const g = $("grid");
     g.innerHTML = "";
     rows.forEach(r=>{
       const k = document.createElement("div");
@@ -120,12 +135,12 @@
     const rows = [];
     const pills = [];
 
-    // Phone (local)
     const rawPhone = getPhone();
     const phone = rawPhone ? normPhone(rawPhone) : null;
 
     rows.push({k:"Phone (local)", v: rawPhone || "—"});
     rows.push({k:"Phone (normalisé)", v: phone || "—"});
+    rows.push({k:"Module", v:"LOC"});
 
     // Auth user
     let user = null;
@@ -144,6 +159,7 @@
     }else{
       pills.push({text:"Auth ❌", kind:"bad"});
       rows.push({k:"User ID", v: "—"});
+      rows.push({k:"Email", v: "—"});
     }
 
     // Ensure profile phone
@@ -184,7 +200,6 @@
       pills.push({text:"LOC ? (non testé)", kind:"warn"});
     }
 
-    rows.push({k:"Module", v:"LOC"});
     rows.push({k:"Active", v: active === null ? "—" : String(active)});
     rows.push({k:"Date/heure", v: new Date().toString()});
 
@@ -192,11 +207,42 @@
     setGrid(rows);
   }
 
-  document.getElementById("btnRun").addEventListener("click", run);
-  document.getElementById("btnClear").addEventListener("click", function(){
+  async function sendMagicLink(){
+    const email = ($("email").value || "").trim();
+    if(!email) return alert("Mets un email");
+    msg.textContent = "Envoi du magic link…";
+
+    const emailRedirectTo = location.href;
+
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo }
+    });
+
+    if(error){
+      msg.textContent = "Erreur: " + error.message;
+      return;
+    }
+    msg.textContent = "✅ Lien envoyé. Ouvre ton email, clique, puis reviens ici.";
+  }
+
+  async function logout(){
+    await sb.auth.signOut();
+    msg.textContent = "Déconnecté.";
+    run();
+  }
+
+  $("btnRun").addEventListener("click", run);
+  $("btnClear").addEventListener("click", function(){
     clearPhoneCache();
     alert("Cache phone effacé. Recharge / reconnecte.");
+    run();
   });
+  $("btnLogin").addEventListener("click", sendMagicLink);
+  $("btnLogout").addEventListener("click", logout);
+
+  // auto refresh on auth state changes
+  sb.auth.onAuthStateChange(() => run());
 
   run();
 })();
