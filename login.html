@@ -131,12 +131,15 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const $ = (id)=>document.getElementById(id);
-  const authPill = $("authPill");
-  const msg = $("msg");
-  const btnSend = $("btnSend");
-  const btnLogout = $("btnLogout");
   const emailInput = $("email");
   const phoneInput = $("phone");
+  const msg = $("msg");
+  const authPill = $("authPill");
+
+  function setPill(ok, text){
+    authPill.className = "pill " + (ok ? "ok" : "bad");
+    authPill.textContent = text;
+  }
 
   function normPhone(p){
     p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
@@ -149,94 +152,68 @@
   function savePhone(phone){
     const p = normPhone(phone);
     sessionStorage.setItem("digiy_phone", p);
-    sessionStorage.setItem("digiy_driver_phone", p);
-    try{
-      localStorage.setItem("digiy_access_pin", JSON.stringify({ phone: p }));
-      localStorage.setItem("digiy_driver_access_pin", JSON.stringify({ phone: p }));
-    }catch(_){}
+    localStorage.setItem("digiy_access_pin", JSON.stringify({ phone: p }));
     return p;
   }
 
   function loadPhone(){
-    const s = sessionStorage.getItem("digiy_phone") || sessionStorage.getItem("digiy_driver_phone");
-    if(s) return s;
     try{
       const a = JSON.parse(localStorage.getItem("digiy_access_pin")||"null");
-      if(a?.phone) return a.phone;
-    }catch(_){}
-    return "";
-  }
-
-  function setPill(ok, text){
-    authPill.className = "pill " + (ok ? "ok" : "bad");
-    authPill.textContent = text;
+      return a?.phone || "";
+    }catch(_){ return ""; }
   }
 
   async function refreshAuth(){
-    const { data, error } = await sb.auth.getUser();
-    if(error){
-      setPill(false, "Auth: ❌ " + (error.message || "KO"));
-      return null;
-    }
-    const user = data?.user || null;
-    if(user){
+    const { data } = await sb.auth.getSession();
+    if(data?.session){
       setPill(true, "Auth: ✅ connecté");
-      msg.textContent = "Connecté en tant que: " + (user.email || user.id);
-      return user;
-    } else {
-      setPill(false, "Auth: ❌ non connecté");
-      msg.textContent = "";
-      return null;
+      setTimeout(()=>location.replace("./planning.html"), 400);
+      return;
     }
+    setPill(false, "Auth: ❌ non connecté");
   }
 
   async function sendMagicLink(){
     const email = (emailInput.value || "").trim();
-    if(!email) return alert("Mets ton email");
-
     const phoneRaw = (phoneInput.value || "").trim();
-    if(!phoneRaw) return alert("Mets ton téléphone");
+
+    if(!email) return alert("Email requis");
+    if(!phoneRaw) return alert("Téléphone requis");
+
     const phone = savePhone(phoneRaw);
-
-    btnSend.disabled = true;
-    msg.textContent = "Envoi du lien… (téléphone enregistré: " + phone + ")";
-
-    // redirect back to this page
-    const emailRedirectTo = location.origin + location.pathname;
+    msg.textContent = "Envoi du lien… (" + phone + ")";
 
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo }
+      options: {
+        emailRedirectTo: location.origin + location.pathname
+      }
     });
-
-    btnSend.disabled = false;
 
     if(error){
       msg.textContent = "Erreur: " + error.message;
       return;
     }
 
-    msg.textContent = "✅ Lien envoyé. Ouvre ton email, clique le lien, puis reviens ici.";
+    msg.textContent = "Lien envoyé. Ouvre ton email et clique.";
   }
 
   async function logout(){
     await sb.auth.signOut();
-    await refreshAuth();
-    alert("Déconnecté.");
+    setPill(false, "Auth: ❌ déconnecté");
   }
 
-  // after magic link callback, session becomes available
-  sb.auth.onAuthStateChange(async (_event, _session) => {
-    const user = await refreshAuth();
-    if(user){
-      setTimeout(()=> location.replace("./planning.html"), 600);
+  // 👉 LIGNE CLÉ : consomme automatiquement le token AU RETOUR
+  sb.auth.getSession().then(({ data })=>{
+    if(data?.session){
+      setPill(true, "Auth: ✅ connecté");
+      setTimeout(()=>location.replace("./planning.html"), 400);
     }
   });
 
-  btnSend.addEventListener("click", sendMagicLink);
-  btnLogout.addEventListener("click", logout);
+  $("btnSend").addEventListener("click", sendMagicLink);
+  $("btnLogout").addEventListener("click", logout);
 
-  // init
   phoneInput.value = loadPhone();
   refreshAuth();
 })();
