@@ -18,15 +18,15 @@
     .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px; }
     .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
     .muted{ color:var(--muted); }
-    .btn{ border:1px solid var(--line); background:transparent; color:var(--text); padding:10px 12px; border-radius:14px; cursor:pointer; }
+    .btn{ border:1px solid var(--line); background:transparent; color:var(--text); padding:10px 12px; border-radius:14px; cursor:pointer; font-weight:900; }
     .btn.ok{ border-color:rgba(34,197,94,.6); }
     .pill{ display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:999px; }
-    .bad{ color:var(--bad); font-weight:800; }
+    .bad{ color:var(--bad); font-weight:900; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 
-  <!-- ✅ GitHub Pages safe: use relative paths -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-1"></script>
+  <script src="./guard.js?v=locpro-2"></script>
 </head>
 
 <body>
@@ -34,11 +34,12 @@
     <div class="card">
       <div class="row">
         <div>
-          <div style="font-weight:800; font-size:18px;">DIGIY LOC PRO • Planning</div>
+          <div style="font-weight:900; font-size:18px;">DIGIY LOC PRO • Planning</div>
           <div class="muted" id="sub">🧭 Vérification accès LOC…</div>
         </div>
         <div class="row">
-          <span class="pill" id="pillSlug">slug: —</span>
+          <span class="pill mono" id="pillSlug">slug: —</span>
+          <span class="pill">module: <span class="mono">loc</span></span>
           <button class="btn" id="btnLogout">Déconnexion</button>
           <button class="btn ok" id="btnGoLogin">Retour login</button>
         </div>
@@ -48,31 +49,34 @@
     <div style="height:12px;"></div>
 
     <div class="card">
-      <div style="font-weight:800;">État</div>
+      <div style="font-weight:900;">État</div>
       <pre id="state" class="muted" style="white-space:pre-wrap;margin:10px 0 0;"></pre>
     </div>
   </div>
 
   <script>
     (function(){
+      const MODULE = "loc";
       const $ = (id)=>document.getElementById(id);
 
       function setSub(text, isBad){
         $("sub").textContent = text;
         $("sub").className = isBad ? "bad" : "muted";
       }
-
       function dump(obj){
         $("state").textContent = JSON.stringify(obj, null, 2);
       }
 
-      // ✅ ALWAYS use relative login inside repo
       function goLogin(){
-        const url = (window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html");
-        location.replace(url);
+        const u = (window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html");
+        location.replace(u);
       }
 
-      $("btnGoLogin").onclick = ()=> location.href = (window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html");
+      $("btnGoLogin").onclick = ()=> {
+        const u = (window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html");
+        location.href = u;
+      };
+
       $("btnLogout").onclick = ()=>{
         try{ window.DIGIY_GUARD?.clearSession?.(); }catch(_){}
         goLogin();
@@ -82,8 +86,7 @@
         setSub("DIGIY_GUARD introuvable (guard.js non chargé / mauvais objet).", true);
         dump({
           guardFound: !!window.DIGIY_GUARD,
-          expected: "window.DIGIY_GUARD",
-          hint: "Vérifie que ./guard.js existe à la racine du repo",
+          hint: "Vérifie ./guard.js et l'ordre des scripts.",
           here: location.href
         });
         return;
@@ -92,9 +95,8 @@
       const slug = window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "";
       $("pillSlug").textContent = "slug: " + (slug || "—");
 
-      // ✅ enforce access (slug + session + optional subscription)
       window.DIGIY_GUARD.boot({
-        module: "LOC",
+        module: MODULE,
         dashboard: "./planning.html",
         login: "./login.html",
         requireSlug: true,
@@ -107,10 +109,11 @@
         });
       }).catch((e)=>{
         setSub("Erreur guard → retour login", true);
-        dump({ error: String(e) });
+        dump({ error: String(e?.message || e) });
         goLogin();
       });
     })();
   </script>
 </body>
 </html>
+
