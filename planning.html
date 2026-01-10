@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DIGIY LOC • Planning</title>
 
+  <link rel="stylesheet" href="./ui.css">
+
   <!-- Fallback minimal (au cas où ui.css ne charge pas) -->
   <style>
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#061b14;color:#eafff1}
@@ -13,10 +15,15 @@
     .muted{opacity:.8}
     .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
     .btn{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#eafff1;font-weight:900;border-radius:14px;padding:10px 12px}
-    #app{display:none} /* on montre seulement quand guard OK */
+    .calendar{margin-top:14px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .day{border-radius:14px;padding:14px 0;text-align:center;font-weight:1000;cursor:pointer;user-select:none;border:1px solid rgba(255,255,255,.14)}
+    .day.free{background:rgba(34,197,94,.18);color:#7CFFB3}
+    .day.booked{background:rgba(249,115,115,.18);color:#FFB4B4}
+    .day.closed{background:rgba(148,163,184,.18);color:rgba(234,255,241,.75)}
+    .day.off{opacity:.15;border:none;cursor:default}
   </style>
 
-  <link rel="stylesheet" href="./ui.css">
+  <!-- Order important -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js"></script>
 </head>
@@ -36,7 +43,7 @@
   </div>
 
   <!-- APP -->
-  <div id="app">
+  <div id="app" style="display:none">
     <div class="card">
       <div class="top">
         <div>
@@ -45,17 +52,16 @@
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn" onclick="location.href='./index.html'">← Dashboard</button>
-          <button class="btn" onclick="DIGIY_LOC_GUARD.logout()">🚪 Logout</button>
+          <button class="btn" onclick="sessionStorage.removeItem('digiy_phone'); sessionStorage.removeItem('digiy_pin_ok'); location.replace('./login.html')">🚪 Logout</button>
         </div>
       </div>
     </div>
 
-    <!-- Ton contenu actuel -->
     <div class="card">
       <h2 style="margin:0 0 6px">Calendrier — Octobre 2025</h2>
       <div class="muted">Clique sur un jour pour changer son statut.</div>
 
-      <div class="calendar" style="margin-top:14px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
+      <div class="calendar">
         <div class="muted" style="text-align:center;font-weight:900;font-size:12px">Lun</div>
         <div class="muted" style="text-align:center;font-weight:900;font-size:12px">Mar</div>
         <div class="muted" style="text-align:center;font-weight:900;font-size:12px">Mer</div>
@@ -67,31 +73,12 @@
         <div class="day off"></div>
         <div class="day off"></div>
 
-        <!-- jours -->
         <div class="day free">1</div><div class="day booked">2</div><div class="day free">3</div><div class="day free">4</div><div class="day closed">5</div><div class="day free">6</div><div class="day booked">7</div>
         <div class="day free">8</div><div class="day free">9</div><div class="day booked">10</div><div class="day free">11</div><div class="day free">12</div><div class="day closed">13</div><div class="day free">14</div>
         <div class="day free">15</div><div class="day booked">16</div><div class="day free">17</div><div class="day free">18</div><div class="day free">19</div><div class="day closed">20</div><div class="day free">21</div>
         <div class="day free">22</div><div class="day booked">23</div><div class="day free">24</div><div class="day free">25</div><div class="day free">26</div><div class="day closed">27</div><div class="day free">28</div>
         <div class="day free">29</div><div class="day free">30</div><div class="day free">31</div>
       </div>
-
-      <style>
-        .day{border-radius:14px;padding:14px 0;text-align:center;font-weight:1000;cursor:pointer;user-select:none;border:1px solid rgba(255,255,255,.14)}
-        .day.free{background:rgba(34,197,94,.18);color:#7CFFB3}
-        .day.booked{background:rgba(249,115,115,.18);color:#FFB4B4}
-        .day.closed{background:rgba(148,163,184,.18);color:rgba(234,255,241,.75)}
-        .day.off{opacity:.15;border:none;cursor:default}
-      </style>
-
-      <script>
-        document.addEventListener("click",(e)=>{
-          const d = e.target.closest(".day");
-          if(!d || d.classList.contains("off")) return;
-          if(d.classList.contains("free")){ d.classList.remove("free"); d.classList.add("booked"); }
-          else if(d.classList.contains("booked")){ d.classList.remove("booked"); d.classList.add("closed"); }
-          else { d.classList.remove("closed"); d.classList.add("free"); }
-        });
-      </script>
     </div>
   </div>
 
@@ -105,36 +92,43 @@
 
   function show(msg){ dbg.textContent = msg; }
 
-  // Catch erreurs JS -> visibles
+  // erreurs visibles
   window.addEventListener("error",(e)=> show("Erreur JS: " + (e.message || e.type)));
   window.addEventListener("unhandledrejection",(e)=> show("Promise rejetée: " + (e.reason?.message || e.reason || "unknown")));
 
   (async ()=>{
     show("Guard…");
-    if(!window.DIGIY_LOC_GUARD){
-      show("guard.js introuvable (404) ou non chargé.");
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.boot){
+      show("DIGIY_GUARD introuvable (guard.js pas chargé ou mauvais objet).");
       return;
     }
-    await window.DIGIY_LOC_GUARD.protectPage({ login:"./login.html" });
-    // Si protectPage redirige, on ne passera pas ici.
+
+    // boot = protège (login/pay) puis laisse la page si ok
+    await window.DIGIY_GUARD.boot({
+      module: "LOC",
+      dashboard: "./planning.html",
+      login: "./login.html",
+      pay: "https://beauville.github.io/commencer-a-payer/"
+    });
+
+    // Si boot redirige, on ne passera pas ici.
     show("OK ✅");
     loading.style.display = "none";
     app.style.display = "block";
   })();
+})();
 </script>
+
 <script src="./ui.js"></script>
-  <script>console.log("PLANNING: start");</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js"></script>
 <script>
-  console.log("PLANNING: guard loaded", typeof window.DIGIY_GUARD);
-  DIGIY_GUARD.boot({
-    module: "LOC",
-    dashboard: "./planning.html",
-    login: "./login.html",
-    pay: "https://beauville.github.io/commencer-a-payer/"
+  // UI calendar toggle
+  document.addEventListener("click",(e)=>{
+    const d = e.target.closest(".day");
+    if(!d || d.classList.contains("off")) return;
+    if(d.classList.contains("free")){ d.classList.remove("free"); d.classList.add("booked"); }
+    else if(d.classList.contains("booked")){ d.classList.remove("booked"); d.classList.add("closed"); }
+    else { d.classList.remove("closed"); d.classList.add("free"); }
   });
 </script>
 </body>
 </html>
-
