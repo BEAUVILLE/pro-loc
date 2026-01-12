@@ -1,234 +1,283 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>DIGIY LOC PRO ∞ — Cockpit Propriétaire ROYAL</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DIGIY LOC PRO ∞ — Cockpit Propriétaire ROYAL</title>
 
-<style>
-/* ======== TON CSS (inchangé) ======== */
-:root{
-  --bg:#020617;
-  --bg2:#0b1020;
-  --card:#0b1220;
-  --line:#1f2937;
-  --ink:#f9fafb;
-  --muted:#cbd5f5;
-  --gold:#facc15;
-  --gold2:#f97316;
-  --green:#22c55e;
-  --danger:#ef4444;
-  --soft:rgba(255,255,255,.04);
-  --shadow:0 22px 50px rgba(0,0,0,.55);
-}
-*{box-sizing:border-box}
-body{
-  margin:0; color:var(--ink);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  background:
-    radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
-    radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
-    linear-gradient(180deg, var(--bg2), var(--bg));
-  min-height:100vh;
-}
-a{color:inherit}
-.wrap{max-width:1150px;margin:0 auto;padding:14px}
-.top{
-  display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-  padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03);
-  box-shadow:var(--shadow);
-}
-.brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.logo{
-  width:40px;height:40px;border-radius:14px;
-  background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
-  border:1px solid rgba(250,204,21,.35);
-  box-shadow:0 0 22px rgba(250,204,21,.12);
-}
-.brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
-.brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
-.brand .sub{color:var(--muted);font-weight:800;font-size:.92rem}
-.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.pill{
-  border:1px solid rgba(148,163,184,.35);
-  padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
-  color:var(--muted);font-weight:900;font-size:.86rem;
-}
-.pill strong{color:#fff}
-.pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-.pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-.grid{display:grid;grid-template-columns:1fr 1.1fr;gap:14px;margin-top:14px}
-@media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+  <style>
+    /* ======== TON CSS (inchangé + PREMIUM PATCH) ======== */
+    :root{
+      --bg:#020617;
+      --bg2:#0b1020;
+      --card:#0b1220;
+      --line:#1f2937;
+      --ink:#f9fafb;
+      --muted:#cbd5f5;
+      --gold:#facc15;
+      --gold2:#f97316;
+      --green:#22c55e;
+      --danger:#ef4444;
+      --soft:rgba(255,255,255,.04);
+      --shadow:0 22px 50px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      min-height:100vh;
+    }
+    a{color:inherit}
+    .wrap{max-width:1150px;margin:0 auto;padding:14px}
+    .top{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+    }
+    .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+      border:1px solid rgba(250,204,21,.35);
+      box-shadow:0 0 22px rgba(250,204,21,.12);
+    }
+    .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
+    .brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
+    .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem}
+    .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:.86rem;
+    }
+    .pill strong{color:#fff}
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 
-.card{
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
-  border-radius:20px;
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-.cardHead{
-  padding:12px 14px;
-  border-bottom:1px solid var(--line);
-  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
-}
-.cardHead h2{margin:0;font-size:1.02rem}
-.cardHead small{color:var(--muted);font-weight:800}
-.cardBody{padding:14px}
-hr.sep{border:none;border-top:1px solid rgba(148,163,184,.18);margin:12px 0}
+    .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:14px;margin-top:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
 
-.btnRow{display:flex;gap:10px;flex-wrap:wrap}
-.btn{
-  border:0; cursor:pointer;
-  border-radius:14px;
-  padding:11px 12px;
-  font-weight:1000;
-  background:rgba(255,255,255,.03);
-  border:1px solid var(--line);
-  color:var(--muted);
-  transition:all 0.2s ease;
-}
-.btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
-.btn:active:not(:disabled){transform:translateY(0)}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
-.btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
-.btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
-.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
-.btn.ghost{background:rgba(255,255,255,.02)}
-.btn.small{padding:9px 10px;border-radius:12px}
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+    }
+    .cardHead h2{margin:0;font-size:1.02rem}
+    .cardHead small{color:var(--muted);font-weight:800}
+    .cardBody{padding:14px}
+    hr.sep{border:none;border-top:1px solid rgba(148,163,184,.18);margin:12px 0}
 
-.note{
-  margin-top:10px;
-  padding:10px 12px;border-radius:14px;
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.03);
-  color:var(--muted);
-  white-space:pre-wrap;
-  display:none;
-}
-.note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
-.note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
-.note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:0; cursor:pointer;
+      border-radius:14px;
+      padding:11px 12px;
+      font-weight:1000;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      color:var(--muted);
+      transition:all 0.2s ease;
+      touch-action:manipulation;
+      min-height:44px;
+    }
+    .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+    .btn:active:not(:disabled){transform:translateY(0)}
+    .btn:disabled{opacity:0.5;cursor:not-allowed}
+    .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
+    .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn.ghost{background:rgba(255,255,255,.02)}
+    .btn.small{padding:9px 10px;border-radius:12px;min-height:40px}
 
-.fieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width: 720px){ .fieldGrid{grid-template-columns:1fr} }
+    .note{
+      margin-top:10px;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      white-space:pre-wrap;
+      display:none;
+    }
+    .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
+    .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
+    .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
 
-label{display:block;font-size:.86rem;font-weight:950;color:#fff;margin:10px 0 6px}
-input, textarea, select{
-  width:100%;
-  border-radius:14px;
-  border:1px solid var(--line);
-  background:rgba(0,0,0,.18);
-  color:var(--ink);
-  padding:11px 12px;
-  font-weight:850;
-  outline:none;
-  transition:all 0.2s ease;
-}
-input:focus, textarea:focus, select:focus{
-  border-color:var(--gold);
-  box-shadow:0 0 0 3px rgba(250,204,21,.15);
-}
-textarea{min-height:110px;resize:vertical}
-small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-height:1.35}
-input[type="date"]{color-scheme:dark}
+    .fieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 720px){ .fieldGrid{grid-template-columns:1fr} }
 
-.list{display:flex;flex-direction:column;gap:10px}
-.item{
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.02);
-  border-radius:16px;
-  padding:12px;
-  display:flex;gap:10px;align-items:flex-start;justify-content:space-between;
-  transition:all 0.2s ease;
-}
-.item:hover{
-  background:rgba(255,255,255,.04);
-  border-color:rgba(250,204,21,.35);
-}
-.itemLeft{min-width:0}
-.itemTitle{font-weight:1000}
-.itemMeta{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:3px}
-.tag{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:6px 9px;border-radius:999px;
-  border:1px solid rgba(148,163,184,.25);
-  color:var(--muted);font-weight:950;font-size:.82rem;
-}
-.tag.dot::before{
-  content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block;
-}
-.tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-.tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
-.tag.draft{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-.tag.draft.dot::before{background:var(--gold)}
-.itemBtns{display:flex;flex-direction:column;gap:8px}
-.itemBtns .btn{padding:9px 10px;border-radius:12px}
+    label{display:block;font-size:.86rem;font-weight:950;color:#fff;margin:10px 0 6px}
+    input, textarea, select{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      color:var(--ink);
+      padding:11px 12px;
+      font-weight:850;
+      outline:none;
+      transition:all 0.2s ease;
+      touch-action:manipulation;
+    }
+    input:focus, textarea:focus, select:focus{
+      border-color:var(--gold);
+      box-shadow:0 0 0 3px rgba(250,204,21,.15);
+    }
+    textarea{min-height:110px;resize:vertical}
+    small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-height:1.35}
+    input[type="date"]{color-scheme:dark}
 
-.previewBox{
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.02);
-  border-radius:18px;
-  padding:12px;
-}
-.previewImg{
-  width:100%;height:210px;object-fit:cover;border-radius:16px;
-  border:1px solid rgba(148,163,184,.22);
-  background:rgba(255,255,255,.03);
-  display:block;
-}
-.videoWrap{
-  margin-top:10px;border-radius:16px;overflow:hidden;
-  border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.03);
-  display:none;
-}
-.videoWrap iframe{width:100%;height:230px;border:0;display:block}
-.miniRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.mini{
-  border:1px solid rgba(148,163,184,.25);
-  border-radius:999px;
-  padding:8px 10px;
-  font-weight:950;
-  color:var(--muted);
-  background:rgba(255,255,255,.02);
-}
-.mini strong{color:#fff}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.02);
+      border-radius:16px;
+      padding:12px;
+      display:flex;gap:10px;align-items:flex-start;justify-content:space-between;
+      transition:all 0.2s ease;
+    }
+    .item:hover{
+      background:rgba(255,255,255,.04);
+      border-color:rgba(250,204,21,.35);
+    }
+    .itemLeft{min-width:0}
+    .itemTitle{font-weight:1000}
+    .itemMeta{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:3px}
+    .tag{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:6px 9px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      color:var(--muted);font-weight:950;font-size:.82rem;
+    }
+    .tag.dot::before{
+      content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block;
+    }
+    .tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
+    .tag.draft{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .tag.draft.dot::before{background:var(--gold)}
+    .itemBtns{display:flex;flex-direction:column;gap:8px}
+    .itemBtns .btn{padding:9px 10px;border-radius:12px}
 
-.simpleList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.rowItem{
-  border:1px solid rgba(148,163,184,.22);
-  background:rgba(255,255,255,.02);
-  border-radius:14px;
-  padding:10px;
-}
-.rowTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.rowTop strong{font-weight:1100}
-.rowSub{color:var(--muted);font-weight:850;margin-top:4px;font-size:.92rem}
+    .previewBox{
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.02);
+      border-radius:18px;
+      padding:12px;
+    }
+    .previewImg{
+      width:100%;height:210px;object-fit:cover;border-radius:16px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.03);
+      display:block;
+    }
+    .videoWrap{
+      margin-top:10px;border-radius:16px;overflow:hidden;
+      border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.03);
+      display:none;
+    }
+    .videoWrap iframe{width:100%;height:230px;border:0;display:block}
+    .miniRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .mini{
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:999px;
+      padding:8px 10px;
+      font-weight:950;
+      color:var(--muted);
+      background:rgba(255,255,255,.02);
+    }
+    .mini strong{color:#fff}
 
-.spinner{
-  display:inline-block;
-  width:16px;height:16px;
-  border:2px solid rgba(255,255,255,.2);
-  border-top-color:#fff;
-  border-radius:50%;
-  animation:spin 0.6s linear infinite;
-}
-@keyframes spin{ to{transform:rotate(360deg)} }
+    .simpleList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .rowItem{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:14px;
+      padding:10px;
+    }
+    .rowTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .rowTop strong{font-weight:1100}
+    .rowSub{color:var(--muted);font-weight:850;margin-top:4px;font-size:.92rem}
 
-.statsRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
-.statBox{
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.02);
-  border-radius:14px;
-  padding:12px;
-  text-align:center;
-}
-.statBox .num{font-size:1.8rem;font-weight:1100;color:var(--gold)}
-.statBox .lbl{color:var(--muted);font-weight:800;font-size:.82rem;margin-top:4px}
-</style>
+    /* Loading spinner */
+    .spinner{
+      display:inline-block;
+      width:16px;height:16px;
+      border:2px solid rgba(255,255,255,.2);
+      border-top-color:#fff;
+      border-radius:50%;
+      animation:spin 0.6s linear infinite;
+    }
+    @keyframes spin{ to{transform:rotate(360deg)} }
+
+    /* Stats */
+    .statsRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+    .statBox{
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.02);
+      border-radius:14px;
+      padding:12px;
+      text-align:center;
+    }
+    .statBox .num{font-size:1.8rem;font-weight:1100;color:var(--gold)}
+    .statBox .lbl{color:var(--muted);font-weight:800;font-size:.82rem;margin-top:4px}
+
+    /* ===== PREMIUM PATCH ===== */
+
+    /* Mobile: barre d’actions sticky */
+    .mobileDock{
+      position:sticky; bottom:0; z-index:50;
+      padding:10px; margin-top:12px;
+      background:linear-gradient(180deg, rgba(2,6,23,0), rgba(2,6,23,.85) 35%, rgba(2,6,23,.95));
+      backdrop-filter: blur(8px);
+    }
+    .mobileDock .btnRow{justify-content:space-between}
+    @media (min-width: 981px){
+      .mobileDock{display:none}
+    }
+
+    /* details premium */
+    details.previewBox{padding:0}
+    details.previewBox > summary{
+      list-style:none;
+      cursor:pointer;
+      padding:12px;
+      font-weight:1100;
+      user-select:none;
+    }
+    details.previewBox > summary::-webkit-details-marker{display:none}
+    details.previewBox > .detailsBody{padding:0 12px 12px}
+
+    /* petite notification toast */
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:14px; z-index:9999;
+      background:rgba(2,6,23,.92);
+      border:1px solid rgba(148,163,184,.25);
+      color:var(--ink);
+      padding:10px 12px;
+      border-radius:14px;
+      box-shadow:0 18px 45px rgba(0,0,0,.55);
+      display:none;
+      width:min(520px, calc(100vw - 28px));
+      font-weight:900;
+    }
+    .toast small{display:block;color:var(--muted);font-weight:800;margin-top:2px}
+  </style>
 </head>
 
 <body>
@@ -248,38 +297,6 @@ input[type="date"]{color-scheme:dark}
     </div>
   </div>
 
-  <!-- ✅ AJOUT: LIENS RAPIDES -->
-  <div class="grid" style="grid-template-columns:1fr; margin-top:14px;">
-    <section class="card">
-      <div class="cardHead">
-        <div>
-          <h2>🚀 Liens rapides</h2>
-          <small>Navigation clean • garde le slug • accès terrain</small>
-        </div>
-        <div class="btnRow">
-          <button class="btn gold small" id="btnOpenPlanning">📅 Planning</button>
-          <button class="btn small" id="btnOpenListing">📋 Listing du jour</button>
-          <button class="btn small" id="btnOpenHealth">🧪 Health</button>
-        </div>
-      </div>
-      <div class="cardBody">
-        <div class="btnRow">
-          <button class="btn" id="btnOpenCreatePin">🧷 Créer GO PIN</button>
-          <button class="btn" id="btnOpenPin">🔐 Page PIN</button>
-          <button class="btn" id="btnOpenManageLinks">🔗 Manage Links</button>
-          <button class="btn" id="btnOpenAuthLoc">🪪 Auth Loc</button>
-          <button class="btn" id="btnOpenApp">📲 App</button>
-          <button class="btn" id="btnOpenLogin">🔑 Login</button>
-        </div>
-
-        <div class="note" id="navNote"></div>
-        <small class="hint" style="margin-top:10px">
-          Astuce: Listing = <span class="mono">listing.html?business=TON_CODE</span>. On prend ton <b>business_code</b> du logement sélectionné si possible.
-        </small>
-      </div>
-    </section>
-  </div>
-
   <div class="grid">
     <!-- LEFT -->
     <section class="card">
@@ -291,6 +308,7 @@ input[type="date"]{color-scheme:dark}
         <div class="btnRow">
           <button class="btn gold" id="btnNew">+ Nouveau</button>
           <button class="btn" id="btnRefresh">↻ Actualiser</button>
+          <button class="btn small" id="btnOpenLinks">🔗 Liens</button>
         </div>
       </div>
 
@@ -336,6 +354,7 @@ input[type="date"]{color-scheme:dark}
           <button class="btn primary" id="btnSave" disabled>💾 Enregistrer</button>
           <button class="btn gold" id="btnPublish" disabled>🚀 Publier</button>
           <button class="btn" id="btnDraft" disabled>📝 Brouillon</button>
+          <button class="btn small" id="btnCopyBC" disabled>📋 Copier business_code</button>
           <button class="btn danger small" id="btnDelete" disabled style="display:none">🗑️ Supprimer</button>
         </div>
       </div>
@@ -356,6 +375,8 @@ input[type="date"]{color-scheme:dark}
 
           <div class="btnRow" style="margin-top:10px">
             <button class="btn" id="btnOpenPublic" disabled>👁️ Ouvrir fiche publique</button>
+            <button class="btn" id="btnOpenPlanning" disabled>📅 Planning</button>
+            <button class="btn" id="btnOpenListing" disabled>📋 Listing</button>
             <button class="btn" id="btnTestMedia" disabled>🔎 Tester médias</button>
           </div>
 
@@ -363,8 +384,6 @@ input[type="date"]{color-scheme:dark}
         </div>
 
         <hr class="sep" />
-
-        <!-- ... TON FORM RESTE IDENTIQUE ... -->
 
         <div class="fieldGrid">
           <div>
@@ -382,7 +401,7 @@ input[type="date"]{color-scheme:dark}
           <div>
             <label>Business Code (unique)</label>
             <input id="f_business_code" placeholder="ex: VILLA_PARADISE_001" maxlength="50" />
-            <small class="hint">Code unique pour lier réservations</small>
+            <small class="hint">Code unique pour lier réservations + listing du jour</small>
           </div>
           <div>
             <label>Adresse (optionnel)</label>
@@ -466,53 +485,69 @@ input[type="date"]{color-scheme:dark}
 
         <hr class="sep"/>
 
-        <!-- CALENDRIER -->
-        <div class="previewBox">
-          <div style="font-weight:1100">📅 Calendrier (bloquer dates)</div>
-          <small class="hint">Bloque les périodes occupées. La fiche publique affichera disponible/non disponible.</small>
+        <!-- CALENDRIER (pliable premium) -->
+        <details class="previewBox" open>
+          <summary>📅 Calendrier (bloquer dates)</summary>
+          <div class="detailsBody">
+            <small class="hint">Bloque les périodes occupées. La fiche publique affichera disponible/non disponible.</small>
 
-          <div class="fieldGrid" style="margin-top:8px">
-            <div>
-              <label>Début *</label>
-              <input type="date" id="calStart">
+            <div class="fieldGrid" style="margin-top:8px">
+              <div>
+                <label>Début *</label>
+                <input type="date" id="calStart">
+              </div>
+              <div>
+                <label>Fin *</label>
+                <input type="date" id="calEnd">
+              </div>
             </div>
-            <div>
-              <label>Fin *</label>
-              <input type="date" id="calEnd">
+
+            <label>Raison (optionnel)</label>
+            <input id="calReason" placeholder="ex: Occupé / Maintenance / Réservé ailleurs" maxlength="100" />
+
+            <div class="btnRow" style="margin-top:10px">
+              <button class="btn primary" id="btnAddBlock" disabled>➕ Bloquer période</button>
+              <button class="btn" id="btnReloadBlocks" disabled>↻ Recharger</button>
             </div>
+
+            <div class="note" id="calNote"></div>
+            <div class="simpleList" id="calList"></div>
           </div>
-
-          <label>Raison (optionnel)</label>
-          <input id="calReason" placeholder="ex: Occupé / Maintenance / Réservé ailleurs" maxlength="100" />
-
-          <div class="btnRow" style="margin-top:10px">
-            <button class="btn primary" id="btnAddBlock" disabled>➕ Bloquer période</button>
-            <button class="btn" id="btnReloadBlocks" disabled>↻ Recharger</button>
-          </div>
-
-          <div class="note" id="calNote"></div>
-          <div class="simpleList" id="calList"></div>
-        </div>
+        </details>
 
         <hr class="sep"/>
 
-        <!-- ACOMPTES -->
-        <div class="previewBox">
-          <div style="font-weight:1100">💳 Acomptes (preuves Wave)</div>
-          <small class="hint">Liste des preuves d'acompte reçues. Confirme ou rejette chaque paiement.</small>
+        <!-- ACOMPTES (pliable premium) -->
+        <details class="previewBox">
+          <summary>💳 Acomptes (preuves Wave)</summary>
+          <div class="detailsBody">
+            <small class="hint">Liste des preuves d'acompte reçues. Confirme ou rejette chaque paiement.</small>
 
-          <div class="btnRow" style="margin-top:10px">
-            <button class="btn" id="btnReloadPays" disabled>↻ Recharger</button>
+            <div class="btnRow" style="margin-top:10px">
+              <button class="btn" id="btnReloadPays" disabled>↻ Recharger</button>
+            </div>
+
+            <div class="note" id="payAdminNote"></div>
+            <div class="simpleList" id="payList"></div>
           </div>
+        </details>
 
-          <div class="note" id="payAdminNote"></div>
-          <div class="simpleList" id="payList"></div>
+        <!-- MOBILE DOCK (sticky bottom) -->
+        <div class="mobileDock">
+          <div class="btnRow">
+            <button class="btn primary" id="dockSave">💾 Save</button>
+            <button class="btn gold" id="dockPublish">🚀 Publier</button>
+            <button class="btn" id="dockPlanning">📅 Planning</button>
+            <button class="btn" id="dockListing">📋 Listing</button>
+          </div>
         </div>
 
       </div>
     </section>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 /* =============================
@@ -523,55 +558,18 @@ const SUPABASE_ANON_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ✅ AJOUT: NAV HELPERS (slug + liens) */
-const navNote = document.getElementById("navNote");
-const btnOpenPlanning = document.getElementById("btnOpenPlanning");
-const btnOpenListing = document.getElementById("btnOpenListing");
-const btnOpenHealth = document.getElementById("btnOpenHealth");
-const btnOpenCreatePin = document.getElementById("btnOpenCreatePin");
-const btnOpenPin = document.getElementById("btnOpenPin");
-const btnOpenManageLinks = document.getElementById("btnOpenManageLinks");
-const btnOpenAuthLoc = document.getElementById("btnOpenAuthLoc");
-const btnOpenApp = document.getElementById("btnOpenApp");
-const btnOpenLogin = document.getElementById("btnOpenLogin");
-
-function showNav(msg, type){
-  if(!navNote) return;
-  navNote.style.display = "block";
-  navNote.classList.remove("ok","bad","warn");
-  if(type) navNote.classList.add(type);
-  navNote.textContent = msg;
-}
-
-function getSlug(){
-  const u = new URL(location.href);
-  return (u.searchParams.get("slug") || "").trim();
-}
-function withSlug(url){
-  const slug = getSlug();
-  if(!slug) return url;
-  const u = new URL(url, location.href);
-  u.searchParams.set("slug", slug);
-  return u.toString();
-}
-function openPage(url){
-  location.href = withSlug(url);
-}
-
-/* listing.html attend: ?business=CODE (& date optionnel) */
-function openListingForBusiness(business){
-  if(!business){
-    showNav("⚠️ Sélectionne un logement avec business_code, ou renseigne business_code dans l’éditeur.", "warn");
-    openPage("./listing.html"); // fallback
-    return;
-  }
-  const u = new URL("./listing.html", location.href);
-  u.searchParams.set("business", String(business).toUpperCase());
-  // garde slug si présent
-  const slug = getSlug();
-  if(slug) u.searchParams.set("slug", slug);
-  location.href = u.toString();
-}
+/* =============================
+   PAGES / ROUTES (LIENS)
+============================= */
+const PAGES = {
+  links: "./manage-links.html",
+  publicLoc: "./loc.html",         // fiche publique: loc.html?id=...
+  planning: "./planning.html",     // planning (pro)
+  listing: "./listing.html",       // listing du jour: listing.html?business=XXX&date=YYYY-MM-DD
+  health: "./health-loc.html",     // health check
+  loginPin: "./authentification-loc.html", // accès par PIN (si besoin)
+  createPin: "./create-pin.html"   // création GO PIN (si besoin)
+};
 
 /* =============================
    DOM ELEMENTS
@@ -591,13 +589,18 @@ const authNote = document.getElementById("authNote");
 
 const btnNew = document.getElementById("btnNew");
 const btnRefresh = document.getElementById("btnRefresh");
+const btnOpenLinks = document.getElementById("btnOpenLinks");
 const listNote = document.getElementById("listNote");
 
 const btnSave = document.getElementById("btnSave");
 const btnPublish = document.getElementById("btnPublish");
 const btnDraft = document.getElementById("btnDraft");
 const btnDelete = document.getElementById("btnDelete");
+const btnCopyBC = document.getElementById("btnCopyBC");
+
 const btnOpenPublic = document.getElementById("btnOpenPublic");
+const btnOpenPlanning = document.getElementById("btnOpenPlanning");
+const btnOpenListing = document.getElementById("btnOpenListing");
 const btnTestMedia = document.getElementById("btnTestMedia");
 
 const pvImg = document.getElementById("pvImg");
@@ -638,6 +641,15 @@ const btnReloadPays = document.getElementById("btnReloadPays");
 const payAdminNote = document.getElementById("payAdminNote");
 const payList = document.getElementById("payList");
 
+/* Dock mobile */
+const dockSave = document.getElementById("dockSave");
+const dockPublish = document.getElementById("dockPublish");
+const dockPlanning = document.getElementById("dockPlanning");
+const dockListing = document.getElementById("dockListing");
+
+/* Toast */
+const toastEl = document.getElementById("toast");
+
 /* =============================
    STATE
 ============================= */
@@ -647,8 +659,14 @@ let hasUnsavedChanges = false;
 const FALLBACK_PHOTO = "https://digiylyfe.com/wp-content/uploads/2025/06/042-BAPTISTE.png";
 
 /* =============================
-   UTILITY FUNCTIONS
+   HELPERS
 ============================= */
+function toast(msg, sub){
+  toastEl.innerHTML = msg + (sub ? `<small>${sub}</small>` : "");
+  toastEl.style.display = "block";
+  clearTimeout(window.__t);
+  window.__t = setTimeout(()=> toastEl.style.display="none", 2600);
+}
 function showNote(el, msg, type){
   el.style.display = "block";
   el.classList.remove("ok","bad","warn");
@@ -659,6 +677,43 @@ function hideNote(el){
   el.style.display="none";
   el.textContent="";
   el.classList.remove("ok","bad","warn");
+}
+function openPage(path){
+  window.location.href = path;
+}
+function openNewTab(url){
+  window.open(url, "_blank", "noopener");
+}
+function todayISO(){
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function openListingForBusiness(businessCode){
+  const bc = (businessCode||"").trim().toUpperCase();
+  if(!bc) return toast("⚠️ business_code vide", "Renseigne ou génère le business_code d’abord.");
+  const u = new URL(PAGES.listing, window.location.href);
+  u.searchParams.set("business", bc);
+  u.searchParams.set("date", todayISO());
+  openNewTab(u.toString());
+}
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast("✅ Copié", text);
+  }catch(_){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position="fixed";
+    ta.style.left="-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    toast("✅ Copié", text);
+  }
 }
 
 function toEmbedUrl(u){
@@ -674,19 +729,16 @@ function toEmbedUrl(u){
   if(m && m[1]) return "https://drive.google.com/file/d/" + m[1] + "/preview";
   return "";
 }
-
 function normalizeStatus(s){
   const v = String(s||"").toLowerCase().trim();
   if(["actif","active","published","online"].includes(v)) return "actif";
   return "brouillon";
 }
-
 function rowTag(status){
   const s = normalizeStatus(status);
   if(s==="actif") return `<span class="tag dot live">Actif</span>`;
   return `<span class="tag dot draft">Brouillon</span>`;
 }
-
 function generateBusinessCode(nom, ville){
   const n = (nom||"").toUpperCase().replace(/[^A-Z0-9]/g,"_").slice(0,20);
   const v = (ville||"").toUpperCase().replace(/[^A-Z0-9]/g,"_").slice(0,10);
@@ -731,11 +783,22 @@ function enableEditorActions(yes){
   btnSave.disabled = !yes;
   btnPublish.disabled = !yes;
   btnDraft.disabled = !yes;
+
   btnOpenPublic.disabled = !yes;
+  btnOpenPlanning.disabled = !yes;
+  btnOpenListing.disabled = !yes;
   btnTestMedia.disabled = !yes;
+
   btnAddBlock.disabled = !yes;
   btnReloadBlocks.disabled = !yes;
   btnReloadPays.disabled = !yes;
+
+  btnCopyBC.disabled = !yes;
+
+  if(dockSave) dockSave.disabled = !yes;
+  if(dockPublish) dockPublish.disabled = !yes;
+  if(dockPlanning) dockPlanning.disabled = !yes;
+  if(dockListing) dockListing.disabled = !yes;
 }
 
 function setConnectedUI(user){
@@ -750,7 +813,6 @@ function setConnectedUI(user){
     authBox.style.display = "none";
     listBox.style.display = "block";
     enableEditorActions(true);
-    showNav("✅ Connecté. Utilise les liens rapides au-dessus (Planning / Listing / GO PIN).", "ok");
   }else{
     pillState.textContent = "🔒 Déconnecté";
     pillState.classList.remove("ok");
@@ -760,7 +822,6 @@ function setConnectedUI(user){
     listBox.style.display = "none";
     enableEditorActions(false);
     btnDelete.style.display = "none";
-    showNav("🔒 Connecte-toi pour charger tes logements. Les liens rapides restent accessibles.", "warn");
   }
 }
 
@@ -813,7 +874,7 @@ btnSendOtp.onclick = async ()=>{
   try{
     const { error } = await SB.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: location.origin + location.pathname + location.search }
+      options: { emailRedirectTo: location.origin + location.pathname }
     });
     if(error) throw error;
     showNote(authNote, "✅ Lien envoyé! Va dans ton email et clique le lien magique.", "ok");
@@ -835,25 +896,11 @@ btnLogout.onclick = async ()=>{
   paintEditor(null);
   setConnectedUI(null);
   markClean();
+  toast("Déconnecté ✅");
 };
 
-/* =============================
-   NAV BUTTONS WIRING
-============================= */
-btnOpenPlanning.onclick = ()=> openPage("./planning.html");
-btnOpenHealth.onclick   = ()=> openPage("./health-loc.html");
-btnOpenCreatePin.onclick= ()=> openPage("./create-pin.html");
-btnOpenPin.onclick      = ()=> openPage("./pin.html");
-btnOpenManageLinks.onclick = ()=> openPage("./manage-links.html");
-btnOpenAuthLoc.onclick  = ()=> openPage("./authentification-loc.html");
-btnOpenApp.onclick      = ()=> openPage("./app.html");
-btnOpenLogin.onclick    = ()=> openPage("./login.html");
-
-/* Listing: si logement sélectionné -> business_code ; sinon -> juste listing.html */
-btnOpenListing.onclick = ()=>{
-  const bc = (current?.business_code || "").trim();
-  openListingForBusiness(bc);
-};
+/* Quick links */
+btnOpenLinks.onclick = ()=> openNewTab(PAGES.links);
 
 /* =============================
    LIST
@@ -915,8 +962,6 @@ async function loadList(){
           <button class="btn gold small" data-open="${item.id}">✏️ Éditer</button>
           <button class="btn small" data-dup="${item.id}">📋 Dupliquer</button>
           <button class="btn ghost small" data-view="${item.id}">👁️ Fiche</button>
-          <button class="btn small" data-day="${item.business_code || ""}">📋 Listing</button>
-          <button class="btn small" data-plan="1">📅 Planning</button>
         </div>
       `;
       listEl.appendChild(div);
@@ -925,21 +970,11 @@ async function loadList(){
     listEl.querySelectorAll("[data-open]").forEach(b=>{
       b.onclick = ()=> openOne(b.getAttribute("data-open"));
     });
-
     listEl.querySelectorAll("[data-view]").forEach(b=>{
-      b.onclick = ()=> window.open(withSlug("loc.html?id=" + encodeURIComponent(b.getAttribute("data-view"))), "_blank");
+      b.onclick = ()=> openNewTab(PAGES.publicLoc + "?id=" + encodeURIComponent(b.getAttribute("data-view")));
     });
-
     listEl.querySelectorAll("[data-dup]").forEach(b=>{
       b.onclick = ()=> duplicateOne(b.getAttribute("data-dup"));
-    });
-
-    listEl.querySelectorAll("[data-day]").forEach(b=>{
-      b.onclick = ()=> openListingForBusiness((b.getAttribute("data-day")||"").trim());
-    });
-
-    listEl.querySelectorAll("[data-plan]").forEach(b=>{
-      b.onclick = ()=> openPage("./planning.html");
     });
 
     showNote(listNote, `✅ ${total} logement(s) chargé(s).`, "ok");
@@ -985,16 +1020,13 @@ async function openOne(id){
   markClean();
 
   btnDelete.style.display = "inline-flex";
+
+  try{ localStorage.setItem("digiy_locpro_last", JSON.stringify({ at:new Date().toISOString(), id: current.id, business_code: current.business_code || "", nom: current.nom || "" })); }catch(_){}
+
   await loadBlocksForCurrent();
   await loadPaymentsForCurrent();
 
-  // ✅ message nav
-  const bc = (current.business_code || "").trim();
-  if(bc){
-    showNav("✅ Logement sélectionné. Listing du jour prêt via business_code: " + bc, "ok");
-  }else{
-    showNav("⚠️ Logement sélectionné mais business_code vide. Mets-le pour activer Listing du jour.", "warn");
-  }
+  toast("Ouvert ✅", (current.nom || "Logement"));
 }
 
 function newDraft(){
@@ -1100,6 +1132,7 @@ function collectForm(){
   if(!businessCode && f_nom.value && f_ville.value){
     businessCode = generateBusinessCode(f_nom.value, f_ville.value);
     f_business_code.value = businessCode;
+    toast("Business code généré ✅", businessCode);
   }
 
   return {
@@ -1140,6 +1173,9 @@ async function saveRecord(mode){
   btnSave.disabled = true;
   btnPublish.disabled = true;
   btnDraft.disabled = true;
+  if(dockSave) dockSave.disabled = true;
+  if(dockPublish) dockPublish.disabled = true;
+
   btnSave.innerHTML = '<span class="spinner"></span> Sauvegarde...';
 
   try{
@@ -1153,6 +1189,7 @@ async function saveRecord(mode){
 
       current.id = data.id;
       showNote(saveNote, `✅ Créé! ID: ${current.id}`, "ok");
+      toast("Créé ✅", current.id);
     }else{
       const { error } = await SB
         .from("digiy_logements")
@@ -1162,6 +1199,7 @@ async function saveRecord(mode){
 
       if(error) throw error;
       showNote(saveNote, "✅ Sauvegardé!", "ok");
+      toast("Sauvegardé ✅", current.nom || "Logement");
     }
 
     markClean();
@@ -1170,10 +1208,14 @@ async function saveRecord(mode){
   }catch(e){
     console.error(e);
     showNote(saveNote, "❌ Erreur:\n" + (e?.message || e), "bad");
+    toast("Erreur ❌", e?.message || String(e));
   }finally{
     btnSave.disabled = false;
     btnPublish.disabled = false;
     btnDraft.disabled = false;
+    if(dockSave) dockSave.disabled = false;
+    if(dockPublish) dockPublish.disabled = false;
+
     btnSave.innerHTML = '💾 Enregistrer';
   }
 }
@@ -1203,15 +1245,16 @@ btnDelete.onclick = async ()=>{
     if(error) throw error;
 
     showNote(editNote, "✅ Logement supprimé!", "ok");
+    toast("Supprimé ✅");
     current = null;
     paintEditor(null);
     markClean();
     btnDelete.style.display = "none";
     await loadList();
-    showNav("✅ Logement supprimé. Listing du jour nécessite un logement sélectionné (business_code).", "warn");
   }catch(e){
     console.error(e);
     showNote(editNote, "❌ Suppression refusée:\n" + (e?.message || e), "bad");
+    toast("Suppression refusée ❌", e?.message || String(e));
   }finally{
     btnDelete.disabled = false;
     btnDelete.innerHTML = '🗑️ Supprimer';
@@ -1248,11 +1291,27 @@ btnTestMedia.onclick = ()=>{
   pvWave.textContent = (wn ? wn + " • " : "") + (wp || "—");
   pvVille.textContent = payload.ville || "—";
   pvStatus.textContent = payload.status || "—";
+
+  toast("Préview mise à jour ✅");
 };
 
 btnOpenPublic.onclick = ()=>{
   if(!current || !current.id) return showNote(editNote, "❌ Sauvegarde d'abord (pas d'ID).", "bad");
-  window.open(withSlug("loc.html?id=" + encodeURIComponent(current.id)), "_blank");
+  openNewTab(PAGES.publicLoc + "?id=" + encodeURIComponent(current.id));
+};
+
+btnOpenPlanning.onclick = ()=> openNewTab(PAGES.planning);
+
+btnOpenListing.onclick = ()=>{
+  const bc = (current?.business_code || f_business_code.value || "").trim();
+  openListingForBusiness(bc);
+};
+
+/* Copier business_code */
+btnCopyBC.onclick = async ()=>{
+  const bc = (current?.business_code || f_business_code.value || "").trim().toUpperCase();
+  if(!bc) return toast("⚠️ business_code vide", "Renseigne ou génère le business_code.");
+  await copyText(bc);
 };
 
 /* =============================
@@ -1306,6 +1365,7 @@ async function duplicateOne(id){
   }
 
   showNote(listNote, `✅ Dupliqué! Nouveau logement: ${created.id}`, "ok");
+  toast("Dupliqué ✅", created.id);
   await loadList();
   await openOne(created.id);
   showNote(editNote, "✨ Copie prête. Renomme + ajuste puis Publier.", "ok");
@@ -1341,6 +1401,7 @@ btnAddBlock.onclick = async ()=>{
     if(error) throw error;
 
     showNote(calNote, "✅ Période bloquée!", "ok");
+    toast("Période bloquée ✅", `${s} → ${e}`);
     calStart.value = "";
     calEnd.value = "";
     calReason.value = "";
@@ -1348,6 +1409,7 @@ btnAddBlock.onclick = async ()=>{
   }catch(err){
     console.error(err);
     showNote(calNote, "❌ Blocage refusé:\n" + (err?.message || err), "bad");
+    toast("Blocage refusé ❌", err?.message || String(err));
   }finally{
     btnAddBlock.disabled = false;
     btnAddBlock.innerHTML = '➕ Bloquer période';
@@ -1402,10 +1464,12 @@ async function loadBlocksForCurrent(){
 
           if(error) throw error;
           showNote(calNote, "✅ Bloc supprimé!", "ok");
+          toast("Bloc supprimé ✅");
           await loadBlocksForCurrent();
         }catch(e){
           console.error(e);
           showNote(calNote, "❌ Suppression refusée:\n" + (e?.message || e), "bad");
+          toast("Suppression refusée ❌", e?.message || String(e));
         }
       };
     });
@@ -1496,12 +1560,34 @@ async function updatePayStatus(id, status){
     if(error) throw error;
 
     showNote(payAdminNote, `✅ Statut mis à jour: ${status}`, "ok");
+    toast("Statut mis à jour ✅", status);
     await loadPaymentsForCurrent();
   }catch(e){
     console.error(e);
     showNote(payAdminNote, "❌ Update refusé:\n" + (e?.message || e), "bad");
+    toast("Update refusé ❌", e?.message || String(e));
   }
 }
+
+/* =============================
+   DOCK ACTIONS
+============================= */
+if(dockSave) dockSave.onclick = ()=> saveRecord("save");
+if(dockPublish) dockPublish.onclick = ()=> saveRecord("publish");
+if(dockPlanning) dockPlanning.onclick = ()=> openNewTab(PAGES.planning);
+if(dockListing) dockListing.onclick = ()=>{
+  const bc = (current?.business_code || f_business_code.value || "").trim();
+  openListingForBusiness(bc);
+};
+
+/* =============================
+   QUICK NAV (editor buttons)
+============================= */
+btnOpenPlanning.onclick = ()=> openNewTab(PAGES.planning);
+btnOpenListing.onclick = ()=> {
+  const bc = (current?.business_code || f_business_code.value || "").trim();
+  openListingForBusiness(bc);
+};
 
 /* =============================
    AUTH LISTENER
@@ -1521,6 +1607,15 @@ SB.auth.onAuthStateChange((_event, session)=>{
 ============================= */
 refreshSession();
 paintEditor(null);
+
+/* ===== Optionnel: auto-save light (décommente si tu veux) =====
+setInterval(async ()=>{
+  if(!sessionUser) return;
+  if(!current || !current.id) return;
+  if(!hasUnsavedChanges) return;
+  try{ await saveRecord("save"); }catch(_){}
+}, 20000);
+*/
 </script>
 </body>
 </html>
