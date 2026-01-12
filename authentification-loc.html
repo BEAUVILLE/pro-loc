@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC — Connexion</title>
+  <title>DIGIY LOC PRO — Connexion (PIN)</title>
   <meta name="theme-color" content="#F8FAF6"/>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js"></script>
+  <script src="./guard.js?v=locpro-2"></script>
+
   <style>
     :root{--bg:#F8FAF6;--card:#fff;--line:#E5E7EB;--text:#111827;--muted:#6B7280;--gold:#EAB308;--r:20px}
     *{box-sizing:border-box}
@@ -18,57 +20,151 @@
     label{display:block;margin:12px 0 8px;font-weight:950}
     input{width:100%;border:1px solid var(--line);border-radius:16px;padding:12px;font-size:15px;outline:none}
     .btn{width:100%;border:0;border-radius:16px;padding:12px 14px;min-height:44px;font-weight:950;cursor:pointer;margin-top:14px;background:linear-gradient(135deg,#FFF7D6,#FDE68A);color:#78350F}
+    .btn2{width:100%;border:1px solid var(--line);border-radius:16px;padding:12px 14px;min-height:44px;font-weight:950;cursor:pointer;margin-top:10px;background:#fff;color:#111827}
     .msg{margin-top:12px;padding:12px;border-radius:16px;border:1px solid var(--line);background:#F9FAFB;color:var(--muted);font-weight:800;white-space:pre-wrap}
     .msg.bad{border-color:rgba(239,68,68,.22);background:rgba(239,68,68,.06);color:#7f1d1d}
     .msg.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.07);color:#14532d}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);font-weight:800}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
   </style>
 </head>
+
 <body>
   <div class="card">
     <div class="logo">🏠</div>
     <h1>DIGIY LOC PRO</h1>
     <div class="sub">Connexion gestionnaire (téléphone + PIN)</div>
 
+    <div class="row">
+      <span class="pill">module: <span class="mono">LOC</span></span>
+      <span class="pill mono" id="pillSlug">slug: —</span>
+    </div>
+
     <label>Téléphone</label>
     <input id="phone" type="tel" inputmode="tel" placeholder="+221 77..." autocomplete="tel"/>
 
     <label>PIN</label>
-    <input id="pin" type="password" inputmode="numeric" placeholder="••••" />
+    <input id="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="one-time-code"/>
 
     <button class="btn" id="btn">Entrer</button>
+    <button class="btn2" id="btnForgot" type="button">❓ PIN oublié</button>
+
     <div class="msg" id="msg">Entre ton téléphone + PIN.</div>
   </div>
 
-<script>
-(function(){
-  const msg = document.getElementById("msg");
-  const btn = document.getElementById("btn");
-  const phoneEl = document.getElementById("phone");
-  const pinEl = document.getElementById("pin");
+  <script>
+  (function(){
+    const MODULE = "LOC";
+    const SUPPORT_WA = "+221771342889";
 
-  function setMsg(t, cls){
-    msg.className = "msg" + (cls ? (" " + cls) : "");
-    msg.textContent = t;
-  }
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("btn");
+    const btnForgot = document.getElementById("btnForgot");
+    const phoneEl = document.getElementById("phone");
+    const pinEl = document.getElementById("pin");
+    const pillSlug = document.getElementById("pillSlug");
 
-  btn.addEventListener("click", () => {
-    const phone = DIGIY_GUARD.normPhone(phoneEl.value);
-    const pin = (pinEl.value||"").trim();
-
-    if(!phone || !phone.startsWith("+221")){
-      setMsg("⚠️ Numéro invalide. Exemple: +221771234567", "bad");
-      return;
-    }
-    if(pin.length < 3){
-      setMsg("⚠️ PIN trop court.", "bad");
-      return;
+    function setMsg(t, cls){
+      msg.className = "msg" + (cls ? (" " + cls) : "");
+      msg.textContent = t;
     }
 
-    DIGIY_GUARD.setPhone(phone);
-    setMsg("✅ OK. Redirection…", "ok");
-    setTimeout(()=> location.replace("./index.html"), 350);
-  });
-})();
-</script>
+    function lock(on){
+      btn.disabled = !!on;
+      btnForgot.disabled = !!on;
+      phoneEl.disabled = !!on;
+      pinEl.disabled = !!on;
+    }
+
+    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.loginWithPin !== "function"){
+      setMsg("❌ Guard absent. Vérifie que ./guard.js est bien chargé.", "bad");
+      return;
+    }
+
+    // slug UI + storage
+    const slug = window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "";
+    pillSlug.textContent = "slug: " + (slug || "—");
+
+    // Prefill phone
+    try{
+      const p = window.DIGIY_GUARD.getPhone && window.DIGIY_GUARD.getPhone();
+      if(p) phoneEl.value = p;
+    }catch(_){}
+
+    // Si session déjà OK -> direct planning
+    try{
+      const s = window.DIGIY_GUARD.getSession && window.DIGIY_GUARD.getSession();
+      if(s && s.phone){
+        const next = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./planning.html") : "./planning.html";
+        location.replace(next);
+        return;
+      }
+    }catch(_){}
+
+    async function doLogin(){
+      const rawPhone = (phoneEl.value || "").trim();
+      const pin = (pinEl.value || "").trim();
+      const phone = window.DIGIY_GUARD.normPhone ? window.DIGIY_GUARD.normPhone(rawPhone) : rawPhone;
+
+      if(!phone){
+        setMsg("⚠️ Téléphone requis. Exemple: +221771234567", "bad");
+        phoneEl.focus();
+        return;
+      }
+      if(pin.length < 4){
+        setMsg("⚠️ PIN invalide (4–8 chiffres).", "bad");
+        pinEl.focus();
+        return;
+      }
+
+      lock(true);
+      setMsg("⏳ Vérification PIN…", "");
+
+      try{
+        const out = await window.DIGIY_GUARD.loginWithPin(phone, pin, MODULE);
+        if(!out || out.ok !== true){
+          const reason = out?.res?.reason ? String(out.res.reason) : "";
+          setMsg("❌ PIN incorrect. Réessaie.", "bad");
+          if(reason) setMsg("❌ PIN incorrect.\n" + "Raison: " + reason, "bad");
+          lock(false);
+          return;
+        }
+
+        setMsg("✅ OK. Ouverture du planning…", "ok");
+        const next = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./planning.html") : "./planning.html";
+        location.replace(next);
+
+      }catch(e){
+        console.error(e);
+        setMsg("❌ Erreur réseau / Supabase / RPC.\n" + String(e?.message || e), "bad");
+        lock(false);
+      }
+    }
+
+    btn.addEventListener("click", doLogin);
+    pinEl.addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") doLogin(); });
+
+    btnForgot.addEventListener("click", ()=>{
+      const rawPhone = (phoneEl.value || "").trim();
+      const phone = window.DIGIY_GUARD.normPhone ? window.DIGIY_GUARD.normPhone(rawPhone) : rawPhone;
+      const s = window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "";
+
+      const msgTxt =
+`DIGIY • Support LOC PRO
+Demande: Reset PIN
+
+Module: ${MODULE}
+Slug: ${s || "—"}
+Téléphone: ${phone || "—"}
+
+Merci. — DIGIY`;
+
+      location.href = "https://wa.me/" + SUPPORT_WA.replace(/\+/g,"") + "?text=" + encodeURIComponent(msgTxt);
+    });
+
+  })();
+  </script>
 </body>
 </html>
+
