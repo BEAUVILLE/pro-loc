@@ -1,282 +1,249 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>DIGIY LOC PRO ∞ — Cockpit Propriétaire ROYAL</title>
+  <title>DIGIY LOC PRO ∞ — Cockpit Propriétaire</title>
+  <meta name="theme-color" content="#0b1020" />
 
   <!-- Supabase JS v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* ======== TON CSS (inchangé + PREMIUM PATCH) ======== */
-    :root{
-      --bg:#020617;
-      --bg2:#0b1020;
-      --card:#0b1220;
-      --line:#1f2937;
-      --ink:#f9fafb;
-      --muted:#cbd5f5;
-      --gold:#facc15;
-      --gold2:#f97316;
-      --green:#22c55e;
-      --danger:#ef4444;
-      --soft:rgba(255,255,255,.04);
-      --shadow:0 22px 50px rgba(0,0,0,.55);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:var(--ink);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      background:
-        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
-        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
-        linear-gradient(180deg, var(--bg2), var(--bg));
-      min-height:100vh;
-    }
-    a{color:inherit}
-    .wrap{max-width:1150px;margin:0 auto;padding:14px}
-    .top{
-      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-      padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03);
-      box-shadow:var(--shadow);
-    }
-    .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .logo{
-      width:40px;height:40px;border-radius:14px;
-      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
-      border:1px solid rgba(250,204,21,.35);
-      box-shadow:0 0 22px rgba(250,204,21,.12);
-    }
-    .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
-    .brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
-    .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem}
-    .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .pill{
-      border:1px solid rgba(148,163,184,.35);
-      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
-      color:var(--muted);font-weight:900;font-size:.86rem;
-    }
-    .pill strong{color:#fff}
-    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+  :root{
+    --bg:#020617;
+    --bg2:#0b1020;
+    --card:#0b1220;
+    --line:#1f2937;
+    --ink:#f9fafb;
+    --muted:#cbd5f5;
+    --gold:#facc15;
+    --gold2:#f97316;
+    --green:#22c55e;
+    --danger:#ef4444;
+    --soft:rgba(255,255,255,.04);
+    --shadow:0 22px 50px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:
+      radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+      radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+      linear-gradient(180deg, var(--bg2), var(--bg));
+    min-height:100vh;
+  }
+  a{color:inherit}
+  .wrap{max-width:1150px;margin:0 auto;padding:14px}
 
-    .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:14px;margin-top:14px}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+  .top{
+    position:sticky; top:0; z-index:50;
+    display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:rgba(2,6,23,.72);
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+  .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-width:0}
+  .logo{
+    width:40px;height:40px;border-radius:14px;
+    background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+    border:1px solid rgba(250,204,21,.35);
+    box-shadow:0 0 22px rgba(250,204,21,.12);
+    flex:0 0 auto;
+  }
+  .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(520px, 72vw)}
+  .brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
+  .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(520px, 72vw)}
+  .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pill{
+    border:1px solid rgba(148,163,184,.35);
+    padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+    color:var(--muted);font-weight:900;font-size:.86rem;
+  }
+  .pill strong{color:#fff}
+  .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+  .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 
-    .card{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      border-radius:20px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .cardHead{
-      padding:12px 14px;
-      border-bottom:1px solid var(--line);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
-    }
-    .cardHead h2{margin:0;font-size:1.02rem}
-    .cardHead small{color:var(--muted);font-weight:800}
-    .cardBody{padding:14px}
-    hr.sep{border:none;border-top:1px solid rgba(148,163,184,.18);margin:12px 0}
+  .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:14px;margin-top:14px}
+  @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
 
-    .btnRow{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{
-      border:0; cursor:pointer;
-      border-radius:14px;
-      padding:11px 12px;
-      font-weight:1000;
-      background:rgba(255,255,255,.03);
-      border:1px solid var(--line);
-      color:var(--muted);
-      transition:all 0.2s ease;
-      touch-action:manipulation;
-      min-height:44px;
-    }
-    .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
-    .btn:active:not(:disabled){transform:translateY(0)}
-    .btn:disabled{opacity:0.5;cursor:not-allowed}
-    .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
-    .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
-    .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
-    .btn.ghost{background:rgba(255,255,255,.02)}
-    .btn.small{padding:9px 10px;border-radius:12px;min-height:40px}
+  .card{
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .cardHead{
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+  }
+  .cardHead h2{margin:0;font-size:1.02rem}
+  .cardHead small{color:var(--muted);font-weight:800}
+  .cardBody{padding:14px}
+  hr.sep{border:none;border-top:1px solid rgba(148,163,184,.18);margin:12px 0}
 
-    .note{
-      margin-top:10px;
-      padding:10px 12px;border-radius:14px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      white-space:pre-wrap;
-      display:none;
-    }
-    .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
-    .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
-    .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
+  .btnRow{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{
+    border:0; cursor:pointer;
+    border-radius:14px;
+    padding:11px 12px;
+    font-weight:1000;
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--line);
+    color:var(--muted);
+    transition:all 0.2s ease;
+    min-height:44px;
+    display:inline-flex;align-items:center;justify-content:center;
+    gap:8px;
+  }
+  .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+  .btn:active:not(:disabled){transform:translateY(0)}
+  .btn:disabled{opacity:0.5;cursor:not-allowed}
+  .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
+  .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
+  .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
+  .btn.ghost{background:rgba(255,255,255,.02)}
+  .btn.small{padding:9px 10px;border-radius:12px;min-height:38px}
 
-    .fieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width: 720px){ .fieldGrid{grid-template-columns:1fr} }
+  .note{
+    margin-top:10px;
+    padding:10px 12px;border-radius:14px;
+    border:1px solid rgba(148,163,184,.25);
+    background:rgba(255,255,255,.03);
+    color:var(--muted);
+    white-space:pre-wrap;
+    display:none;
+  }
+  .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
+  .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
+  .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
 
-    label{display:block;font-size:.86rem;font-weight:950;color:#fff;margin:10px 0 6px}
-    input, textarea, select{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
-      color:var(--ink);
-      padding:11px 12px;
-      font-weight:850;
-      outline:none;
-      transition:all 0.2s ease;
-      touch-action:manipulation;
-    }
-    input:focus, textarea:focus, select:focus{
-      border-color:var(--gold);
-      box-shadow:0 0 0 3px rgba(250,204,21,.15);
-    }
-    textarea{min-height:110px;resize:vertical}
-    small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-height:1.35}
-    input[type="date"]{color-scheme:dark}
+  .fieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width: 720px){ .fieldGrid{grid-template-columns:1fr} }
 
-    .list{display:flex;flex-direction:column;gap:10px}
-    .item{
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.02);
-      border-radius:16px;
-      padding:12px;
-      display:flex;gap:10px;align-items:flex-start;justify-content:space-between;
-      transition:all 0.2s ease;
-    }
-    .item:hover{
-      background:rgba(255,255,255,.04);
-      border-color:rgba(250,204,21,.35);
-    }
-    .itemLeft{min-width:0}
-    .itemTitle{font-weight:1000}
-    .itemMeta{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:3px}
-    .tag{
-      display:inline-flex;align-items:center;gap:7px;
-      padding:6px 9px;border-radius:999px;
-      border:1px solid rgba(148,163,184,.25);
-      color:var(--muted);font-weight:950;font-size:.82rem;
-    }
-    .tag.dot::before{
-      content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block;
-    }
-    .tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
-    .tag.draft{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .tag.draft.dot::before{background:var(--gold)}
-    .itemBtns{display:flex;flex-direction:column;gap:8px}
-    .itemBtns .btn{padding:9px 10px;border-radius:12px}
+  label{display:block;font-size:.86rem;font-weight:950;color:#fff;margin:10px 0 6px}
+  input, textarea, select{
+    width:100%;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.18);
+    color:var(--ink);
+    padding:11px 12px;
+    font-weight:850;
+    outline:none;
+    transition:all 0.2s ease;
+  }
+  input:focus, textarea:focus, select:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(250,204,21,.15);
+  }
+  textarea{min-height:110px;resize:vertical}
+  small.hint{display:block;color:var(--muted);font-weight:800;margin-top:6px;line-height:1.35}
+  input[type="date"]{color-scheme:dark}
 
-    .previewBox{
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.02);
-      border-radius:18px;
-      padding:12px;
-    }
-    .previewImg{
-      width:100%;height:210px;object-fit:cover;border-radius:16px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.03);
-      display:block;
-    }
-    .videoWrap{
-      margin-top:10px;border-radius:16px;overflow:hidden;
-      border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.03);
-      display:none;
-    }
-    .videoWrap iframe{width:100%;height:230px;border:0;display:block}
-    .miniRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .mini{
-      border:1px solid rgba(148,163,184,.25);
-      border-radius:999px;
-      padding:8px 10px;
-      font-weight:950;
-      color:var(--muted);
-      background:rgba(255,255,255,.02);
-    }
-    .mini strong{color:#fff}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{
+    border:1px solid rgba(148,163,184,.25);
+    background:rgba(255,255,255,.02);
+    border-radius:16px;
+    padding:12px;
+    display:flex;gap:10px;align-items:flex-start;justify-content:space-between;
+    transition:all 0.2s ease;
+  }
+  .item:hover{
+    background:rgba(255,255,255,.04);
+    border-color:rgba(250,204,21,.35);
+  }
+  .itemLeft{min-width:0}
+  .itemTitle{font-weight:1000}
+  .itemMeta{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:3px}
+  .tag{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:6px 9px;border-radius:999px;
+    border:1px solid rgba(148,163,184,.25);
+    color:var(--muted);font-weight:950;font-size:.82rem;
+  }
+  .tag.dot::before{
+    content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block;
+  }
+  .tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+  .tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
+  .tag.draft{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+  .tag.draft.dot::before{background:var(--gold)}
+  .itemBtns{display:flex;flex-direction:column;gap:8px}
+  .itemBtns .btn{padding:9px 10px;border-radius:12px}
 
-    .simpleList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-    .rowItem{
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.02);
-      border-radius:14px;
-      padding:10px;
-    }
-    .rowTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .rowTop strong{font-weight:1100}
-    .rowSub{color:var(--muted);font-weight:850;margin-top:4px;font-size:.92rem}
+  .previewBox{
+    border:1px solid rgba(148,163,184,.25);
+    background:rgba(255,255,255,.02);
+    border-radius:18px;
+    padding:12px;
+  }
+  .previewImg{
+    width:100%;height:210px;object-fit:cover;border-radius:16px;
+    border:1px solid rgba(148,163,184,.22);
+    background:rgba(255,255,255,.03);
+    display:block;
+  }
+  .videoWrap{
+    margin-top:10px;border-radius:16px;overflow:hidden;
+    border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.03);
+    display:none;
+  }
+  .videoWrap iframe{width:100%;height:230px;border:0;display:block}
+  .miniRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .mini{
+    border:1px solid rgba(148,163,184,.25);
+    border-radius:999px;
+    padding:8px 10px;
+    font-weight:950;
+    color:var(--muted);
+    background:rgba(255,255,255,.02);
+  }
+  .mini strong{color:#fff}
 
-    /* Loading spinner */
-    .spinner{
-      display:inline-block;
-      width:16px;height:16px;
-      border:2px solid rgba(255,255,255,.2);
-      border-top-color:#fff;
-      border-radius:50%;
-      animation:spin 0.6s linear infinite;
-    }
-    @keyframes spin{ to{transform:rotate(360deg)} }
+  .simpleList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .rowItem{
+    border:1px solid rgba(148,163,184,.22);
+    background:rgba(255,255,255,.02);
+    border-radius:14px;
+    padding:10px;
+  }
+  .rowTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .rowTop strong{font-weight:1100}
+  .rowSub{color:var(--muted);font-weight:850;margin-top:4px;font-size:.92rem}
 
-    /* Stats */
-    .statsRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
-    .statBox{
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.02);
-      border-radius:14px;
-      padding:12px;
-      text-align:center;
-    }
-    .statBox .num{font-size:1.8rem;font-weight:1100;color:var(--gold)}
-    .statBox .lbl{color:var(--muted);font-weight:800;font-size:.82rem;margin-top:4px}
+  .spinner{
+    display:inline-block;
+    width:16px;height:16px;
+    border:2px solid rgba(255,255,255,.2);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin 0.6s linear infinite;
+  }
+  @keyframes spin{ to{transform:rotate(360deg)} }
 
-    /* ===== PREMIUM PATCH ===== */
+  .statsRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+  .statBox{
+    border:1px solid rgba(148,163,184,.25);
+    background:rgba(255,255,255,.02);
+    border-radius:14px;
+    padding:12px;
+    text-align:center;
+  }
+  .statBox .num{font-size:1.8rem;font-weight:1100;color:var(--gold)}
+  .statBox .lbl{color:var(--muted);font-weight:800;font-size:.82rem;margin-top:4px}
 
-    /* Mobile: barre d’actions sticky */
-    .mobileDock{
-      position:sticky; bottom:0; z-index:50;
-      padding:10px; margin-top:12px;
-      background:linear-gradient(180deg, rgba(2,6,23,0), rgba(2,6,23,.85) 35%, rgba(2,6,23,.95));
-      backdrop-filter: blur(8px);
-    }
-    .mobileDock .btnRow{justify-content:space-between}
-    @media (min-width: 981px){
-      .mobileDock{display:none}
-    }
-
-    /* details premium */
-    details.previewBox{padding:0}
-    details.previewBox > summary{
-      list-style:none;
-      cursor:pointer;
-      padding:12px;
-      font-weight:1100;
-      user-select:none;
-    }
-    details.previewBox > summary::-webkit-details-marker{display:none}
-    details.previewBox > .detailsBody{padding:0 12px 12px}
-
-    /* petite notification toast */
-    .toast{
-      position:fixed; left:50%; transform:translateX(-50%);
-      bottom:14px; z-index:9999;
-      background:rgba(2,6,23,.92);
-      border:1px solid rgba(148,163,184,.25);
-      color:var(--ink);
-      padding:10px 12px;
-      border-radius:14px;
-      box-shadow:0 18px 45px rgba(0,0,0,.55);
-      display:none;
-      width:min(520px, calc(100vw - 28px));
-      font-weight:900;
-    }
-    .toast small{display:block;color:var(--muted);font-weight:800;margin-top:2px}
+  /* Bar d'accès rapide (simple, humain) */
+  .quick{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    margin-top:12px;
+  }
+  .quick a.btn{ text-decoration:none }
   </style>
 </head>
 
@@ -285,16 +252,27 @@
   <div class="top">
     <div class="brand">
       <div class="logo"></div>
-      <div>
+      <div style="min-width:0">
         <h1>DIGIY LOC PRO <span class="infinity">∞</span></h1>
-        <div class="sub">Cockpit Propriétaire ROYAL • Sécurisé • Optimisé • Professionnel</div>
+        <div class="sub">Cockpit Propriétaire • simple, rapide, terrain</div>
       </div>
     </div>
+
     <div class="pills">
+      <button class="btn ghost small" id="btnBack">← Retour</button>
+
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
       <div class="pill warn" id="pillState">🔒 Déconnecté</div>
       <button class="btn ghost small" id="btnLogout" style="display:none">Se déconnecter</button>
     </div>
+  </div>
+
+  <!-- Accès rapides (humain, pas ingénieur) -->
+  <div class="quick">
+    <a class="btn small" href="./manage-links.html">🔗 Mes liens</a>
+    <a class="btn small" href="./listing.html?business=BEAUVILLE">📋 Listing du jour</a>
+    <a class="btn small" href="./health-loc.html">🩺 Diagnostic</a>
+    <a class="btn small" href="./create-pin.html">🧷 Créer GO PIN</a>
   </div>
 
   <div class="grid">
@@ -303,12 +281,11 @@
       <div class="cardHead">
         <div>
           <h2>🏡 Mes logements</h2>
-          <small>Créer, éditer, dupliquer, publier.</small>
+          <small>Créer • éditer • dupliquer • publier</small>
         </div>
         <div class="btnRow">
           <button class="btn gold" id="btnNew">+ Nouveau</button>
           <button class="btn" id="btnRefresh">↻ Actualiser</button>
-          <button class="btn small" id="btnOpenLinks">🔗 Liens</button>
         </div>
       </div>
 
@@ -318,7 +295,7 @@
           <div class="previewBox">
             <div style="font-weight:1000;font-size:1.05rem;margin-bottom:6px;">🔐 Connexion PRO</div>
             <div style="color:var(--muted);font-weight:800;">
-              Connexion sécurisée par email (Magic Link OTP). Reçois un lien, clique, c'est tout.
+              Connexion par email (Magic Link). Tu reçois un lien, tu cliques, terminé.
             </div>
 
             <label>Email PRO</label>
@@ -329,7 +306,7 @@
               <button class="btn" id="btnDemoFill">⚡ Demo</button>
             </div>
 
-            <small class="hint">💡 Astuce: ouvre ton email sur le même navigateur pour te connecter automatiquement.</small>
+            <small class="hint">Astuce: ouvre ton email sur ce même navigateur.</small>
             <div class="note" id="authNote"></div>
           </div>
         </div>
@@ -348,13 +325,12 @@
       <div class="cardHead">
         <div>
           <h2>✨ Éditeur Premium</h2>
-          <small>Photo + vidéo + Wave + tarifs + calendrier + acomptes</small>
+          <small>Photo • vidéo • Wave • tarifs • calendrier • acomptes</small>
         </div>
         <div class="btnRow">
           <button class="btn primary" id="btnSave" disabled>💾 Enregistrer</button>
           <button class="btn gold" id="btnPublish" disabled>🚀 Publier</button>
           <button class="btn" id="btnDraft" disabled>📝 Brouillon</button>
-          <button class="btn small" id="btnCopyBC" disabled>📋 Copier business_code</button>
           <button class="btn danger small" id="btnDelete" disabled style="display:none">🗑️ Supprimer</button>
         </div>
       </div>
@@ -375,8 +351,6 @@
 
           <div class="btnRow" style="margin-top:10px">
             <button class="btn" id="btnOpenPublic" disabled>👁️ Ouvrir fiche publique</button>
-            <button class="btn" id="btnOpenPlanning" disabled>📅 Planning</button>
-            <button class="btn" id="btnOpenListing" disabled>📋 Listing</button>
             <button class="btn" id="btnTestMedia" disabled>🔎 Tester médias</button>
           </div>
 
@@ -399,9 +373,9 @@
 
         <div class="fieldGrid">
           <div>
-            <label>Business Code (unique)</label>
+            <label>Code business (unique)</label>
             <input id="f_business_code" placeholder="ex: VILLA_PARADISE_001" maxlength="50" />
-            <small class="hint">Code unique pour lier réservations + listing du jour</small>
+            <small class="hint">Sert à lier réservations + listing du jour</small>
           </div>
           <div>
             <label>Adresse (optionnel)</label>
@@ -417,7 +391,7 @@
           <div>
             <label>Photo principale (URL) *</label>
             <input id="f_photo" placeholder="https://exemple.com/photo.jpg" />
-            <small class="hint">Format: jpg, jpeg, png, webp</small>
+            <small class="hint">jpg / jpeg / png / webp</small>
           </div>
           <div>
             <label>Vidéo (Drive / YouTube / Vimeo)</label>
@@ -454,7 +428,7 @@
           <div>
             <label>Wave — Numéro *</label>
             <input id="f_wave_phone" placeholder="+221 77 123 45 67" />
-            <small class="hint">Format: +221 suivi de 9 chiffres</small>
+            <small class="hint">+221 suivi de 9 chiffres</small>
           </div>
           <div>
             <label>Wave — Nom affiché *</label>
@@ -471,7 +445,7 @@
           <div>
             <label>Acompte (%) *</label>
             <input id="f_deposit" type="number" min="0" max="100" step="5" placeholder="30" />
-            <small class="hint">Entre 0 et 100%</small>
+            <small class="hint">0 → 100%</small>
           </div>
         </div>
 
@@ -485,69 +459,53 @@
 
         <hr class="sep"/>
 
-        <!-- CALENDRIER (pliable premium) -->
-        <details class="previewBox" open>
-          <summary>📅 Calendrier (bloquer dates)</summary>
-          <div class="detailsBody">
-            <small class="hint">Bloque les périodes occupées. La fiche publique affichera disponible/non disponible.</small>
+        <!-- CALENDRIER -->
+        <div class="previewBox">
+          <div style="font-weight:1100">📅 Calendrier (bloquer dates)</div>
+          <small class="hint">Bloque les périodes occupées. La fiche publique affichera dispo/non dispo.</small>
 
-            <div class="fieldGrid" style="margin-top:8px">
-              <div>
-                <label>Début *</label>
-                <input type="date" id="calStart">
-              </div>
-              <div>
-                <label>Fin *</label>
-                <input type="date" id="calEnd">
-              </div>
+          <div class="fieldGrid" style="margin-top:8px">
+            <div>
+              <label>Début *</label>
+              <input type="date" id="calStart">
             </div>
-
-            <label>Raison (optionnel)</label>
-            <input id="calReason" placeholder="ex: Occupé / Maintenance / Réservé ailleurs" maxlength="100" />
-
-            <div class="btnRow" style="margin-top:10px">
-              <button class="btn primary" id="btnAddBlock" disabled>➕ Bloquer période</button>
-              <button class="btn" id="btnReloadBlocks" disabled>↻ Recharger</button>
+            <div>
+              <label>Fin *</label>
+              <input type="date" id="calEnd">
             </div>
-
-            <div class="note" id="calNote"></div>
-            <div class="simpleList" id="calList"></div>
           </div>
-        </details>
+
+          <label>Raison (optionnel)</label>
+          <input id="calReason" placeholder="ex: Occupé / Maintenance / Réservé ailleurs" maxlength="100" />
+
+          <div class="btnRow" style="margin-top:10px">
+            <button class="btn primary" id="btnAddBlock" disabled>➕ Bloquer période</button>
+            <button class="btn" id="btnReloadBlocks" disabled>↻ Recharger</button>
+          </div>
+
+          <div class="note" id="calNote"></div>
+          <div class="simpleList" id="calList"></div>
+        </div>
 
         <hr class="sep"/>
 
-        <!-- ACOMPTES (pliable premium) -->
-        <details class="previewBox">
-          <summary>💳 Acomptes (preuves Wave)</summary>
-          <div class="detailsBody">
-            <small class="hint">Liste des preuves d'acompte reçues. Confirme ou rejette chaque paiement.</small>
+        <!-- ACOMPTES -->
+        <div class="previewBox">
+          <div style="font-weight:1100">💳 Acomptes (preuves Wave)</div>
+          <small class="hint">Confirme ou rejette chaque paiement.</small>
 
-            <div class="btnRow" style="margin-top:10px">
-              <button class="btn" id="btnReloadPays" disabled>↻ Recharger</button>
-            </div>
-
-            <div class="note" id="payAdminNote"></div>
-            <div class="simpleList" id="payList"></div>
+          <div class="btnRow" style="margin-top:10px">
+            <button class="btn" id="btnReloadPays" disabled>↻ Recharger</button>
           </div>
-        </details>
 
-        <!-- MOBILE DOCK (sticky bottom) -->
-        <div class="mobileDock">
-          <div class="btnRow">
-            <button class="btn primary" id="dockSave">💾 Save</button>
-            <button class="btn gold" id="dockPublish">🚀 Publier</button>
-            <button class="btn" id="dockPlanning">📅 Planning</button>
-            <button class="btn" id="dockListing">📋 Listing</button>
-          </div>
+          <div class="note" id="payAdminNote"></div>
+          <div class="simpleList" id="payList"></div>
         </div>
 
       </div>
     </section>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
 /* =============================
@@ -559,17 +517,17 @@ const SUPABASE_ANON_KEY =
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =============================
-   PAGES / ROUTES (LIENS)
+   MAGIC LINK CLEAN (évite pages “polluées”)
 ============================= */
-const PAGES = {
-  links: "./manage-links.html",
-  publicLoc: "./loc.html",         // fiche publique: loc.html?id=...
-  planning: "./planning.html",     // planning (pro)
-  listing: "./listing.html",       // listing du jour: listing.html?business=XXX&date=YYYY-MM-DD
-  health: "./health-loc.html",     // health check
-  loginPin: "./authentification-loc.html", // accès par PIN (si besoin)
-  createPin: "./create-pin.html"   // création GO PIN (si besoin)
-};
+(function cleanMagicLink(){
+  try{
+    const h = location.hash || "";
+    // Supabase met parfois des tokens dans le hash (#access_token=...)
+    if(h.includes("access_token") || h.includes("refresh_token") || h.includes("type=recovery")){
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  }catch(_){}
+})();
 
 /* =============================
    DOM ELEMENTS
@@ -589,18 +547,13 @@ const authNote = document.getElementById("authNote");
 
 const btnNew = document.getElementById("btnNew");
 const btnRefresh = document.getElementById("btnRefresh");
-const btnOpenLinks = document.getElementById("btnOpenLinks");
 const listNote = document.getElementById("listNote");
 
 const btnSave = document.getElementById("btnSave");
 const btnPublish = document.getElementById("btnPublish");
 const btnDraft = document.getElementById("btnDraft");
 const btnDelete = document.getElementById("btnDelete");
-const btnCopyBC = document.getElementById("btnCopyBC");
-
 const btnOpenPublic = document.getElementById("btnOpenPublic");
-const btnOpenPlanning = document.getElementById("btnOpenPlanning");
-const btnOpenListing = document.getElementById("btnOpenListing");
 const btnTestMedia = document.getElementById("btnTestMedia");
 
 const pvImg = document.getElementById("pvImg");
@@ -641,15 +594,6 @@ const btnReloadPays = document.getElementById("btnReloadPays");
 const payAdminNote = document.getElementById("payAdminNote");
 const payList = document.getElementById("payList");
 
-/* Dock mobile */
-const dockSave = document.getElementById("dockSave");
-const dockPublish = document.getElementById("dockPublish");
-const dockPlanning = document.getElementById("dockPlanning");
-const dockListing = document.getElementById("dockListing");
-
-/* Toast */
-const toastEl = document.getElementById("toast");
-
 /* =============================
    STATE
 ============================= */
@@ -659,14 +603,33 @@ let hasUnsavedChanges = false;
 const FALLBACK_PHOTO = "https://digiylyfe.com/wp-content/uploads/2025/06/042-BAPTISTE.png";
 
 /* =============================
-   HELPERS
+   APP BACK (reste dans l'app)
 ============================= */
-function toast(msg, sub){
-  toastEl.innerHTML = msg + (sub ? `<small>${sub}</small>` : "");
-  toastEl.style.display = "block";
-  clearTimeout(window.__t);
-  window.__t = setTimeout(()=> toastEl.style.display="none", 2600);
-}
+(function appBack(){
+  const btn = document.getElementById("btnBack");
+  if(!btn) return;
+
+  function safeBack(){
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    // fallback “app”
+    window.location.href = "./app.html";
+  }
+
+  btn.addEventListener("click", (e)=>{
+    e.preventDefault();
+    if(hasUnsavedChanges){
+      if(!confirm("⚠️ Modifications non sauvegardées. Revenir quand même ?")) return;
+    }
+    safeBack();
+  });
+})();
+
+/* =============================
+   UTILITY FUNCTIONS
+============================= */
 function showNote(el, msg, type){
   el.style.display = "block";
   el.classList.remove("ok","bad","warn");
@@ -677,43 +640,6 @@ function hideNote(el){
   el.style.display="none";
   el.textContent="";
   el.classList.remove("ok","bad","warn");
-}
-function openPage(path){
-  window.location.href = path;
-}
-function openNewTab(url){
-  window.open(url, "_blank", "noopener");
-}
-function todayISO(){
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-function openListingForBusiness(businessCode){
-  const bc = (businessCode||"").trim().toUpperCase();
-  if(!bc) return toast("⚠️ business_code vide", "Renseigne ou génère le business_code d’abord.");
-  const u = new URL(PAGES.listing, window.location.href);
-  u.searchParams.set("business", bc);
-  u.searchParams.set("date", todayISO());
-  openNewTab(u.toString());
-}
-async function copyText(text){
-  try{
-    await navigator.clipboard.writeText(text);
-    toast("✅ Copié", text);
-  }catch(_){
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position="fixed";
-    ta.style.left="-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    toast("✅ Copié", text);
-  }
 }
 
 function toEmbedUrl(u){
@@ -729,16 +655,19 @@ function toEmbedUrl(u){
   if(m && m[1]) return "https://drive.google.com/file/d/" + m[1] + "/preview";
   return "";
 }
+
 function normalizeStatus(s){
   const v = String(s||"").toLowerCase().trim();
   if(["actif","active","published","online"].includes(v)) return "actif";
   return "brouillon";
 }
+
 function rowTag(status){
   const s = normalizeStatus(status);
   if(s==="actif") return `<span class="tag dot live">Actif</span>`;
   return `<span class="tag dot draft">Brouillon</span>`;
 }
+
 function generateBusinessCode(nom, ville){
   const n = (nom||"").toUpperCase().replace(/[^A-Z0-9]/g,"_").slice(0,20);
   const v = (ville||"").toUpperCase().replace(/[^A-Z0-9]/g,"_").slice(0,10);
@@ -771,7 +700,7 @@ function validateListing(p){
   if(p.deposit_percent < 0 || p.deposit_percent > 100) errors.push("❌ Acompte doit être entre 0 et 100%");
 
   if(p.business_code && !/^[A-Z0-9_]{3,50}$/.test(p.business_code)){
-    errors.push("❌ Business code invalide (A-Z, 0-9, _)");
+    errors.push("❌ Code business invalide (A-Z, 0-9, _)");
   }
   return errors;
 }
@@ -783,22 +712,11 @@ function enableEditorActions(yes){
   btnSave.disabled = !yes;
   btnPublish.disabled = !yes;
   btnDraft.disabled = !yes;
-
   btnOpenPublic.disabled = !yes;
-  btnOpenPlanning.disabled = !yes;
-  btnOpenListing.disabled = !yes;
   btnTestMedia.disabled = !yes;
-
   btnAddBlock.disabled = !yes;
   btnReloadBlocks.disabled = !yes;
   btnReloadPays.disabled = !yes;
-
-  btnCopyBC.disabled = !yes;
-
-  if(dockSave) dockSave.disabled = !yes;
-  if(dockPublish) dockPublish.disabled = !yes;
-  if(dockPlanning) dockPlanning.disabled = !yes;
-  if(dockListing) dockListing.disabled = !yes;
 }
 
 function setConnectedUI(user){
@@ -872,12 +790,13 @@ btnSendOtp.onclick = async ()=>{
   btnSendOtp.innerHTML = '<span class="spinner"></span> Envoi...';
 
   try{
+    // IMPORTANT: on revient sur index.html (pas manage-links), c’est plus fluide
     const { error } = await SB.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: location.origin + location.pathname }
     });
     if(error) throw error;
-    showNote(authNote, "✅ Lien envoyé! Va dans ton email et clique le lien magique.", "ok");
+    showNote(authNote, "✅ Lien envoyé! Ouvre ton email et clique le lien magique.", "ok");
   }catch(e){
     console.error(e);
     showNote(authNote, "❌ Erreur: " + (e?.message || e), "bad");
@@ -888,7 +807,7 @@ btnSendOtp.onclick = async ()=>{
 };
 
 btnLogout.onclick = async ()=>{
-  if(hasUnsavedChanges && !confirm("⚠️ Tu as des modifications non sauvegardées. Déconnexion quand même ?")){
+  if(hasUnsavedChanges && !confirm("⚠️ Modifications non sauvegardées. Déconnexion quand même ?")){
     return;
   }
   await SB.auth.signOut();
@@ -896,11 +815,7 @@ btnLogout.onclick = async ()=>{
   paintEditor(null);
   setConnectedUI(null);
   markClean();
-  toast("Déconnecté ✅");
 };
-
-/* Quick links */
-btnOpenLinks.onclick = ()=> openNewTab(PAGES.links);
 
 /* =============================
    LIST
@@ -971,7 +886,7 @@ async function loadList(){
       b.onclick = ()=> openOne(b.getAttribute("data-open"));
     });
     listEl.querySelectorAll("[data-view]").forEach(b=>{
-      b.onclick = ()=> openNewTab(PAGES.publicLoc + "?id=" + encodeURIComponent(b.getAttribute("data-view")));
+      b.onclick = ()=> window.open("loc.html?id=" + encodeURIComponent(b.getAttribute("data-view")), "_blank");
     });
     listEl.querySelectorAll("[data-dup]").forEach(b=>{
       b.onclick = ()=> duplicateOne(b.getAttribute("data-dup"));
@@ -992,7 +907,7 @@ btnRefresh.onclick = async ()=>{ await loadList(); };
    OPEN / NEW
 ============================= */
 async function openOne(id){
-  if(hasUnsavedChanges && !confirm("⚠️ Tu as des modifications non sauvegardées. Continuer ?")){
+  if(hasUnsavedChanges && !confirm("⚠️ Modifications non sauvegardées. Continuer ?")){
     return;
   }
 
@@ -1020,17 +935,12 @@ async function openOne(id){
   markClean();
 
   btnDelete.style.display = "inline-flex";
-
-  try{ localStorage.setItem("digiy_locpro_last", JSON.stringify({ at:new Date().toISOString(), id: current.id, business_code: current.business_code || "", nom: current.nom || "" })); }catch(_){}
-
   await loadBlocksForCurrent();
   await loadPaymentsForCurrent();
-
-  toast("Ouvert ✅", (current.nom || "Logement"));
 }
 
 function newDraft(){
-  if(hasUnsavedChanges && !confirm("⚠️ Tu as des modifications non sauvegardées. Continuer ?")){
+  if(hasUnsavedChanges && !confirm("⚠️ Modifications non sauvegardées. Continuer ?")){
     return;
   }
 
@@ -1132,7 +1042,6 @@ function collectForm(){
   if(!businessCode && f_nom.value && f_ville.value){
     businessCode = generateBusinessCode(f_nom.value, f_ville.value);
     f_business_code.value = businessCode;
-    toast("Business code généré ✅", businessCode);
   }
 
   return {
@@ -1173,9 +1082,6 @@ async function saveRecord(mode){
   btnSave.disabled = true;
   btnPublish.disabled = true;
   btnDraft.disabled = true;
-  if(dockSave) dockSave.disabled = true;
-  if(dockPublish) dockPublish.disabled = true;
-
   btnSave.innerHTML = '<span class="spinner"></span> Sauvegarde...';
 
   try{
@@ -1189,7 +1095,6 @@ async function saveRecord(mode){
 
       current.id = data.id;
       showNote(saveNote, `✅ Créé! ID: ${current.id}`, "ok");
-      toast("Créé ✅", current.id);
     }else{
       const { error } = await SB
         .from("digiy_logements")
@@ -1199,7 +1104,6 @@ async function saveRecord(mode){
 
       if(error) throw error;
       showNote(saveNote, "✅ Sauvegardé!", "ok");
-      toast("Sauvegardé ✅", current.nom || "Logement");
     }
 
     markClean();
@@ -1208,14 +1112,10 @@ async function saveRecord(mode){
   }catch(e){
     console.error(e);
     showNote(saveNote, "❌ Erreur:\n" + (e?.message || e), "bad");
-    toast("Erreur ❌", e?.message || String(e));
   }finally{
     btnSave.disabled = false;
     btnPublish.disabled = false;
     btnDraft.disabled = false;
-    if(dockSave) dockSave.disabled = false;
-    if(dockPublish) dockPublish.disabled = false;
-
     btnSave.innerHTML = '💾 Enregistrer';
   }
 }
@@ -1245,7 +1145,6 @@ btnDelete.onclick = async ()=>{
     if(error) throw error;
 
     showNote(editNote, "✅ Logement supprimé!", "ok");
-    toast("Supprimé ✅");
     current = null;
     paintEditor(null);
     markClean();
@@ -1254,7 +1153,6 @@ btnDelete.onclick = async ()=>{
   }catch(e){
     console.error(e);
     showNote(editNote, "❌ Suppression refusée:\n" + (e?.message || e), "bad");
-    toast("Suppression refusée ❌", e?.message || String(e));
   }finally{
     btnDelete.disabled = false;
     btnDelete.innerHTML = '🗑️ Supprimer';
@@ -1291,27 +1189,11 @@ btnTestMedia.onclick = ()=>{
   pvWave.textContent = (wn ? wn + " • " : "") + (wp || "—");
   pvVille.textContent = payload.ville || "—";
   pvStatus.textContent = payload.status || "—";
-
-  toast("Préview mise à jour ✅");
 };
 
 btnOpenPublic.onclick = ()=>{
   if(!current || !current.id) return showNote(editNote, "❌ Sauvegarde d'abord (pas d'ID).", "bad");
-  openNewTab(PAGES.publicLoc + "?id=" + encodeURIComponent(current.id));
-};
-
-btnOpenPlanning.onclick = ()=> openNewTab(PAGES.planning);
-
-btnOpenListing.onclick = ()=>{
-  const bc = (current?.business_code || f_business_code.value || "").trim();
-  openListingForBusiness(bc);
-};
-
-/* Copier business_code */
-btnCopyBC.onclick = async ()=>{
-  const bc = (current?.business_code || f_business_code.value || "").trim().toUpperCase();
-  if(!bc) return toast("⚠️ business_code vide", "Renseigne ou génère le business_code.");
-  await copyText(bc);
+  window.open("loc.html?id=" + encodeURIComponent(current.id), "_blank");
 };
 
 /* =============================
@@ -1365,7 +1247,6 @@ async function duplicateOne(id){
   }
 
   showNote(listNote, `✅ Dupliqué! Nouveau logement: ${created.id}`, "ok");
-  toast("Dupliqué ✅", created.id);
   await loadList();
   await openOne(created.id);
   showNote(editNote, "✨ Copie prête. Renomme + ajuste puis Publier.", "ok");
@@ -1401,7 +1282,6 @@ btnAddBlock.onclick = async ()=>{
     if(error) throw error;
 
     showNote(calNote, "✅ Période bloquée!", "ok");
-    toast("Période bloquée ✅", `${s} → ${e}`);
     calStart.value = "";
     calEnd.value = "";
     calReason.value = "";
@@ -1409,7 +1289,6 @@ btnAddBlock.onclick = async ()=>{
   }catch(err){
     console.error(err);
     showNote(calNote, "❌ Blocage refusé:\n" + (err?.message || err), "bad");
-    toast("Blocage refusé ❌", err?.message || String(err));
   }finally{
     btnAddBlock.disabled = false;
     btnAddBlock.innerHTML = '➕ Bloquer période';
@@ -1464,12 +1343,10 @@ async function loadBlocksForCurrent(){
 
           if(error) throw error;
           showNote(calNote, "✅ Bloc supprimé!", "ok");
-          toast("Bloc supprimé ✅");
           await loadBlocksForCurrent();
         }catch(e){
           console.error(e);
           showNote(calNote, "❌ Suppression refusée:\n" + (e?.message || e), "bad");
-          toast("Suppression refusée ❌", e?.message || String(e));
         }
       };
     });
@@ -1560,34 +1437,12 @@ async function updatePayStatus(id, status){
     if(error) throw error;
 
     showNote(payAdminNote, `✅ Statut mis à jour: ${status}`, "ok");
-    toast("Statut mis à jour ✅", status);
     await loadPaymentsForCurrent();
   }catch(e){
     console.error(e);
     showNote(payAdminNote, "❌ Update refusé:\n" + (e?.message || e), "bad");
-    toast("Update refusé ❌", e?.message || String(e));
   }
 }
-
-/* =============================
-   DOCK ACTIONS
-============================= */
-if(dockSave) dockSave.onclick = ()=> saveRecord("save");
-if(dockPublish) dockPublish.onclick = ()=> saveRecord("publish");
-if(dockPlanning) dockPlanning.onclick = ()=> openNewTab(PAGES.planning);
-if(dockListing) dockListing.onclick = ()=>{
-  const bc = (current?.business_code || f_business_code.value || "").trim();
-  openListingForBusiness(bc);
-};
-
-/* =============================
-   QUICK NAV (editor buttons)
-============================= */
-btnOpenPlanning.onclick = ()=> openNewTab(PAGES.planning);
-btnOpenListing.onclick = ()=> {
-  const bc = (current?.business_code || f_business_code.value || "").trim();
-  openListingForBusiness(bc);
-};
 
 /* =============================
    AUTH LISTENER
@@ -1607,15 +1462,6 @@ SB.auth.onAuthStateChange((_event, session)=>{
 ============================= */
 refreshSession();
 paintEditor(null);
-
-/* ===== Optionnel: auto-save light (décommente si tu veux) =====
-setInterval(async ()=>{
-  if(!sessionUser) return;
-  if(!current || !current.id) return;
-  if(!hasUnsavedChanges) return;
-  try{ await saveRecord("save"); }catch(_){}
-}, 20000);
-*/
 </script>
 </body>
 </html>
