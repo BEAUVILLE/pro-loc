@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>GO PIN — Création</title>
   <meta name="theme-color" content="#16a34a" />
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- ✅ Guard (slug + retour planning/login + phone préfill) -->
+  <script src="./guard.js?v=locpro-2"></script>
+
   <style>
     :root{--bg:#061b14;--card:#0b2a1f;--line:rgba(255,255,255,.14);--text:#eafff1;--muted:rgba(234,255,241,.78);--g:#16a34a;--r:18px}
     *{box-sizing:border-box}
@@ -17,18 +22,42 @@
     label{display:block;margin:10px 0 6px;color:var(--muted);font-size:12px}
     input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);outline:none}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .btn{margin-top:12px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:var(--text);font-weight:800}
+    .btn{margin-top:12px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:var(--text);font-weight:800;cursor:pointer}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
     .row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:14px}
     .qr{background:#fff;border-radius:14px;padding:10px}
-    .muted{color:var(--muted);font-size:12px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.35}
     pre{white-space:pre-wrap;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:12px;border-radius:14px}
+    .top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
+    .pill b{color:var(--text)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .mini{padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:800;cursor:pointer}
+    .mini.ok{border-color:rgba(34,197,94,.45)}
+    .mini.bad{border-color:rgba(239,68,68,.45)}
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="card">
+
+      <div class="top">
+        <div class="pill">Module: <b>GO PIN</b> · slug: <b id="pillSlug">—</b></div>
+        <div class="actions">
+          <button class="mini ok" id="btnPlanning">✅ Planning</button>
+          <button class="mini" id="btnLogin">🔐 Login</button>
+          <button class="mini bad" id="btnLogout">🚪 Déconnexion</button>
+        </div>
+      </div>
+
       <h1>GO PIN — création (DAK-XXXXX)</h1>
-      <div class="muted">⚠️ Auth requise (session Supabase). Si tu n’es pas connecté, la création sera refusée.</div>
+      <div class="muted">
+        ⚠️ Cette page crée un GO PIN via RPC <b>create_go_pin</b>.<br/>
+        Elle peut utiliser : <b>(1)</b> ta session DIGIY_GUARD (téléphone/slug) pour pré-remplir,
+        et <b>(2)</b> une session Supabase (si ton RPC exige auth).<br/>
+        Si ton RPC ne demande pas auth, ça marche quand même.
+      </div>
 
       <div class="grid" style="margin-top:10px">
         <div>
@@ -76,9 +105,13 @@
           <div style="flex:1;min-width:280px">
             <div class="muted">Résultat</div>
             <pre id="json"></pre>
-            <div class="muted">Lien public (à mettre dans le QR)</div>
+
+            <div class="muted" style="margin-top:10px">Lien public (à mettre dans le QR)</div>
             <pre id="link"></pre>
+
+            <div class="muted" style="margin-top:10px">Astuce: ce lien ouvre <b>pin.html</b> (public) avec <b>?slug=</b></div>
           </div>
+
           <div>
             <div class="muted">QR</div>
             <div class="qr" id="qrcode"></div>
@@ -94,13 +127,14 @@
 (function(){
   "use strict";
 
-  // ✅ Tes variables Supabase
+  // =============================
+  // SUPABASE
+  // =============================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA".replace(
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA"
-  );
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const $ = (id)=>document.getElementById(id);
 
@@ -111,51 +145,116 @@
     return Number.isFinite(n) ? n : null;
   }
 
+  function setErr(msg){
+    $("err").textContent = msg || "";
+    $("err").style.display = msg ? "block" : "none";
+  }
+
+  function setOut(on){
+    $("out").style.display = on ? "block" : "none";
+  }
+
+  function setBusy(on){
+    $("create").disabled = !!on;
+    $("create").textContent = on ? "⏳ Création..." : "Créer le GO PIN";
+  }
+
+  // =============================
+  // GUARD (slug + liens + préfill)
+  // =============================
+  const hasGuard = !!(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.withSlug === "function");
+
+  function safeWithSlug(url){
+    if(hasGuard) return window.DIGIY_GUARD.withSlug(url);
+    return url;
+  }
+
+  function getSlug(){
+    if(hasGuard && typeof window.DIGIY_GUARD.getSlug === "function") return window.DIGIY_GUARD.getSlug();
+    try{ return new URL(location.href).searchParams.get("slug") || ""; }catch(_){ return ""; }
+  }
+
+  // Top pills + buttons
+  const slug = getSlug();
+  $("pillSlug").textContent = slug || "—";
+
+  $("btnPlanning").onclick = ()=> location.href = safeWithSlug("./planning.html");
+  $("btnLogin").onclick = ()=> location.href = safeWithSlug("./login.html");
+  $("btnLogout").onclick = ()=>{
+    try{ window.DIGIY_GUARD?.clearSession?.(); }catch(_){}
+    location.replace(safeWithSlug("./login.html"));
+  };
+
+  // Prefill phone/whatsapp from guard session if possible
+  try{
+    const sess = window.DIGIY_GUARD?.getSession?.();
+    const phone = sess?.phone || window.DIGIY_GUARD?.getPhone?.() || "";
+    if(phone){
+      $("phone").value = phone;
+      $("whatsapp").value = phone;
+    }
+  }catch(_){}
+
+  // Prefill slug input with current slug
+  if(slug && !$("slug").value) $("slug").value = slug;
+
+  // =============================
+  // Create GO PIN
+  // =============================
   $("create").addEventListener("click", async ()=>{
-    $("err").style.display="none";
-    $("out").style.display="none";
+    setErr("");
+    setOut(false);
     $("qrcode").innerHTML = "";
 
     const payload = {
       p_title: $("title").value.trim(),
-      p_category: $("category").value.trim() || "service",
-      p_phone: $("phone").value.trim() || null,
-      p_whatsapp: $("whatsapp").value.trim() || null,
-      p_address_label: $("address_label").value.trim() || null,
+      p_category: ($("category").value.trim() || "service"),
+      p_phone: ($("phone").value.trim() || null),
+      p_whatsapp: ($("whatsapp").value.trim() || null),
+      p_address_label: ($("address_label").value.trim() || null),
       p_lat: numOrNull($("lat").value),
       p_lng: numOrNull($("lng").value),
-      p_slug: $("slug").value.trim() || null
+      p_slug: ($("slug").value.trim() || null)
     };
 
     if(!payload.p_title){
-      $("err").textContent = "Titre obligatoire.";
-      $("err").style.display="block";
+      setErr("Titre obligatoire.");
       return;
     }
 
-    const { data, error } = await sb.rpc("create_go_pin", payload);
+    setBusy(true);
+    try{
+      const { data, error } = await sb.rpc("create_go_pin", payload);
 
-    if(error){
-      $("err").textContent = "Erreur: " + (error.message || "inconnue") + " (vérifie que tu es connecté)";
-      $("err").style.display="block";
-      return;
+      if(error){
+        setErr("Erreur: " + (error.message || "inconnue") + " (si ton RPC exige auth: connecte-toi d’abord)");
+        return;
+      }
+
+      setOut(true);
+      $("json").textContent = JSON.stringify(data, null, 2);
+
+      // Base folder (robuste)
+      const u = new URL(location.href);
+      u.hash = "";
+      u.search = "";
+      u.pathname = u.pathname.replace(/[^/]*$/, ""); // keep folder
+
+      const publicLink = u.toString() + "pin.html?slug=" + encodeURIComponent(data.slug);
+      $("link").textContent = publicLink;
+
+      new QRCode($("qrcode"), { text: publicLink, width: 180, height: 180 });
+
+    }catch(e){
+      console.error(e);
+      setErr("Erreur runtime: " + String(e?.message || e));
+    }finally{
+      setBusy(false);
     }
-
-    $("out").style.display="block";
-    $("json").textContent = JSON.stringify(data, null, 2);
-
-    // Lien public vers pin.html
-    const base = location.href.replace(/create-pin\.html.*$/,'');
-    const publicLink = base + "pin.html?slug=" + encodeURIComponent(data.slug);
-    $("link").textContent = publicLink;
-
-    new QRCode($("qrcode"), {
-      text: publicLink,
-      width: 180,
-      height: 180
-    });
   });
+
 })();
 </script>
+
 </body>
 </html>
