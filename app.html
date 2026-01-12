@@ -4,9 +4,11 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>DIGIY LOC PRO — Gestion Location</title>
-  
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+  <!-- ✅ Guard (cache-bust) -->
+  <script src="./guard.js?v=locpro-2"></script>
+
   <style>
     :root{
       --bg:#061b14;
@@ -19,9 +21,7 @@
       --muted:#9ca3af;
       --border:rgba(148,163,184,0.2);
     }
-    
     *{box-sizing:border-box;margin:0;padding:0}
-    
     body{
       margin:0;
       font-family:system-ui,sans-serif;
@@ -29,9 +29,8 @@
       color:var(--text);
       min-height:100vh;
     }
-    
     .container{max-width:1400px;margin:0 auto;padding:1rem}
-    
+
     /* HEADER */
     .header{
       background:rgba(255,255,255,0.05);
@@ -46,7 +45,6 @@
       flex-wrap:wrap;
       gap:1rem;
     }
-    
     .header h1{
       font-size:1.8rem;
       margin:0;
@@ -54,13 +52,8 @@
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
-    
-    .header-actions{
-      display:flex;
-      gap:0.5rem;
-      flex-wrap:wrap;
-    }
-    
+    .header-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
+
     /* TABS */
     .tabs{
       display:flex;
@@ -69,7 +62,6 @@
       overflow-x:auto;
       padding-bottom:0.5rem;
     }
-    
     .tab{
       padding:0.75rem 1.5rem;
       background:rgba(255,255,255,0.05);
@@ -81,22 +73,13 @@
       font-weight:600;
       font-size:0.9rem;
     }
-    
-    .tab:hover{
-      background:rgba(255,255,255,0.1);
-      border-color:var(--accent);
-    }
-    
-    .tab.active{
-      background:var(--accent);
-      color:#000;
-      border-color:var(--accent);
-    }
-    
+    .tab:hover{background:rgba(255,255,255,0.1);border-color:var(--accent);}
+    .tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
+
     /* CONTENT */
     .content{display:none}
     .content.active{display:block}
-    
+
     /* CARDS */
     .card{
       background:rgba(255,255,255,0.05);
@@ -106,13 +89,12 @@
       padding:1.5rem;
       margin-bottom:1rem;
     }
-    
     .card h2{
       font-size:1.3rem;
       margin:0 0 1rem;
       color:var(--accent);
     }
-    
+
     /* STATS */
     .stats-grid{
       display:grid;
@@ -120,14 +102,12 @@
       gap:1rem;
       margin-bottom:1.5rem;
     }
-    
     .stat-card{
       background:rgba(255,255,255,0.05);
       padding:1.5rem;
       border-radius:12px;
       border:1px solid var(--border);
     }
-    
     .stat-label{
       font-size:0.85rem;
       color:var(--muted);
@@ -135,13 +115,12 @@
       font-weight:600;
       text-transform:uppercase;
     }
-    
     .stat-value{
       font-size:2rem;
       font-weight:900;
       color:var(--accent);
     }
-    
+
     /* BUTTONS */
     .btn{
       padding:0.75rem 1.5rem;
@@ -155,80 +134,32 @@
       align-items:center;
       gap:0.5rem;
     }
-    
-    .btn-primary{
-      background:var(--accent);
-      color:#000;
-    }
-    
-    .btn-primary:hover{
-      transform:translateY(-2px);
-      box-shadow:0 8px 16px rgba(250,204,21,0.3);
-    }
-    
-    .btn-success{
-      background:var(--success);
-      color:#fff;
-    }
-    
-    .btn-danger{
-      background:var(--danger);
-      color:#fff;
-    }
-    
-    .btn-secondary{
-      background:rgba(255,255,255,0.1);
-      color:var(--text);
-      border:1px solid var(--border);
-    }
-    
+    .btn-primary{background:var(--accent);color:#000;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(250,204,21,0.3);}
+    .btn-success{background:var(--success);color:#fff;}
+    .btn-danger{background:var(--danger);color:#fff;}
+    .btn-secondary{background:rgba(255,255,255,0.1);color:var(--text);border:1px solid var(--border);}
+
     /* TABLE */
-    table{
-      width:100%;
-      border-collapse:collapse;
-    }
-    
-    th,td{
-      padding:1rem;
-      text-align:left;
-      border-bottom:1px solid var(--border);
-    }
-    
-    th{
-      font-size:0.85rem;
-      color:var(--muted);
-      font-weight:700;
-      text-transform:uppercase;
-    }
-    
-    td{
-      font-size:0.95rem;
-    }
-    
-    tr:hover{
-      background:rgba(255,255,255,0.05);
-    }
-    
+    table{width:100%;border-collapse:collapse;}
+    th,td{padding:1rem;text-align:left;border-bottom:1px solid var(--border);}
+    th{font-size:0.85rem;color:var(--muted);font-weight:700;text-transform:uppercase;}
+    td{font-size:0.95rem;}
+    tr:hover{background:rgba(255,255,255,0.05);}
+
     /* FORM */
     .form-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
       gap:1rem;
     }
-    
-    .form-group{
-      display:flex;
-      flex-direction:column;
-      gap:0.5rem;
-    }
-    
+    .form-group{display:flex;flex-direction:column;gap:0.5rem;}
     label{
       font-size:0.85rem;
       color:var(--muted);
       font-weight:600;
       text-transform:uppercase;
     }
-    
     input,textarea,select{
       padding:0.75rem;
       border-radius:8px;
@@ -239,17 +170,12 @@
       outline:none;
       transition:all 0.2s;
     }
-    
     input:focus,textarea:focus,select:focus{
       border-color:var(--accent);
       box-shadow:0 0 0 2px rgba(250,204,21,0.2);
     }
-    
-    textarea{
-      resize:vertical;
-      min-height:100px;
-    }
-    
+    textarea{resize:vertical;min-height:100px;}
+
     /* BADGE */
     .badge{
       display:inline-block;
@@ -258,42 +184,21 @@
       font-size:0.75rem;
       font-weight:700;
     }
-    
-    .badge-success{
-      background:rgba(34,197,94,0.2);
-      color:var(--success);
-    }
-    
-    .badge-warning{
-      background:rgba(250,204,21,0.2);
-      color:var(--accent);
-    }
-    
-    .badge-danger{
-      background:rgba(239,68,68,0.2);
-      color:var(--danger);
-    }
-    
+    .badge-success{background:rgba(34,197,94,0.2);color:var(--success);}
+    .badge-warning{background:rgba(250,204,21,0.2);color:var(--accent);}
+    .badge-danger{background:rgba(239,68,68,0.2);color:var(--danger);}
+
     /* MODAL */
     .modal{
       display:none;
       position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
+      top:0;left:0;width:100%;height:100%;
       background:rgba(0,0,0,0.8);
       z-index:1000;
       padding:2rem;
       overflow-y:auto;
     }
-    
-    .modal.active{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    
+    .modal.active{display:flex;align-items:center;justify-content:center;}
     .modal-content{
       background:var(--card);
       border:1px solid var(--border);
@@ -304,20 +209,13 @@
       max-height:90vh;
       overflow-y:auto;
     }
-    
     .modal-header{
       display:flex;
       justify-content:space-between;
       align-items:center;
       margin-bottom:1.5rem;
     }
-    
-    .modal-header h3{
-      font-size:1.5rem;
-      color:var(--accent);
-      margin:0;
-    }
-    
+    .modal-header h3{font-size:1.5rem;color:var(--accent);margin:0;}
     .modal-close{
       font-size:1.5rem;
       cursor:pointer;
@@ -326,48 +224,8 @@
       border:none;
       padding:0.5rem;
     }
-    
-    .modal-close:hover{
-      color:var(--text);
-    }
-    
-    /* CALENDAR */
-    .calendar{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:0.5rem;
-    }
-    
-    .calendar-day{
-      aspect-ratio:1;
-      padding:0.5rem;
-      background:rgba(255,255,255,0.05);
-      border:1px solid var(--border);
-      border-radius:8px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      transition:all 0.2s;
-      font-size:0.9rem;
-    }
-    
-    .calendar-day:hover{
-      background:rgba(255,255,255,0.1);
-      border-color:var(--accent);
-    }
-    
-    .calendar-day.reserved{
-      background:rgba(239,68,68,0.2);
-      border-color:var(--danger);
-    }
-    
-    .calendar-day.available{
-      background:rgba(34,197,94,0.2);
-      border-color:var(--success);
-    }
-    
+    .modal-close:hover{color:var(--text);}
+
     /* LOGEMENT CARD */
     .logement-card{
       background:rgba(255,255,255,0.05);
@@ -380,41 +238,17 @@
       gap:1.5rem;
       align-items:start;
     }
-    
-    .logement-img{
-      width:200px;
-      height:150px;
-      object-fit:cover;
-      border-radius:8px;
-    }
-    
-    .logement-info h3{
-      margin:0 0 0.5rem;
-      color:var(--accent);
-      font-size:1.2rem;
-    }
-    
-    .logement-info p{
-      margin:0.25rem 0;
-      color:var(--muted);
-      font-size:0.9rem;
-    }
-    
-    .logement-actions{
-      display:flex;
-      flex-direction:column;
-      gap:0.5rem;
-    }
-    
+    .logement-img{width:200px;height:150px;object-fit:cover;border-radius:8px;}
+    .logement-info h3{margin:0 0 0.5rem;color:var(--accent);font-size:1.2rem;}
+    .logement-info p{margin:0.25rem 0;color:var(--muted);font-size:0.9rem;}
+    .logement-actions{display:flex;flex-direction:column;gap:0.5rem;}
+
     @media(max-width:768px){
       .container{padding:0.5rem}
       .header{padding:1rem}
       .header h1{font-size:1.3rem}
       .stats-grid{grid-template-columns:1fr}
-      .logement-card{
-        grid-template-columns:1fr;
-        gap:1rem;
-      }
+      .logement-card{grid-template-columns:1fr;gap:1rem;}
       .logement-img{width:100%;height:200px}
       .form-grid{grid-template-columns:1fr}
       table{font-size:0.85rem}
@@ -422,6 +256,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -430,8 +265,8 @@
     <div>
       <h1>🏠 DIGIY LOC PRO</h1>
       <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
-        <span id="userName">Jean Baptiste Beauville</span> · 
-        <span id="userPhone">+221 77 134 28 89</span>
+        <span id="userName">Gestionnaire</span> ·
+        <span id="userPhone">—</span>
       </p>
     </div>
     <div class="header-actions">
@@ -446,11 +281,11 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-    <div class="tab" onclick="switchTab('logements')">🏠 Mes logements</div>
-    <div class="tab" onclick="switchTab('reservations')">📅 Réservations</div>
-    <div class="tab" onclick="switchTab('calendrier')">📆 Calendrier</div>
-    <div class="tab" onclick="switchTab('stats')">📈 Statistiques</div>
+    <div class="tab active" onclick="switchTab('dashboard', event)">📊 Dashboard</div>
+    <div class="tab" onclick="switchTab('logements', event)">🏠 Mes logements</div>
+    <div class="tab" onclick="switchTab('reservations', event)">📅 Réservations</div>
+    <div class="tab" onclick="switchTab('calendrier', event)">📆 Calendrier</div>
+    <div class="tab" onclick="switchTab('stats', event)">📈 Statistiques</div>
   </div>
 
   <!-- CONTENT: DASHBOARD -->
@@ -493,9 +328,7 @@
   <div id="logements" class="content">
     <div class="card">
       <h2>🏠 Mes logements</h2>
-      <div id="listeLogements">
-        <!-- Logements chargés dynamiquement -->
-      </div>
+      <div id="listeLogements"></div>
     </div>
   </div>
 
@@ -531,9 +364,7 @@
   <div id="calendrier" class="content">
     <div class="card">
       <h2>📆 Calendrier de disponibilité</h2>
-      <div id="calendarView">
-        <!-- Calendrier généré dynamiquement -->
-      </div>
+      <div id="calendarView"></div>
     </div>
   </div>
 
@@ -555,50 +386,50 @@
       <h3>➕ Ajouter un logement</h3>
       <button class="modal-close" onclick="closeModal('modalAddLogement')">✕</button>
     </div>
-    
+
     <form id="formAddLogement" onsubmit="saveLogement(event)">
       <div class="form-grid">
         <div class="form-group">
           <label>Nom du logement *</label>
           <input type="text" name="nom" required placeholder="Ex: CHEZ BAPTISTE">
         </div>
-        
+
         <div class="form-group">
           <label>Adresse *</label>
           <input type="text" name="adresse" required placeholder="Saly, Sénégal">
         </div>
-        
+
         <div class="form-group">
           <label>Personnes max *</label>
           <input type="number" name="personnes_max" required min="1" value="4">
         </div>
-        
+
         <div class="form-group">
           <label>Prix nuit (FCFA) *</label>
           <input type="number" name="prix_nuit" required placeholder="30000">
         </div>
-        
+
         <div class="form-group">
           <label>Prix semaine (FCFA)</label>
           <input type="number" name="prix_semaine" placeholder="175000">
         </div>
-        
+
         <div class="form-group">
           <label>Prix mois (FCFA)</label>
           <input type="number" name="prix_mois" placeholder="550000">
         </div>
       </div>
-      
+
       <div class="form-group" style="margin-top:1rem">
         <label>Description</label>
         <textarea name="description" placeholder="Quartier calme, Sénélec en sus, etc."></textarea>
       </div>
-      
+
       <div class="form-group" style="margin-top:1rem">
         <label>URL Photo</label>
         <input type="url" name="photo_url" placeholder="https://...">
       </div>
-      
+
       <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
         <button type="button" class="btn btn-secondary" onclick="closeModal('modalAddLogement')">
           Annuler
@@ -612,47 +443,42 @@
 </div>
 
 <script>
+/* =============================
+   SUPABASE (si tu en as besoin ici)
+============================= */
 const SUPABASE_CONFIG = {
   url: "https://wesqmwjjtsefyjnluosj.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA"
 };
-
 const sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-const userPhone = localStorage.getItem('digiy_auth_phone') || '+221771342889';
 
-// Init
-window.addEventListener('load', () => {
-  loadDashboard();
-  loadLogements();
-});
-
-// Switch tabs
-function switchTab(tabName) {
+/* =============================
+   UI
+============================= */
+function switchTab(tabName, ev) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-  
-  event.target.classList.add('active');
-  document.getElementById(tabName).classList.add('active');
-  
+  if(ev && ev.target) ev.target.classList.add('active');
+  const el = document.getElementById(tabName);
+  if(el) el.classList.add('active');
+
   if (tabName === 'logements') loadLogements();
   if (tabName === 'reservations') loadReservations();
   if (tabName === 'calendrier') loadCalendar();
 }
 
-// Dashboard
+// Dashboard (placeholder)
 async function loadDashboard() {
-  // Stats fictives pour le moment
   document.getElementById('revenusMois').textContent = '0 F';
   document.getElementById('tauxOccupation').textContent = '0%';
   document.getElementById('resasActives').textContent = '0';
   document.getElementById('logementsActifs').textContent = '1';
 }
 
-// Logements
+// Logements (placeholder)
 async function loadLogements() {
   const container = document.getElementById('listeLogements');
-  
-  // Logement exemple CHEZ BAPTISTE
+
   const logementBaptiste = {
     nom: 'CHEZ BAPTISTE',
     adresse: 'Saly, Sénégal',
@@ -664,7 +490,7 @@ async function loadLogements() {
     photo_url: 'https://via.placeholder.com/200x150?text=CHEZ+BAPTISTE',
     status: 'actif'
   };
-  
+
   container.innerHTML = `
     <div class="logement-card">
       <img src="${logementBaptiste.photo_url}" alt="${logementBaptiste.nom}" class="logement-img">
@@ -693,20 +519,14 @@ async function loadLogements() {
 }
 
 // Réservations
-async function loadReservations() {
-  // À implémenter avec vraies données
-}
-
+async function loadReservations() { /* à implémenter */ }
 // Calendrier
-async function loadCalendar() {
-  // À implémenter
-}
+async function loadCalendar() { /* à implémenter */ }
 
 // Modal
 function openAddLogement() {
   document.getElementById('modalAddLogement').classList.add('active');
 }
-
 function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('active');
 }
@@ -716,21 +536,57 @@ async function saveLogement(e) {
   e.preventDefault();
   const formData = new FormData(e.target);
   const data = Object.fromEntries(formData);
-  
   console.log('Nouveau logement:', data);
   alert('✅ Logement enregistré ! (Fonctionnalité à finaliser)');
   closeModal('modalAddLogement');
   loadLogements();
 }
 
-// Logout
+// Logout (✅ guard-friendly)
 function logout() {
   if (confirm('Se déconnecter ?')) {
-    localStorage.removeItem('digiy_auth_phone');
-    sessionStorage.removeItem('digiy_auth_phone');
-    window.location.href = 'login.html';
+    try{ window.DIGIY_GUARD?.clearSession?.(); }catch(_){}
+    const u = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html";
+    window.location.replace(u);
   }
 }
+
+/* =============================
+   ✅ GUARD FIRST + INIT
+============================= */
+(function(){
+  const MODULE = "LOC";
+  const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
+
+  if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
+    console.warn("Guard absent (guard.js non chargé).");
+    return;
+  }
+
+  // 🔒 protège la page (redirige si pas session/abo)
+  window.DIGIY_GUARD.boot({
+    module: MODULE,
+    dashboard: "./planning.html",
+    login: "./login.html",
+    pay: PAY_URL,
+    requireSlug: true,
+    checkSubscription: true
+  });
+
+  // Si on reste ici => OK : on initialise l'app
+  try{
+    const sess = window.DIGIY_GUARD.getSession ? window.DIGIY_GUARD.getSession() : null;
+    const phone = sess?.phone || (window.DIGIY_GUARD.getPhone && window.DIGIY_GUARD.getPhone()) || "";
+
+    const phoneEl = document.getElementById("userPhone");
+    if(phoneEl) phoneEl.textContent = phone || "—";
+
+    loadDashboard();
+    loadLogements();
+  }catch(e){
+    console.warn("Init error:", e);
+  }
+})();
 </script>
 
 </body>
