@@ -305,6 +305,15 @@
           <div class="n" id="kpiArr">0</div>
           <div class="l">Arrivées</div>
         </div>
+        <div class="actions" style="margin-top:12px">
+  <button class="btn whatsapp" id="shareWA">📲 Partager WhatsApp</button>
+  <button class="btn call" id="shareSMS">💬 Partager SMS</button>
+</div>
+
+<div class="actions" style="margin-top:10px">
+  <button class="btn ok" id="copyLink">🔗 Copier le lien</button>
+  <button class="btn" id="copyMsg">📝 Copier le message</button>
+</div>
         <div class="kpi">
           <div class="n" id="kpiDep">0</div>
           <div class="l">Départs</div>
@@ -553,6 +562,79 @@
       const last = localStorage.getItem("digiy_loc_listing_tab") || "arr";
       setTab(["arr","dep","occ"].includes(last) ? last : "arr");
     })();
+// =============================
+// OPTION A — PARTAGE (sans API)
+// WhatsApp / SMS / Copier
+// =============================
+function buildListingUrl(){
+  const url = new URL(window.location.href);
+  // On garde business + date dans l’URL si présents
+  const business = url.searchParams.get("business") || DEMO.business_code || "";
+  const date = url.searchParams.get("date") || (new Date()).toISOString().slice(0,10);
+  url.searchParams.set("business", business);
+  url.searchParams.set("date", date);
+  return url.toString();
+}
+
+function buildShareMessage(){
+  const arr = DEMO.arrivals.length;
+  const dep = DEMO.departures.length;
+  const occ = DEMO.occupied.length;
+  const dateLabel = ($("todayLabel")?.textContent || "").trim();
+  const business = DEMO.business_code || "";
+  const link = buildListingUrl();
+
+  return `📋 DIGIY LOC — Listing du Jour
+${business ? "🏠 " + business + "\n" : ""}${dateLabel ? "📅 " + dateLabel + "\n" : ""}Arrivées: ${arr} • Départs: ${dep} • En cours: ${occ}
+
+Ouvrir: ${link}`;
+}
+
+function openWhatsAppShare(){
+  const msg = buildShareMessage();
+  // WhatsApp share — fonctionne mobile (Android/iOS) si WhatsApp installé
+  const link = "https://wa.me/?text=" + encodeURIComponent(msg);
+  window.open(link, "_blank", "noopener");
+}
+
+function openSmsShare(){
+  const msg = buildShareMessage();
+  // SMS: iOS/Android gèrent ?body=... (parfois &body=...). On gère les deux.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const sep = isIOS ? "&" : "?";
+  window.location.href = `sms:${sep}body=${encodeURIComponent(msg)}`;
+}
+
+async function copyToClipboard(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast("Copié ✅");
+  }catch(e){
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    toast("Copié ✅");
+  }
+}
+
+// Wire buttons
+(function wireShareButtons(){
+  const bWA = $("shareWA");
+  const bSMS = $("shareSMS");
+  const bLink = $("copyLink");
+  const bMsg = $("copyMsg");
+
+  if (bWA) bWA.addEventListener("click", openWhatsAppShare);
+  if (bSMS) bSMS.addEventListener("click", openSmsShare);
+  if (bLink) bLink.addEventListener("click", ()=> copyToClipboard(buildListingUrl()));
+  if (bMsg) bMsg.addEventListener("click", ()=> copyToClipboard(buildShareMessage()));
+})();    
   </script>
 </body>
 </html>
