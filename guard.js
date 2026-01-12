@@ -1,11 +1,12 @@
 /* =========================
-   DIGIY LOC PRO GUARD — GitHub Pages SAFE (FINAL)
+   DIGIY LOC PRO GUARD — GitHub Pages SAFE (FINAL + PENDING)
    - RPC: verify_access_pin(p_phone,p_pin,p_module) -> json|bool
    - RPC optional: is_module_active(p_phone,p_module) -> bool
    - ✅ Redirects repo-safe (relative/within same GH Pages base)
    - ✅ Exposes window.DIGIY_GUARD (compat)
    - ✅ Keeps ?slug=... across pages
    - ✅ Subscription check cached (avoid spamming RPC)
+   - ✅ If not active -> redirects to pay with status=pending (Wave/WA flow)
 ========================= */
 (function(){
   "use strict";
@@ -64,8 +65,6 @@
 
       if (isAbs) return u.toString();
 
-      // Keep within same site without forcing full absolute origin
-      // (works nicely on GitHub Pages base paths)
       return u.pathname + u.search + u.hash;
     }catch(_){
       const sep = String(url).includes("?") ? "&" : "?";
@@ -210,6 +209,18 @@
     return !!data;
   }
 
+  function redirectToPay(pay, module, phone, slug){
+    const from = location.href;
+    location.replace(
+      pay
+      + "?module=" + encodeURIComponent(module)
+      + "&phone=" + encodeURIComponent(phone)
+      + "&from=" + encodeURIComponent(from)
+      + (slug ? "&slug=" + encodeURIComponent(slug) : "")
+      + "&status=pending" // ✅ Wave/WA: show EN ATTENTE instead of scary INACTIF
+    );
+  }
+
   // =============================
   // PUBLIC API
   // =============================
@@ -225,12 +236,9 @@
     const checkSubscription = (cfg.checkSubscription !== false) && DEFAULTS.checkSubscription;
     const subsCacheMs = Number(cfg.subsCacheMs || DEFAULTS.subsCacheMs);
 
-    // If we are already on login page, don't auto-bounce unless asked
-    // (still allows login page to call boot({force:true}) if desired)
     const file = currentFile();
     const force = !!cfg.force;
     if (!force && (file === "login.html" || file === "pin.html" || file === "create-pin.html")) {
-      // keep slug stored, do nothing
       getSlug();
       return;
     }
@@ -249,36 +257,20 @@
     }
 
     if (checkSubscription){
-      // cache first
       const cached = getCachedSub(phone, module);
+
       if (cached === true){
         // ok
       } else if (cached === false){
-        // not ok
-        const from = location.href;
-        location.replace(
-          pay
-          + "?module=" + encodeURIComponent(module)
-          + "&phone=" + encodeURIComponent(phone)
-          + "&from=" + encodeURIComponent(from)
-          + (slug ? "&slug=" + encodeURIComponent(slug) : "")
-        );
+        redirectToPay(pay, module, phone, slug);
         return;
       } else {
-        // no cache -> RPC
         try{
           const ok = await rpcIsModuleActive(phone, module);
           setCachedSub(phone, module, ok, subsCacheMs);
 
           if (!ok){
-            const from = location.href;
-            location.replace(
-              pay
-              + "?module=" + encodeURIComponent(module)
-              + "&phone=" + encodeURIComponent(phone)
-              + "&from=" + encodeURIComponent(from)
-              + (slug ? "&slug=" + encodeURIComponent(slug) : "")
-            );
+            redirectToPay(pay, module, phone, slug);
             return;
           }
         }catch(e){
@@ -290,7 +282,6 @@
       }
     }
 
-    // If already on dashboard file, don't loop
     const dashName = String(dashboard).split("/").pop();
     if (dashName && location.pathname.endsWith(dashName)) return;
 
@@ -317,8 +308,7 @@
     const token = (res && typeof res === "object" && res.token) ? String(res.token) : null;
 
     setSession({ phone: p, token, exp }, DEFAULTS.sessionMs);
-    // reset subs cache (fresh check next boot)
-    setCachedSub(p, mod, true, 30 * 1000); // short optimistic cache to smooth UX
+    setCachedSub(p, mod, true, 30 * 1000);
 
     return { ok:true, res };
   }
@@ -337,5 +327,5 @@
   };
 
   window.DIGIY_LOC_PRO_GUARD = API;
-  window.DIGIY_GUARD = API; // compat
+  window.DIGIY_GUARD = API;
 })();
