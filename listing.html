@@ -680,5 +680,15 @@ Ouvrir: ${link}`;
       loadData();
     })();
   </script>
+  <script>
+  window.DIGIY_GUARD.boot({
+    module: "LOC",
+    dashboard: "./planning.html",
+    login: "./login.html",
+    pay: "https://beauville.github.io/commencer-a-payer/",
+    requireSlug: true,
+    checkSubscription: true
+  });
+</script>
 </body>
 </html>
