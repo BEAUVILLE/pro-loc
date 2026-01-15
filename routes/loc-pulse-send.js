@@ -1,127 +1,195 @@
-// routes/locPulseSend.js
+// routes/loc-pulse-send.js
 import express from "express";
 
 const router = express.Router();
 
-// -------------------------
-// CONFIG
-// -------------------------
-const SEND_API_KEY = process.env.SEND_API_KEY || ""; // même clé que ton worker
-const DEFAULT_SMS_SENDER = process.env.SMS_SENDER || "DIGIY";
+/**
+ * ENV attendues:
+ * - LOC_PULSE_API_KEY        (clé attendue côté API)
+ * - DIGIY_ENV               (prod|staging|dev) optionnel
+ *
+ * NOTE: pas de Supabase ici si tu veux rester "send-only".
+ * L'outbox (claim/status) = côté worker VPS avec SERVICE_ROLE.
+ */
 
-// -------------------------
-// HELPERS
-// -------------------------
-function isAuthed(req) {
-  const key1 = req.headers["x-api-key"];
-  const auth = req.headers["authorization"] || "";
-  const key2 = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  return SEND_API_KEY && (key1 === SEND_API_KEY || key2 === SEND_API_KEY);
+function getReqId(req) {
+  return req.headers["x-request-id"] || cryptoRandomId();
 }
 
-function normPhone(p) {
-  // garde simple: +221XXXXXXXXX
-  return String(p || "").trim();
-}
-
-function pickText(payload, fallback = "") {
-  if (!payload) return fallback;
-  return payload.msg || payload.text || fallback;
-}
-
-// -------------------------
-// PROVIDER STUBS (à brancher)
-// -------------------------
-async function sendWhatsApp({ to, text, meta }) {
-  // TODO: brancher ton provider WhatsApp (Cloud API / Gateway / autre)
-  // Retourne { ok: true } si succès, { ok:false, error:"..." } sinon
-  console.log("[WA] to=", to, "text=", text, "meta=", meta);
-  return { ok: true };
-}
-
-async function sendSMS({ to, text, meta }) {
-  // TODO: brancher ton provider SMS (Orange/Free/Sendbox/Twilio/etc.)
-  console.log("[SMS] to=", to, "text=", text, "meta=", meta);
-  return { ok: true };
-}
-
-async function sendPush({ to, title, body, meta }) {
-  // TODO: brancher Web Push/PWA (si tu as déjà)
-  console.log("[PUSH] to=", to, "title=", title, "body=", body, "meta=", meta);
-  return { ok: true };
-}
-
-// -------------------------
-// ROUTE
-// -------------------------
-router.post("/loc/pulse/send", express.json({ limit: "256kb" }), async (req, res) => {
+function cryptoRandomId() {
   try {
-    if (!isAuthed(req)) {
-      return res.status(401).json({ ok: false, error: "unauthorized" });
-    }
+    // node >= 16
+    return globalThis.crypto?.randomUUID?.() || `req_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  } catch {
+    return `req_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
+}
 
-    const {
-      outbox_id,
-      reservation_id,
+function requireApiKey(req) {
+  const expected = process.env.LOC_PULSE_API_KEY || "";
+  if (!expected) return { ok: false, code: 500, error: "LOC_PULSE_API_KEY missing on API" };
+
+  const got = (req.headers["x-api-key"] || "").toString().trim();
+  if (!got || got !== expected) return { ok: false, code: 401, error: "Invalid API key" };
+
+  return { ok: true };
+}
+
+function normalizePhone(phone) {
+  if (!phone) return "";
+  let p = String(phone).trim();
+  // Nettoyage basique
+  p = p.replace(/\s+/g, "");
+  // Optionnel: si tu veux forcer +221
+  // if (!p.startsWith("+") && p.length === 9) p = "+221" + p;
+  return p;
+}
+
+function validateBody(body) {
+  const errors = [];
+  const channel = (body?.channel || "").toString().trim(); // "whatsapp" | "sms"
+  const phone = normalizePhone(body?.phone);
+  const business_code = (body?.business_code || "").toString().trim();
+  const pulse_kind = (body?.pulse_kind || "").toString().trim();
+  const payload = body?.payload ?? {};
+
+  if (!channel) errors.push("channel required");
+  if (!["whatsapp", "sms"].includes(channel)) errors.push("channel must be whatsapp|sms");
+
+  if (!phone) errors.push("phone required");
+  if (!business_code) errors.push("business_code required");
+  if (!pulse_kind) errors.push("pulse_kind required");
+
+  // message: soit direct, soit dans payload.message
+  const message =
+    (body?.message || payload?.message || "").toString().trim();
+
+  if (!message) errors.push("message required (body.message or payload.message)");
+
+  // optionnels utiles
+  const reservation_id = body?.reservation_id || payload?.reservation_id || null;
+  const outbox_id = body?.outbox_id || payload?.outbox_id || null;
+
+  return {
+    ok: errors.length === 0,
+    errors,
+    clean: {
+      channel,
       phone,
       business_code,
       pulse_kind,
-      channel,     // 'whatsapp'/'sms' (input worker) — mais nous on route
-      payload,     // json
-      worker_id,
-    } = req.body || {};
-
-    const to = normPhone(phone);
-    if (!to) return res.status(400).json({ ok: false, error: "missing phone" });
-
-    const text = pickText(payload, `DIGIY LOC: ${pulse_kind || "pulse"}`);
-    const priority = payload?.priority || "normal";
-    const whatsapp_optin = !!payload?.whatsapp_optin; // clé terrain
-    const pwa_optin = !!payload?.pwa_optin;
-
-    // meta utile pour logs/providers
-    const meta = {
-      outbox_id,
+      message,
+      payload,
       reservation_id,
+      outbox_id,
+    },
+  };
+}
+
+/**
+ * POST /loc/pulse/send
+ * Appelé par le worker VPS (loc-pulse) quand un outbox est claim.
+ *
+ * Body minimal:
+ * {
+ *   "channel":"whatsapp",
+ *   "phone":"+22177...",
+ *   "business_code":"SALY01",
+ *   "pulse_kind":"J-1",
+ *   "message":"Rappel ...",
+ *   "payload":{...},
+ *   "outbox_id":"uuid-optional",
+ *   "reservation_id":"uuid-optional"
+ * }
+ */
+router.post("/send", async (req, res) => {
+  const rid = getReqId(req);
+
+  // Auth API key
+  const k = requireApiKey(req);
+  if (!k.ok) {
+    return res.status(k.code).json({ ok: false, request_id: rid, error: k.error });
+  }
+
+  // Validate
+  const v = validateBody(req.body);
+  if (!v.ok) {
+    return res.status(400).json({
+      ok: false,
+      request_id: rid,
+      error: "Invalid payload",
+      details: v.errors,
+    });
+  }
+
+  const { channel, phone, business_code, pulse_kind, message, payload, outbox_id, reservation_id } = v.clean;
+
+  try {
+    /**
+     * Ici tu branches ton provider WhatsApp/SMS.
+     * - WhatsApp: Meta Cloud API, Twilio, Gupshup, etc.
+     * - SMS: Orange, Twilio, etc.
+     *
+     * Pour l’instant je mets un "stub" qui simule l’envoi.
+     * Remplace sendWhatsApp/sendSMS par tes intégrations.
+     */
+    let provider_result = null;
+
+    if (channel === "whatsapp") {
+      provider_result = await sendWhatsApp({ phone, message, business_code, pulse_kind, payload });
+    } else if (channel === "sms") {
+      provider_result = await sendSMS({ phone, message, business_code, pulse_kind, payload });
+    }
+
+    return res.json({
+      ok: true,
+      request_id: rid,
+      sent: true,
+      channel,
+      phone,
       business_code,
       pulse_kind,
-      worker_id,
-      priority,
-    };
-
-    // 1) Push en bonus (non bloquant)
-    if (pwa_optin) {
-      sendPush({
-        to,
-        title: "DIGIY LOC",
-        body: text,
-        meta,
-      }).catch(() => {});
-    }
-
-    // 2) Routage principal
-    // - WhatsApp seulement si opt-in
-    // - sinon SMS
-    // - fallback: si WA échoue -> SMS
-    if (whatsapp_optin) {
-      const wa = await sendWhatsApp({ to, text, meta });
-      if (wa.ok) return res.json({ ok: true, channel_used: "whatsapp" });
-
-      // fallback SMS
-      const sms = await sendSMS({ to, text, meta });
-      if (sms.ok) return res.json({ ok: true, channel_used: "sms", fallback_from: "whatsapp" });
-
-      return res.status(502).json({ ok: false, error: "wa_failed_and_sms_failed", detail: wa.error || "unknown" });
-    }
-
-    // Sans opt-in => SMS direct
-    const sms = await sendSMS({ to, text, meta });
-    if (sms.ok) return res.json({ ok: true, channel_used: "sms" });
-
-    return res.status(502).json({ ok: false, error: "sms_failed" });
+      outbox_id: outbox_id || null,
+      reservation_id: reservation_id || null,
+      provider_result,
+      env: process.env.DIGIY_ENV || "prod",
+    });
   } catch (e) {
-    return res.status(500).json({ ok: false, error: e?.message || "server_error" });
+    console.error("[loc-pulse-send] error", rid, e);
+    return res.status(502).json({
+      ok: false,
+      request_id: rid,
+      error: e?.message || "Send failed",
+    });
   }
 });
 
+/* ---------------------------
+   PROVIDER STUBS (à remplacer)
+--------------------------- */
+
+async function sendWhatsApp({ phone, message }) {
+  // TODO: intégration Meta/Twilio/etc
+  // Ici on simule
+  return {
+    provider: "stub",
+    to: phone,
+    message_id: `wa_${Date.now()}`,
+    status: "queued",
+    preview: message.slice(0, 120),
+  };
+}
+
+async function sendSMS({ phone, message }) {
+  // TODO: intégration SMS provider
+  return {
+    provider: "stub",
+    to: phone,
+    message_id: `sms_${Date.now()}`,
+    status: "queued",
+    preview: message.slice(0, 120),
+  };
+}
+
 export default router;
+
