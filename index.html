@@ -296,6 +296,7 @@ input[type="date"]{color-scheme:dark}
         <div class="navLabel" id="navSlug">slug: —</div>
       </div>
       <div class="navRight">
+   <button class="btn small navBtn" id="goToday">📅 Vue du jour</button>
   <button class="btn small navBtn" id="goApp">🏠 APP</button>
   <button class="btn small navBtn" id="goPulse">📲 Pulse</button>
   <button class="btn small navBtn" id="goPlanning">🗓️ Planning</button>
@@ -573,7 +574,13 @@ setNavSlug();
 /* =============================
    NAV BUTTONS (100% SAFE)
 ============================= */
-document.getElementById("btnBack").addEventListener("click", ()=>{
+ document.getElementById("goToday");
+if (btnToday) {
+  btnToday.onclick = () => {
+    location.href = withSlug("./today.html");
+  };
+}
+   document.getElementById("btnBack").addEventListener("click", ()=>{
   if(history.length > 1) return history.back();
   location.href = withSlug("./index.html");
 });
