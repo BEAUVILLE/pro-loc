@@ -1,0 +1,64 @@
+# DIGIY LOC PRO — LOCK FILE (NE PAS CASSER) ♾️
+
+## 1) Pages OFFICIELLES (ne pas renommer)
+- /index.html  (cockpit, alias de /)
+- /pin.html    (login pro par téléphone + PIN)
+- /go-pin.html (page publique GO PIN)
+- /today.html
+- /planning.html
+- /listing.html
+- /manage-links.html
+- /health-loc.html
+- /proprio-loc.html
+
+✅ RÈGLE: PAS d’espaces dans les noms de fichiers. (go-pin.html OK / "go pin.html" INTERDIT)
+
+---
+
+## 2) URL de test (OBLIGATOIRES avant chaque push)
+A. Cockpit (slug):
+https://beauville.github.io/digiy-loc-pro/?slug=chez-astou-saly
+
+B. PIN pro:
+https://beauville.github.io/digiy-loc-pro/pin.html?slug=chez-astou-saly
+
+C. GO PIN public:
+https://beauville.github.io/digiy-loc-pro/go-pin.html?slug=chez-astou-saly
+
+Checklist GO/NO-GO (2 minutes):
+- [ ] pin.html affiche slug (pas "slug: —")
+- [ ] PIN OK -> redirige vers index.html (slug conservé)
+- [ ] refresh sur index.html -> session toujours OK
+- [ ] bouton "GO PIN public" -> pas de 404
+- [ ] navigation (today/planning/listing/links/health) -> slug conservé
+
+---
+
+## 3) Règles anti-casse (IMPORTANT)
+### Règle A — On ne remplace jamais un fichier complet par une “mini version”
+✅ Toujours faire un PATCH ciblé (10-30 lignes) dans le bon endroit.
+❌ Interdit: remplacer index.html / pin.html / guard.js par un exemple court.
+
+### Règle B — Slug obligatoire
+- Toutes les pages premium doivent conserver `?slug=...`
+- Si slug manquant => redirection vers /pin.html
+
+### Règle C — Session obligatoire
+- Si session manquante => redirection vers /pin.html
+
+---
+
+## 4) Fichiers CRITIQUES (à toucher avec prudence)
+- guard.js  (cerveau: slug + session + redirects)
+- pin.html  (porte pro)
+- index.html (cockpit)
+✅ Avant changement: copier le fichier en backup local (ou commit “backup-stable”).
+
+---
+
+## 5) Convention de liens (anti-404)
+Toujours lier comme ça (relatif + slug):
+- ./pin.html?slug=XXX
+- ./go-pin.html?slug=XXX
+- ./index.html?slug=XXX
+Jamais de chemins exotiques, jamais d’espace, jamais de fichier renommé sans MAJ des liens.
