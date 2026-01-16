@@ -3,59 +3,481 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#022c22" />
-  <title>DIGIY LOC PRO — Accueil</title>
-  <meta name="referrer" content="no-referrer" />
+  <title>DIGIY LOC PRO ♾️ — Cockpit</title>
+  <meta name="theme-color" content="#0b1020" />
+
+  <!-- ✅ Supabase + Guard -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-final"></script>
+
+  <!-- =============================
+       ✅ SLUG ROOT FIX (CRITIQUE)
+       -> À laisser dans index.html (ROOT)
+       -> Anti GitHub Pages reset
+  ============================== -->
+  <script>
+  (function(){
+    const u = new URL(location.href);
+    let slug = (u.searchParams.get("slug") || "").trim().toLowerCase();
+
+    // 1) si slug dans l’URL → on le grave
+    if(slug){
+      try{ localStorage.setItem("digiy_loc_slug", slug); }catch(_){}
+    }else{
+      // 2) sinon on relit le dernier slug connu
+      try{ slug = (localStorage.getItem("digiy_loc_slug") || "").trim().toLowerCase(); }catch(_){ slug=""; }
+    }
+
+    // 3) si toujours rien → retour GO PIN public
+    if(!slug){
+      location.replace("./go-pin.html");
+      return;
+    }
+
+    // 4) on s’assure que l’URL courante contient le slug
+    if(!u.searchParams.get("slug")){
+      u.searchParams.set("slug", slug);
+      location.replace(u.toString());
+    }
+  })();
+  </script>
+
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;margin:0;background:#022c22;color:#e5e7eb}
-    .wrap{max-width:980px;margin:0 auto;padding:16px}
-    .card{background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.25);border-radius:16px;padding:16px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .badge{padding:6px 10px;border-radius:999px;background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.35)}
-    .muted{opacity:.85}
+    :root{
+      --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
+      --line:#1f2937; --ink:#f9fafb; --muted:#cbd5f5;
+      --gold:#facc15; --green:#22c55e; --danger:#ef4444;
+      --shadow:0 22px 50px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1150px;margin:0 auto;padding:14px}
+    .top{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      box-shadow:var(--shadow);
+    }
+    .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+      border:1px solid rgba(250,204,21,.35);
+      box-shadow:0 0 22px rgba(250,204,21,.12);
+      display:grid;place-items:center;color:#061b14;font-weight:1100;
+    }
+    .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
+    .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:3px}
+    .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:.86rem;
+    }
+    .pill strong{color:#fff}
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .btn{
+      border:0; cursor:pointer;
+      border-radius:14px;
+      padding:11px 12px;
+      font-weight:1000;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      color:var(--muted);
+      transition:all 0.2s ease;
+      min-height:44px;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+    .btn:active:not(:disabled){transform:translateY(0)}
+    .btn:disabled{opacity:0.5;cursor:not-allowed}
+    .btn.primary{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.danger{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn.small{padding:9px 10px;border-radius:12px}
+
+    .navRow{
+      width:100%;
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      margin-top:10px;
+    }
+    .navLeft,.navRight{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .navLabel{
+      color:var(--muted);
+      font-weight:900;
+      font-size:.86rem;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.02);
+    }
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:12px 14px;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+    }
+    .cardHead h2{margin:0;font-size:1.02rem}
+    .cardHead small{color:var(--muted);font-weight:800}
+    .cardBody{padding:14px}
+
+    .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .kpi{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:16px;padding:12px;
+    }
+    .kpi .lbl{color:var(--muted);font-weight:900;font-size:.85rem}
+    .kpi .val{margin-top:6px;font-weight:1100;font-size:1.3rem;color:var(--gold)}
+    .note{
+      margin-top:10px;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      white-space:pre-wrap;
+      display:none;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .item{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:16px;padding:12px;
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+    }
+    .itemTitle{font-weight:1100}
+    .itemMeta{color:var(--muted);font-weight:850;margin-top:4px}
+    .itemBtns{display:flex;flex-direction:column;gap:8px}
+    @media (max-width: 720px){
+      .wrap{padding:12px}
+      .btn{width:100%}
+      .navRight,.navLeft{width:100%}
+      .navRight .btn{width:100%}
+      .kpis{grid-template-columns:1fr}
+      .item{flex-direction:column}
+      .itemBtns{flex-direction:row;flex-wrap:wrap}
+    }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div style="font-weight:800;font-size:18px">DIGIY LOC PRO</div>
-          <div class="muted" id="slugLine">slug: —</div>
-        </div>
-        <div class="badge">🔐 Entrée sécurisée</div>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo">∞</div>
+      <div>
+        <h1>DIGIY LOC PRO ♾️</h1>
+        <div class="sub">Cockpit propriétaire • sécurisé • 0% commission • paiement direct</div>
       </div>
+    </div>
 
-      <hr style="border:0;border-top:1px solid rgba(148,163,184,.25);margin:14px 0" />
+    <div class="pills">
+      <div class="pill" id="pillUser">👤 <strong>—</strong></div>
+      <div class="pill warn" id="pillState">🔒 Déconnecté</div>
+      <button class="btn small danger" id="btnLogout" style="display:none">🚪 Déconnexion</button>
+    </div>
 
-      <div class="muted">
-        Si tu vois cette page, c’est que <b>slug + session + PIN</b> sont OK.
+    <!-- NAV premium -->
+    <div class="navRow">
+      <div class="navLeft">
+        <button class="btn small" id="btnBack">⬅️ Retour</button>
+        <div class="navLabel" id="navSlug">slug: —</div>
+      </div>
+      <div class="navRight">
+        <button class="btn small" id="goToday">📅 Vue du jour</button>
+        <button class="btn small gold" id="goApp">🏠 APP</button>
+        <button class="btn small" id="goPulse">📲 Pulse</button>
+        <button class="btn small" id="goPlanning">🗓️ Planning</button>
+        <button class="btn small" id="goListing">📋 Listing</button>
+        <button class="btn small" id="goLinks">🔗 Liens / QR</button>
+        <button class="btn small" id="goHealth">🧪 Diagnostic</button>
       </div>
     </div>
   </div>
 
-  <!-- Supabase JS (obligatoire) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <div class="grid">
+    <!-- LEFT -->
+    <section class="card">
+      <div class="cardHead">
+        <div>
+          <h2>⚡ Tableau de bord</h2>
+          <small>Vue rapide (slug + session + chiffres)</small>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn small" id="btnRefresh">↻ Actualiser</button>
+          <a class="btn small gold" id="btnGoPinPublic" href="#">👁️ GO PIN public</a>
+        </div>
+      </div>
 
-  <!-- Guard -->
-  <script src="./guard.js"></script>
+      <div class="cardBody">
+        <div class="kpis">
+          <div class="kpi">
+            <div class="lbl">Slug</div>
+            <div class="val" id="kSlug">—</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Téléphone</div>
+            <div class="val" id="kPhone">—</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Owner ID</div>
+            <div class="val" id="kOwner">—</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Session</div>
+            <div class="val" id="kSess">—</div>
+          </div>
+        </div>
 
-  <script>
-    (async () => {
-      // GEL FINAL : slug + session + pin obligatoires
-      const res = await window.DigiyGuard.require({
-        requireSlug: true,
-        requireAuth: true,
-        requirePin: true,
-        loginUrl: "login.html",
-        pinUrl: "pin.html",
-        pinTtlHours: 12
-      });
+        <div class="note warn" id="note"></div>
 
-      if (!res.ok) return; // déjà redirect
+        <div class="list" id="quickLinks">
+          <div class="item">
+            <div>
+              <div class="itemTitle">🏡 Gérer tes logements</div>
+              <div class="itemMeta">Créer / modifier / publier</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small gold" id="btnOpenApp">Ouvrir</button>
+            </div>
+          </div>
 
-      document.getElementById("slugLine").textContent = "slug: " + (res.slug || "—");
-    })();
-  </script>
+          <div class="item">
+            <div>
+              <div class="itemTitle">🗓️ Planning</div>
+              <div class="itemMeta">Réservations, calendrier</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small" id="btnOpenPlanning">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="item">
+            <div>
+              <div class="itemTitle">📋 Listing du jour</div>
+              <div class="itemMeta">Vue propriétaire (jour)</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small" id="btnOpenListing">Ouvrir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="card">
+      <div class="cardHead">
+        <div>
+          <h2>🧭 Actions</h2>
+          <small>Navigation stable (slug conservé)</small>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn small" id="btnPin" href="#">🔐 PIN</a>
+          <a class="btn small" id="btnToday" href="#">📅 Today</a>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <div class="list">
+          <div class="item">
+            <div>
+              <div class="itemTitle">🔗 Liens / QR</div>
+              <div class="itemMeta">Générer des QR, liens publics</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small" id="btnOpenLinks">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="item">
+            <div>
+              <div class="itemTitle">📲 Pulse</div>
+              <div class="itemMeta">Rappels WhatsApp / SMS</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small" id="btnOpenPulse">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="item">
+            <div>
+              <div class="itemTitle">🧪 Diagnostic</div>
+              <div class="itemMeta">Tester routes, session, RPC</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small" id="btnOpenHealth">Ouvrir</button>
+            </div>
+          </div>
+
+          <div class="item">
+            <div>
+              <div class="itemTitle">🚀 Tarifs</div>
+              <div class="itemMeta">Page tarifs / abonnement</div>
+            </div>
+            <div class="itemBtns">
+              <button class="btn small" id="btnOpenTarifs">Ouvrir</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="note ok" id="noteOk"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = (id)=>document.getElementById(id);
+  const u = new URL(location.href);
+
+  function getSlug(){
+    return (u.searchParams.get("slug") || localStorage.getItem("digiy_loc_slug") || "").trim().toLowerCase();
+  }
+  function withSlug(path){
+    const slug = getSlug();
+    const x = new URL(path, location.href);
+    if(slug && !x.searchParams.get("slug")) x.searchParams.set("slug", slug);
+    return x.toString();
+  }
+  function showNote(msg, cls){
+    const el = $("note");
+    el.className = "note " + (cls || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+  function showOk(msg){
+    const el = $("noteOk");
+    el.className = "note ok";
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  const SLUG = getSlug();
+  $("navSlug").textContent = "slug: " + (SLUG || "—");
+  $("kSlug").textContent = SLUG || "—";
+
+  // liens fixes
+  $("btnGoPinPublic").href = withSlug("./go-pin.html");
+  $("btnPin").href = withSlug("./pin.html");
+  $("btnToday").href = withSlug("./today.html");
+
+  // nav buttons
+  const nav = {
+    btnBack: "./go-pin.html",
+    goToday: "./today.html",
+    goApp: "./app.html",
+    goPulse: "./proprio-loc.html",
+    goPlanning: "./planning.html",
+    goListing: "./listing.html",
+    goLinks: "./manage-links.html",
+    goHealth: "./health-loc.html",
+    btnOpenApp: "./app.html",
+    btnOpenPlanning: "./planning.html",
+    btnOpenListing: "./listing.html",
+    btnOpenLinks: "./manage-links.html",
+    btnOpenPulse: "./proprio-loc.html",
+    btnOpenHealth: "./health-loc.html",
+    btnOpenTarifs: "./tarifs.html",
+  };
+  Object.entries(nav).forEach(([id, path])=>{
+    const b = $(id);
+    if(!b) return;
+    b.addEventListener("click", (e)=>{
+      e.preventDefault();
+      location.href = withSlug(path);
+    });
+  });
+
+  // refresh
+  $("btnRefresh").addEventListener("click", ()=>{
+    location.reload();
+  });
+
+  // guard boot (protège index)
+  try{
+    window.DIGIY_GUARD?.boot?.({
+      module: "LOC",
+      login: "./pin.html",
+      dashboard: "./index.html",
+      pay: "https://beauville.github.io/commencer-a-payer/",
+      requireSlug: true,
+      checkSubscription: true
+    });
+  }catch(e){
+    console.warn("guard boot error:", e);
+  }
+
+  // UI session
+  function renderSession(){
+    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+
+    if(sess?.ok){
+      $("pillUser").innerHTML = `👤 <strong>${sess.phone || "—"}</strong>`;
+      $("pillState").textContent = "✅ Connecté";
+      $("pillState").classList.remove("warn");
+      $("pillState").classList.add("ok");
+      $("btnLogout").style.display = "inline-flex";
+
+      $("kPhone").textContent = sess.phone || "—";
+      $("kOwner").textContent = sess.owner_id || "—";
+      $("kSess").textContent = sess.exp ? "OK (expire)" : "OK";
+
+      showOk("Session OK. Navigation stable. 👊");
+      showNote("", "warn");
+    }else{
+      $("pillUser").innerHTML = `👤 <strong>—</strong>`;
+      $("pillState").textContent = "🔒 Déconnecté";
+      $("pillState").classList.remove("ok");
+      $("pillState").classList.add("warn");
+      $("btnLogout").style.display = "none";
+
+      $("kPhone").textContent = "—";
+      $("kOwner").textContent = "—";
+      $("kSess").textContent = "—";
+
+      showOk("");
+      showNote("🔒 Pas de session. Va sur PIN pour ouvrir ton cockpit.", "warn");
+    }
+  }
+
+  $("btnLogout").addEventListener("click", ()=>{
+    if(confirm("Se déconnecter ?")){
+      try{ window.DIGIY_GUARD?.logout?.("./pin.html"); }
+      catch(_){ location.replace(withSlug("./pin.html")); }
+    }
+  });
+
+  if(!SLUG){
+    showNote("❌ Slug introuvable.\n➡️ Ouvre go-pin.html?slug=chez-astou-saly", "bad");
+  }
+
+  renderSession();
+})();
+</script>
 </body>
 </html>
