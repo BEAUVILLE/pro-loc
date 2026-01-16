@@ -1,11 +1,11 @@
 /* =========================
-   DIGIY LOC PRO — GUARD (FINAL PRO)
+   DIGIY LOC PRO — GUARD (FINAL PRO) ✅ PATCH OWNER_ID + LOGOUT SAFE
    GitHub Pages SAFE • Session fluide • Logout fiable
    - RPC: go_pin_check(p_slug) -> json { ok:true, ... } (RLS-safe)
-   - RPC: verify_access_pin(p_phone,p_pin,p_module) -> json { ok:true|false, reason }
+   - RPC: verify_access_pin(p_phone,p_pin,p_module) -> json { ok:true|false, reason, owner_id? }
    - ✅ Conserve slug sur toutes les pages
-   - ✅ Conserve session (8h) => plus de re-saisie tel+PIN à chaque page
-   - ✅ Logout: purge propre (session + cache + phone) + redirect
+   - ✅ Conserve session (8h)
+   - ✅ Logout: purge propre + redirect
 ========================= */
 (function(){
   "use strict";
@@ -23,7 +23,7 @@
   const KEY = {
     slug: "digiy_loc_slug",
     phone: "digiy_phone",
-    sess: "digiy_loc_pro_session_v2",   // { phone, ok:true, exp, module, slug }
+    sess: "digiy_loc_pro_session_v2",   // { phone, ok:true, exp, module, slug, owner_id? }
   };
 
   // =============================
@@ -80,24 +80,26 @@
     return p;
   }
 
+  function safeStr(x){ return (x === null || x === undefined) ? "" : String(x); }
+
   // =============================
   // SLUG
   // =============================
   function getSlug(){
-    const s = String(qs("slug") || "").trim();
+    const s = safeStr(qs("slug")).trim();
     if (s){
       try { localStorage.setItem(KEY.slug, s); } catch(_){}
       return s;
     }
-    try { return String(localStorage.getItem(KEY.slug) || "").trim(); } catch(_){}
+    try { return safeStr(localStorage.getItem(KEY.slug)).trim(); } catch(_){}
     return "";
   }
 
   function withSlug(url){
     const slug = getSlug();
-    if (!slug) return String(url);
+    if (!slug) return safeStr(url);
 
-    const raw = String(url||"");
+    const raw = safeStr(url);
     const abs = isAbsUrl(raw);
 
     try{
@@ -129,13 +131,15 @@
     }
   }
 
-  function setSession({ phone, module, slug, sessionMs }){
+  // ✅ owner_id ajouté
+  function setSession({ phone, owner_id, module, slug, sessionMs }){
     const exp = now() + Number(sessionMs || DEFAULTS.sessionMs);
     const sess = {
       ok: true,
       phone: normPhone(phone),
-      module: String(module || DEFAULTS.module),
-      slug: String(slug || getSlug() || ""),
+      owner_id: owner_id || null,                 // ✅
+      module: safeStr(module || DEFAULTS.module),
+      slug: safeStr(slug || getSlug() || ""),
       exp
     };
     try{ localStorage.setItem(KEY.sess, JSON.stringify(sess)); }catch(_){}
@@ -148,7 +152,7 @@
     try{ localStorage.removeItem(KEY.sess); }catch(_){}
     try{ sessionStorage.removeItem(KEY.phone); }catch(_){}
     try{ localStorage.removeItem("digiy_access_pin"); }catch(_){}
-    // on garde le slug (c'est un "lieu", pas une session)
+    // on garde le slug
   }
 
   function getPhone(){
@@ -166,7 +170,7 @@
   // =============================
   async function rpcGoPinCheck(slug){
     const sb = getSB();
-    const { data, error } = await sb.rpc("go_pin_check", { p_slug: String(slug||"") });
+    const { data, error } = await sb.rpc("go_pin_check", { p_slug: safeStr(slug) });
     if (error) throw error;
     return data;
   }
@@ -175,26 +179,11 @@
     const sb = getSB();
     const { data, error } = await sb.rpc("verify_access_pin", {
       p_phone: phone,
-      p_pin: String(pin||""),
-      p_module: String(module||DEFAULTS.module)
+      p_pin: safeStr(pin),
+      p_module: safeStr(module || DEFAULTS.module)
     });
     if (error) throw error;
     return data;
-  }
-
-  // =============================
-  // REDIRECT PAY
-  // =============================
-  function redirectToPay(pay, module, phone, slug){
-    const from = location.href;
-    location.replace(
-      String(pay)
-      + "?module=" + encodeURIComponent(module)
-      + "&phone=" + encodeURIComponent(phone)
-      + "&from=" + encodeURIComponent(from)
-      + (slug ? "&slug=" + encodeURIComponent(slug) : "")
-      + "&status=pending"
-    );
   }
 
   // =============================
@@ -202,37 +191,33 @@
   // =============================
   async function boot(cfg){
     cfg = cfg || {};
-    const module = String(cfg.module || DEFAULTS.module).trim();
+    const module = safeStr(cfg.module || DEFAULTS.module).trim();
     const requireSlug = (cfg.requireSlug !== false) && DEFAULTS.requireSlug;
 
     const login = cfg.login || DEFAULTS.login;
     const dashboard = cfg.dashboard || DEFAULTS.dashboard;
     const diagnostic = cfg.diagnostic || DEFAULTS.diagnostic;
-    const pay = cfg.pay || DEFAULTS.pay;
 
     const file = currentFile();
     const isLoginPage = (file === "pin.html" || file === "login.html" || file === "create-pin.html");
-    const force = !!cfg.force;
 
     const slug = getSlug();
     if (requireSlug && !slug){
-      // pas de slug => impossible de savoir quel GO PIN
       if (!isLoginPage) go(login);
       return { ok:false, reason:"NO_SLUG" };
     }
 
-    // ✅ 1) check GO PIN (RLS-safe via RPC)
+    // ✅ 1) check GO PIN
     let goPin;
     try{
       goPin = await rpcGoPinCheck(slug);
     }catch(e){
       console.warn("go_pin_check error:", e);
       if (!isLoginPage) go(diagnostic);
-      return { ok:false, reason:"GO_PIN_RPC_ERROR", error:String(e?.message||e) };
+      return { ok:false, reason:"GO_PIN_RPC_ERROR", error:safeStr(e?.message||e) };
     }
 
     if (!goPin || goPin.ok !== true){
-      // slug inconnu ou inactif
       if (!isLoginPage) go(login);
       return { ok:false, reason:goPin?.reason || "GO_PIN_INVALID" };
     }
@@ -244,21 +229,14 @@
       return { ok:false, reason:"NO_SESSION" };
     }
 
-    // ✅ 3) module actif ? (optionnel)
-    // Ici, on n'a pas une RPC module_active dans cette version.
-    // => On te laisse la logique paiement au niveau "commencer-a-payer" si tu veux.
-    // Si tu veux remettre is_module_active plus tard, on le rajoute.
-
-    // ✅ 4) si tout OK -> rester sur page, ou rediriger dashboard si demandé
-    // - Sur login page -> on pousse vers dashboard
-    // - Sur autres pages -> on ne force pas, sauf cfg.redirectToDashboard
+    // ✅ 3) si login page -> dashboard
     if (isLoginPage){
       go(dashboard);
       return { ok:true, goPin, sess };
     }
 
     if (cfg.redirectToDashboard === true){
-      const dashName = String(dashboard).split("/").pop();
+      const dashName = safeStr(dashboard).split("/").pop();
       if (dashName && location.pathname.endsWith(dashName)) return { ok:true, goPin, sess };
       go(dashboard);
       return { ok:true, goPin, sess };
@@ -269,18 +247,18 @@
 
   async function loginWithPin(phone, pin, module){
     const p = normPhone(phone);
-    const mod = String(module || DEFAULTS.module);
+    const mod = safeStr(module || DEFAULTS.module).toUpperCase();
 
     const slug = getSlug();
     if (!slug) return { ok:false, reason:"NO_SLUG" };
 
-    // GO PIN check d'abord (évite confusion)
+    // GO PIN check d'abord
     const goPin = await rpcGoPinCheck(slug);
     if (!goPin || goPin.ok !== true){
       return { ok:false, reason: goPin?.reason || "GO_PIN_INVALID" };
     }
 
-    const res = await rpcVerifyAccessPin(p, String(pin||""), mod);
+    const res = await rpcVerifyAccessPin(p, safeStr(pin), mod);
 
     const ok =
       (res === true) ||
@@ -288,21 +266,32 @@
 
     if (!ok) return { ok:false, res };
 
-    setSession({ phone: p, module: mod, slug, sessionMs: DEFAULTS.sessionMs });
-    return { ok:true, res, goPin };
+    // ✅ owner_id si disponible
+    const owner_id = (res && typeof res === "object")
+      ? (res.owner_id || res.ownerId || res.user_id || res.uid || null)
+      : null;
+
+    const sess = setSession({ phone: p, owner_id, module: mod, slug, sessionMs: DEFAULTS.sessionMs });
+    return { ok:true, res, goPin, sess };
   }
 
+  // ✅ logout accepte string OU objet
   function logout(opts){
-    opts = opts || {};
-    const to = opts.redirect || DEFAULTS.login;
+    let redirect = DEFAULTS.login;
+
+    if (typeof opts === "string") {
+      redirect = opts;
+    } else if (opts && typeof opts === "object") {
+      redirect = opts.redirect || DEFAULTS.login;
+    }
+
     clearSession();
 
-    // bonus: flush aussi les caches legacy éventuels
     try{ localStorage.removeItem("digiy_loc_subs_cache_v1"); }catch(_){}
     try{ localStorage.removeItem("digiy_loc_subs_cache_v2"); }catch(_){}
     try{ sessionStorage.removeItem("digiy_driver_phone"); }catch(_){}
 
-    go(to);
+    go(redirect);
   }
 
   // API exposée
