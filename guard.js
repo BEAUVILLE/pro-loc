@@ -23,7 +23,7 @@
   const KEY = {
     slug: "digiy_loc_slug",
     phone: "digiy_phone",
-    sess: "digiy_loc_pro_session_v2" // { phone, ok:true, exp, module, slug, owner_id? }
+    sess: "digiy_loc_pro_session_v2",   // { phone, ok:true, exp, module, slug, owner_id? }
   };
 
   // =============================
@@ -41,7 +41,7 @@
     diagnostic: "./health-loc.html",
 
     // payment page (external ok)
-    pay: "https://beauville.github.io/commencer-a-payer/"
+    pay: "https://beauville.github.io/commencer-a-payer/",
   };
 
   // =============================
@@ -81,35 +81,6 @@
   }
 
   function safeStr(x){ return (x === null || x === undefined) ? "" : String(x); }
-
-  function toObjMaybe(x){
-    if (!x) return x;
-    if (typeof x === "object") return x;
-    if (typeof x === "string"){
-      const s = x.trim();
-      if (!s) return x;
-      // essaie JSON.parse si ça ressemble à du JSON
-      if (s.startsWith("{") || s.startsWith("[")){
-        try { return JSON.parse(s); } catch(_) { return x; }
-      }
-    }
-    return x;
-  }
-
-  function pickOwnerId(resObj){
-    if (!resObj || typeof resObj !== "object") return null;
-    return (
-      resObj.owner_id ||
-      resObj.ownerId ||
-      resObj.owner_user_id ||
-      resObj.ownerUserId ||
-      resObj.owner ||
-      resObj.user_id ||
-      resObj.userId ||
-      resObj.uid ||
-      null
-    );
-  }
 
   // =============================
   // SLUG
@@ -166,8 +137,8 @@
     const sess = {
       ok: true,
       phone: normPhone(phone),
-      owner_id: owner_id ? String(owner_id) : null,
-      module: safeStr(module || DEFAULTS.module).toUpperCase(),
+      owner_id: owner_id || null,                 // ✅
+      module: safeStr(module || DEFAULTS.module),
       slug: safeStr(slug || getSlug() || ""),
       exp
     };
@@ -201,7 +172,7 @@
     const sb = getSB();
     const { data, error } = await sb.rpc("go_pin_check", { p_slug: safeStr(slug) });
     if (error) throw error;
-    return toObjMaybe(data);
+    return data;
   }
 
   async function rpcVerifyAccessPin(phone, pin, module){
@@ -209,10 +180,10 @@
     const { data, error } = await sb.rpc("verify_access_pin", {
       p_phone: phone,
       p_pin: safeStr(pin),
-      p_module: safeStr(module || DEFAULTS.module).toUpperCase()
+      p_module: safeStr(module || DEFAULTS.module)
     });
     if (error) throw error;
-    return toObjMaybe(data);
+    return data;
   }
 
   // =============================
@@ -220,7 +191,7 @@
   // =============================
   async function boot(cfg){
     cfg = cfg || {};
-    const module = safeStr(cfg.module || DEFAULTS.module).trim().toUpperCase();
+    const module = safeStr(cfg.module || DEFAULTS.module).trim();
     const requireSlug = (cfg.requireSlug !== false) && DEFAULTS.requireSlug;
 
     const login = cfg.login || DEFAULTS.login;
@@ -288,19 +259,20 @@
     }
 
     const res = await rpcVerifyAccessPin(p, safeStr(pin), mod);
-    const resObj = toObjMaybe(res);
 
     const ok =
-      (resObj === true) ||
-      (resObj && typeof resObj === "object" && (resObj.ok === true || resObj.allowed === true || resObj.valid === true));
+      (res === true) ||
+      (res && typeof res === "object" && (res.ok === true || res.allowed === true || res.valid === true));
 
-    if (!ok) return { ok:false, res: resObj };
+    if (!ok) return { ok:false, res };
 
-    // ✅ owner_id robuste
-    const owner_id = pickOwnerId(resObj);
+    // ✅ owner_id si disponible
+    const owner_id = (res && typeof res === "object")
+      ? (res.owner_id || res.ownerId || res.user_id || res.uid || null)
+      : null;
 
     const sess = setSession({ phone: p, owner_id, module: mod, slug, sessionMs: DEFAULTS.sessionMs });
-    return { ok:true, res: resObj, goPin, sess };
+    return { ok:true, res, goPin, sess };
   }
 
   // ✅ logout accepte string OU objet
