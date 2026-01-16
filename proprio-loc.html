@@ -167,6 +167,25 @@
     @media(min-width:720px){ .two{grid-template-columns:1fr 1fr;} }
 
     .okline{color:rgba(234,255,241,.92); font-weight:900}
+
+    /* PULSE */
+    .pulseGrid{display:grid; grid-template-columns:1fr; gap:10px}
+    .pulseBox{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      border-radius:16px;
+      padding:12px;
+    }
+    .pulseHead{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center}
+    .badge{
+      display:inline-block; padding:4px 10px; border-radius:999px;
+      font-size:11px; font-weight:950;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18);
+    }
+    .badge.ok{border-color: rgba(34,197,94,.35)}
+    .badge.warn{border-color: rgba(245,158,11,.45)}
+    .badge.bad{border-color: rgba(239,68,68,.45)}
   </style>
 </head>
 
@@ -224,7 +243,7 @@
       </div>
     </div>
 
-    <!-- RIGHT: ADD LOGEMENT + RESAS -->
+    <!-- RIGHT: ADD LOGEMENT + RESAS + PULSE -->
     <div class="card">
       <div class="h2">Ajouter un logement / chambre</div>
       <div class="muted">Tu peux créer autant d’unités que tu veux (ex: Chambre 101, 102, Suite…).</div>
@@ -272,6 +291,43 @@
       <div class="muted">Tu confirmes → ça bloque les dates (anti double-booking) + met occupied auto.</div>
       <div style="height:10px"></div>
       <div class="list" id="resaList"></div>
+
+      <div class="sep"></div>
+
+      <!-- ✅ PULSE -->
+      <div class="pulseHead">
+        <div>
+          <div class="h2" style="margin:0">📲 Pulse (messages auto)</div>
+          <div class="muted">À venir / envoyés / échecs — lecture depuis <b>digiy_loc_outbox</b>.</div>
+        </div>
+        <div class="row">
+          <button class="secondary" id="btnPulseRefresh" type="button">Rafraîchir</button>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <div class="row" style="gap:8px">
+        <span class="badge warn">À venir: <span id="pulseQueuedCount">0</span></span>
+        <span class="badge ok">Envoyés: <span id="pulseSentCount">0</span></span>
+        <span class="badge bad">Échecs: <span id="pulseFailedCount">0</span></span>
+      </div>
+
+      <div style="height:10px"></div>
+      <div class="pulseGrid">
+        <div class="pulseBox">
+          <div class="muted" style="font-weight:950;margin-bottom:8px">⏳ À venir</div>
+          <div id="pulseUpcoming" class="muted">—</div>
+        </div>
+        <div class="pulseBox">
+          <div class="muted" style="font-weight:950;margin-bottom:8px">✅ Derniers envoyés</div>
+          <div id="pulseSent" class="muted">—</div>
+        </div>
+        <div class="pulseBox">
+          <div class="muted" style="font-weight:950;margin-bottom:8px">⚠️ Échecs</div>
+          <div id="pulseFailed" class="muted">—</div>
+        </div>
+      </div>
+      <!-- /PULSE -->
     </div>
   </div>
 </div>
@@ -392,6 +448,22 @@ function setBusy(btn, busy){
   btn.disabled = !!busy;
 }
 
+function fmtDT(ts){
+  try{
+    if(!ts) return "—";
+    const d = new Date(ts);
+    return d.toLocaleString("fr-FR");
+  }catch(_){
+    return String(ts || "—");
+  }
+}
+function badgeStatus(status){
+  if(status === "sent") return "✅ envoyé";
+  if(status === "failed") return "❌ échec";
+  if(status === "sending") return "🚚 envoi";
+  return "⏳ à venir";
+}
+
 /* =========================
    State
 ========================= */
@@ -404,6 +476,85 @@ monthCursor.setDate(1);
 
 let dispoMap = new Map(); // key=YYYY-MM-DD -> row
 let logementPrix = null;  // prix_nuit standard
+
+/* =========================
+   PULSE (Outbox UI)
+   - essaie de lire digiy_loc_outbox
+   - filtre par user.id via join logique (si policy existe)
+   - sinon: affiche message clair
+========================= */
+async function loadPulse(){
+  const upEl = $("pulseUpcoming");
+  const sentEl = $("pulseSent");
+  const failEl = $("pulseFailed");
+
+  const qCountEl = $("pulseQueuedCount");
+  const sCountEl = $("pulseSentCount");
+  const fCountEl = $("pulseFailedCount");
+
+  if(qCountEl) qCountEl.textContent = "0";
+  if(sCountEl) sCountEl.textContent = "0";
+  if(fCountEl) fCountEl.textContent = "0";
+
+  if(upEl) upEl.textContent = user ? "Chargement..." : "Connecte-toi pour voir Pulse.";
+  if(sentEl) sentEl.textContent = user ? "Chargement..." : "—";
+  if(failEl) failEl.textContent = user ? "Chargement..." : "—";
+
+  if(!user) return;
+
+  try{
+    // ⚠️ Lecture simple.
+    // Si ta RLS n’autorise pas, ça va throw => message d’aide.
+    const { data, error } = await sb
+      .from("digiy_loc_outbox")
+      .select("id, created_at, due_at, due_date, pulse_kind, status, sent_at, attempts, last_error, reservation_id, room_id, phone, business_code")
+      .order("due_at", { ascending: true })
+      .limit(200);
+
+    if(error) throw error;
+
+    const rows = data || [];
+    const queued = rows.filter(r => r.status === "queued" || r.status === "sending");
+    const sent = rows.filter(r => r.status === "sent");
+    const failed = rows.filter(r => r.status === "failed");
+
+    if(qCountEl) qCountEl.textContent = String(queued.length);
+    if(sCountEl) sCountEl.textContent = String(sent.length);
+    if(fCountEl) fCountEl.textContent = String(failed.length);
+
+    const upcoming = queued.slice(0, 10);
+    const lastSent = sent.slice().sort((a,b)=> String(b.sent_at||b.due_at||"").localeCompare(String(a.sent_at||a.due_at||""))).slice(0, 10);
+    const lastFail = failed.slice().sort((a,b)=> String(b.updated_at||b.due_at||"").localeCompare(String(a.updated_at||a.due_at||""))).slice(0, 10);
+
+    const render = (list, emptyText) => {
+      if(!list.length) return `<div class="muted">${emptyText}</div>`;
+      return list.map(r=>{
+        const line1 = `<b>${escapeHtml(r.pulse_kind || "—")}</b> — ${fmtDT(r.due_at)} — ${badgeStatus(r.status)}`;
+        const line2 = r.last_error ? `<div style="margin-top:6px;color:rgba(239,68,68,.95)">${escapeHtml(r.last_error)}</div>` : "";
+        return `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.10)">${line1}${line2}</div>`;
+      }).join("");
+    };
+
+    if(upEl) upEl.innerHTML = render(upcoming, "Aucun pulse à venir ✅");
+    if(sentEl) sentEl.innerHTML = render(lastSent, "Aucun pulse envoyé pour l’instant.");
+    if(failEl) failEl.innerHTML = render(lastFail, "Aucun échec. Tout roule ✅");
+
+  }catch(e){
+    console.error(e);
+    const msg = (e?.message || String(e) || "").toLowerCase();
+    const hint = (
+      msg.includes("permission") || msg.includes("rls") || msg.includes("not allowed")
+    )
+      ? "Pulse est bien actif, mais Supabase bloque la lecture depuis le front (policy RLS manquante). Dis à Frérot de coller la policy SELECT propriétaire pour digiy_loc_outbox."
+      : "Erreur Pulse: " + (e?.message || e);
+
+    if(upEl) upEl.innerHTML = `<div style="color:rgba(245,158,11,.95);font-weight:950">${escapeHtml(hint)}</div>`;
+    if(sentEl) sentEl.innerHTML = `<div class="muted">—</div>`;
+    if(failEl) failEl.innerHTML = `<div class="muted">—</div>`;
+  }
+}
+const btnPulseRefresh = document.getElementById("btnPulseRefresh");
+if(btnPulseRefresh) btnPulseRefresh.addEventListener("click", loadPulse);
 
 /* =========================
    BULK (édition en masse)
@@ -507,6 +658,7 @@ $("btnLogout").addEventListener("click", async ()=>{
   await refreshAuth();
   dbg("Logout OK.");
   resetUI();
+  loadPulse();
 });
 
 /* =========================
@@ -562,6 +714,7 @@ $("selLogement").addEventListener("change", async ()=>{
   selectedLogementId = $("selLogement").value || null;
   logementPrix = logements.find(x=>x.id===selectedLogementId)?.prix_nuit ?? null;
   await reloadAll();
+  loadPulse();
 });
 
 /* =========================
@@ -593,10 +746,9 @@ $("btnAddLogement").addEventListener("click", async ()=>{
 
     setBusy(btn, true);
 
-    // IMPORTANT: owner_id doit être la colonne NOT NULL dans ta table digiy_logements
     const payload = {
       owner_id: user.id,
-      proprietaire_phone: user.phone || "+221000000000", // fallback si tu n'utilises pas auth phone
+      proprietaire_phone: user.phone || "+221000000000",
       nom,
       ville,
       adresse,
@@ -616,7 +768,6 @@ $("btnAddLogement").addEventListener("click", async ()=>{
     dbg("OK: logement ajouté.");
     await loadLogements();
 
-    // sélectionner automatiquement le nouveau si possible
     if(data?.id){
       selectedLogementId = data.id;
       $("selLogement").value = selectedLogementId;
@@ -625,6 +776,7 @@ $("btnAddLogement").addEventListener("click", async ()=>{
 
     await reloadAll();
     $("btnResetForm").click();
+    loadPulse();
   }catch(e){
     dbg("ERROR: " + (e.message || e));
   }finally{
@@ -647,7 +799,7 @@ async function loadDispo(){
 
   const { start, end } = monthRange(monthCursor);
   const startISO = isoDate(start);
-  const endISO = isoDate(new Date(end.getTime()-86400000)); // last day
+  const endISO = isoDate(new Date(end.getTime()-86400000));
 
   const { data, error } = await sb
     .from("digiy_disponibilites")
@@ -728,6 +880,7 @@ async function confirmReservation(resaId){
     if(error) throw error;
     dbg("OK: réservation confirmée.");
     await reloadAll();
+    loadPulse();
   }catch(e){
     dbg("ERROR: " + (e.message || e));
   }
@@ -742,7 +895,6 @@ function renderCalendar(){
 
   cal.innerHTML = "";
 
-  // header DOW
   const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
   for(const w of dows){
     const el = document.createElement("div");
@@ -756,8 +908,8 @@ function renderCalendar(){
   const { start } = monthRange(monthCursor);
   const firstDay = new Date(start);
 
-  const jsDow = firstDay.getDay(); // 0..6
-  const offset = (jsDow + 6) % 7; // Mon=0, Sun=6
+  const jsDow = firstDay.getDay();
+  const offset = (jsDow + 6) % 7;
 
   for(let i=0;i<offset;i++){
     const b = document.createElement("div");
@@ -884,7 +1036,6 @@ $("nextMonth").addEventListener("click", async ()=>{
 });
 
 async function reloadAll(){
-  // CALENDRIER TOUJOURS VISIBLE
   if(!user){
     resetUI();
     renderCalendar();
@@ -918,6 +1069,7 @@ function resetUI(){
 sb.auth.onAuthStateChange(async ()=>{
   await refreshAuth();
   await reloadAll();
+  loadPulse();
 });
 
 // BOOT INITIAL (même avant login, on affiche le calendrier)
@@ -925,6 +1077,7 @@ sb.auth.onAuthStateChange(async ()=>{
   renderCalendar();
   await refreshAuth();
   await reloadAll();
+  loadPulse();
 })();
 </script>
 </body>
