@@ -242,7 +242,9 @@
         </div>
       </div>
 
-      <div class="pill tag" id="pillSlug">slug: <strong>—</strong></div>
+      <div class="pill tag" id="pillSlug">
+        slug: <strong id="pillSlugVal">—</strong>
+      </div>
     </div>
 
     <div class="card">
@@ -256,12 +258,12 @@
         </div>
 
         <div class="btnRow">
-          <a class="btn primary" id="btnCall" href="#">
+          <a class="btn primary disabled" id="btnCall" href="#">
             <span class="ico">📞</span>
             Appeler
           </a>
 
-          <a class="btn primary" id="btnWA" href="#">
+          <a class="btn primary disabled" id="btnWA" href="#">
             <span class="ico">💬</span>
             WhatsApp
           </a>
@@ -296,7 +298,6 @@
 
     // ✅ RPC recommandée (RLS ON)
     // Mets ici le nom EXACT de ta fonction si différent :
-    // ex: "go_pin_get_by_slug" ou "get_go_pin_by_slug" etc.
     const RPC_NAME = "go_pin_get_by_slug";
 
     const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -306,10 +307,28 @@
     ============================= */
     const $ = (id)=>document.getElementById(id);
 
+    function setDisabled(id, on){
+      const el = $(id);
+      if(!el) return;
+      el.classList.toggle("disabled", !!on);
+      if(el.tagName === "A"){
+        el.setAttribute("aria-disabled", on ? "true" : "false");
+      }else{
+        el.disabled = !!on;
+      }
+    }
+
     function showStatus(msg, cls){
       const el = $("status");
+      const text = String(msg || "").trim();
+      if(!text){
+        el.textContent = "";
+        el.style.display = "none";
+        el.className = "status";
+        return;
+      }
       el.className = "status " + (cls || "warn");
-      el.textContent = msg;
+      el.textContent = text;
       el.style.display = "block";
     }
 
@@ -328,10 +347,38 @@
       return "https://wa.me/" + num + (text ? ("?text=" + encodeURIComponent(text)) : "");
     }
 
+    function isIOS(){
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
     function mapsLink(lat, lng, label){
-      // Apple Maps / Google Maps (universal)
       const q = (label ? label : (lat + "," + lng));
+      if(isIOS()){
+        return "https://maps.apple.com/?q=" + encodeURIComponent(q) + "&ll=" + encodeURIComponent(lat + "," + lng);
+      }
       return "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&ll=" + encodeURIComponent(lat + "," + lng);
+    }
+
+    async function copyText(txt){
+      try{
+        await navigator.clipboard.writeText(txt);
+        return true;
+      }catch(_){
+        try{
+          const ta = document.createElement("textarea");
+          ta.value = txt;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.top = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand("copy");
+          ta.remove();
+          return ok;
+        }catch(__){
+          return false;
+        }
+      }
     }
 
     /* =============================
@@ -340,7 +387,7 @@
     const url = new URL(location.href);
     const slug = (url.searchParams.get("slug") || "").trim();
 
-    $("pillSlug").innerHTML = 'slug: <strong>' + (slug || "—") + '</strong>';
+    $("pillSlugVal").textContent = slug || "—";
 
     if(!slug){
       showStatus("GO PIN introuvable ou inactif.\n➡️ Il manque ?slug=.... dans l’URL", "bad");
@@ -358,12 +405,19 @@
       try{
         const { data, error } = await SB.rpc(RPC_NAME, { p_slug: slug });
         if(!error && data){
-          // data peut être {ok:true,...} ou directement l’objet
-          const out = (typeof data === "string") ? JSON.parse(data) : data;
+          // data peut être objet, tableau, ou JSON string
+          let out = data;
+          if(typeof out === "string"){
+            try{ out = JSON.parse(out); }catch(_){}
+          }
+          if(Array.isArray(out)) out = out[0];
+
           if(out?.ok === false){
             throw new Error(out.reason || "NOT_FOUND");
           }
+
           const pin = out?.pin_code || out?.pin || out?.code || "0000";
+
           return renderGoPin({
             slug: out.slug || slug,
             title: out.title || "—",
@@ -376,7 +430,7 @@
           });
         }
       }catch(e){
-        // on continue vers fallback
+        // continue vers fallback
       }
 
       // 2) Fallback direct table (si RLS permet select)
@@ -409,57 +463,58 @@
     function renderGoPin(p){
       const title = p.title || "—";
       const cat = p.category || "—";
-      const pin = String(p.pin_code || "0000").slice(0,8);
+      const rawPin = String(p.pin_code || "0000").trim();
+      const pin = rawPin.replace(/\s+/g,"").slice(0,8);
 
       const phone = normPhone(p.phone);
       const wa = normPhone(p.whatsapp || p.phone);
 
       $("tTitle").textContent = title;
       $("tCat").textContent = cat;
-      $("tPin").textContent = pin.padStart(4,"0");
+      $("tPin").textContent = (pin || "0000").padStart(4,"0");
 
       // Call
       if(phone){
         $("btnCall").href = "tel:" + phone.replace(/\s/g,"");
-        $("btnCall").classList.remove("disabled");
+        setDisabled("btnCall", false);
       }else{
         $("btnCall").href = "#";
-        $("btnCall").classList.add("disabled");
+        setDisabled("btnCall", true);
       }
 
       // WhatsApp
       if(wa){
         const msg = `DIGIY • ${title}\nSalut, je viens via DIGIY.`;
         $("btnWA").href = waLink(wa, msg);
-        $("btnWA").classList.remove("disabled");
+        setDisabled("btnWA", false);
       }else{
         $("btnWA").href = "#";
-        $("btnWA").classList.add("disabled");
+        setDisabled("btnWA", true);
       }
 
       // Map
       const hasMap = Number.isFinite(+p.lat) && Number.isFinite(+p.lng);
       if(hasMap){
-        $("btnMap").href = mapsLink(p.lat, p.lng, title);
-        $("btnMap").classList.remove("disabled");
+        $("btnMap").href = mapsLink(+p.lat, +p.lng, title);
+        setDisabled("btnMap", false);
       }else{
         $("btnMap").href = "#";
-        $("btnMap").classList.add("disabled");
+        setDisabled("btnMap", true);
       }
 
       // Share
       $("btnShare").onclick = async ()=>{
         const shareUrl = location.origin + location.pathname + "?slug=" + encodeURIComponent(p.slug || slug);
-        const txt = `DIGIY • ${title}\nCatégorie: ${cat}\nPIN: ${pin}\n`;
+        const txt = `DIGIY • ${title}\nCatégorie: ${cat}\nPIN: ${pin || "0000"}\n`;
 
         try{
           if(navigator.share){
             await navigator.share({ title: `DIGIY • ${title}`, text: txt, url: shareUrl });
-          }else{
-            await navigator.clipboard.writeText(shareUrl);
-            showStatus("✅ Lien copié.", "ok");
-            setTimeout(()=>showStatus("", "warn"), 800);
+            return;
           }
+          const ok = await copyText(shareUrl);
+          showStatus(ok ? "✅ Lien copié." : "⚠️ Copie impossible sur ce navigateur.", ok ? "ok" : "warn");
+          setTimeout(()=>showStatus("", ""), 900);
         }catch(e){
           // si l’utilisateur annule, on ne crie pas
           console.log(e);
@@ -473,3 +528,4 @@
   </script>
 </body>
 </html>
+
