@@ -3,618 +3,186 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY ♾️ — GO PIN</title>
-  <meta name="theme-color" content="#064e3b"/>
+  <title>DIGIY LOC PRO ♾️ — PIN</title>
+  <meta name="theme-color" content="#0b1020"/>
 
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-final"></script>
 
   <style>
     :root{
-      --bg0:#02130f;
-      --bg1:#022c22;
-      --bg2:#065f46;
-
-      --glass:rgba(2,44,34,.35);
-      --line:rgba(148,163,184,.24);
-
-      --text:#ecfdf5;
-      --muted:rgba(236,253,245,.74);
-
-      --gold:#facc15;
-      --ok:#22c55e;
-      --bad:#ef4444;
-
-      --shadow:0 22px 60px rgba(0,0,0,.55);
-      --radius:22px;
+      --bg:#020617; --bg2:#0b1020; --line:#1f2937;
+      --ink:#f9fafb; --muted:#cbd5f5;
+      --gold:#facc15; --green:#22c55e; --danger:#ef4444;
+      --shadow:0 22px 50px rgba(0,0,0,.55);
+      --card:rgba(255,255,255,.03);
     }
-
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
     body{
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--ink);
       background:
-        radial-gradient(900px 520px at 15% -10%, rgba(250,204,21,.14), transparent 60%),
-        radial-gradient(900px 520px at 90% 10%, rgba(34,197,94,.12), transparent 60%),
-        radial-gradient(700px 420px at 30% 90%, rgba(245,158,11,.10), transparent 60%),
-        linear-gradient(135deg, var(--bg1), var(--bg2));
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
       padding:16px;
-      -webkit-font-smoothing: antialiased;
-      -webkit-text-size-adjust: 100%;
     }
-
-    /* ✅ iOS touch safe */
-    *{ -webkit-tap-highlight-color: transparent; }
-    a,button{ touch-action: manipulation; }
-    body::before, body::after, .fx, .overlay, .glow { pointer-events:none !important; }
-    .wrap, .top, .card, .btnRow, .btn, .pill, .cta { position:relative; z-index:2; }
-
-    .wrap{max-width:560px;margin:0 auto;padding:4px}
-
+    .wrap{max-width:560px;margin:0 auto}
     .top{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-      padding:12px 12px;
+      display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      box-shadow:var(--shadow);
     }
-
-    .brand{
-      display:flex;align-items:center;gap:10px;min-width:0;
-    }
+    .brand{display:flex;gap:10px;align-items:center}
     .logo{
       width:44px;height:44px;border-radius:16px;
-      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.14));
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
       border:1px solid rgba(250,204,21,.35);
-      box-shadow:0 0 24px rgba(250,204,21,.12);
-      display:grid;place-items:center;
-      font-weight:1100;color:#062e22;
+      box-shadow:0 0 22px rgba(250,204,21,.12);
+      display:grid;place-items:center;color:#061b14;font-weight:1100;
     }
-    .brandTxt{min-width:0}
-    .brandTitle{
-      font-weight:1100;
-      font-size:18px;
-      letter-spacing:.04em;
-      line-height:1.1;
-      white-space:nowrap;
-      overflow:hidden;text-overflow:ellipsis;
-    }
-    .brandSub{
-      margin-top:3px;
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-    }
-
     .pill{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      padding:9px 12px;
-      border-radius:999px;
-      font-weight:1000;
-      font-size:12px;
-      color:var(--muted);
-      display:inline-flex;gap:8px;align-items:center;
-      max-width:100%;
+      border:1px solid rgba(148,163,184,.35);
+      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:.86rem;
     }
-    .pill strong{color:#fff}
-    .pill.tag{
-      background:rgba(250,204,21,.12);
-      border-color:rgba(250,204,21,.30);
-      color:#fff;
-    }
-
     .card{
-      margin-top:8px;
-      border-radius:var(--radius);
-      border:1px solid rgba(148,163,184,.18);
-      background:linear-gradient(180deg, rgba(2,44,34,.42), rgba(2,44,34,.20));
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .cardInner{padding:16px}
-
-    .title{
-      font-size:34px;
-      font-weight:1200;
-      letter-spacing:-.02em;
-      line-height:1.05;
-    }
-    .meta{
-      margin-top:8px;
-      color:var(--muted);
-      font-weight:900;
-      font-size:15px;
-    }
-
-    .pinRow{
-      margin-top:14px;
-      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    }
-    .pinLabel{
-      color:var(--muted);
-      font-weight:1000;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      font-size:12px;
-    }
-
-    .pinInputRow{
-      margin-top:12px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    .pinInput{
-      flex:1 1 220px;
-      min-height:54px;
-      padding:12px 14px;
-      border-radius:16px;
-      border:1px solid rgba(250,204,21,.30);
-      background:rgba(250,204,21,.08);
-      color:#fff;
-      font-weight:1100;
-      font-size:18px;
-      letter-spacing:.18em;
-      outline:none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    .pinInput:focus{
-      border-color:rgba(250,204,21,.55);
-      box-shadow:0 0 0 3px rgba(250,204,21,.12);
-    }
-
-    .btnMini{
-      min-height:54px;
-      padding:12px 14px;
-      border-radius:16px;
-      border:1px solid rgba(250,204,21,.35);
-      background:rgba(250,204,21,.12);
-      color:#fff;
-      font-weight:1100;
-      font-size:16px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .btnMini:active{transform:scale(.99)}
-    .btnMini[disabled]{opacity:.55;cursor:not-allowed}
-
-    .hint{
-      margin-top:8px;
-      color:rgba(236,253,245,.70);
-      font-weight:900;
-      font-size:13px;
-      line-height:1.35;
-    }
-
-    .btnRow{margin-top:14px;display:flex;flex-direction:column;gap:12px}
-
-    .btn{
-      width:100%;
-      min-height:56px;
-      border-radius:18px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-      color:#fff;
-      font-weight:1100;
-      font-size:18px;
-      display:flex;align-items:center;justify-content:center;gap:12px;
-      text-decoration:none;
-      user-select:none;
-      cursor:pointer;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
-    }
-    .btn:active{transform:scale(.99)}
-    .btn.primary{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-    }
-    .btn.gold{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.12);
-    }
-    .btn.disabled{
-      opacity:.45;
-      filter:saturate(.7);
-      cursor:not-allowed;
-      pointer-events:none;
-    }
-    .btn .ico{
-      width:30px;height:30px;border-radius:999px;
-      display:grid;place-items:center;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(148,163,184,.18);
-      font-size:16px;
-    }
-
-    .footer{
-      margin-top:14px;
-      padding:14px 16px;
-      border-top:1px solid rgba(148,163,184,.14);
-      background:rgba(0,0,0,.12);
-      color:rgba(236,253,245,.70);
-      font-weight:900;
-      text-align:center;
-      letter-spacing:.02em;
-    }
-
-    .status{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.18);
+      margin-top:14px;border:1px solid var(--line);
       background:rgba(255,255,255,.03);
-      color:var(--muted);
-      font-weight:1000;
-      font-size:13px;
-      white-space:pre-wrap;
-      display:none;
+      border-radius:20px;box-shadow:var(--shadow);
+      padding:16px;
     }
-    .status.ok{display:block;border-color:rgba(34,197,94,.30);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .status.bad{display:block;border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.10);color:#fecaca}
-    .status.warn{display:block;border-color:rgba(250,204,21,.30);background:rgba(250,204,21,.10);color:#fde68a}
-
-    @media (max-width:420px){
-      body{padding:12px}
-      .title{font-size:30px}
-      .btn{min-height:54px;font-size:17px}
-      .pinInput,.btnMini{min-height:52px}
+    h1{font-size:1.2rem;margin:0}
+    .sub{color:var(--muted);font-weight:800;margin-top:4px;line-height:1.35}
+    label{display:block;margin:14px 0 6px;font-weight:950;color:#fff}
+    input{
+      width:100%;border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.18);color:var(--ink);
+      padding:12px 12px;font-weight:900;outline:none;
     }
+    input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(250,204,21,.15)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      width:100%;min-height:52px;border-radius:16px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);color:#fff;font-weight:1100;font-size:16px;
+      cursor:pointer;
+    }
+    .btn.primary{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
+    .note{
+      margin-top:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;display:none;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-
     <div class="top">
       <div class="brand">
         <div class="logo">∞</div>
-        <div class="brandTxt">
-          <div class="brandTitle">DIGIY ♾️ — GO PIN</div>
-          <div class="brandSub">Terrain • Rapide • Direct</div>
+        <div>
+          <h1>DIGIY LOC PRO — Accès</h1>
+          <div class="sub">Entre ton téléphone + ton PIN pour ouvrir ton cockpit.</div>
         </div>
       </div>
-
-      <div class="pill tag" id="pillSlug">
-        slug: <strong id="pillSlugVal">—</strong>
-      </div>
+      <div class="pill" id="pillSlug">slug: —</div>
     </div>
 
     <div class="card">
-      <div class="cardInner">
-        <div class="title" id="tTitle">—</div>
-        <div class="meta">Catégorie: <strong id="tCat">—</strong></div>
+      <label>Téléphone (Wave)</label>
+      <input id="phone" inputmode="tel" placeholder="+221 77 123 45 67" />
 
-        <div class="pinRow">
-          <div class="pinLabel">Débloque avec ton PIN</div>
-        </div>
+      <label>PIN</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="one-time-code" placeholder="••••" maxlength="8" />
 
-        <div class="pinInputRow">
-          <input class="pinInput" id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code"
-                 placeholder="••••" maxlength="8" />
-          <button class="btnMini" id="btnUnlock" type="button">GO</button>
-        </div>
-
-        <div class="hint" id="hint">
-          ⚠️ Tant que le PIN n’est pas validé, les boutons restent bloqués.
-        </div>
-
-        <div class="btnRow">
-          <a class="btn primary disabled" id="btnCall" href="#">
-            <span class="ico">📞</span>
-            Appeler
-          </a>
-
-          <a class="btn primary disabled" id="btnWA" href="#">
-            <span class="ico">💬</span>
-            WhatsApp
-          </a>
-
-          <a class="btn gold disabled" id="btnMap" href="#" target="_blank" rel="noopener">
-            <span class="ico">📍</span>
-            Itinéraire
-          </a>
-
-          <button class="btn" id="btnShare" type="button">
-            <span class="ico">🔗</span>
-            Partager
-          </button>
-        </div>
-
-        <div class="status warn" id="status"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnLogin" type="button">🔓 Ouvrir mon cockpit</button>
+        <a class="btn gold" id="btnPublic" href="#" style="display:flex;align-items:center;justify-content:center;text-decoration:none">
+          👁️ Retour GO PIN public
+        </a>
       </div>
 
-      <div class="footer">0% commission • Contact direct • DIGIYLYFE</div>
+      <div class="note warn" id="note"></div>
     </div>
   </div>
 
-  <script>
-    /* =============================
-       CONFIG
-    ============================= */
+<script>
+(function(){
+  "use strict";
+  const $ = (id)=>document.getElementById(id);
 
-    const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  function note(msg, cls){
+    const el = $("note");
+    el.className = "note " + (cls || "warn");
+    el.textContent = msg;
+    el.style.display = msg ? "block" : "none";
+  }
 
-    // RPCs (mode PROD secure)
-    const RPC_GET = "go_pin_get_by_slug";  // doit renvoyer ok,true + infos (sans pin_code)
-    const RPC_VERIFY = "go_pin_verify";    // params: p_slug, p_pin -> {ok:true|false}
+  function cleanPin(v){ return String(v||"").trim().replace(/[^\d]/g,"").slice(0,8); }
 
-    const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // slug
+  const u = new URL(location.href);
+  const SLUG = (u.searchParams.get("slug") || "").trim().replace(/\/+$/,"").toLowerCase();
+  $("pillSlug").textContent = "slug: " + (SLUG || "—");
 
-    /* =============================
-       HELPERS
-    ============================= */
-    const $ = (id)=>document.getElementById(id);
+  // lien retour public
+  const back = new URL("./go-pin.html", location.href);
+  if(SLUG) back.searchParams.set("slug", SLUG);
+  $("btnPublic").href = back.toString();
 
-    function setDisabled(id, on){
-      const el = $(id);
-      if(!el) return;
-      el.classList.toggle("disabled", !!on);
-      if(el.tagName === "A"){
-        el.setAttribute("aria-disabled", on ? "true" : "false");
-      }else{
-        el.disabled = !!on;
-      }
+  if(!SLUG){
+    note("⚠️ Il manque le slug.\n➡️ Exemple: pin.html?slug=chez-astou-saly", "bad");
+  }
+
+  async function doLogin(){
+    if(!SLUG){
+      note("❌ Slug manquant.", "bad");
+      return;
     }
 
-    function showStatus(msg, cls){
-      const el = $("status");
-      const text = String(msg || "").trim();
-      if(!text){
-        el.textContent = "";
-        el.style.display = "none";
-        el.className = "status";
-        return;
-      }
-      el.className = "status " + (cls || "warn");
-      el.textContent = text;
-      el.style.display = "block";
+    const phone = $("phone").value;
+    const pin = cleanPin($("pin").value);
+    $("pin").value = pin;
+
+    if(pin.length < 4){
+      note("⚠️ Mets au moins 4 chiffres.", "warn");
+      return;
     }
 
-    function normPhone(p){
-      let s = String(p||"").trim();
-      if(!s) return "";
-      s = s.replace(/[^\d+]/g,"");
-      if(s.startsWith("00")) s = "+" + s.slice(2);
-      if(s.startsWith("221") && !s.startsWith("+221")) s = "+221" + s.slice(3);
-      if(/^\d{9}$/.test(s)) s = "+221" + s;
-      return s;
-    }
+    $("btnLogin").disabled = true;
+    note("⏳ Vérification…", "warn");
 
-    function waLink(phone, text){
-      const num = String(phone||"").replace(/[^\d]/g,"");
-      return "https://wa.me/" + num + (text ? ("?text=" + encodeURIComponent(text)) : "");
-    }
-
-    function isIOS(){
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    }
-
-    function mapsLink(lat, lng, label){
-      const q = (label ? label : (lat + "," + lng));
-      if(isIOS()){
-        return "https://maps.apple.com/?q=" + encodeURIComponent(q) + "&ll=" + encodeURIComponent(lat + "," + lng);
-      }
-      return "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&ll=" + encodeURIComponent(lat + "," + lng);
-    }
-
-    async function copyText(txt){
-      try{
-        await navigator.clipboard.writeText(txt);
-        return true;
-      }catch(_){
-        try{
-          const ta = document.createElement("textarea");
-          ta.value = txt;
-          ta.setAttribute("readonly", "");
-          ta.style.position = "fixed";
-          ta.style.top = "-9999px";
-          document.body.appendChild(ta);
-          ta.select();
-          const ok = document.execCommand("copy");
-          ta.remove();
-          return ok;
-        }catch(__){
-          return false;
-        }
-      }
-    }
-
-    function lockActions(){
-      setDisabled("btnCall", true);
-      setDisabled("btnWA", true);
-      setDisabled("btnMap", true);
-      $("btnCall").href = "#";
-      $("btnWA").href = "#";
-      $("btnMap").href = "#";
-      $("hint").textContent = "⚠️ Tant que le PIN n’est pas validé, les boutons restent bloqués.";
-    }
-
-    function unlockActions(){
-      $("hint").textContent = "✅ PIN validé. Tu peux contacter directement.";
-    }
-
-    /* =============================
-       SLUG
-    ============================= */
-    const url = new URL(location.href);
-    const slug = (url.searchParams.get("slug") || "").trim();
-    $("pillSlugVal").textContent = slug || "—";
-
-    // state data (rempli après load)
-    let GO = null;
-
-    lockActions();
-
-    if(!slug){
-      showStatus("GO PIN introuvable.\n➡️ Il manque ?slug=.... dans l’URL", "bad");
-    }
-
-    /* =============================
-       LOAD GO PIN (RPC GET)
-    ============================= */
-    async function loadGoPin(){
-      if(!slug) return;
-
-      showStatus("⏳ Chargement…", "warn");
-
-      try{
-        const { data, error } = await SB.rpc(RPC_GET, { p_slug: slug });
-        if(error) throw error;
-
-        let out = data;
-        if(typeof out === "string"){
-          try{ out = JSON.parse(out); }catch(_){}
-        }
-        if(Array.isArray(out)) out = out[0];
-
-        if(!out || out.ok === false){
-          showStatus("❌ GO PIN introuvable ou inactif.", "bad");
-          return;
-        }
-
-        GO = {
-          slug: out.slug || slug,
-          title: out.title || "—",
-          category: out.category || "—",
-          phone: normPhone(out.phone),
-          whatsapp: normPhone(out.whatsapp || out.phone),
-          lat: out.lat,
-          lng: out.lng
-        };
-
-        $("tTitle").textContent = GO.title;
-        $("tCat").textContent = GO.category;
-
-        showStatus("🔒 Entre le PIN pour débloquer.", "warn");
-
-        // Share fonctionne même sans unlock (le lien est public)
-        wireShare();
-
-        // UX: focus direct
-        setTimeout(()=> $("pinInput").focus(), 150);
-
-      }catch(err){
-        console.error(err);
-        showStatus("❌ Erreur chargement.\nDétail: " + (err?.message || err), "bad");
-      }
-    }
-
-    function wireShare(){
-      $("btnShare").onclick = async ()=>{
-        const shareUrl = location.origin + location.pathname + "?slug=" + encodeURIComponent((GO && GO.slug) ? GO.slug : slug);
-        const title = GO?.title ? `DIGIY • ${GO.title}` : "DIGIY • GO PIN";
-        const txt = GO?.title ? `DIGIY • ${GO.title}\nCatégorie: ${GO.category}\n` : "DIGIY • GO PIN\n";
-
-        try{
-          if(navigator.share){
-            await navigator.share({ title, text: txt, url: shareUrl });
-            return;
-          }
-          const ok = await copyText(shareUrl);
-          showStatus(ok ? "✅ Lien copié." : "⚠️ Copie impossible sur ce navigateur.", ok ? "ok" : "warn");
-          setTimeout(()=>showStatus("🔒 Entre le PIN pour débloquer.", "warn"), 900);
-        }catch(e){
-          console.log(e);
-        }
-      };
-    }
-
-    /* =============================
-       VERIFY PIN (RPC VERIFY)
-    ============================= */
-    function cleanPin(v){
-      return String(v||"").trim().replace(/[^\d]/g,"").slice(0,8);
-    }
-
-    async function verifyPin(){
-      if(!GO){
-        showStatus("⚠️ On charge d’abord la fiche…", "warn");
+    try{
+      const res = await window.DIGIY_GUARD.loginWithPin(phone, pin, "LOC");
+      if(!res || res.ok !== true){
+        note("❌ Accès refusé. Vérifie ton téléphone + ton PIN.", "bad");
         return;
       }
 
-      const pin = cleanPin($("pinInput").value);
-      $("pinInput").value = pin;
-
-      if(pin.length < 4){
-        showStatus("⚠️ Mets au moins 4 chiffres.", "warn");
-        return;
-      }
-
-      $("btnUnlock").disabled = true;
-      showStatus("⏳ Vérification du PIN…", "warn");
-
-      try{
-        const { data, error } = await SB.rpc(RPC_VERIFY, { p_slug: GO.slug, p_pin: pin });
-        if(error) throw error;
-
-        let out = data;
-        if(typeof out === "string"){
-          try{ out = JSON.parse(out); }catch(_){}
-        }
-        if(Array.isArray(out)) out = out[0];
-
-        if(out && out.ok === true){
-          // ✅ unlock actions
-          unlockActions();
-          showStatus("✅ PIN validé. Tu peux contacter.", "ok");
-
-          // Call
-          if(GO.phone){
-            $("btnCall").href = "tel:" + GO.phone.replace(/\s/g,"");
-            setDisabled("btnCall", false);
-          }else{
-            setDisabled("btnCall", true);
-          }
-
-          // WhatsApp
-          if(GO.whatsapp){
-            const msg = `DIGIY • ${GO.title}\nSalut, je viens via DIGIY.`;
-            $("btnWA").href = waLink(GO.whatsapp, msg);
-            setDisabled("btnWA", false);
-          }else{
-            setDisabled("btnWA", true);
-          }
-
-          // Map
-          const hasMap = Number.isFinite(+GO.lat) && Number.isFinite(+GO.lng);
-          if(hasMap){
-            $("btnMap").href = mapsLink(+GO.lat, +GO.lng, GO.title);
-            setDisabled("btnMap", false);
-          }else{
-            // fallback: recherche par nom si pas de coords
-            $("btnMap").href = isIOS()
-              ? ("https://maps.apple.com/?q=" + encodeURIComponent(GO.title))
-              : ("https://www.google.com/maps?q=" + encodeURIComponent(GO.title));
-            setDisabled("btnMap", false);
-          }
-
-          return;
-        }
-
-        showStatus("❌ PIN incorrect.", "bad");
-        lockActions();
-
-      }catch(err){
-        console.error(err);
-        showStatus("❌ Erreur vérif PIN.\nDétail: " + (err?.message || err), "bad");
-        lockActions();
-      }finally{
-        $("btnUnlock").disabled = false;
-      }
+      note("✅ OK. Ouverture…", "ok");
+      const dash = new URL("./index.html", location.href);
+      dash.searchParams.set("slug", SLUG);
+      location.replace(dash.toString());
+    }catch(e){
+      console.error(e);
+      note("❌ Erreur login.\nDétail: " + (e?.message || e), "bad");
+    }finally{
+      $("btnLogin").disabled = false;
     }
+  }
 
-    $("btnUnlock").addEventListener("click", verifyPin);
-    $("pinInput").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter") verifyPin();
-    });
+  $("btnLogin").addEventListener("click", doLogin);
+  $("pin").addEventListener("keydown", (e)=>{ if(e.key==="Enter") doLogin(); });
 
-    // Init
-    loadGoPin();
-  </script>
+  // UX focus
+  setTimeout(()=> ($("phone").value ? $("pin") : $("phone")).focus(), 120);
+})();
+</script>
 </body>
 </html>
+
