@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>DIGIY LOC PRO ∞ — Cockpit Propriétaire ROYAL</title>
 <meta name="theme-color" content="#0b1020" />
+
+<!-- Supabase + Guard (PIN session) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./guard.js?v=locpro-final"></script>
 
@@ -297,14 +299,14 @@ input[type="date"]{color-scheme:dark}
         <div class="navLabel" id="navSlug">slug: —</div>
       </div>
       <div class="navRight">
-   <button class="btn small navBtn" id="goToday">📅 Vue du jour</button>
-  <button class="btn small navBtn" id="goApp">🏠 APP</button>
-  <button class="btn small navBtn" id="goPulse">📲 Pulse</button>
-  <button class="btn small navBtn" id="goPlanning">🗓️ Planning</button>
-  <button class="btn small navBtn" id="goListing">📋 Listing du jour</button>
-  <button class="btn small navBtn" id="goLinks">🔗 Liens / QR</button>
-  <button class="btn small navBtn" id="goHealth">🧪 Diagnostic</button>
-</div>
+        <button class="btn small navBtn" id="goToday">📅 Vue du jour</button>
+        <button class="btn small navBtn" id="goApp">🏠 APP</button>
+        <button class="btn small navBtn" id="goPulse">📲 Pulse</button>
+        <button class="btn small navBtn" id="goPlanning">🗓️ Planning</button>
+        <button class="btn small navBtn" id="goListing">📋 Listing du jour</button>
+        <button class="btn small navBtn" id="goLinks">🔗 Liens / QR</button>
+        <button class="btn small navBtn" id="goHealth">🧪 Diagnostic</button>
+      </div>
     </div>
   </div>
 
@@ -323,29 +325,8 @@ input[type="date"]{color-scheme:dark}
       </div>
 
       <div class="cardBody">
-        <!-- AUTH -->
-        <div id="authBox">
-          <div class="previewBox">
-            <div style="font-weight:1000;font-size:1.05rem;margin-bottom:6px;">🔐 Accès propriétaire</div>
-            <div style="color:var(--muted);font-weight:800;">
-              Tu entres ton email, tu reçois un lien, tu cliques : c’est tout.
-            </div>
-
-            <label>Email</label>
-            <input id="authEmail" type="email" placeholder="ex: ton-email@example.com" />
-
-            <div class="btnRow" style="margin-top:12px">
-              <button class="btn primary" id="btnSendOtp">📩 Envoyer le lien</button>
-              <button class="btn" id="btnDemoFill">⚡ Demo</button>
-            </div>
-
-            <small class="hint">💡 Astuce : ouvre ton email sur ce même navigateur.</small>
-            <div class="note" id="authNote"></div>
-          </div>
-        </div>
-
         <!-- LIST -->
-        <div id="listBox" style="display:none">
+        <div id="listBox">
           <div class="statsRow" id="statsBox"></div>
           <div class="list" id="list"></div>
           <div class="note" id="listNote"></div>
@@ -547,7 +528,19 @@ input[type="date"]{color-scheme:dark}
 
 <script>
 /* =============================
-   SUPABASE CONFIG
+   BOOT GUARD (anti-friction)
+============================= */
+window.DIGIY_GUARD?.boot({
+  module: "loc",
+  login: "./pin.html",
+  dashboard: "./index.html",
+  pay: "https://beauville.github.io/commencer-a-payer/",
+  requireSlug: true,
+  checkSubscription: true
+});
+
+/* =============================
+   SUPABASE CONFIG (client anon)
 ============================= */
 const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
 const SUPABASE_ANON_KEY =
@@ -559,11 +552,10 @@ const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ============================= */
 const url = new URL(location.href);
 const SLUG = (url.searchParams.get("slug") || "").trim();
-
 function withSlug(path){
   if(!SLUG) return path;
   const u = new URL(path, location.href);
-  u.searchParams.set("slug", SLUG);
+  if(!u.searchParams.get("slug")) u.searchParams.set("slug", SLUG);
   return u.toString();
 }
 function setNavSlug(){
@@ -575,61 +567,32 @@ setNavSlug();
 /* =============================
    NAV BUTTONS (SAFE + NO CRASH)
 ============================= */
-const btnBack    = document.getElementById("btnBack");
-const btnToday   = document.getElementById("goToday");
-const btnApp     = document.getElementById("goApp");
-const btnPulse   = document.getElementById("goPulse");
-const btnPlanning= document.getElementById("goPlanning");
-const btnListing = document.getElementById("goListing");
-const btnLinks   = document.getElementById("goLinks");
-const btnHealth  = document.getElementById("goHealth");
+const btnBack     = document.getElementById("btnBack");
+const btnToday    = document.getElementById("goToday");
+const btnApp      = document.getElementById("goApp");
+const btnPulse    = document.getElementById("goPulse");
+const btnPlanning = document.getElementById("goPlanning");
+const btnListing  = document.getElementById("goListing");
+const btnLinks    = document.getElementById("goLinks");
+const btnHealth   = document.getElementById("goHealth");
 
-// Retour (version SAFE)
-if (btnBack) btnBack.onclick = () => location.href = withSlug("./index.html");
-
-// Vue du jour
-if (btnToday) btnToday.onclick = () => location.href = withSlug("./today.html");
-
-// App
-if (btnApp) btnApp.onclick = () => location.href = withSlug("./app.html");
-
-// Pulse (page proprio)
-if (btnPulse) btnPulse.onclick = () => location.href = withSlug("./proprio-loc.html");
-
-// Planning
+if (btnBack)     btnBack.onclick     = () => location.href = withSlug("./index.html");
+if (btnToday)    btnToday.onclick    = () => location.href = withSlug("./today.html");
+if (btnApp)      btnApp.onclick      = () => location.href = withSlug("./app.html");
+if (btnPulse)    btnPulse.onclick    = () => location.href = withSlug("./proprio-loc.html");
 if (btnPlanning) btnPlanning.onclick = () => location.href = withSlug("./planning.html");
-
-// Liens / QR
-if (btnLinks) btnLinks.onclick = () => location.href = withSlug("./manage-links.html");
-
-// Diagnostic (ancien Health)
-if (btnHealth) btnHealth.onclick = () => location.href = withSlug("./health-loc.html");
-
-// Listing du jour (avec business_code si dispo)
-if (btnListing) {
-  btnListing.onclick = () => {
-    const bc = (current && current.business_code) ? current.business_code : "";
-    const u = new URL(withSlug("./listing.html"), location.href);
-    if (bc) u.searchParams.set("business", bc);
-    location.href = u.toString();
-  };
-}
+if (btnLinks)    btnLinks.onclick    = () => location.href = withSlug("./manage-links.html");
+if (btnHealth)   btnHealth.onclick   = () => location.href = withSlug("./health-loc.html");
 
 /* =============================
    DOM
 ============================= */
-const authBox = document.getElementById("authBox");
 const listBox = document.getElementById("listBox");
 const listEl = document.getElementById("list");
 const statsBox = document.getElementById("statsBox");
 const pillUser = document.getElementById("pillUser");
 const pillState = document.getElementById("pillState");
 const btnLogout = document.getElementById("btnLogout");
-
-const authEmail = document.getElementById("authEmail");
-const btnSendOtp = document.getElementById("btnSendOtp");
-const btnDemoFill = document.getElementById("btnDemoFill");
-const authNote = document.getElementById("authNote");
 
 const btnNew = document.getElementById("btnNew");
 const btnRefresh = document.getElementById("btnRefresh");
@@ -680,12 +643,39 @@ const payAdminNote = document.getElementById("payAdminNote");
 const payList = document.getElementById("payList");
 
 /* =============================
-   STATE
+   STATE (PIN)
 ============================= */
-let sessionUser = null;
+let sessionUser = null;     // { phone, owner_id }
 let current = null;
 let hasUnsavedChanges = false;
 const FALLBACK_PHOTO = "https://digiylyfe.com/wp-content/uploads/2025/06/042-BAPTISTE.png";
+
+/* =============================
+   PIN SESSION → UI
+============================= */
+function readPinSession(){
+  const s = window.DIGIY_GUARD?.getSession?.();
+  if(!s?.ok || !s?.phone || !s?.owner_id) return null;
+  return { phone: s.phone, owner_id: s.owner_id };
+}
+function setPinConnectedUI(){
+  const s = readPinSession();
+  sessionUser = s;
+
+  if(s){
+    pillUser.innerHTML = `👤 <strong>${s.phone}</strong>`;
+    pillState.textContent = "✅ Connecté";
+    pillState.classList.remove("warn");
+    pillState.classList.add("ok");
+    btnLogout.style.display = "inline-flex";
+  }else{
+    pillUser.innerHTML = `👤 <strong>—</strong>`;
+    pillState.textContent = "🔒 Déconnecté";
+    pillState.classList.remove("ok");
+    pillState.classList.add("warn");
+    btnLogout.style.display = "none";
+  }
+}
 
 /* =============================
    UTILS
@@ -758,10 +748,8 @@ function validateListing(p){
 
   const dp = Number(p.deposit_percent);
   if(!Number.isFinite(dp) || dp < 0 || dp > 100) errors.push("❌ Avance entre 0 et 100%");
+  if(p.business_code && !/^[A-Z0-9_]{3,50}$/.test(p.business_code)) errors.push("❌ Code logement invalide (A-Z, 0-9, _)");
 
-  if(p.business_code && !/^[A-Z0-9_]{3,50}$/.test(p.business_code)){
-    errors.push("❌ Code logement invalide (A-Z, 0-9, _)");
-  }
   return errors;
 }
 
@@ -778,34 +766,13 @@ function enableEditorActions(yes){
   btnReloadBlocks.disabled = !yes;
   btnReloadPays.disabled = !yes;
 }
-function setConnectedUI(user){
-  sessionUser = user || null;
-  pillUser.innerHTML = `👤 <strong>${user ? (user.email || "PRO") : "—"}</strong>`;
-
-  if(user){
-    pillState.textContent = "✅ Connecté";
-    pillState.classList.remove("warn");
-    pillState.classList.add("ok");
-    btnLogout.style.display = "inline-flex";
-    authBox.style.display = "none";
-    listBox.style.display = "block";
+function setConnectedUI(){
+  if(sessionUser){
     enableEditorActions(true);
   }else{
-    pillState.textContent = "🔒 Déconnecté";
-    pillState.classList.remove("ok");
-    pillState.classList.add("warn");
-    btnLogout.style.display = "none";
-    authBox.style.display = "block";
-    listBox.style.display = "none";
     enableEditorActions(false);
     btnDelete.style.display = "none";
   }
-}
-
-async function refreshSession(){
-  const { data } = await SB.auth.getSession();
-  setConnectedUI(data?.session?.user || null);
-  if(data?.session?.user) await loadList();
 }
 
 /* =============================
@@ -831,54 +798,17 @@ window.addEventListener('beforeunload', (e)=>{
 });
 
 /* =============================
-   AUTH
+   LOGOUT (PIN)
 ============================= */
-btnDemoFill.addEventListener("click", ()=>{
-  authEmail.value = "baptistejb24@gmail.com";
-  showNote(authNote, '✅ Demo rempli. Clique "Envoyer le lien".', "ok");
-});
-
-btnSendOtp.addEventListener("click", async ()=>{
-  hideNote(authNote);
-  const email = authEmail.value.trim();
-  if(!email || !email.includes("@")){
-    return showNote(authNote, "❌ Email invalide.", "bad");
-  }
-
-  btnSendOtp.disabled = true;
-  btnSendOtp.innerHTML = '<span class="spinner"></span> Envoi...';
-
-  try{
-    const redirectTo = withSlug(location.origin + location.pathname);
-    const { error } = await SB.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirectTo }
-    });
-    if(error) throw error;
-
-    showNote(authNote, "✅ Lien envoyé. Va dans ton email et clique.", "ok");
-  }catch(e){
-    console.error(e);
-    showNote(authNote, "❌ Erreur: " + (e?.message || e), "bad");
-  }finally{
-    btnSendOtp.disabled = false;
-    btnSendOtp.innerHTML = '📩 Envoyer le lien';
-  }
-});
-
-btnLogout.addEventListener("click", async ()=>{
+btnLogout.addEventListener("click", ()=>{
   if(hasUnsavedChanges && !confirm("⚠️ Tu as des modifications non sauvegardées. Déconnexion quand même ?")){
     return;
   }
-  await SB.auth.signOut();
-  current = null;
-  paintEditor(null);
-  setConnectedUI(null);
-  markClean();
+  window.DIGIY_GUARD?.logout("./pin.html");
 });
 
 /* =============================
-   LISTE
+   LISTE (owner_id via session PIN)
 ============================= */
 async function loadList(){
   hideNote(listNote);
@@ -889,12 +819,12 @@ async function loadList(){
   btnRefresh.innerHTML = '<span class="spinner"></span> Chargement...';
 
   try{
-    const uid = sessionUser?.id;
-    if(!uid) throw new Error("Non connecté");
+    const uid = sessionUser?.owner_id;
+    if(!uid) throw new Error("Non connecté (PIN)");
 
     const { data, error } = await SB
       .from("digiy_logements")
-      .select("id,nom,ville,business_code,status,updated_at,created_at,owner_id,prix_nuit")
+      .select("id,nom,ville,business_code,status,updated_at,created_at,owner_id,prix_nuit,photo_url,wave_phone,wave_name,deposit_percent")
       .eq("owner_id", uid)
       .order("updated_at", { ascending:false })
       .limit(100);
@@ -975,8 +905,8 @@ async function openOne(id){
   calList.innerHTML = "";
   payList.innerHTML = "";
 
-  const uid = sessionUser?.id;
-  if(!uid) return showNote(editNote, "❌ Non connecté.", "bad");
+  const uid = sessionUser?.owner_id;
+  if(!uid) return showNote(editNote, "❌ Non connecté (PIN).", "bad");
 
   const { data, error } = await SB
     .from("digiy_logements")
@@ -1004,7 +934,7 @@ function newDraft(){
     return;
   }
 
-  const uid = sessionUser?.id || null;
+  const uid = sessionUser?.owner_id || null;
   current = {
     id: null,
     owner_id: uid,
@@ -1088,13 +1018,23 @@ function paintEditor(x){
     pvVideo.src = "";
     pvVideoWrap.style.display = "none";
   }
+
+  // enable listing button to include business_code if present
+  if (btnListing){
+    btnListing.onclick = () => {
+      const bc = (current && current.business_code) ? current.business_code : "";
+      const u = new URL(withSlug("./listing.html"), location.href);
+      if (bc) u.searchParams.set("business", bc);
+      location.href = u.toString();
+    };
+  }
 }
 
 /* =============================
    FORM → PAYLOAD
 ============================= */
 function collectForm(){
-  const uid = sessionUser?.id || null;
+  const uid = sessionUser?.owner_id || null;
   let businessCode = f_business_code.value.trim();
 
   if(!businessCode && f_nom.value && f_ville.value){
@@ -1157,7 +1097,7 @@ async function saveRecord(mode){
         .from("digiy_logements")
         .update(payload)
         .eq("id", current.id)
-        .eq("owner_id", sessionUser.id);
+        .eq("owner_id", sessionUser.owner_id);
 
       if(error) throw error;
       showNote(saveNote, "✅ Sauvegardé!", "ok");
@@ -1197,7 +1137,7 @@ btnDelete.addEventListener("click", async ()=>{
       .from("digiy_logements")
       .delete()
       .eq("id", current.id)
-      .eq("owner_id", sessionUser.id);
+      .eq("owner_id", sessionUser.owner_id);
 
     if(error) throw error;
 
@@ -1264,7 +1204,7 @@ async function duplicateOne(id){
     .from("digiy_logements")
     .select("*")
     .eq("id", id)
-    .eq("owner_id", sessionUser.id)
+    .eq("owner_id", sessionUser.owner_id)
     .single();
 
   if(e1 || !src){
@@ -1273,7 +1213,7 @@ async function duplicateOne(id){
   }
 
   const copy = {
-    owner_id: sessionUser.id,
+    owner_id: sessionUser.owner_id,
     nom: (src.nom || "Logement") + " (copie)",
     ville: src.ville || "",
     business_code: generateBusinessCode((src.nom || "Logement") + " copie", src.ville || ""),
@@ -1327,7 +1267,7 @@ btnAddBlock.addEventListener("click", async ()=>{
   try{
     const insertPayload = {
       listing_id: current.id,
-      owner_id: sessionUser.id,
+      owner_id: sessionUser.owner_id,
       start_date: s,
       end_date: e,
       reason: calReason.value.trim() || null,
@@ -1363,7 +1303,7 @@ async function loadBlocksForCurrent(){
       .from("loc_availability_blocks")
       .select("id,start_date,end_date,reason,created_at")
       .eq("listing_id", current.id)
-      .eq("owner_id", sessionUser.id)
+      .eq("owner_id", sessionUser.owner_id)
       .order("start_date", { ascending:true });
 
     if(error) throw error;
@@ -1395,7 +1335,7 @@ async function loadBlocksForCurrent(){
             .from("loc_availability_blocks")
             .delete()
             .eq("id", bid)
-            .eq("owner_id", sessionUser.id);
+            .eq("owner_id", sessionUser.owner_id);
 
           if(error) throw error;
           showNote(calNote, "✅ Bloc supprimé!", "ok");
@@ -1498,24 +1438,20 @@ async function updatePayStatus(id, status){
 }
 
 /* =============================
-   AUTH LISTENER
-============================= */
-SB.auth.onAuthStateChange((_event, session)=>{
-  setConnectedUI(session?.user || null);
-  if(session?.user){
-    loadList();
-  }else{
-    current = null;
-    paintEditor(null);
-  }
-});
-
-/* =============================
    INIT
 ============================= */
-(async function init(){
-  await refreshSession();
+(function init(){
+  setPinConnectedUI();
+  setConnectedUI();
   paintEditor(null);
+
+  if(sessionUser){
+    loadList();
+    showNote(listNote, "✅ Session OK. Chargement des logements…", "ok");
+  }else{
+    showNote(listNote, "🔒 Session manquante. Retour login…", "warn");
+    setTimeout(()=> window.DIGIY_GUARD?.logout("./pin.html"), 250);
+  }
 })();
 </script>
 
