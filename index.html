@@ -572,34 +572,47 @@ function setNavSlug(){
 setNavSlug();
 
 /* =============================
-   NAV BUTTONS (100% SAFE)
+   NAV BUTTONS (SAFE + NO CRASH)
 ============================= */
- document.getElementById("goToday");
-if (btnToday) {
-  btnToday.onclick = () => {
-    location.href = withSlug("./today.html");
+const btnBack    = document.getElementById("btnBack");
+const btnToday   = document.getElementById("goToday");
+const btnApp     = document.getElementById("goApp");
+const btnPulse   = document.getElementById("goPulse");
+const btnPlanning= document.getElementById("goPlanning");
+const btnListing = document.getElementById("goListing");
+const btnLinks   = document.getElementById("goLinks");
+const btnHealth  = document.getElementById("goHealth");
+
+// Retour (version SAFE)
+if (btnBack) btnBack.onclick = () => location.href = withSlug("./index.html");
+
+// Vue du jour
+if (btnToday) btnToday.onclick = () => location.href = withSlug("./today.html");
+
+// App
+if (btnApp) btnApp.onclick = () => location.href = withSlug("./app.html");
+
+// Pulse (page proprio)
+if (btnPulse) btnPulse.onclick = () => location.href = withSlug("./proprio-loc.html");
+
+// Planning
+if (btnPlanning) btnPlanning.onclick = () => location.href = withSlug("./planning.html");
+
+// Liens / QR
+if (btnLinks) btnLinks.onclick = () => location.href = withSlug("./manage-links.html");
+
+// Diagnostic (ancien Health)
+if (btnHealth) btnHealth.onclick = () => location.href = withSlug("./health-loc.html");
+
+// Listing du jour (avec business_code si dispo)
+if (btnListing) {
+  btnListing.onclick = () => {
+    const bc = (current && current.business_code) ? current.business_code : "";
+    const u = new URL(withSlug("./listing.html"), location.href);
+    if (bc) u.searchParams.set("business", bc);
+    location.href = u.toString();
   };
 }
-   document.getElementById("btnBack").addEventListener("click", ()=>{
-  if(history.length > 1) return history.back();
-  location.href = withSlug("./index.html");
-});
-document.getElementById("goApp").addEventListener("click", ()=>{
-  location.href = withSlug("./app.html");
-});
-document.getElementById("goPulse").addEventListener("click", ()=>{
-  location.href = withSlug("./proprio-loc.html");
-});
-document.getElementById("goPlanning").addEventListener("click", ()=> location.href = withSlug("./planning.html"));
-document.getElementById("goLinks").addEventListener("click", ()=> location.href = withSlug("./manage-links.html"));
-document.getElementById("goHealth").addEventListener("click", ()=> location.href = withSlug("./health-loc.html"));
-
-document.getElementById("goListing").addEventListener("click", ()=>{
-  const bc = (current && current.business_code) ? current.business_code : "";
-  const u = new URL(withSlug("./listing.html"), location.href);
-  if(bc) u.searchParams.set("business", bc);
-  location.href = u.toString();
-});
 
 /* =============================
    DOM
