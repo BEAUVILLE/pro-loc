@@ -15,7 +15,6 @@
       --bg1:#022c22;
       --bg2:#065f46;
 
-      --card:rgba(6,95,70,.26);
       --glass:rgba(2,44,34,.35);
       --line:rgba(148,163,184,.24);
 
@@ -23,7 +22,6 @@
       --muted:rgba(236,253,245,.74);
 
       --gold:#facc15;
-      --gold2:#f59e0b;
       --ok:#22c55e;
       --bad:#ef4444;
 
@@ -138,18 +136,55 @@
       text-transform:uppercase;
       font-size:12px;
     }
-    .pinBox{
-      display:inline-flex;align-items:center;justify-content:center;
+
+    .pinInputRow{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .pinInput{
+      flex:1 1 220px;
       min-height:54px;
-      padding:12px 16px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(250,204,21,.30);
+      background:rgba(250,204,21,.08);
+      color:#fff;
+      font-weight:1100;
+      font-size:18px;
+      letter-spacing:.18em;
+      outline:none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .pinInput:focus{
+      border-color:rgba(250,204,21,.55);
+      box-shadow:0 0 0 3px rgba(250,204,21,.12);
+    }
+
+    .btnMini{
+      min-height:54px;
+      padding:12px 14px;
       border-radius:16px;
       border:1px solid rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
+      background:rgba(250,204,21,.12);
       color:#fff;
-      font-weight:1200;
-      font-size:26px;
-      letter-spacing:.18em;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-weight:1100;
+      font-size:16px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btnMini:active{transform:scale(.99)}
+    .btnMini[disabled]{opacity:.55;cursor:not-allowed}
+
+    .hint{
+      margin-top:8px;
+      color:rgba(236,253,245,.70);
+      font-weight:900;
+      font-size:13px;
+      line-height:1.35;
     }
 
     .btnRow{margin-top:14px;display:flex;flex-direction:column;gap:12px}
@@ -225,7 +260,7 @@
       body{padding:12px}
       .title{font-size:30px}
       .btn{min-height:54px;font-size:17px}
-      .pinBox{font-size:24px;min-height:52px}
+      .pinInput,.btnMini{min-height:52px}
     }
   </style>
 </head>
@@ -253,8 +288,17 @@
         <div class="meta">Catégorie: <strong id="tCat">—</strong></div>
 
         <div class="pinRow">
-          <div class="pinLabel">PIN</div>
-          <div class="pinBox" id="tPin">••••</div>
+          <div class="pinLabel">Débloque avec ton PIN</div>
+        </div>
+
+        <div class="pinInputRow">
+          <input class="pinInput" id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code"
+                 placeholder="••••" maxlength="8" />
+          <button class="btnMini" id="btnUnlock" type="button">GO</button>
+        </div>
+
+        <div class="hint" id="hint">
+          ⚠️ Tant que le PIN n’est pas validé, les boutons restent bloqués.
         </div>
 
         <div class="btnRow">
@@ -291,14 +335,13 @@
        CONFIG
     ============================= */
 
-    // ✅ Supabase (client anon)
     const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     const SUPABASE_ANON_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-    // ✅ RPC recommandée (RLS ON)
-    // Mets ici le nom EXACT de ta fonction si différent :
-    const RPC_NAME = "go_pin_get_by_slug";
+    // RPCs (mode PROD secure)
+    const RPC_GET = "go_pin_get_by_slug";  // doit renvoyer ok,true + infos (sans pin_code)
+    const RPC_VERIFY = "go_pin_verify";    // params: p_slug, p_pin -> {ok:true|false}
 
     const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -381,151 +424,197 @@
       }
     }
 
+    function lockActions(){
+      setDisabled("btnCall", true);
+      setDisabled("btnWA", true);
+      setDisabled("btnMap", true);
+      $("btnCall").href = "#";
+      $("btnWA").href = "#";
+      $("btnMap").href = "#";
+      $("hint").textContent = "⚠️ Tant que le PIN n’est pas validé, les boutons restent bloqués.";
+    }
+
+    function unlockActions(){
+      $("hint").textContent = "✅ PIN validé. Tu peux contacter directement.";
+    }
+
     /* =============================
        SLUG
     ============================= */
     const url = new URL(location.href);
     const slug = (url.searchParams.get("slug") || "").trim();
-
     $("pillSlugVal").textContent = slug || "—";
 
+    // state data (rempli après load)
+    let GO = null;
+
+    lockActions();
+
     if(!slug){
-      showStatus("GO PIN introuvable ou inactif.\n➡️ Il manque ?slug=.... dans l’URL", "bad");
+      showStatus("GO PIN introuvable.\n➡️ Il manque ?slug=.... dans l’URL", "bad");
     }
 
     /* =============================
-       LOAD GO PIN (RPC -> fallback table)
+       LOAD GO PIN (RPC GET)
     ============================= */
     async function loadGoPin(){
       if(!slug) return;
 
       showStatus("⏳ Chargement…", "warn");
 
-      // 1) RPC (idéal si RLS)
       try{
-        const { data, error } = await SB.rpc(RPC_NAME, { p_slug: slug });
-        if(!error && data){
-          // data peut être objet, tableau, ou JSON string
-          let out = data;
-          if(typeof out === "string"){
-            try{ out = JSON.parse(out); }catch(_){}
-          }
-          if(Array.isArray(out)) out = out[0];
-
-          if(out?.ok === false){
-            throw new Error(out.reason || "NOT_FOUND");
-          }
-
-          const pin = out?.pin_code || out?.pin || out?.code || "0000";
-
-          return renderGoPin({
-            slug: out.slug || slug,
-            title: out.title || "—",
-            category: out.category || "—",
-            phone: out.phone || out.whatsapp || "",
-            whatsapp: out.whatsapp || out.phone || "",
-            lat: out.lat ?? null,
-            lng: out.lng ?? null,
-            pin_code: pin
-          });
-        }
-      }catch(e){
-        // continue vers fallback
-      }
-
-      // 2) Fallback direct table (si RLS permet select)
-      try{
-        const { data, error } = await SB
-          .from("go_pins")
-          .select("slug,title,category,phone,whatsapp,lat,lng,pin_code,is_active")
-          .eq("slug", slug)
-          .eq("is_active", true)
-          .limit(1)
-          .maybeSingle();
-
+        const { data, error } = await SB.rpc(RPC_GET, { p_slug: slug });
         if(error) throw error;
-        if(!data) throw new Error("NOT_FOUND");
-        return renderGoPin(data);
+
+        let out = data;
+        if(typeof out === "string"){
+          try{ out = JSON.parse(out); }catch(_){}
+        }
+        if(Array.isArray(out)) out = out[0];
+
+        if(!out || out.ok === false){
+          showStatus("❌ GO PIN introuvable ou inactif.", "bad");
+          return;
+        }
+
+        GO = {
+          slug: out.slug || slug,
+          title: out.title || "—",
+          category: out.category || "—",
+          phone: normPhone(out.phone),
+          whatsapp: normPhone(out.whatsapp || out.phone),
+          lat: out.lat,
+          lng: out.lng
+        };
+
+        $("tTitle").textContent = GO.title;
+        $("tCat").textContent = GO.category;
+
+        showStatus("🔒 Entre le PIN pour débloquer.", "warn");
+
+        // Share fonctionne même sans unlock (le lien est public)
+        wireShare();
+
+        // UX: focus direct
+        setTimeout(()=> $("pinInput").focus(), 150);
+
       }catch(err){
         console.error(err);
-        showStatus(
-          "❌ GO PIN introuvable ou non autorisé.\n" +
-          "➡️ Vérifie: slug, is_active=true, et/ou RPC.\n" +
-          "Détail: " + (err?.message || err),
-          "bad"
-        );
+        showStatus("❌ Erreur chargement.\nDétail: " + (err?.message || err), "bad");
       }
     }
 
-    /* =============================
-       RENDER + ACTIONS (iPhone safe)
-    ============================= */
-    function renderGoPin(p){
-      const title = p.title || "—";
-      const cat = p.category || "—";
-      const rawPin = String(p.pin_code || "0000").trim();
-      const pin = rawPin.replace(/\s+/g,"").slice(0,8);
-
-      const phone = normPhone(p.phone);
-      const wa = normPhone(p.whatsapp || p.phone);
-
-      $("tTitle").textContent = title;
-      $("tCat").textContent = cat;
-      $("tPin").textContent = (pin || "0000").padStart(4,"0");
-
-      // Call
-      if(phone){
-        $("btnCall").href = "tel:" + phone.replace(/\s/g,"");
-        setDisabled("btnCall", false);
-      }else{
-        $("btnCall").href = "#";
-        setDisabled("btnCall", true);
-      }
-
-      // WhatsApp
-      if(wa){
-        const msg = `DIGIY • ${title}\nSalut, je viens via DIGIY.`;
-        $("btnWA").href = waLink(wa, msg);
-        setDisabled("btnWA", false);
-      }else{
-        $("btnWA").href = "#";
-        setDisabled("btnWA", true);
-      }
-
-      // Map
-      const hasMap = Number.isFinite(+p.lat) && Number.isFinite(+p.lng);
-      if(hasMap){
-        $("btnMap").href = mapsLink(+p.lat, +p.lng, title);
-        setDisabled("btnMap", false);
-      }else{
-        $("btnMap").href = "#";
-        setDisabled("btnMap", true);
-      }
-
-      // Share
+    function wireShare(){
       $("btnShare").onclick = async ()=>{
-        const shareUrl = location.origin + location.pathname + "?slug=" + encodeURIComponent(p.slug || slug);
-        const txt = `DIGIY • ${title}\nCatégorie: ${cat}\nPIN: ${pin || "0000"}\n`;
+        const shareUrl = location.origin + location.pathname + "?slug=" + encodeURIComponent((GO && GO.slug) ? GO.slug : slug);
+        const title = GO?.title ? `DIGIY • ${GO.title}` : "DIGIY • GO PIN";
+        const txt = GO?.title ? `DIGIY • ${GO.title}\nCatégorie: ${GO.category}\n` : "DIGIY • GO PIN\n";
 
         try{
           if(navigator.share){
-            await navigator.share({ title: `DIGIY • ${title}`, text: txt, url: shareUrl });
+            await navigator.share({ title, text: txt, url: shareUrl });
             return;
           }
           const ok = await copyText(shareUrl);
           showStatus(ok ? "✅ Lien copié." : "⚠️ Copie impossible sur ce navigateur.", ok ? "ok" : "warn");
-          setTimeout(()=>showStatus("", ""), 900);
+          setTimeout(()=>showStatus("🔒 Entre le PIN pour débloquer.", "warn"), 900);
         }catch(e){
-          // si l’utilisateur annule, on ne crie pas
           console.log(e);
         }
       };
-
-      showStatus("✅ Prêt. Touch OK.", "ok");
     }
 
+    /* =============================
+       VERIFY PIN (RPC VERIFY)
+    ============================= */
+    function cleanPin(v){
+      return String(v||"").trim().replace(/[^\d]/g,"").slice(0,8);
+    }
+
+    async function verifyPin(){
+      if(!GO){
+        showStatus("⚠️ On charge d’abord la fiche…", "warn");
+        return;
+      }
+
+      const pin = cleanPin($("pinInput").value);
+      $("pinInput").value = pin;
+
+      if(pin.length < 4){
+        showStatus("⚠️ Mets au moins 4 chiffres.", "warn");
+        return;
+      }
+
+      $("btnUnlock").disabled = true;
+      showStatus("⏳ Vérification du PIN…", "warn");
+
+      try{
+        const { data, error } = await SB.rpc(RPC_VERIFY, { p_slug: GO.slug, p_pin: pin });
+        if(error) throw error;
+
+        let out = data;
+        if(typeof out === "string"){
+          try{ out = JSON.parse(out); }catch(_){}
+        }
+        if(Array.isArray(out)) out = out[0];
+
+        if(out && out.ok === true){
+          // ✅ unlock actions
+          unlockActions();
+          showStatus("✅ PIN validé. Tu peux contacter.", "ok");
+
+          // Call
+          if(GO.phone){
+            $("btnCall").href = "tel:" + GO.phone.replace(/\s/g,"");
+            setDisabled("btnCall", false);
+          }else{
+            setDisabled("btnCall", true);
+          }
+
+          // WhatsApp
+          if(GO.whatsapp){
+            const msg = `DIGIY • ${GO.title}\nSalut, je viens via DIGIY.`;
+            $("btnWA").href = waLink(GO.whatsapp, msg);
+            setDisabled("btnWA", false);
+          }else{
+            setDisabled("btnWA", true);
+          }
+
+          // Map
+          const hasMap = Number.isFinite(+GO.lat) && Number.isFinite(+GO.lng);
+          if(hasMap){
+            $("btnMap").href = mapsLink(+GO.lat, +GO.lng, GO.title);
+            setDisabled("btnMap", false);
+          }else{
+            // fallback: recherche par nom si pas de coords
+            $("btnMap").href = isIOS()
+              ? ("https://maps.apple.com/?q=" + encodeURIComponent(GO.title))
+              : ("https://www.google.com/maps?q=" + encodeURIComponent(GO.title));
+            setDisabled("btnMap", false);
+          }
+
+          return;
+        }
+
+        showStatus("❌ PIN incorrect.", "bad");
+        lockActions();
+
+      }catch(err){
+        console.error(err);
+        showStatus("❌ Erreur vérif PIN.\nDétail: " + (err?.message || err), "bad");
+        lockActions();
+      }finally{
+        $("btnUnlock").disabled = false;
+      }
+    }
+
+    $("btnUnlock").addEventListener("click", verifyPin);
+    $("pinInput").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") verifyPin();
+    });
+
+    // Init
     loadGoPin();
   </script>
 </body>
 </html>
-
