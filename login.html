@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Redirection…</title>
+</head>
+<body>
+<script>
+  const u = new URL(location.href);
+  const slug = u.searchParams.get("slug");
+  const to = new URL("./pin.html", location.href);
+  if (slug) to.searchParams.set("slug", slug);
+  location.replace(to.toString());
+</script>
+</body>
+</html>
