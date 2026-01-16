@@ -495,7 +495,7 @@
 
 <script>
 /* =============================
-   SUPABASE
+   SUPABASE (ANON)
 ============================= */
 const SUPABASE_CONFIG = {
   url: "https://wesqmwjjtsefyjnluosj.supabase.co",
@@ -509,9 +509,10 @@ const sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key
 const DB = {
   rooms: "digiy_loc_rooms",
   reservations: "digiy_loc_reservations",
-  // champs
+
+  // champs rooms
   roomOwnerId: "owner_id",
-  roomTitle: "nom",          // si ta table a "title" => change en "title"
+  roomTitle: "nom",
   roomAddress: "adresse",
   roomMaxPeople: "personnes_max",
   roomPriceNight: "prix_nuit",
@@ -520,7 +521,8 @@ const DB = {
   roomDesc: "description",
   roomPhoto: "photo_url",
   roomStatus: "status",
-  // réservation
+
+  // champs reservations
   resOwnerId: "owner_id",
   resRoomId: "room_id",
   resClientName: "client_name",
@@ -528,17 +530,17 @@ const DB = {
   resCheckin: "checkin",
   resCheckout: "checkout",
   resAmount: "amount_total",
-  resStatus: "status",            // pending|confirmed|cancelled|...
-  resPayStatus: "payment_status", // paid|pending|...
+  resStatus: "status",
+  resPayStatus: "payment_status",
 };
 
 /* =============================
    PULSE API (OPTIONNEL)
 ============================= */
 const PULSE = {
-  enabled: true, // <- mets false si tu veux couper le test
+  enabled: true,
   base: "https://api.digiylyfe.com",
-  apiKey: "", // optionnel si ton endpoint le demande
+  apiKey: "",
   endpoint: "/loc/pulse/send"
 };
 
@@ -546,13 +548,18 @@ const PULSE = {
    STATE
 ============================= */
 const State = {
-  user: null,
+  user: null,        // { id: owner_id }
+  ownerId: null,     // string
   phone: "",
   business_code: "TEST",
   rooms: [],
   reservations: [],
+  _calRoom: null
 };
 
+/* =============================
+   HELPERS
+============================= */
 function moneyFCFA(x){
   const n = Number(x || 0);
   return n.toLocaleString("fr-FR") + " F";
@@ -561,12 +568,8 @@ function fmtDate(d){
   if(!d) return "—";
   try { return new Date(d).toLocaleDateString("fr-FR"); } catch { return String(d); }
 }
-function startOfMonth(dt){
-  return new Date(dt.getFullYear(), dt.getMonth(), 1);
-}
-function endOfMonth(dt){
-  return new Date(dt.getFullYear(), dt.getMonth()+1, 0);
-}
+function startOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth(), 1); }
+function endOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth()+1, 0); }
 function ymd(dt){
   const y = dt.getFullYear();
   const m = String(dt.getMonth()+1).padStart(2,"0");
@@ -578,14 +581,12 @@ function todayYMD(){
   return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate()));
 }
 function badgeForStatus(res){
-  const pay = res?.[DB.resPayStatus];
+  const pay = (res?.[DB.resPayStatus] || "").toLowerCase();
   const st = (res?.[DB.resStatus] || "").toLowerCase();
 
-  // priorité paiement
   if(pay === "paid" || pay === "succeeded") return `<span class="badge badge-success">Payé</span>`;
   if(pay === "pending" || pay === "requires_payment" || pay === "unpaid") return `<span class="badge badge-warning">Paiement en attente</span>`;
 
-  // sinon status réservation
   if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
   if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
   if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
@@ -599,6 +600,7 @@ function switchTab(tabName, ev) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
   if(ev && ev.target) ev.target.classList.add('active');
+
   const el = document.getElementById(tabName);
   if(el) el.classList.add('active');
 
@@ -606,7 +608,6 @@ function switchTab(tabName, ev) {
   if (tabName === 'reservations') loadReservations();
   if (tabName === 'calendrier') loadCalendar();
 }
-
 function openAddLogement() {
   document.getElementById('modalAddLogement').classList.add('active');
 }
@@ -615,17 +616,19 @@ function closeModal(modalId) {
 }
 
 /* =============================
-   AUTH / CONTEXT (Guard + Supabase)
+   ✅ AUTH / CONTEXT (PIN GUARD)
+   LOC PRO = pas Supabase Auth
 ============================= */
 async function resolveUser() {
-  // 1) préfère Supabase session
-  const { data } = await sb.auth.getSession();
-  const user = data?.session?.user || null;
-  if(user) return user;
-
-  // 2) fallback guard (si ton guard expose un user_id)
   const sess = window.DIGIY_GUARD?.getSession?.() || null;
-  if(sess?.user_id) return { id: sess.user_id };
+  if (sess?.owner_id) return { id: sess.owner_id }; // ✅ source de vérité
+
+  // fallback si un jour Supabase Auth est activé
+  try{
+    const { data } = await sb.auth.getSession();
+    const user = data?.session?.user || null;
+    if(user?.id) return user;
+  }catch(_){}
 
   return null;
 }
@@ -633,13 +636,16 @@ async function resolveUser() {
 function hydrateHeader() {
   const phoneEl = document.getElementById("userPhone");
   if(phoneEl) phoneEl.textContent = State.phone || "—";
+
+  const nameEl = document.getElementById("userName");
+  if(nameEl) nameEl.textContent = "Gestionnaire";
 }
 
 /* =============================
-   DB CALLS
+   DB CALLS (owner_id = State.ownerId)
 ============================= */
 async function fetchRooms() {
-  const ownerId = State.user?.id;
+  const ownerId = State.ownerId;
   if(!ownerId) return [];
 
   const { data, error } = await sb
@@ -653,7 +659,7 @@ async function fetchRooms() {
 }
 
 async function fetchReservations() {
-  const ownerId = State.user?.id;
+  const ownerId = State.ownerId;
   if(!ownerId) return [];
 
   const { data, error } = await sb
@@ -693,7 +699,7 @@ function renderRooms(list) {
     const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
     const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
     const img = room?.[DB.roomPhoto] || room?.cover_url || "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-    const status = (room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
+    const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
     const badge = status.includes("act") ? `<span class="badge badge-success">Actif</span>` : `<span class="badge badge-warning">${status}</span>`;
 
     return `
@@ -726,13 +732,14 @@ async function loadLogements() {
   try{
     State.rooms = await fetchRooms();
     renderRooms(State.rooms);
-    // KPI logements actifs
+
     const actifs = State.rooms.filter(r => String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")).length;
     const el = document.getElementById("logementsActifs");
     if(el) el.textContent = String(actifs);
   }catch(e){
     console.error(e);
-    document.getElementById('listeLogements').innerHTML = `<p style="color:var(--danger)">Erreur chargement logements: ${e.message || e}</p>`;
+    document.getElementById('listeLogements').innerHTML =
+      `<p style="color:var(--danger)">Erreur chargement logements: ${e.message || e}</p>`;
   }
 }
 
@@ -747,7 +754,7 @@ async function saveLogement(e) {
     const data = Object.fromEntries(formData);
 
     const payload = {
-      [DB.roomOwnerId]: State.user.id,
+      [DB.roomOwnerId]: State.ownerId, // ✅ owner_id (PIN)
       [DB.roomTitle]: (data.nom || "").trim(),
       [DB.roomAddress]: (data.adresse || "").trim(),
       [DB.roomMaxPeople]: Number(data.personnes_max || 1),
@@ -769,7 +776,7 @@ async function saveLogement(e) {
     e.target.reset();
 
     await loadLogements();
-    await loadDashboard(); // refresh KPIs
+    await loadDashboard();
   }catch(err){
     console.error(err);
     alert("❌ Erreur: " + (err?.message || err));
@@ -780,7 +787,6 @@ function openEditLogement(roomId){
   const room = State.rooms.find(r => String(r.id) === String(roomId));
   if(!room) return alert("Logement introuvable");
 
-  // petit prompt simple sans modal additionnelle (terrain)
   const newName = prompt("Nom du logement :", room?.[DB.roomTitle] || room?.title || "");
   if(newName === null) return;
 
@@ -799,7 +805,7 @@ async function updateLogement(roomId, patch){
       .from(DB.rooms)
       .update(patch)
       .eq("id", roomId)
-      .eq(DB.roomOwnerId, State.user.id);
+      .eq(DB.roomOwnerId, State.ownerId); // ✅ sécurité
 
     if(error) throw error;
     await loadLogements();
@@ -817,7 +823,7 @@ async function deleteLogement(roomId){
       .from(DB.rooms)
       .delete()
       .eq("id", roomId)
-      .eq(DB.roomOwnerId, State.user.id);
+      .eq(DB.roomOwnerId, State.ownerId); // ✅ sécurité
 
     if(error) throw error;
     await loadLogements();
@@ -829,7 +835,6 @@ async function deleteLogement(roomId){
 }
 
 function goCalendarRoom(roomId){
-  // bascule sur tab calendrier + filtre
   switchTab("calendrier", null);
   loadCalendar(roomId);
 }
@@ -874,6 +879,7 @@ function renderReservations(list){
 function viewReservation(resId){
   const r = State.reservations.find(x => String(x.id) === String(resId));
   if(!r) return alert("Réservation introuvable");
+
   const lines = [
     `Client: ${r?.[DB.resClientName] || "—"}`,
     `Tel: ${r?.[DB.resPhone] || "—"}`,
@@ -888,17 +894,15 @@ function viewReservation(resId){
 
 async function loadReservations(){
   try{
-    // assure rooms en mémoire pour mapping
     if(!State.rooms.length) State.rooms = await fetchRooms();
-
     State.reservations = await fetchReservations();
     renderReservations(State.reservations);
-
-    await loadDashboard(); // refresh dashboard aussi
+    await loadDashboard();
   }catch(e){
     console.error(e);
     const tb = document.getElementById("tableReservations");
-    if(tb) tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${e.message || e}</td></tr>`;
+    if(tb) tb.innerHTML =
+      `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${e.message || e}</td></tr>`;
   }
 }
 
@@ -906,24 +910,22 @@ async function loadReservations(){
    DASHBOARD (KPIs + listes)
 ============================= */
 function reservationIsActive(r){
-  const st = (r?.[DB.resStatus] || "").toLowerCase();
+  const st = String(r?.[DB.resStatus] || "").toLowerCase();
   if(st.includes("cancel")) return false;
-  // active si aujourd’hui entre checkin/checkout
+
   const t = todayYMD();
-  const ci = (r?.[DB.resCheckin] || "").slice(0,10);
-  const co = (r?.[DB.resCheckout] || "").slice(0,10);
+  const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+  const co = String(r?.[DB.resCheckout] || "").slice(0,10);
   return ci && co && t >= ci && t < co;
 }
-
 function reservationIsUpcoming(r){
   const t = todayYMD();
-  const ci = (r?.[DB.resCheckin] || "").slice(0,10);
+  const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
   return ci && ci >= t;
 }
-
 function reservationIsPending(r){
-  const st = (r?.[DB.resStatus] || "").toLowerCase();
-  const pay = (r?.[DB.resPayStatus] || "").toLowerCase();
+  const st = String(r?.[DB.resStatus] || "").toLowerCase();
+  const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
   return st.includes("pending") || pay.includes("pending") || pay.includes("requires");
 }
 
@@ -932,7 +934,6 @@ async function loadDashboard(){
     if(!State.rooms.length) State.rooms = await fetchRooms();
     if(!State.reservations.length) State.reservations = await fetchReservations();
 
-    // revenus mois = somme des reservations payées créées ce mois (simple)
     const now = new Date();
     const mStart = startOfMonth(now);
     const mEnd = endOfMonth(now);
@@ -944,35 +945,29 @@ async function loadDashboard(){
     let upcoming = [];
     let pending = [];
 
-    // occupation = nb jours occupés / nb jours * nb logements (approx)
     const daysInMonth = mEnd.getDate();
-    const busyDays = new Set(); // clé = roomId|yyyy-mm-dd
+    const busyDays = new Set(); // roomId|yyyy-mm-dd
 
     for(const r of State.reservations){
-      const pay = (r?.[DB.resPayStatus] || "").toLowerCase();
-      const ci = (r?.[DB.resCheckin] || "").slice(0,10);
-      const co = (r?.[DB.resCheckout] || "").slice(0,10);
+      const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
+      const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+      const co = String(r?.[DB.resCheckout] || "").slice(0,10);
       const roomId = r?.[DB.resRoomId];
 
-      // revenus ce mois (checkin dans mois + payé)
       if(ci >= mStartY && ci <= mEndY && (pay === "paid" || pay === "succeeded")){
         revenus += Number(r?.[DB.resAmount] || 0);
       }
 
       if(reservationIsActive(r)) activeCount++;
-
       if(reservationIsUpcoming(r)) upcoming.push(r);
       if(reservationIsPending(r)) pending.push(r);
 
-      // busy days
       if(roomId && ci && co){
         let d = new Date(ci + "T00:00:00");
         const end = new Date(co + "T00:00:00");
         while(d < end){
-          const key = `${roomId}|${ymd(d)}`;
-          // compte seulement si dans ce mois
           const dy = ymd(d);
-          if(dy >= mStartY && dy <= mEndY) busyDays.add(key);
+          if(dy >= mStartY && dy <= mEndY) busyDays.add(`${roomId}|${dy}`);
           d.setDate(d.getDate()+1);
         }
       }
@@ -988,7 +983,6 @@ async function loadDashboard(){
     const occ = Math.round((busyDays.size / denom) * 100);
     document.getElementById('tauxOccupation').textContent = String(occ) + "%";
 
-    // prochaines arrivées (top 5)
     upcoming = upcoming
       .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
       .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
@@ -996,19 +990,16 @@ async function loadDashboard(){
 
     const upBox = document.getElementById("prochainesArrivees");
     if(upBox){
-      if(!upcoming.length){
-        upBox.innerHTML = `<p style="color:var(--muted)">Aucune réservation à venir</p>`;
-      } else {
-        upBox.innerHTML = upcoming.map(r => `
+      upBox.innerHTML = !upcoming.length
+        ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
+        : upcoming.map(r => `
           <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
             <div style="font-weight:800">${r?.[DB.resClientName] || "Client"} — ${roomNameById(r?.[DB.resRoomId])}</div>
             <div style="color:var(--muted);margin-top:0.2rem">${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])} · <strong>${moneyFCFA(r?.[DB.resAmount])}</strong></div>
           </div>
         `).join("");
-      }
     }
 
-    // demandes attente (top 5)
     pending = pending
       .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
       .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
@@ -1016,21 +1007,18 @@ async function loadDashboard(){
 
     const pBox = document.getElementById("demandesAttente");
     if(pBox){
-      if(!pending.length){
-        pBox.innerHTML = `<p style="color:var(--muted)">Aucune demande en attente</p>`;
-      } else {
-        pBox.innerHTML = pending.map(r => `
+      pBox.innerHTML = !pending.length
+        ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
+        : pending.map(r => `
           <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
             <div style="font-weight:800">${r?.[DB.resClientName] || "Client"} — ${roomNameById(r?.[DB.resRoomId])}</div>
             <div style="color:var(--muted);margin-top:0.2rem">${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])} · ${badgeForStatus(r)}</div>
           </div>
         `).join("");
-      }
     }
 
   }catch(e){
     console.error(e);
-    // dashboard ne doit pas casser la page
   }
 }
 
@@ -1046,37 +1034,31 @@ function buildCalendar(monthDate, reservations, roomIdFilter=null){
   const firstDow = (monthStart.getDay() + 6) % 7; // Lundi=0
   const days = monthEnd.getDate();
 
-  // set busy days
   const busy = new Set(); // yyyy-mm-dd
   for(const r of reservations){
     if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
-    const st = (r?.[DB.resStatus] || "").toLowerCase();
+    const st = String(r?.[DB.resStatus] || "").toLowerCase();
     if(st.includes("cancel")) continue;
 
-    const ci = (r?.[DB.resCheckin] || "").slice(0,10);
-    const co = (r?.[DB.resCheckout] || "").slice(0,10);
+    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+    const co = String(r?.[DB.resCheckout] || "").slice(0,10);
     if(!ci || !co) continue;
 
     let d = new Date(ci + "T00:00:00");
     const end = new Date(co + "T00:00:00");
     while(d < end){
       const key = ymd(d);
-      // uniquement ce mois
       if(key.slice(0,7) === ymd(monthStart).slice(0,7)) busy.add(key);
       d.setDate(d.getDate()+1);
     }
   }
 
   const monthLabel = monthStart.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
-
   const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(x=>`<div class="cal-dow">${x}</div>`).join("");
 
   let cells = "";
-  // padding avant le 1er
-  for(let i=0;i<firstDow;i++){
-    cells += `<div class="cal-day off"></div>`;
-  }
-  // jours du mois
+  for(let i=0;i<firstDow;i++) cells += `<div class="cal-day off"></div>`;
+
   for(let day=1; day<=days; day++){
     const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
     const key = ymd(dt);
@@ -1089,7 +1071,6 @@ function buildCalendar(monthDate, reservations, roomIdFilter=null){
     `;
   }
 
-  // filtre affiché
   let filterLabel = "";
   if(roomIdFilter){
     filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${roomNameById(roomIdFilter)}</strong></span>`;
@@ -1138,8 +1119,6 @@ async function loadCalendar(roomId=null){
 
 /* =============================
    PULSE TEST (OPTIONNEL)
-   -> envoie un message test via /loc/pulse/send
-   -> nécessite que ton API accepte x-api-key si tu l’actives
 ============================= */
 async function pulseTest(){
   const msgEl = document.getElementById("pulseMsg");
@@ -1175,14 +1154,11 @@ async function pulseTest(){
 }
 
 /* =============================
-   LOGOUT (✅ guard-friendly)
+   ✅ LOGOUT (Guard)
 ============================= */
 function logout() {
-  if (confirm('Se déconnecter ?')) {
-    try{ window.DIGIY_GUARD?.clearSession?.(); }catch(_){}
-    const u = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html";
-    window.location.replace(u);
-  }
+  if (!confirm("Se déconnecter ?")) return;
+  window.DIGIY_GUARD?.logout?.("./pin.html");
 }
 
 /* =============================
@@ -1197,40 +1173,39 @@ function logout() {
     return;
   }
 
-  // 🔒 protège la page (redirige si pas session/abo)
-  window.DIGIY_GUARD.boot({
+  // 🔒 protège la page (redirige si pas session/slug)
+  const guardRes = await window.DIGIY_GUARD.boot({
     module: MODULE,
-    dashboard: "./planning.html",
-    login: "./login.html",
+    dashboard: "./app.html",   // ✅ cette page = cockpit
+    login: "./pin.html",       // ✅ page PIN
     pay: PAY_URL,
     requireSlug: true,
     checkSubscription: true
   });
 
-  // Si on reste ici => OK : on initialise l'app
+  if(!guardRes?.ok){
+    // boot redirige généralement lui-même; on stop net
+    return;
+  }
+
   try{
-    // user
+    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+
+    // ownerId = clé
     State.user = await resolveUser();
-    if(!State.user?.id){
-      console.warn("User introuvable, redirection login.");
-      const u = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html";
-      window.location.replace(u);
+    State.ownerId = State.user?.id || sess?.owner_id || null;
+
+    if(!State.ownerId){
+      console.warn("owner_id introuvable, retour PIN.");
+      window.location.replace(window.DIGIY_GUARD.withSlug("./pin.html"));
       return;
     }
 
-    // phone / business_code depuis guard session si dispo
-    const sess = window.DIGIY_GUARD.getSession ? window.DIGIY_GUARD.getSession() : null;
     State.phone = sess?.phone || (window.DIGIY_GUARD.getPhone && window.DIGIY_GUARD.getPhone()) || "";
     State.business_code = sess?.business_code || sess?.businessCode || "TEST";
 
-    // header
-    const phoneEl = document.getElementById("userPhone");
-    if(phoneEl) phoneEl.textContent = State.phone || "—";
+    hydrateHeader();
 
-    const nameEl = document.getElementById("userName");
-    if(nameEl) nameEl.textContent = sess?.full_name || sess?.name || "Gestionnaire";
-
-    // load everything
     State.rooms = await fetchRooms();
     State.reservations = await fetchReservations();
 
