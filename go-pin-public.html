@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DIGIY GO PIN ♾️ — Fiche publique</title>
+  <meta name="theme-color" content="#0b1020"/>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg:#020617; --bg2:#0b1020; --line:#1f2937;
+      --ink:#f9fafb; --muted:#cbd5f5;
+      --gold:#facc15; --green:#22c55e; --danger:#ef4444;
+      --shadow:0 22px 50px rgba(0,0,0,.55);
+      --card:rgba(255,255,255,.03);
+      --soft:rgba(255,255,255,.04);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      padding:16px;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:820px;margin:0 auto}
+    .top{
+      display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      box-shadow:var(--shadow);
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{
+      width:46px;height:46px;border-radius:16px;
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+      border:1px solid rgba(250,204,21,.35);
+      box-shadow:0 0 22px rgba(250,204,21,.12);
+      display:grid;place-items:center;color:#061b14;font-weight:1100;
+    }
+    h1{font-size:1.15rem;margin:0}
+    .sub{color:var(--muted);font-weight:800;margin-top:4px;line-height:1.35}
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:.86rem;
+    }
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:20px;box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px;border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    }
+    .head b{font-size:1rem}
+    .body{padding:14px}
+    .hero{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:18px;
+      padding:12px;
+    }
+    .title{font-weight:1100;font-size:1.25rem}
+    .meta{color:var(--muted);font-weight:850;margin-top:6px;line-height:1.4}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tag{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:6px 9px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      color:var(--muted);font-weight:950;font-size:.82rem;
+      background:rgba(255,255,255,.02);
+    }
+    .tag.dot::before{content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block}
+    .tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{
+      flex:1;
+      min-width:180px;
+      border-radius:16px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;font-weight:1100;font-size:16px;
+      padding:12px 12px;
+      cursor:pointer;
+      text-align:center;
+      transition:.2s ease;
+    }
+    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn.whats{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
+    .btn.call{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
+    .btn.loc{background:rgba(255,255,255,.03)}
+    .btn.pin{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
+    .box{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:18px;
+      padding:12px;
+    }
+    .kv{display:grid;grid-template-columns:120px 1fr;gap:10px;margin-top:8px}
+    .k{color:var(--muted);font-weight:950;font-size:.9rem}
+    .v{font-weight:950;word-break:break-word}
+    .note{
+      margin-top:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;display:none;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+    .small{font-size:.9rem;color:var(--muted);font-weight:850;line-height:1.4}
+    .qr{
+      width:100%;
+      aspect-ratio:1/1;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.03);
+      display:grid;
+      place-items:center;
+      font-weight:1100;
+      color:var(--muted);
+    }
+    .footer{
+      margin-top:14px;
+      padding:10px 12px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:16px;
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      color:var(--muted);
+      font-weight:850;
+      font-size:.9rem;
+    }
+    code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:10px;border:1px solid rgba(148,163,184,.18)}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">∞</div>
+        <div>
+          <h1>DIGIY GO PIN — Fiche publique</h1>
+          <div class="sub">Lien officiel du lieu • Partage QR • Contact direct • 0% commission</div>
+        </div>
+      </div>
+      <div class="pill" id="pillSlug">slug: —</div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="head">
+          <b>📍 Le lieu</b>
+          <span class="pill" id="pillStatus">⏳ Chargement…</span>
+        </div>
+        <div class="body">
+          <div class="hero">
+            <div class="title" id="tTitle">—</div>
+            <div class="meta" id="tMeta">—</div>
+
+            <div class="tags">
+              <span class="tag dot live" id="tCat">Catégorie</span>
+              <span class="tag" id="tPhone">📞 —</span>
+              <span class="tag" id="tWhats">💬 —</span>
+            </div>
+
+            <div class="btnRow">
+              <a class="btn whats" id="btnWhats" href="#" target="_blank" rel="noopener">💬 WhatsApp</a>
+              <a class="btn call" id="btnCall" href="#">📞 Appeler</a>
+              <a class="btn loc" id="btnLoc" href="#" id="btnLocLink">🏡 Voir les logements</a>
+            </div>
+
+            <div class="note warn" id="note"></div>
+          </div>
+
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">🔗 Partage</div>
+            <div class="small" style="margin-top:6px">
+              Copie ce lien et envoie-le sur WhatsApp / SMS. Le QR peut pointer ici.
+            </div>
+            <div class="kv">
+              <div class="k">Lien</div>
+              <div class="v"><code id="shareUrl">—</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="head">
+          <b>🧾 Infos</b>
+          <span class="pill">Public</span>
+        </div>
+        <div class="body">
+          <div class="box">
+            <div style="font-weight:1100">🧩 Détails</div>
+            <div class="kv">
+              <div class="k">Slug</div><div class="v" id="dSlug">—</div>
+              <div class="k">Titre</div><div class="v" id="dTitle">—</div>
+              <div class="k">Catégorie</div><div class="v" id="dCat">—</div>
+              <div class="k">Téléphone</div><div class="v" id="dPhone">—</div>
+              <div class="k">WhatsApp</div><div class="v" id="dWhats">—</div>
+            </div>
+          </div>
+
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">🔐 Propriétaire</div>
+            <div class="small" style="margin-top:6px">
+              Accès réservé au propriétaire du lieu.
+            </div>
+            <a class="btn pin" id="btnPin" href="#" style="display:block;margin-top:10px">
+              🔐 Ouvrir le cockpit (PIN)
+            </a>
+          </div>
+
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">📦 QR (placeholder)</div>
+            <div class="small" style="margin-top:6px">
+              Plus tard on génère le QR ici. Pour l’instant, ton QR peut pointer sur ce lien.
+            </div>
+            <div class="qr" style="margin-top:10px">QR ici</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>© DIGIYLYFE ♾️ — Paiement direct, 0% commission.</div>
+      <div>Astuce : ajoute <code>?slug=ton-lieu</code> à l’URL.</div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ========== SUPABASE ==========
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id)=>document.getElementById(id);
+
+  function setNote(msg, cls){
+    const el = $("note");
+    el.className = "note " + (cls || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function normPhone(p){
+    p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if (p.startsWith("00221")) p = "+221" + p.slice(5);
+    if (!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if (!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
+  }
+
+  // slug
+  const u = new URL(location.href);
+  const SLUG = (u.searchParams.get("slug") || "").trim().replace(/\/+$/,"").toLowerCase();
+
+  $("pillSlug").textContent = "slug: " + (SLUG || "—");
+  $("shareUrl").textContent = location.href;
+
+  // routes internes repo
+  function withSlug(path){
+    if(!SLUG) return path;
+    const x = new URL(path, location.href);
+    if(!x.searchParams.get("slug")) x.searchParams.set("slug", SLUG);
+    return x.toString();
+  }
+
+  // liens
+  $("btnPin").href = withSlug("./pin.html");
+  $("btnLoc").href = withSlug("./loc.html"); // si tu as une page loc.html publique (fiche logement)
+  // sinon tu peux remplacer par listing.html / search.html plus tard.
+
+  async function load(){
+    if(!SLUG){
+      $("pillStatus").textContent = "❌ Slug manquant";
+      $("pillStatus").style.borderColor = "rgba(239,68,68,.35)";
+      setNote("⚠️ Il manque le slug.\n➡️ Exemple: go-pin.html?slug=chez-astou-saly", "bad");
+      return;
+    }
+
+    $("pillStatus").textContent = "⏳ Vérification…";
+    setNote("⏳ Chargement du GO PIN…", "warn");
+
+    try{
+      // ✅ RPC RLS-safe
+      const { data, error } = await SB.rpc("go_pin_check", { p_slug: SLUG });
+      if(error) throw error;
+
+      if(!data || data.ok !== true){
+        $("pillStatus").textContent = "⛔ Introuvable";
+        setNote("❌ GO PIN introuvable ou inactif.\n➡️ Vérifie le slug (minuscules + tirets).", "bad");
+        return;
+      }
+
+      const title = data.title || "Lieu DIGIY";
+      const cat = (data.category || "loc").toString();
+      const phone = normPhone(data.phone || "");
+      const whats = normPhone(data.whatsapp || data.phone || "");
+
+      $("pillStatus").textContent = "✅ En ligne";
+      setNote("", "");
+
+      $("tTitle").textContent = title;
+      $("tMeta").textContent = data.address_label ? ("📌 " + data.address_label) : "📌 Lieu vérifié — contact direct";
+
+      $("tCat").textContent = "🏷️ " + cat.toUpperCase();
+      $("tPhone").textContent = "📞 " + (phone || "—");
+      $("tWhats").textContent = "💬 " + (whats || "—");
+
+      $("dSlug").textContent = SLUG;
+      $("dTitle").textContent = title;
+      $("dCat").textContent = cat.toUpperCase();
+      $("dPhone").textContent = phone || "—";
+      $("dWhats").textContent = whats || "—";
+
+      // Actions
+      const waMsg = `Bonjour ${title} 👋\nJe viens via DIGIY. Je veux des infos / réserver.`;
+      $("btnWhats").href = whats ? ("https://wa.me/" + whats.replace("+","") + "?text=" + encodeURIComponent(waMsg)) : "#";
+      $("btnCall").href = phone ? ("tel:" + phone) : "#";
+
+      if(!whats) $("btnWhats").style.opacity = 0.6;
+      if(!phone) $("btnCall").style.opacity = 0.6;
+
+      // Share URL propre (canonique)
+      const share = new URL(location.href);
+      share.searchParams.set("slug", SLUG);
+      $("shareUrl").textContent = share.toString();
+    }catch(e){
+      console.error(e);
+      $("pillStatus").textContent = "⚠️ Erreur";
+      setNote("❌ Impossible de charger le GO PIN.\nDétail: " + (e?.message || e), "bad");
+    }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>
