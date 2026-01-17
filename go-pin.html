@@ -96,25 +96,8 @@
   }
   .btn-wa{background:var(--ok);color:#052e16}
   .btn-call{background:#111827;color:#e5e7eb;border:1px solid var(--line)}
+  .btn-partner{background:#0f172a;color:#e5e7eb;border:1px solid rgba(148,163,184,.35)}
   .btn-video{background:#0f172a;color:#e5e7eb;border:1px solid rgba(148,163,184,.35);display:none}
-
-  .layout{
-    margin-top:12px;
-    display:grid;
-    grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
-    gap:12px;
-  }
-  @media(max-width:900px){.layout{grid-template-columns:1fr}}
-
-  .card{
-    background:rgba(255,255,255,.03);
-    border-radius:16px;
-    border:1px solid var(--line);
-    box-shadow:0 16px 32px rgba(0,0,0,.45);
-    padding:12px;
-  }
-  .card h2{margin:0 0 6px;font-size:16px}
-  .card small{color:var(--muted);font-size:12px}
 
   footer{padding:10px 14px 14px;font-size:11px;color:var(--muted);text-align:center}
   .inline-link{color:#f59e0b;text-decoration:none}
@@ -153,7 +136,7 @@
             <span><span>Semaine :</span><strong id="pWeek">Sur demande</strong></span>
             <span><span>Mois :</span><strong id="pMonth">Sur demande</strong></span>
           </div>
-          <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="notes">—</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="notes">Contact direct · Paiement Wave · 0% commission</div>
         </div>
 
         <div class="wave-card">
@@ -167,30 +150,14 @@
         <div class="cta-col">
           <button class="btn btn-wa" id="btnWa">💬 Réserver par WhatsApp</button>
           <button class="btn btn-call" id="btnCall">📞 Appeler le propriétaire</button>
+          <button class="btn btn-partner" id="btnPartner">📄 Fiche partenaire (détails + vidéo)</button>
           <button class="btn btn-video" id="btnVideo">🎥 Voir la vidéo</button>
         </div>
+
+        <div class="tag" style="margin-top:10px">
+          ✅ Contact direct · 📄 Fiche complète · 🔒 Accès propriétaire (PIN)
+        </div>
       </div>
-    </section>
-
-    <section class="layout">
-      <article class="card">
-        <h2>Contact direct</h2>
-        <small>Tu parles au propriétaire sans intermédiaire.</small>
-        <div style="margin-top:10px;font-size:13px;line-height:1.6">
-          WhatsApp : <a class="inline-link" id="linkWa" href="#" target="_blank" rel="noopener">—</a><br>
-          Téléphone : <a class="inline-link" id="linkTel" href="#">—</a><br>
-          Lien du lieu : <a class="inline-link" id="linkShare" href="#" target="_blank" rel="noopener">copier / partager</a>
-        </div>
-      </article>
-
-      <article class="card">
-        <h2>Accès propriétaire</h2>
-        <small>Réservé au propriétaire (téléphone + PIN).</small>
-        <div style="margin-top:10px;font-size:13px;line-height:1.6">
-          🔒 Clique sur “Accès propriétaire” dans ton cockpit privé.<br>
-          ✅ Si besoin, partage ce lien à l’équipe terrain / au proprio.
-        </div>
-      </article>
     </section>
   </main>
 
@@ -247,12 +214,16 @@
 
     const ownerName = pick(data, ["owner_name","owner_full_name","proprietaire","proprietaire_nom","nom_proprio","contact_name","contact_nom","host_name"], "Propriétaire");
 
-    const ownerPhoneRaw = pick(data, ["owner_phone","phone","telephone","tel","contact_phone","contact_tel","host_phone"], "");
-    const ownerWaRaw    = pick(data, ["owner_whatsapp","whatsapp","wa","contact_whatsapp","contact_wa","host_whatsapp"], ownerPhoneRaw);
+    // ✅ VRAIS TELS (priorité WhatsApp dédié)
+    const ownerPhoneRaw = pick(data, ["owner_phone","phone","telephone","tel","call_phone","phone_call","contact_phone","contact_tel","host_phone"], "");
+    const ownerWaRaw    = pick(data, ["owner_whatsapp","whatsapp","wa","whatsapp_phone","wa_phone","contact_whatsapp","contact_wa","host_whatsapp"], ownerPhoneRaw);
     const waveRaw       = pick(data, ["wave_phone","wave","payment_wave","paiement_wave","wave_tel"], ownerPhoneRaw);
 
+    // ✅ lien fiche partenaire (WordPress)
+    const partnerUrl = pick(data, ["partner_url","partner_link","partner_page_url","public_url","fiche_url"], null);
+
     const phoneDigits = digits(ownerPhoneRaw);
-    const waDigits    = digits(ownerWaRaw);
+    const waDigits = digits(ownerWaRaw);
 
     // UI
     document.title = `${title} — DIGIY LOC`;
@@ -269,11 +240,11 @@
     chips.push("WhatsApp direct");
     document.getElementById("chips").innerHTML = chips.map(t => `<span class="chip">${t}</span>`).join("");
 
-    // Photo + caption
+    // Photo
     const img = document.getElementById("photo");
     img.src = (photo && photo !== "—") ? photo : FALLBACK_PHOTO;
     document.getElementById("caption").textContent = `Lieu: ${slug}`;
-    
+
     // Prix
     document.getElementById("pNight").textContent = money(pNight);
     document.getElementById("pWeek").textContent  = money(pWeek);
@@ -284,20 +255,7 @@
     document.getElementById("ownerName").textContent = ownerName || "Propriétaire";
     document.getElementById("ownerPhone").textContent = ownerPhoneRaw ? `📞 ${ownerPhoneRaw}` : "—";
 
-    // Links
-    const waLink = waDigits ? `https://wa.me/${waDigits}` : "#";
-    document.getElementById("linkWa").href = waLink;
-    document.getElementById("linkWa").textContent = ownerWaRaw || "—";
-
-    const telLink = phoneDigits ? `tel:${phoneDigits}` : "#";
-    document.getElementById("linkTel").href = telLink;
-    document.getElementById("linkTel").textContent = ownerPhoneRaw || "—";
-
-    const shareUrl = location.origin + location.pathname + `?slug=${encodeURIComponent(slug)}`;
-    document.getElementById("linkShare").href = shareUrl;
-    document.getElementById("foot").textContent = `${title} · DIGIY LOC ♾️`;
-
-    // CTA actions
+    // CTA
     document.getElementById("btnCall").onclick = () => { if (phoneDigits) location.href = `tel:${phoneDigits}`; };
     document.getElementById("btnWa").onclick = () => {
       if (!waDigits) return;
@@ -305,7 +263,16 @@
       window.open(`https://wa.me/${waDigits}?text=${encodeURIComponent(msg)}`, "_blank");
     };
 
-    // Video
+    // Partner
+    const btnPartner = document.getElementById("btnPartner");
+    if (partnerUrl) {
+      btnPartner.onclick = () => window.open(partnerUrl, "_blank");
+    } else {
+      // pas de fiche -> on laisse le bouton mais on explique
+      btnPartner.onclick = () => alert("Fiche partenaire non renseignée (partner_url).");
+    }
+
+    // Video (si tu la mets en DB, bouton auto)
     const btnVideo = document.getElementById("btnVideo");
     if (video) {
       btnVideo.style.display = "flex";
@@ -313,6 +280,8 @@
     } else {
       btnVideo.style.display = "none";
     }
+
+    document.getElementById("foot").textContent = `${title} · DIGIY LOC ♾️`;
   });
 })();
 </script>
