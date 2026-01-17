@@ -36,6 +36,21 @@ header{
   color:#9ca3af;
 }
 
+/* DEBUG BAR */
+.debug{
+  border:1px dashed rgba(148,163,184,.35);
+  background:rgba(2,44,34,.18);
+  border-radius:14px;
+  padding:10px 12px;
+  margin-bottom:12px;
+  font-size:12.5px;
+  color:#e5e7eb;
+  line-height:1.35;
+}
+.debug .ok{color:#22c55e;font-weight:900}
+.debug .bad{color:#fb7185;font-weight:900}
+.debug code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
+
 .hero{
   background:#020617;
   border:1px solid #1f2937;
@@ -58,6 +73,7 @@ header{
   object-fit:cover;
   border-radius:14px;
   border:1px solid #1f2937;
+  display:none;
 }
 
 .price-block{
@@ -121,150 +137,173 @@ footer{
 <body>
 <div class="app">
 
-<header>
-  <div class="brand" id="brandTitle">DIGIY LOC</div>
-  <div class="tag" id="tagLine">—</div>
-</header>
+  <!-- DEBUG VISIBLE -->
+  <div class="debug" id="dbg">
+    <div><b>DEBUG GO PIN</b> — si tu vois ce bloc, tu es sur la bonne version.</div>
+    <div id="dbgLine">Boot…</div>
+  </div>
 
-<section class="hero">
-  <h1 id="heroTitle">—</h1>
-  <p id="heroDesc">—</p>
+  <header>
+    <div class="brand" id="brandTitle">DIGIY LOC</div>
+    <div class="tag" id="tagLine">—</div>
+  </header>
 
-  <img id="heroPhoto" src="" alt="Photo du logement">
+  <section class="hero">
+    <h1 id="heroTitle">—</h1>
+    <p id="heroDesc">—</p>
 
-  <div class="price-block">
-    <h2>Tarifs</h2>
-    <div class="tarifs">
-      <span><span>Nuit :</span><strong id="priceNight">—</strong></span>
-      <span><span>Semaine :</span><strong id="priceWeek">—</strong></span>
-      <span><span>Mois :</span><strong id="priceMonth">—</strong></span>
+    <img id="heroPhoto" src="" alt="Photo du logement">
+
+    <div class="price-block">
+      <h2>Tarifs</h2>
+      <div class="tarifs">
+        <span><span>Nuit :</span><strong id="priceNight">—</strong></span>
+        <span><span>Semaine :</span><strong id="priceWeek">—</strong></span>
+        <span><span>Mois :</span><strong id="priceMonth">—</strong></span>
+      </div>
     </div>
-  </div>
 
-  <div class="wave">
-    💳 Paiement direct propriétaire — Wave
-    <div class="num" id="wavePhone">—</div>
-    <div style="margin-top:6px">
-      Propriétaire : <strong id="ownerName">—</strong>
+    <div class="wave">
+      💳 Paiement direct propriétaire — Wave
+      <div class="num" id="wavePhone">—</div>
+      <div style="margin-top:6px">
+        Propriétaire : <strong id="ownerName">—</strong>
+      </div>
+      <div class="tag" id="ownerPhoneTxt" style="margin-top:6px">—</div>
     </div>
-  </div>
 
-  <div class="cta">
-    <button class="btn btn-wa" id="btnWa">💬 Réserver par WhatsApp</button>
-    <button class="btn btn-call" id="btnCall">📞 Appeler le propriétaire</button>
-  </div>
-</section>
+    <div class="cta">
+      <button class="btn btn-wa" id="btnWa">💬 Réserver par WhatsApp</button>
+      <button class="btn btn-call" id="btnCall">📞 Appeler le propriétaire</button>
+    </div>
+  </section>
 
-<footer id="footerTxt">DIGIY LOC ♾️</footer>
+  <footer id="footerTxt">DIGIY LOC ♾️</footer>
 
 </div>
 
-<!-- =========================
-     SUPABASE + LOGIQUE
-========================= -->
+<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-/* 🔐 SUPABASE — DÉJÀ POSÉ */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+(() => {
+  const dbgLine = document.getElementById("dbgLine");
+  const dbg = (html) => { dbgLine.innerHTML = html; };
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+  /* 🔐 SUPABASE — DÉJÀ POSÉ */
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-// -------- helpers ----------
-const pick = (o, keys, d="—") => {
-  for (const k of keys) {
-    if (o && o[k] !== null && o[k] !== undefined && o[k] !== "") return o[k];
-  }
-  return d;
-};
-const money = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n.toLocaleString("fr-FR")+" F" : "—";
-};
-
-// -------- slug ----------
-const slug = new URLSearchParams(window.location.search).get("slug");
-if (!slug) {
-  alert("Slug manquant");
-  throw new Error("Slug manquant");
-}
-
-// -------- load ----------
-(async () => {
-  const { data, error } = await supabase
-    .from("go_pins")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  console.log("GO_PIN DATA =", data);
-  if (error || !data) {
-    alert("Lieu introuvable");
-    console.error(error);
-    return;
-  }
-
-  // -------- mapping TOLÉRANT ----------
-  const title        = pick(data, ["title","name","label"]);
-  const city         = pick(data, ["city","ville","location"]);
-  const desc         = pick(data, ["description","desc","about"], "");
-  const maxGuests    = pick(data, ["max_guests","guests","capacity"], "");
-  const photo        = pick(data, ["photo_url","cover_url","image_url","photo"]);
-  const priceNight   = pick(data, ["price_night","night_price","price"]);
-  const priceWeek    = pick(data, ["price_week","week_price"]);
-  const priceMonth   = pick(data, ["price_month","month_price"]);
-  const ownerName    = pick(data, ["owner_name","proprietaire","owner"]);
-  const ownerPhone   = pick(data, ["owner_phone","phone","telephone"]);
-  const ownerWa      = pick(data, ["owner_whatsapp","whatsapp","wa"]);
-  const wavePhone    = pick(data, ["wave_phone","wave","payment_wave", "owner_phone","phone"]);
-
-  // -------- injection ----------
-  document.title = title + " — DIGIY LOC";
-  document.getElementById("brandTitle").textContent = title || "DIGIY LOC";
-  document.getElementById("heroTitle").textContent =
-    title + (city !== "—" ? " — " + city : "");
-  document.getElementById("heroDesc").textContent = desc || "";
-  document.getElementById("tagLine").textContent =
-    [city, maxGuests ? maxGuests+" pers max" : ""].filter(Boolean).join(" · ");
-
-  const img = document.getElementById("heroPhoto");
-  if (photo && photo !== "—") {
-    img.src = photo;
-    img.style.display = "block";
-  } else {
-    img.style.display = "none";
-  }
-
-  document.getElementById("priceNight").textContent = money(priceNight);
-  document.getElementById("priceWeek").textContent  = money(priceWeek);
-  document.getElementById("priceMonth").textContent = money(priceMonth);
-
-  document.getElementById("wavePhone").textContent = wavePhone;
-  document.getElementById("ownerName").textContent = ownerName;
-
-  document.getElementById("btnCall").onclick = () => {
-    if (ownerPhone && ownerPhone !== "—") {
-      window.location.href = "tel:" + ownerPhone;
+  // Helpers
+  const pick = (o, keys, d="—") => {
+    for (const k of keys) {
+      if (o && o[k] !== null && o[k] !== undefined && o[k] !== "") return o[k];
     }
+    return d;
   };
-
-  document.getElementById("btnWa").onclick = () => {
-    if (!ownerWa || ownerWa === "—") return;
-    const msg = `Bonjour, je souhaite réserver ${title}${city ? " à "+city : ""}.`;
-    window.open(
-      "https://wa.me/" + ownerWa.replace(/\D/g,"") +
-      "?text=" + encodeURIComponent(msg),
-      "_blank"
-    );
+  const money = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n.toLocaleString("fr-FR")+" F" : "—";
   };
+  const digits = (v) => (v ?? "").toString().replace(/\D/g,"");
 
-  document.getElementById("footerTxt").textContent =
-    `${title} · DIGIY LOC · ${ownerPhone || ""}`;
+  const slug = new URLSearchParams(window.location.search).get("slug");
+  dbg(`Slug détecté : <code>${slug || "AUCUN"}</code>`);
+
+  window.addEventListener("DOMContentLoaded", async () => {
+    try {
+      if (!slug) {
+        dbg(`<span class="bad">ERREUR</span> : slug manquant. Exemple : <code>go-pin.html?slug=chez-astou-saly</code>`);
+        return;
+      }
+
+      if (!window.supabase || !window.supabase.createClient) {
+        dbg(`<span class="bad">ERREUR</span> : Supabase CDN non chargé (jsdelivr bloqué / offline).`);
+        return;
+      }
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      dbg(`Supabase : <span class="ok">OK</span> · Lecture <code>go_pins</code> pour <code>${slug}</code>…`);
+
+      const { data, error } = await supabase
+        .from("go_pins")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+      if (error || !data) {
+        dbg(`<span class="bad">ERREUR DB</span> : ${error ? (error.message || "unknown") : "no data"}<br><span style="color:#9ca3af">=> slug introuvable OU RLS bloque.</span>`);
+        console.error("DB ERROR:", error);
+        return;
+      }
+
+      // Preuve des champs reçus
+      const keys = Object.keys(data);
+      dbg(`DB : <span class="ok">DATA OK</span> · champs reçus (${keys.length}) : <code>${keys.slice(0,16).join(", ")}${keys.length>16?"…":""}</code>`);
+
+      // Mapping tolérant (pour coller à ta DB)
+      const title      = pick(data, ["title","name","label"]);
+      const city       = pick(data, ["city","ville","location"]);
+      const desc       = pick(data, ["description","desc","about"], "");
+      const maxGuests  = pick(data, ["max_guests","guests","capacity"], "");
+
+      const photo      = pick(data, ["photo_url","cover_url","image_url","photo"]);
+      const priceNight = pick(data, ["price_night","night_price","price","prix"]);
+      const priceWeek  = pick(data, ["price_week","week_price"]);
+      const priceMonth = pick(data, ["price_month","month_price"]);
+
+      const ownerName  = pick(data, ["owner_name","proprietaire","owner"]);
+      const ownerPhone = pick(data, ["owner_phone","phone","telephone"]);
+      const ownerWa    = pick(data, ["owner_whatsapp","whatsapp","wa"]);
+      const wavePhone  = pick(data, ["wave_phone","wave","payment_wave","owner_phone","phone"]);
+
+      // Injection UI
+      document.title = `${title} — DIGIY LOC`;
+      document.getElementById("brandTitle").textContent = title !== "—" ? title : "DIGIY LOC";
+      document.getElementById("heroTitle").textContent = `${title}${city !== "—" ? " — " + city : ""}`;
+      document.getElementById("heroDesc").textContent = desc || "";
+      document.getElementById("tagLine").textContent =
+        [city !== "—" ? city : "", (maxGuests && maxGuests !== "—") ? `${maxGuests} pers max` : ""].filter(Boolean).join(" · ") || "—";
+
+      const img = document.getElementById("heroPhoto");
+      if (photo && photo !== "—") {
+        img.src = photo;
+        img.style.display = "block";
+      } else {
+        img.style.display = "none";
+      }
+
+      document.getElementById("priceNight").textContent = money(priceNight);
+      document.getElementById("priceWeek").textContent  = money(priceWeek);
+      document.getElementById("priceMonth").textContent = money(priceMonth);
+
+      document.getElementById("wavePhone").textContent = wavePhone;
+      document.getElementById("ownerName").textContent = ownerName;
+      document.getElementById("ownerPhoneTxt").textContent = ownerPhone !== "—" ? `📞 ${ownerPhone}` : "—";
+
+      // CTA
+      document.getElementById("btnCall").onclick = () => {
+        if (ownerPhone && ownerPhone !== "—") window.location.href = "tel:" + ownerPhone;
+      };
+
+      document.getElementById("btnWa").onclick = () => {
+        const wa = digits(ownerWa);
+        if (!wa) return;
+        const msg = `Bonjour, je souhaite réserver ${title}${city !== "—" ? " à " + city : ""}.`;
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
+      };
+
+      document.getElementById("footerTxt").textContent =
+        `${title} · DIGIY LOC · ${ownerPhone !== "—" ? ownerPhone : ""}`;
+
+    } catch (e) {
+      dbg(`<span class="bad">ERREUR JS</span> : ${String(e && e.message ? e.message : e)}`);
+      console.error(e);
+    }
+  });
 })();
 </script>
 </body>
 </html>
+
