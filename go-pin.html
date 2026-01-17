@@ -136,9 +136,9 @@ footer{
     <div class="price-block">
       <h2>Tarifs</h2>
       <div class="tarifs">
-        <span><span>Nuit :</span><strong id="priceNight">—</strong></span>
-        <span><span>Semaine :</span><strong id="priceWeek">—</strong></span>
-        <span><span>Mois :</span><strong id="priceMonth">—</strong></span>
+        <span><span>Nuit :</span><strong id="priceNight">Sur demande</strong></span>
+        <span><span>Semaine :</span><strong id="priceWeek">Sur demande</strong></span>
+        <span><span>Mois :</span><strong id="priceMonth">Sur demande</strong></span>
       </div>
     </div>
 
@@ -169,17 +169,25 @@ footer{
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
   // Helpers
-  const pick = (o, keys, d="—") => {
+  const pick = (o, keys, d=null) => {
     for (const k of keys) {
       if (o && o[k] !== null && o[k] !== undefined && o[k] !== "") return o[k];
     }
     return d;
   };
+  const digits = (v) => (v ?? "").toString().replace(/\D/g,"");
+
   const money = (v) => {
     const n = Number(v);
-    return Number.isFinite(n) && n > 0 ? n.toLocaleString("fr-FR") + " F" : "—";
+    if (Number.isFinite(n) && n > 0) return n.toLocaleString("fr-FR") + " F";
+    // si c’est déjà un texte genre "30 000" ou "sur demande"
+    if (typeof v === "string" && v.trim()) {
+      const d = v.replace(/[^\d]/g,"");
+      if (d) return Number(d).toLocaleString("fr-FR") + " F";
+      return v;
+    }
+    return "Sur demande";
   };
-  const digits = (v) => (v ?? "").toString().replace(/\D/g, "");
 
   const slug = new URLSearchParams(window.location.search).get("slug");
   if (!slug) {
@@ -190,11 +198,11 @@ footer{
   window.addEventListener("DOMContentLoaded", async () => {
     try {
       if (!window.supabase || !window.supabase.createClient) {
-        alert("Supabase CDN non chargé. Vérifie ta connexion / cache.");
+        alert("Supabase CDN non chargé. Vérifie la connexion / cache.");
         return;
       }
 
-      // ✅ Pas de variable "supabase" => pas de collision
+      // ✅ pas de variable 'supabase' => pas de collision
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const { data, error } = await sb
@@ -209,33 +217,63 @@ footer{
         return;
       }
 
-      // Mapping tolérant
-      const title      = pick(data, ["title","name","label"]);
-      const city       = pick(data, ["city","ville","location"]);
-      const desc       = pick(data, ["description","desc","about"], "");
-      const maxGuests  = pick(data, ["max_guests","guests","capacity"], "");
+      // ===== Mapping (tolérant + variantes FR)
+      const title = pick(data, ["title","name","label","nom","titre"], "DIGIY LOC");
+      const city  = pick(data, ["city","ville","location","localite"], "");
+      const desc  = pick(data, ["description","desc","about","resume"], "");
 
-      const photo      = pick(data, ["photo_url","cover_url","image_url","photo"]);
-      const pNight     = pick(data, ["price_night","night_price","price","prix"]);
-      const pWeek      = pick(data, ["price_week","week_price"]);
-      const pMonth     = pick(data, ["price_month","month_price"]);
+      const maxGuests = pick(data, ["max_guests","guests","capacity","capacite"], "");
 
-      const ownerName  = pick(data, ["owner_name","proprietaire","owner"]);
-      const ownerPhone = pick(data, ["owner_phone","phone","telephone"]);
-      const ownerWa    = pick(data, ["owner_whatsapp","whatsapp","wa"]);
-      const wavePhone  = pick(data, ["wave_phone","wave","payment_wave","owner_phone","phone"]);
+      const photo = pick(data, ["photo_url","cover_url","image_url","photo","img","image"], null);
 
-      // Injection UI
+      // PRIX: toutes variantes terrain
+      const pNight = pick(data, [
+        "price_night","night_price","prix_nuit","tarif_nuit","nuit",
+        "price_per_night","tarif_jour","prix_jour"
+      ], null);
+
+      const pWeek = pick(data, [
+        "price_week","week_price","prix_semaine","tarif_semaine","semaine",
+        "price_per_week"
+      ], null);
+
+      const pMonth = pick(data, [
+        "price_month","month_price","prix_mois","tarif_mois","mois",
+        "price_per_month"
+      ], null);
+
+      // NOM proprio: variantes
+      const ownerName = pick(data, [
+        "owner_name","owner_full_name","proprietaire","proprietaire_nom","nom_proprio",
+        "contact_name","contact_nom","host_name"
+      ], "Propriétaire");
+
+      // Téléphone / WhatsApp / Wave: variantes
+      const ownerPhoneRaw = pick(data, [
+        "owner_phone","phone","telephone","tel","contact_phone","contact_tel","host_phone"
+      ], "");
+
+      const ownerWaRaw = pick(data, [
+        "owner_whatsapp","whatsapp","wa","contact_whatsapp","contact_wa","host_whatsapp"
+      ], ownerPhoneRaw);
+
+      const wavePhoneRaw = pick(data, [
+        "wave_phone","wave","payment_wave","paiement_wave","wave_tel"
+      ], ownerPhoneRaw);
+
+      // ===== Injection UI
       document.title = `${title} — DIGIY LOC`;
-      document.getElementById("brandTitle").textContent = title !== "—" ? title : "DIGIY LOC";
-      document.getElementById("heroTitle").textContent = `${title}${city !== "—" ? " — " + city : ""}`;
+      document.getElementById("brandTitle").textContent = title;
+      document.getElementById("heroTitle").textContent = `${title}${city ? " — " + city : ""}`;
       document.getElementById("heroDesc").textContent = desc || "";
-      document.getElementById("tagLine").textContent =
-        [city !== "—" ? city : "", (maxGuests && maxGuests !== "—") ? `${maxGuests} pers max` : ""]
-          .filter(Boolean).join(" · ") || "—";
+
+      const tagParts = [];
+      if (city) tagParts.push(city);
+      if (maxGuests) tagParts.push(`${maxGuests} pers max`);
+      document.getElementById("tagLine").textContent = tagParts.join(" · ") || "—";
 
       const img = document.getElementById("heroPhoto");
-      if (photo && photo !== "—") {
+      if (photo) {
         img.src = photo;
         img.style.display = "block";
       } else {
@@ -246,25 +284,27 @@ footer{
       document.getElementById("priceWeek").textContent  = money(pWeek);
       document.getElementById("priceMonth").textContent = money(pMonth);
 
-      document.getElementById("wavePhone").textContent = wavePhone;
-      document.getElementById("ownerName").textContent = ownerName;
+      document.getElementById("wavePhone").textContent = wavePhoneRaw ? wavePhoneRaw : "—";
+      document.getElementById("ownerName").textContent = ownerName ? ownerName : "Propriétaire";
       document.getElementById("ownerPhoneTxt").textContent =
-        ownerPhone !== "—" ? `📞 ${ownerPhone}` : "—";
+        ownerPhoneRaw ? `📞 ${ownerPhoneRaw}` : "—";
 
       // CTA
+      const ownerPhoneDigits = digits(ownerPhoneRaw);
+      const ownerWaDigits = digits(ownerWaRaw);
+
       document.getElementById("btnCall").onclick = () => {
-        if (ownerPhone && ownerPhone !== "—") window.location.href = "tel:" + ownerPhone;
+        if (ownerPhoneDigits) window.location.href = "tel:" + ownerPhoneDigits;
       };
 
       document.getElementById("btnWa").onclick = () => {
-        const wa = digits(ownerWa);
-        if (!wa) return;
-        const msg = `Bonjour, je souhaite réserver ${title}${city !== "—" ? " à " + city : ""}.`;
-        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
+        if (!ownerWaDigits) return;
+        const msg = `Bonjour, je souhaite réserver ${title}${city ? " à " + city : ""}.`;
+        window.open(`https://wa.me/${ownerWaDigits}?text=${encodeURIComponent(msg)}`, "_blank");
       };
 
       document.getElementById("footerTxt").textContent =
-        `${title} · DIGIY LOC · ${ownerPhone !== "—" ? ownerPhone : ""}`;
+        `${title} · DIGIY LOC · ${ownerPhoneRaw || ""}`;
 
     } catch (e) {
       console.error(e);
