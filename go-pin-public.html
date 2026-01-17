@@ -85,6 +85,11 @@
     .tag.dot::before{content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block}
     .tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
+    .tag.nd{
+      border-color:rgba(250,204,21,.35);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+    }
     .btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .btn{
       flex:1;
@@ -96,6 +101,10 @@
       cursor:pointer;
       text-align:center;
       transition:.2s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
     }
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
@@ -171,7 +180,7 @@
             <div class="title" id="tTitle">—</div>
             <div class="meta" id="tMeta">—</div>
 
-            <div class="tags">
+            <div class="tags" id="tagsRow">
               <span class="tag dot live" id="tCat">Catégorie</span>
               <span class="tag" id="tPhone">📞 —</span>
               <span class="tag" id="tWhats">💬 —</span>
@@ -180,7 +189,7 @@
             <div class="btnRow">
               <a class="btn whats" id="btnWhats" href="#" target="_blank" rel="noopener">💬 WhatsApp</a>
               <a class="btn call" id="btnCall" href="#">📞 Appeler</a>
-              <a class="btn loc" id="btnLoc" href="#" id="btnLocLink">🏡 Voir les logements</a>
+              <a class="btn loc" id="btnLoc" href="#">🏡 Voir les logements</a>
             </div>
 
             <div class="note warn" id="note"></div>
@@ -276,7 +285,6 @@
   const SLUG = (u.searchParams.get("slug") || "").trim().replace(/\/+$/,"").toLowerCase();
 
   $("pillSlug").textContent = "slug: " + (SLUG || "—");
-  $("shareUrl").textContent = location.href;
 
   // routes internes repo
   function withSlug(path){
@@ -288,14 +296,15 @@
 
   // liens
   $("btnPin").href = withSlug("./pin.html");
-  $("btnLoc").href = withSlug("./loc.html"); // si tu as une page loc.html publique (fiche logement)
-  // sinon tu peux remplacer par listing.html / search.html plus tard.
+  $("btnLoc").href = withSlug("./loc.html");
 
   async function load(){
+    $("shareUrl").textContent = location.href;
+
     if(!SLUG){
       $("pillStatus").textContent = "❌ Slug manquant";
       $("pillStatus").style.borderColor = "rgba(239,68,68,.35)";
-      setNote("⚠️ Il manque le slug.\n➡️ Exemple: go-pin.html?slug=chez-astou-saly", "bad");
+      setNote("⚠️ Il manque le slug.\n➡️ Exemple: go-pin-public.html?slug=chez-astou-saly", "bad");
       return;
     }
 
@@ -303,11 +312,17 @@
     setNote("⏳ Chargement du GO PIN…", "warn");
 
     try{
-      // ✅ RPC RLS-safe
-      const { data, error } = await SB.rpc("go_pin_check", { p_slug: SLUG });
-      if(error) throw error;
+      // ✅ SELECT DIRECT (PUBLIC SAFE) — plus de RPC
+      const { data, error } = await SB
+        .from("go_pins")
+        .select("slug,title,category,phone,whatsapp,address_label,ndimbal_enabled,is_public,is_active")
+        .eq("slug", SLUG)
+        .eq("is_public", true)
+        .eq("is_active", true)
+        .single();
 
-      if(!data || data.ok !== true){
+      if(error) throw error;
+      if(!data){
         $("pillStatus").textContent = "⛔ Introuvable";
         setNote("❌ GO PIN introuvable ou inactif.\n➡️ Vérifie le slug (minuscules + tirets).", "bad");
         return;
@@ -317,6 +332,7 @@
       const cat = (data.category || "loc").toString();
       const phone = normPhone(data.phone || "");
       const whats = normPhone(data.whatsapp || data.phone || "");
+      const nd = (data.ndimbal_enabled === true);
 
       $("pillStatus").textContent = "✅ En ligne";
       setNote("", "");
@@ -334,6 +350,17 @@
       $("dPhone").textContent = phone || "—";
       $("dWhats").textContent = whats || "—";
 
+      // Badge NDIMBAL (lecture seule)
+      if(nd){
+        const tagsRow = $("tagsRow");
+        const ndSpan = document.createElement("span");
+        ndSpan.className = "tag nd";
+        ndSpan.textContent = "🤍 NDIMBAL LOC · 1→2 • 2→3";
+        tagsRow.appendChild(ndSpan);
+
+        setNote("🤍 NDIMBAL LOC activé — bonus +1 nuit : 1→2 • 2→3", "ok");
+      }
+
       // Actions
       const waMsg = `Bonjour ${title} 👋\nJe viens via DIGIY. Je veux des infos / réserver.`;
       $("btnWhats").href = whats ? ("https://wa.me/" + whats.replace("+","") + "?text=" + encodeURIComponent(waMsg)) : "#";
@@ -342,10 +369,11 @@
       if(!whats) $("btnWhats").style.opacity = 0.6;
       if(!phone) $("btnCall").style.opacity = 0.6;
 
-      // Share URL propre (canonique)
+      // Share URL canonique
       const share = new URL(location.href);
       share.searchParams.set("slug", SLUG);
       $("shareUrl").textContent = share.toString();
+
     }catch(e){
       console.error(e);
       $("pillStatus").textContent = "⚠️ Erreur";
