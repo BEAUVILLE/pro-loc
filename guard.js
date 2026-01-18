@@ -63,11 +63,11 @@
     }
   }
 
-  function isAbsUrl(u){ return /^https?:\/\//i.test(String(u||"")); }
-
   function getSB(){
     if (window.__sb) return window.__sb;
-    if (!window.supabase?.createClient) throw new Error("Supabase JS not loaded (include supabase-js before guard.js)");
+    if (!window.supabase?.createClient) {
+      throw new Error("Supabase JS not loaded (include supabase-js before guard.js)");
+    }
     window.__sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return window.__sb;
   }
@@ -96,18 +96,26 @@
   }
 
   function withSlug(url){
-  const slug = getSlug();
-  const raw = safeStr(url || "");
+    const slug = getSlug();
+    const raw = safeStr(url || "");
 
-  try{
-    const u = new URL(raw, location.href);
-    if (slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-    return u.toString(); // ✅ TOUJOURS ABSOLU
-  }catch(_){
-    const sep = raw.includes("?") ? "&" : "?";
-    return new URL(raw + (slug ? (sep + "slug=" + encodeURIComponent(slug)) : ""), location.href).toString();
+    try{
+      const u = new URL(raw, location.href);
+      if (slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      return u.toString(); // ✅ TOUJOURS ABSOLU (comme tu veux)
+    }catch(_){
+      const sep = raw.includes("?") ? "&" : "?";
+      return new URL(raw + (slug ? (sep + "slug=" + encodeURIComponent(slug)) : ""), location.href).toString();
+    }
   }
-}
+
+  // ✅ MISSING PIECE: NAVIGATION SAFE (anti-boucle)
+  function go(url){
+    const target = withSlug(url);
+    // évite de recharger exactement la même URL (petite protection)
+    if (target === location.href) return;
+    location.href = target;
+  }
 
   // =============================
   // SESSION
@@ -129,7 +137,7 @@
     const sess = {
       ok: true,
       phone: normPhone(phone),
-      owner_id: owner_id || null,                 // ✅
+      owner_id: owner_id || null,
       module: safeStr(module || DEFAULTS.module),
       slug: safeStr(slug || getSlug() || ""),
       exp
