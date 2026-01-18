@@ -96,26 +96,18 @@
   }
 
   function withSlug(url){
-    const slug = getSlug();
-    if (!slug) return safeStr(url);
+  const slug = getSlug();
+  const raw = safeStr(url || "");
 
-    const raw = safeStr(url);
-    const abs = isAbsUrl(raw);
-
-    try{
-      const u = new URL(raw, location.href);
-      if (!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if (abs) return u.toString();
-      return u.pathname + u.search + u.hash;
-    }catch(_){
-      const sep = raw.includes("?") ? "&" : "?";
-      return raw + sep + "slug=" + encodeURIComponent(slug);
-    }
+  try{
+    const u = new URL(raw, location.href);
+    if (slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+    return u.toString(); // ✅ TOUJOURS ABSOLU
+  }catch(_){
+    const sep = raw.includes("?") ? "&" : "?";
+    return new URL(raw + (slug ? (sep + "slug=" + encodeURIComponent(slug)) : ""), location.href).toString();
   }
-
-  function go(url){
-    location.replace(withSlug(url));
-  }
+}
 
   // =============================
   // SESSION
