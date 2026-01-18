@@ -112,6 +112,7 @@
     .btn.call{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
     .btn.loc{background:rgba(255,255,255,.03)}
     .btn.pin{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
+    .btn.ndbtn{background:rgba(250,204,21,.08);border-color:rgba(250,204,21,.30);color:#fde68a}
     .box{
       border:1px solid rgba(148,163,184,.22);
       background:rgba(255,255,255,.02);
@@ -192,6 +193,10 @@
               <a class="btn loc" id="btnLoc" href="#">🏡 Voir les logements</a>
             </div>
 
+            <div class="btnRow" id="ndRow" style="display:none">
+              <button class="btn ndbtn" id="btnNd" type="button">🌙 Comprendre NDIMBAL</button>
+            </div>
+
             <div class="note warn" id="note"></div>
           </div>
 
@@ -243,6 +248,16 @@
             </div>
             <div class="qr" style="margin-top:10px">QR ici</div>
           </div>
+
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">🆘 Besoin d’aide ?</div>
+            <div class="small" style="margin-top:6px">
+              Si un bouton ne marche pas ou si le numéro n’est pas renseigné, contacte l’équipe DIGIY.
+            </div>
+            <a class="btn whats" id="btnTeam" href="#" target="_blank" rel="noopener" style="display:block;margin-top:10px">
+              📲 Contacter DIGIY
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -263,6 +278,11 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
   const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // ========== ROUTES ==========
+  const GALLERY_URL = "https://beauville.github.io/digiy-loc/";
+  const PRO_COCKPIT_URL = "https://beauville.github.io/digiy-loc-pro/proprio-loc.html";
+  const TEAM_WA = "+221771342889";
+
   const $ = (id)=>document.getElementById(id);
 
   function setNote(msg, cls){
@@ -272,6 +292,8 @@
     el.style.display = msg ? "block" : "none";
   }
 
+  function digits(p){ return String(p||"").replace(/\D/g,""); }
+
   function normPhone(p){
     p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
     if (p.startsWith("00221")) p = "+221" + p.slice(5);
@@ -280,23 +302,30 @@
     return p;
   }
 
-  // slug
-  const u = new URL(location.href);
-  const SLUG = (u.searchParams.get("slug") || "").trim().replace(/\/+$/,"").toLowerCase();
-
-  $("pillSlug").textContent = "slug: " + (SLUG || "—");
-
-  // routes internes repo
-  function withSlug(path){
-    if(!SLUG) return path;
-    const x = new URL(path, location.href);
-    if(!x.searchParams.get("slug")) x.searchParams.set("slug", SLUG);
-    return x.toString();
+  function openWa(phone, msg){
+    const d = digits(phone);
+    if(!d) return "#";
+    return "https://wa.me/" + d + (msg ? ("?text=" + encodeURIComponent(msg)) : "");
   }
 
-  // liens
-  $("btnLoc").href = withSlug("./go-pin.html");
+  function cleanSlug(s){
+    const x = String(s || "").trim().toLowerCase().replace(/\/+$/,"");
+    return x.replace(/[^a-z0-9\-_]/g,"");
+  }
 
+  // slug
+  const u = new URL(location.href);
+  const SLUG = cleanSlug(u.searchParams.get("slug") || "");
+  $("pillSlug").textContent = "slug: " + (SLUG || "—");
+
+  // liens
+  $("btnLoc").href = GALLERY_URL;
+  $("btnPin").href = SLUG ? (PRO_COCKPIT_URL + "?slug=" + encodeURIComponent(SLUG)) : PRO_COCKPIT_URL;
+
+  // Team WA
+  $("btnTeam").href = openWa(TEAM_WA, SLUG
+    ? `Bonjour DIGIY 👋\nJe suis sur le PIN public (${SLUG}) et j’ai besoin d’aide.`
+    : `Bonjour DIGIY 👋\nJe suis sur le PIN public et le slug est manquant.`);
 
   async function load(){
     $("shareUrl").textContent = location.href;
@@ -304,15 +333,14 @@
     if(!SLUG){
       $("pillStatus").textContent = "❌ Slug manquant";
       $("pillStatus").style.borderColor = "rgba(239,68,68,.35)";
-      setNote("⚠️ Il manque le slug.\n➡️ Exemple: go-pin-public.html?slug=chez-astou-saly", "bad");
+      setNote("⚠️ Il manque le slug.\n➡️ Exemple: pin.html?slug=chez-astou-saly", "bad");
       return;
     }
 
     $("pillStatus").textContent = "⏳ Vérification…";
-    setNote("⏳ Chargement du GO PIN…", "warn");
+    setNote("⏳ Chargement du PIN public…", "warn");
 
     try{
-      // ✅ SELECT DIRECT (PUBLIC SAFE) — plus de RPC
       const { data, error } = await SB
         .from("go_pins")
         .select("slug,title,category,phone,whatsapp,address_label,ndimbal_enabled,is_public,is_active")
@@ -324,7 +352,7 @@
       if(error) throw error;
       if(!data){
         $("pillStatus").textContent = "⛔ Introuvable";
-        setNote("❌ GO PIN introuvable ou inactif.\n➡️ Vérifie le slug (minuscules + tirets).", "bad");
+        setNote("❌ PIN introuvable ou inactif.\n➡️ Vérifie le slug (minuscules + tirets).", "bad");
         return;
       }
 
@@ -350,24 +378,27 @@
       $("dPhone").textContent = phone || "—";
       $("dWhats").textContent = whats || "—";
 
-      // Badge NDIMBAL (lecture seule)
+      // NDIMBAL
       if(nd){
         const tagsRow = $("tagsRow");
         const ndSpan = document.createElement("span");
         ndSpan.className = "tag nd";
-        ndSpan.textContent = "🤍 NDIMBAL LOC · 1→2 • 2→3";
+        ndSpan.textContent = "🌙 NDIMBAL • Nuits offertes (semaine)";
         tagsRow.appendChild(ndSpan);
 
-        setNote("🤍 NDIMBAL LOC activé — bonus +1 nuit : 1→2 • 2→3", "ok");
+        $("ndRow").style.display = "flex";
+        $("btnNd").onclick = () => {
+          setNote("🌙 NDIMBAL : 2 nuits payées = 3ᵉ offerte (Lun→Jeu, selon dispo).\nBut : te faire rester +1 nuit → tu consommes +1 jour dans le quartier.", "ok");
+        };
       }
 
       // Actions
       const waMsg = `Bonjour ${title} 👋\nJe viens via DIGIY. Je veux des infos / réserver.`;
-      $("btnWhats").href = whats ? ("https://wa.me/" + whats.replace("+","") + "?text=" + encodeURIComponent(waMsg)) : "#";
-      $("btnCall").href = phone ? ("tel:" + phone) : "#";
+      $("btnWhats").href = whats ? openWa(whats, waMsg) : $("btnTeam").href;
+      $("btnCall").href = phone ? ("tel:" + digits(phone)) : "#";
 
-      if(!whats) $("btnWhats").style.opacity = 0.6;
-      if(!phone) $("btnCall").style.opacity = 0.6;
+      if(!whats) $("btnWhats").style.opacity = 0.7;
+      if(!phone) $("btnCall").style.opacity = 0.7;
 
       // Share URL canonique
       const share = new URL(location.href);
@@ -377,7 +408,7 @@
     }catch(e){
       console.error(e);
       $("pillStatus").textContent = "⚠️ Erreur";
-      setNote("❌ Impossible de charger le GO PIN.\nDétail: " + (e?.message || e), "bad");
+      setNote("❌ Impossible de charger le PIN public.\nDétail: " + (e?.message || e), "bad");
     }
   }
 
