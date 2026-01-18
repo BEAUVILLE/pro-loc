@@ -284,10 +284,6 @@ a{color:inherit}
   const pub = new URL("./go-pin.html", location.href);
   if(slug) pub.searchParams.set("slug", slug);
   $("btnPublic").href = pub.toString();
-  // GO PIN public
-  const pub = new URL("./go-pin.html", location.href);
-  if(slug) pub.searchParams.set("slug", slug);
-  $("btnPublic").href = pub.toString();
   // 🔐 Force ouverture APP avec slug sécurisé
   document.getElementById("goApp")?.addEventListener("click", (e)=>{
     e.preventDefault();
