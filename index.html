@@ -170,7 +170,7 @@ a{color:inherit}
       </div>
       <div class="navRight">
         <a class="btn small" id="goToday" href="#">📅 Vue du jour</a>
-       <button class="btn small navBtn" id="goApp">🏠 APP</button>
+        <button class="btn small navBtn" id="goApp" type="button">🏠 APP</button>
         <a class="btn small" id="goPulse" href="#">📲 Pulse</a>
         <a class="btn small" id="goPlanning" href="#">🗓️ Planning</a>
         <a class="btn small" id="goListing" href="#">📋 Liste du jour</a>
@@ -187,7 +187,7 @@ a{color:inherit}
           <h2>⚡ Vue rapide</h2>
           <small>Ton accès + tes infos en 10 secondes.</small>
         </div>
-        <button class="btn" id="btnRefresh">↻ Recharger</button>
+        <button class="btn" id="btnRefresh" type="button">↻ Recharger</button>
       </div>
       <div class="cardBody">
         <div class="kv">
@@ -219,7 +219,8 @@ a{color:inherit}
           <a class="btn" id="quickPlanning" href="#">🗓️ Voir mon planning</a>
           <a class="btn" id="quickLinks" href="#">🔗 Partager mes liens / QR</a>
           <a class="btn" id="quickHealth" href="#">🧪 Diagnostic (si ça coince)</a>
-          <a class="btn" id="quickNdimbal" href="#">🧭 NDIMBAL LOC — Mon bureau de poche</a>        </div>
+          <a class="btn" id="quickNdimbal" href="#">🧭 NDIMBAL LOC — Mon bureau de poche</a>
+        </div>
       </div>
     </section>
   </div>
@@ -257,37 +258,48 @@ a{color:inherit}
   }
 
   const slug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
-  $("navPlace").textContent = "Lieu : " + (slug || "—");
-  $("kvSlug").textContent = slug || "—";
+  if($("navPlace")) $("navPlace").textContent = "Lieu : " + (slug || "—");
+  if($("kvSlug")) $("kvSlug").textContent = slug || "—";
 
   function withSlug(path){
     return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
   }
 
-  // Nav href
-  $("btnBack").href = withSlug("./index.html");
-  $("goToday").href = withSlug("./today.html");
-  $("goManage").href = withSlug("./app.html"); 
-  $("goPulse").href = withSlug("./proprio-loc.html");
-  $("goPlanning").href = withSlug("./planning.html");
-  $("goListing").href = withSlug("./listing.html");
-  $("goLinks").href = withSlug("./manage-links.html");
-  $("goHealth").href = withSlug("./health-loc.html");
-  $("quickPlanning").href = withSlug("./planning.html");
-  $("quickLinks").href = withSlug("./manage-links.html");
-  $("quickHealth").href = withSlug("./health-loc.html");
-  $("btnOpenPin").href = withSlug("./pin.html");
+  // ✅ HREF uniquement sur les <a>
+  const links = [
+    ["btnBack","./index.html"],
+    ["goToday","./today.html"],
+    ["goPulse","./proprio-loc.html"],
+    ["goPlanning","./planning.html"],
+    ["goListing","./listing.html"],
+    ["goLinks","./manage-links.html"],
+    ["goHealth","./health-loc.html"],
+    ["quickApp","./app.html"],
+    ["quickPlanning","./planning.html"],
+    ["quickLinks","./manage-links.html"],
+    ["quickHealth","./health-loc.html"],
+    ["btnOpenPin","./pin.html"],
+    ["quickNdimbal","./ndimbal.html"]
+  ];
 
-  // GO PIN public
+  links.forEach(([id, path])=>{
+    const el = document.getElementById(id);
+    if(el && el.tagName === "A"){
+      el.href = withSlug(path);
+    }
+  });
+
+  // ✅ GO PIN public (ouvre une page publique)
   const pub = new URL("./go-pin.html", location.href);
   if(slug) pub.searchParams.set("slug", slug);
-  $("btnPublic").href = pub.toString();
-  // 🔐 Force ouverture APP avec slug sécurisé
+  if($("btnPublic")) $("btnPublic").href = pub.toString();
+
+  // ✅ APP (bouton) : navigation propre avec slug
   document.getElementById("goApp")?.addEventListener("click", (e)=>{
     e.preventDefault();
-    const url = window.DIGIY_GUARD.withSlug("./app.html");
-    window.location.href = url;
+    window.location.href = withSlug("./app.html");
   });
+
   function refresh(){
     hideNote();
 
@@ -296,16 +308,18 @@ a{color:inherit}
     const owner = sess?.owner_id || "—";
     const exp = sess?.exp ? new Date(Number(sess.exp)).toISOString().slice(0,16).replace("T"," ") : "";
 
-    $("kvPhone").textContent = phone;
-    $("kvOwner").textContent = owner;
-    $("kvSess").textContent = sess?.ok ? ("OK" + (exp ? " (expire : " + exp + ")" : "")) : "—";
+    if($("kvPhone")) $("kvPhone").textContent = phone;
+    if($("kvOwner")) $("kvOwner").textContent = owner;
+    if($("kvSess")) $("kvSess").textContent = sess?.ok ? ("OK" + (exp ? " (expire : " + exp + ")" : "")) : "—";
 
     if(sess?.ok && sess?.phone){
-      $("pillUser").innerHTML = `👤 <strong>${phone}</strong>`;
-      $("pillState").textContent = "✅ Connecté";
-      $("pillState").classList.remove("warn");
-      $("pillState").classList.add("ok");
-      $("btnLogout").style.display = "inline-flex";
+      if($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${phone}</strong>`;
+      if($("pillState")){
+        $("pillState").textContent = "✅ Connecté";
+        $("pillState").classList.remove("warn");
+        $("pillState").classList.add("ok");
+      }
+      if($("btnLogout")) $("btnLogout").style.display = "inline-flex";
 
       if(!sess?.owner_id){
         showNote(
@@ -321,11 +335,13 @@ a{color:inherit}
     }
 
     // pas de session
-    $("pillUser").innerHTML = `👤 <strong>—</strong>`;
-    $("pillState").textContent = "🔒 Déconnecté";
-    $("pillState").classList.remove("ok");
-    $("pillState").classList.add("warn");
-    $("btnLogout").style.display = "none";
+    if($("pillUser")) $("pillUser").innerHTML = `👤 <strong>—</strong>`;
+    if($("pillState")){
+      $("pillState").textContent = "🔒 Déconnecté";
+      $("pillState").classList.remove("ok");
+      $("pillState").classList.add("warn");
+    }
+    if($("btnLogout")) $("btnLogout").style.display = "none";
 
     if(!slug){
       showNote("⚠️ Lien incomplet.\n➡️ Ouvre le cockpit depuis le QR / GO PIN.", "bad");
@@ -334,12 +350,12 @@ a{color:inherit}
     }
   }
 
-  $("btnRefresh").addEventListener("click", refresh);
+  document.getElementById("btnRefresh")?.addEventListener("click", refresh);
 
-  $("btnLogout").addEventListener("click", ()=>{
-  const url = window.DIGIY_GUARD.withSlug("./pin.html");
-  window.DIGIY_GUARD.logout(url);
-});
+  document.getElementById("btnLogout")?.addEventListener("click", ()=>{
+    const url = withSlug("./pin.html");
+    window.DIGIY_GUARD?.logout?.(url);
+  });
 
   refresh();
 })();
