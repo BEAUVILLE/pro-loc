@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>NDIMBAL LOC ♾️ — Bureau nomade</title>
+  <meta name="theme-color" content="#0b1020"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-final"></script>
+
+  <style>
+    :root{
+      --bg:#020617; --bg2:#0b1020; --line:#1f2937;
+      --ink:#f9fafb; --muted:#cbd5f5;
+      --gold:#facc15; --green:#22c55e; --danger:#ef4444;
+      --card:rgba(255,255,255,.03); --shadow:0 22px 50px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      padding:16px;
+    }
+    .wrap{max-width:1100px;margin:0 auto}
+    .top{
+      display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      box-shadow:var(--shadow);
+    }
+    .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .logo{
+      width:44px;height:44px;border-radius:16px;
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+      border:1px solid rgba(250,204,21,.35);
+      box-shadow:0 0 22px rgba(250,204,21,.12);
+      display:grid;place-items:center;color:#061b14;font-weight:1100;
+    }
+    h1{font-size:1.1rem;margin:0}
+    .sub{color:var(--muted);font-weight:800;margin-top:4px;line-height:1.35}
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:.86rem;
+    }
+    .pill strong{color:#fff}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    .btn{
+      border:1px solid var(--line); background:rgba(255,255,255,.04);
+      color:#fff; font-weight:1000; cursor:pointer; text-decoration:none;
+      border-radius:14px; padding:10px 12px; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{filter:brightness(1.08)}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .card{
+      margin-top:14px;border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:20px;box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .note{
+      margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;display:none;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+
+    .tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    input{
+      border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.18);color:var(--ink);
+      padding:11px 12px;font-weight:900;outline:none;min-width:260px;
+    }
+    input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(250,204,21,.15)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}
+    .item{
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:16px;
+      background:rgba(255,255,255,.02);
+      padding:12px;
+    }
+    .title{font-weight:1100}
+    .meta{margin-top:6px;color:var(--muted);font-weight:850;font-size:.92rem;line-height:1.35}
+    .tag{
+      display:inline-flex;align-items:center;gap:7px;margin-top:10px;
+      padding:6px 9px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      color:var(--muted);font-weight:950;font-size:.82rem;
+    }
+    .tag.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .tag.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+
+    @media (max-width:720px){
+      input{min-width:100%}
+      .btn{width:100%;justify-content:center}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">∞</div>
+        <div>
+          <h1>NDIMBAL LOC — Bureau nomade</h1>
+          <div class="sub">Ton “lieu” = ton bureau de poche. On garde le slug, on garde la main.</div>
+        </div>
+      </div>
+
+      <div class="pill" id="pillSlug">Lieu : <strong>—</strong></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <a class="btn" id="btnBack" href="#">⬅️ Retour cockpit</a>
+        <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
+        <span class="pill" id="pillCount">0 résultat</span>
+      </div>
+
+      <div class="tools">
+        <input id="q" placeholder="Recherche: nom, ville, tag…" />
+        <button class="btn green" id="btnSearch" type="button">🔎 Chercher</button>
+      </div>
+
+      <div class="note warn" id="note"></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+<script>
+(async function(){
+  "use strict";
+
+  /* 🔐 Guard (même session PIN + slug obligatoire) */
+  const MODULE = "LOC";
+  window.DIGIY_GUARD?.boot({
+    module: MODULE,
+    login: "./pin.html",
+    dashboard: "./ndimbal.html",
+    requireSlug: true
+  });
+
+  /* ✅ Supabase (ANON) */
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  /* ✅ DOM */
+  const $ = (id)=>document.getElementById(id);
+  const note = $("note");
+  const grid = $("grid");
+  const pillCount = $("pillCount");
+  const q = $("q");
+
+  function show(msg, type){
+    note.className = "note " + (type || "warn");
+    note.textContent = msg || "";
+    note.style.display = msg ? "block" : "none";
+  }
+  function clear(){
+    show("", "warn");
+    grid.innerHTML = "";
+    pillCount.textContent = "0 résultat";
+  }
+
+  /* ✅ slug = bureau nomade */
+  const url = new URL(location.href);
+  const SLUG = (url.searchParams.get("slug") || "").trim();
+  $("pillSlug").innerHTML = `Lieu : <strong>${SLUG || "—"}</strong>`;
+
+  // Retour cockpit (app.html) en gardant slug
+  const back = new URL("./app.html", location.href);
+  if(SLUG) back.searchParams.set("slug", SLUG);
+  $("btnBack").href = back.toString();
+
+  // sécurité: si session pas ouverte -> retour PIN
+  const sess = window.DIGIY_GUARD?.getSession?.() || null;
+  if(!sess?.ok){
+    show("🔒 Accès non ouvert.\n➡️ Retour PIN…", "warn");
+    setTimeout(()=> window.DIGIY_GUARD?.logout(window.DIGIY_GUARD.withSlug("./pin.html")), 250);
+    return;
+  }
+
+  /* =========================
+     NDIMBAL SOURCE (Supabase)
+     -> view: v_ndimbal_loc
+     -> contient au moins slug (tu l’as vu)
+     -> on affiche ce qu’on trouve, sans casser si colonnes différentes
+  ========================= */
+  const NDIMBAL_VIEW = "v_ndimbal_loc";
+
+  function cardRow(obj){
+    // lecture safe (au cas où les champs changent)
+    const title =
+      obj.title || obj.name || obj.nom || obj.label || obj.business_name || "—";
+
+    const city =
+      obj.city || obj.ville || obj.zone || obj.address_label || obj.address || "";
+
+    const cat =
+      obj.category || obj.type || obj.kind || "loc";
+
+    const rank = (obj.featured_rank ?? obj.rank ?? obj.score ?? null);
+
+    const extra =
+      obj.phone || obj.whatsapp || obj.partner_url || "";
+
+    const tags = [];
+    if(cat) tags.push(`<span class="tag gold">🏷️ ${escapeHtml(String(cat))}</span>`);
+    if(rank !== null && rank !== undefined) tags.push(`<span class="tag ok">⭐ ${escapeHtml(String(rank))}</span>`);
+
+    return `
+      <div class="item">
+        <div class="title">${escapeHtml(String(title))}</div>
+        <div class="meta">
+          ${city ? "📍 " + escapeHtml(String(city)) + "<br>" : ""}
+          ${extra ? "📞 " + escapeHtml(String(extra)) : ""}
+        </div>
+        ${tags.length ? tags.join(" ") : `<div class="tag">NDIMBAL</div>`}
+      </div>
+    `;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  async function load(){
+    clear();
+
+    if(!SLUG){
+      show("⚠️ Lieu manquant.\n➡️ Ouvre NDIMBAL via le cockpit (slug obligatoire).", "bad");
+      return;
+    }
+
+    const keyword = (q.value || "").trim().toLowerCase();
+
+    $("btnReload").disabled = true;
+    $("btnSearch").disabled = true;
+    show("⏳ Chargement NDIMBAL…", "warn");
+
+    try{
+      // Base: filtrer par slug (bureau nomade)
+      let query = SB.from(NDIMBAL_VIEW).select("*").eq("slug", SLUG);
+
+      // Bonus: recherche (si la vue a search_vector, on pourra upgrader plus tard)
+      // Là on fait un filtre "soft" côté JS (sans supposer de colonnes exactes)
+      const { data, error } = await query.limit(200);
+      if(error) throw error;
+
+      let rows = data || [];
+      if(keyword){
+        rows = rows.filter(o=>{
+          const blob = JSON.stringify(o || {}).toLowerCase();
+          return blob.includes(keyword);
+        });
+      }
+
+      if(!rows.length){
+        show("ℹ️ Rien trouvé dans NDIMBAL pour ce lieu.\n➡️ Essaie une autre recherche.", "ok");
+        pillCount.textContent = "0 résultat";
+        return;
+      }
+
+      grid.innerHTML = rows.map(cardRow).join("");
+      pillCount.textContent = rows.length + " résultat(s)";
+      show("✅ NDIMBAL chargé.", "ok");
+
+    }catch(e){
+      console.error(e);
+      show("❌ NDIMBAL indisponible.\n➡️ Vérifie RLS/permissions sur v_ndimbal_loc.\nErreur: " + (e?.message || e), "bad");
+    }finally{
+      $("btnReload").disabled = false;
+      $("btnSearch").disabled = false;
+    }
+  }
+
+  $("btnReload").addEventListener("click", load);
+  $("btnSearch").addEventListener("click", load);
+  q.addEventListener("keydown", (e)=>{ if(e.key==="Enter") load(); });
+
+  // GO
+  load();
+
+})();
+</script>
+</body>
+</html>
