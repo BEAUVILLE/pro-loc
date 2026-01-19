@@ -508,9 +508,9 @@ a{color:inherit}
       $("stSumVerified").textContent = money(st.sum_verified_fcfa ?? st.sum_verified ?? 0);
 
       const rows = await rpcSafe("loc_wave_payments_list_owner", {
-        p_slug: slug,
-        p_owner_phone: ownerPhone
-      });
+  p_slug: slug,
+  p_owner_id: ownerId  // ✅ NOUVELLE LIGNE
+});
 
       renderList(Array.isArray(rows) ? rows : [], ownerPhone);
       showNote("noteWave", "", "");
