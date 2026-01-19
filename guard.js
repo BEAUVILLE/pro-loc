@@ -169,7 +169,7 @@
           }
         }
       }catch(e){
-        // on n’explose pas la page, c’est "best effort"
+        // on n'explose pas la page, c'est "best effort"
         // console.warn("[DIGIY_GUARD] go_pin_check ignored:", e?.message || e);
       }
     }
@@ -210,6 +210,16 @@
     return { ok:true, owner_id: res.owner_id || null, exp };
   }
 
+  // Login simplifié (alias pour pin.html)
+  async function loginWithPin(phone, pin, module){
+    return await verifyAccessAndCreateSession({ 
+      phone, 
+      pin, 
+      module: (module || "LOC").toLowerCase(), 
+      keepHours: 8 
+    });
+  }
+
   function getSession(){
     return readSession();
   }
@@ -241,10 +251,10 @@
     // session
     getSession,
     verifyAccessAndCreateSession,
+    loginWithPin,  // ← AJOUTÉ !
     logout,
 
     // util (optionnel)
     boot
   };
 })();
-
