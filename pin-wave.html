@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DIGIY LOC PRO — Accès Cockpit Wave</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./guard.js?v=pinwave-v2"></script>
+
+<style>
+body{
+  margin:0;
+  background:#020617;
+  font-family:sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  color:white;
+}
+.box{
+  width:100%;
+  max-width:380px;
+  background:#0b1020;
+  padding:22px;
+  border-radius:16px;
+  border:1px solid #1f2937;
+}
+h2{margin-top:0;font-size:1.2rem}
+label{font-size:.85rem;color:#94a3b8}
+input{
+  width:100%;
+  padding:12px;
+  margin:6px 0 14px;
+  border-radius:10px;
+  border:1px solid #1f2937;
+  background:#020617;
+  color:white;
+  font-size:1rem;
+}
+button{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:0;
+  background:#22c55e;
+  font-weight:900;
+  cursor:pointer;
+}
+button:hover{filter:brightness(1.1)}
+.note{margin-top:10px;font-size:.85rem;color:#facc15}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>🔐 Accès Cockpit Wave</h2>
+
+<label>Lieu</label>
+<input id="slug" readonly/>
+
+<label>Téléphone (Wave)</label>
+<input id="phone" placeholder="+221..."/>
+
+<label>PIN</label>
+<input id="pin" type="password"/>
+
+<button id="go">🔓 Ouvrir mon cockpit</button>
+<div class="note" id="note"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async()=>{
+
+const slug = new URLSearchParams(location.search).get("slug") || "";
+document.getElementById("slug").value = slug;
+
+document.getElementById("go").onclick = async()=>{
+
+const phone = document.getElementById("phone").value.trim();
+const pin = document.getElementById("pin").value.trim();
+const note = document.getElementById("note");
+
+note.innerText = "⏳ Vérification...";
+
+try{
+
+const res = await window.DIGIY_GUARD.openWithPin({
+  phone,
+  pin,
+  module:"LOC",
+  slug
+});
+
+if(!res?.ok){
+  note.innerText="❌ PIN invalide ou accès refusé";
+  return;
+}
+
+note.innerText="✅ Accès autorisé";
+window.location.href = window.DIGIY_GUARD.withSlug("./wave.html");
+
+}catch(e){
+console.error(e);
+note.innerText="❌ Problème technique";
+}
+
+};
+
+});
+</script>
+</body>
+</html>
