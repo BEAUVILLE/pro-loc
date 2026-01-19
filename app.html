@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>DIGIY LOC PRO — Gestion Location</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ✅ Guard (cache-bust) -->
+  <!-- ✅ Guard (fournit sb + session + slug) -->
   <script src="./guard.js?v=locpro-2"></script>
 
   <style>
@@ -495,13 +494,11 @@
 
 <script>
 /* =============================
-   SUPABASE (ANON)
+   ✅ SUPABASE via GUARD (source unique)
 ============================= */
-const SUPABASE_CONFIG = {
-  url: "https://wesqmwjjtsefyjnluosj.supabase.co",
-  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA"
-};
-const sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+function getSB(){
+  return window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb || null;
+}
 
 /* =============================
    CONFIG TABLES / FIELDS (ADAPTE ICI SI BESOIN)
@@ -548,8 +545,7 @@ const PULSE = {
    STATE
 ============================= */
 const State = {
-  user: null,        // { id: owner_id }
-  ownerId: null,     // string
+  ownerId: null,     // uuid string
   phone: "",
   business_code: "TEST",
   rooms: [],
@@ -616,7 +612,8 @@ function closeModal(modalId) {
 }
 function logout() {
   if (!confirm("Se déconnecter ?")) return;
-  window.DIGIY_GUARD?.logout?.("./pin.html");
+  const go = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html";
+  window.DIGIY_GUARD?.logout?.(go);
 }
 /* --- NDIMBAL --- */
 function goNdimbal(){
@@ -626,23 +623,6 @@ function goNdimbal(){
   }
   const url = window.DIGIY_GUARD.withSlug("./ndimbal.html");
   window.location.href = url;
-}
-/* =============================
-   ✅ AUTH / CONTEXT (PIN GUARD)
-   LOC PRO = pas Supabase Auth
-============================= */
-async function resolveUser() {
-  const sess = window.DIGIY_GUARD?.getSession?.() || null;
-  if (sess?.owner_id) return { id: sess.owner_id }; // ✅ source de vérité
-
-  // fallback si un jour Supabase Auth est activé
-  try{
-    const { data } = await sb.auth.getSession();
-    const user = data?.session?.user || null;
-    if(user?.id) return user;
-  }catch(_){}
-
-  return null;
 }
 
 function hydrateHeader() {
@@ -657,8 +637,9 @@ function hydrateHeader() {
    DB CALLS (owner_id = State.ownerId)
 ============================= */
 async function fetchRooms() {
+  const sb = getSB();
   const ownerId = State.ownerId;
-  if(!ownerId) return [];
+  if(!sb || !ownerId) return [];
 
   const { data, error } = await sb
     .from(DB.rooms)
@@ -671,8 +652,9 @@ async function fetchRooms() {
 }
 
 async function fetchReservations() {
+  const sb = getSB();
   const ownerId = State.ownerId;
-  if(!ownerId) return [];
+  if(!sb || !ownerId) return [];
 
   const { data, error } = await sb
     .from(DB.reservations)
@@ -750,8 +732,8 @@ async function loadLogements() {
     if(el) el.textContent = String(actifs);
   }catch(e){
     console.error(e);
-    document.getElementById('listeLogements').innerHTML =
-      `<p style="color:var(--danger)">Erreur chargement logements: ${e.message || e}</p>`;
+    const box = document.getElementById('listeLogements');
+    if(box) box.innerHTML = `<p style="color:var(--danger)">Erreur chargement logements: ${e.message || e}</p>`;
   }
 }
 
@@ -762,6 +744,9 @@ async function saveLogement(e) {
   e.preventDefault();
 
   try{
+    const sb = getSB();
+    if(!sb) throw new Error("supabase_not_ready");
+
     if(!State.ownerId){
       alert("Session expirée. Reconnecte-toi.");
       return;
@@ -771,7 +756,7 @@ async function saveLogement(e) {
     const data = Object.fromEntries(formData);
 
     const payload = {
-      [DB.roomOwnerId]: State.ownerId, // ✅ owner_id (PIN)
+      [DB.roomOwnerId]: State.ownerId,
       [DB.roomTitle]: (data.nom || "").trim(),
       [DB.roomAddress]: (data.adresse || "").trim(),
       [DB.roomMaxPeople]: Number(data.personnes_max || 1),
@@ -818,11 +803,14 @@ function openEditLogement(roomId){
 
 async function updateLogement(roomId, patch){
   try{
+    const sb = getSB();
+    if(!sb) throw new Error("supabase_not_ready");
+
     const { error } = await sb
       .from(DB.rooms)
       .update(patch)
       .eq("id", roomId)
-      .eq(DB.roomOwnerId, State.ownerId); // ✅ sécurité
+      .eq(DB.roomOwnerId, State.ownerId);
 
     if(error) throw error;
     await loadLogements();
@@ -836,11 +824,14 @@ async function updateLogement(roomId, patch){
 async function deleteLogement(roomId){
   if(!confirm("Supprimer ce logement ?")) return;
   try{
+    const sb = getSB();
+    if(!sb) throw new Error("supabase_not_ready");
+
     const { error } = await sb
       .from(DB.rooms)
       .delete()
       .eq("id", roomId)
-      .eq(DB.roomOwnerId, State.ownerId); // ✅ sécurité
+      .eq(DB.roomOwnerId, State.ownerId);
 
     if(error) throw error;
     await loadLogements();
@@ -963,7 +954,7 @@ async function loadDashboard(){
     let pending = [];
 
     const daysInMonth = mEnd.getDate();
-    const busyDays = new Set(); // roomId|yyyy-mm-dd
+    const busyDays = new Set();
 
     for(const r of State.reservations){
       const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
@@ -1040,7 +1031,7 @@ async function loadDashboard(){
 }
 
 /* =============================
-   CALENDAR (mois en cours + jours occupés)
+   CALENDAR
 ============================= */
 function buildCalendar(monthDate, reservations, roomIdFilter=null){
   const view = document.getElementById("calendarView");
@@ -1048,10 +1039,10 @@ function buildCalendar(monthDate, reservations, roomIdFilter=null){
 
   const monthStart = startOfMonth(monthDate);
   const monthEnd = endOfMonth(monthDate);
-  const firstDow = (monthStart.getDay() + 6) % 7; // Lundi=0
+  const firstDow = (monthStart.getDay() + 6) % 7;
   const days = monthEnd.getDate();
 
-  const busy = new Set(); // yyyy-mm-dd
+  const busy = new Set();
   for(const r of reservations){
     if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
     const st = String(r?.[DB.resStatus] || "").toLowerCase();
@@ -1171,19 +1162,10 @@ async function pulseTest(){
 }
 
 /* =============================
-   ✅ LOGOUT (Guard) + SLUG SAFE
+   ✅ INIT (GUARD FIRST)
 ============================= */
-function logout() {
-  if (!confirm("Se déconnecter ?")) return;
-  const go = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html";
-  window.DIGIY_GUARD?.logout?.(go);
-}
-
-/* =============================
-   ✅ GUARD FIRST + INIT
-============================= */
-(async function(){
-  const MODULE = "loc"; // ✅ FIX 1 (minuscule)
+(async function init(){
+  const MODULE = "loc";
   const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
 
   if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
@@ -1191,38 +1173,32 @@ function logout() {
     return;
   }
 
-  // 🔒 protège la page (redirige si pas session/slug)
+  // 🔒 protège la page
   const guardRes = await window.DIGIY_GUARD.boot({
     module: MODULE,
-    dashboard: "./app.html",   // ✅ cette page = cockpit
-    login: "./pin.html",       // ✅ page PIN
+    dashboard: "./app.html",
+    login: "./pin.html",
     pay: PAY_URL,
     requireSlug: true,
     checkSubscription: true
   });
 
-  if(!guardRes?.ok){
-    return; // boot redirige généralement lui-même
+  if(!guardRes?.ok) return;
+
+  const sess = window.DIGIY_GUARD.getSession?.() || null;
+  State.ownerId = sess?.owner_id || null;
+  State.phone = sess?.phone || "";
+  State.business_code = sess?.business_code || sess?.businessCode || "TEST";
+
+  if(!State.ownerId){
+    console.warn("owner_id introuvable, retour PIN.");
+    window.location.replace(window.DIGIY_GUARD.withSlug("./pin.html"));
+    return;
   }
 
+  hydrateHeader();
+
   try{
-    const sess = window.DIGIY_GUARD?.getSession?.() || null;
-
-    // ownerId = clé
-    State.user = await resolveUser();
-    State.ownerId = State.user?.id || sess?.owner_id || null;
-
-    if(!State.ownerId){
-      console.warn("owner_id introuvable, retour PIN.");
-      window.location.replace(window.DIGIY_GUARD.withSlug("./pin.html"));
-      return;
-    }
-
-    State.phone = sess?.phone || (window.DIGIY_GUARD.getPhone && window.DIGIY_GUARD.getPhone()) || "";
-    State.business_code = sess?.business_code || sess?.businessCode || "TEST";
-
-    hydrateHeader();
-
     State.rooms = await fetchRooms();
     State.reservations = await fetchReservations();
 
@@ -1234,14 +1210,14 @@ function logout() {
   }catch(e){
     console.warn("Init error:", e);
   }
+
+  // NDIMBAL (si bouton existe)
+  document.getElementById("quickNdimbal")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    goNdimbal();
+  });
 })();
-  /* =============================
-   NDIMBAL BUTTON LINK
-============================= */
-document.getElementById("quickNdimbal")?.addEventListener("click", (e)=>{
-  e.preventDefault();
-  goNdimbal();
-});</script>
+</script>
 
 </body>
 </html>
