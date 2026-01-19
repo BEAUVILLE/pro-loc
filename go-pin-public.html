@@ -1,665 +1,438 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DIGIY LOC — GO PIN (ULTRA)</title>
-<meta name="theme-color" content="#020617">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DIGIY GO PIN ♾️ — Fiche publique</title>
+  <meta name="theme-color" content="#0b1020"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-  :root{
-    --bg:#020617;
-    --card:#0b1224;
-    --line:#1f2937;
-    --ink:#f9fafb;
-    --muted:#9ca3af;
-    --accent:#facc15;
-    --ok:#22c55e;
-    --danger:#ef4444;
-    --soft:rgba(255,255,255,.04);
-    --shadow:0 20px 45px rgba(0,0,0,.55);
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    min-height:100vh;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto;
-    color:var(--ink);
-    background:
-      radial-gradient(circle at top, rgba(34,197,94,.10) 0, transparent 55%),
-      radial-gradient(circle at 15% 85%, rgba(250,204,21,.10) 0, transparent 55%),
-      linear-gradient(135deg,#020617,#0b1020);
-  }
-  .app{max-width:980px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-  header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .brand{font-weight:950;font-size:18px}
-  .brand span{color:var(--accent)}
-  .tag{font-size:12px;color:var(--muted);border:1px solid rgba(148,163,184,.35);padding:6px 10px;border-radius:999px;white-space:nowrap}
-  main{flex:1;padding:0 12px 16px}
-
-  .hero{
-    background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-    border-radius:18px;
-    padding:16px;
-    border:1px solid rgba(250,204,21,.25);
-    box-shadow:var(--shadow);
-    display:grid;
-    grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
-    gap:16px;
-    align-items:flex-start;
-  }
-  @media(max-width:900px){.hero{grid-template-columns:1fr}}
-  .hero h1{font-size:22px;margin:0 0 6px}
-  .hero p{font-size:13px;color:#cbd5e1;line-height:1.45;margin:0 0 10px}
-
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .chip{font-size:11px;color:#cbd5e1;border:1px solid rgba(148,163,184,.35);padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.02)}
-
-  .hero-media{margin-top:10px}
-  .hero-photo{
-    width:100%;
-    max-height:230px;
-    border-radius:14px;
-    object-fit:cover;
-    display:block;
-    border:1px solid var(--line);
-    background:#0b1224;
-  }
-  .hero-caption{margin-top:6px;font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .mini{font-size:11px;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.02)}
-  .miniBtn{
-    border:1px solid rgba(148,163,184,.25);
-    background:rgba(255,255,255,.03);
-    color:#e5e7eb;
-    border-radius:999px;
-    padding:7px 10px;
-    font-weight:950;
-    cursor:pointer;
-    display:inline-flex;gap:7px;align-items:center;
-  }
-  .miniBtn:hover{filter:brightness(1.08)}
-
-  .price-block{
-    background:rgba(0,0,0,.18);
-    border-radius:14px;
-    border:1px solid var(--line);
-    padding:10px 12px;
-    font-size:13px;
-  }
-  .price-block h2{margin:0 0 6px;font-size:14px;color:var(--accent)}
-  .tarifs{display:flex;flex-direction:column;gap:6px}
-  .tarifs span{display:flex;justify-content:space-between;gap:10px}
-  .tarifs strong{color:#e5e7eb}
-
-  .wave-card{
-    margin-top:12px;
-    padding:14px;
-    border-radius:16px;
-    background:rgba(34,197,94,.08);
-    border:2px solid rgba(34,197,94,.85);
-    box-shadow:0 0 18px rgba(34,197,94,.20);
-  }
-  .wave-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .wave-title{font-size:16px;font-weight:950}
-  .wave-num{font-size:22px;font-weight:950;color:var(--ok);letter-spacing:.3px}
-  .wave-note{margin-top:6px;font-size:12px;color:#bbf7d0;line-height:1.4}
-  .owner-line{margin-top:8px;font-size:13px;color:#e5e7eb}
-  .owner-line strong{color:#fff}
-
-  .cta-col{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-  .btn{
-    border:none;border-radius:999px;padding:11px 12px;
-    font-size:14px;font-weight:900;cursor:pointer;
-    display:flex;justify-content:center;align-items:center;gap:8px;
-    text-decoration:none;
-  }
-  .btn-wa{background:var(--ok);color:#052e16}
-  .btn-call{background:#111827;color:#e5e7eb;border:1px solid var(--line)}
-  .btn-partner{background:#0f172a;color:#e5e7eb;border:1px solid rgba(148,163,184,.35)}
-  .btn-video{background:#0f172a;color:#e5e7eb;border:1px solid rgba(148,163,184,.35);display:none}
-  .btn-pay{background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.35);color:#fde68a}
-  .btn-ghost{background:rgba(255,255,255,.03);border:1px solid rgba(148,163,184,.25);color:#e5e7eb}
-
-  .payBox{
-    margin-top:12px;
-    border-radius:16px;
-    border:1px solid rgba(148,163,184,.25);
-    background:rgba(255,255,255,.03);
-    padding:12px;
-  }
-  .payBox h3{margin:0;font-size:13px;color:#e5e7eb}
-  .payBox p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
-  .payRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .payRow input{
-    flex:1;min-width:160px;
-    padding:10px 12px;border-radius:12px;
-    border:1px solid rgba(148,163,184,.25);
-    background:rgba(2,6,23,.65);
-    color:#fff;font-weight:900;outline:none;
-  }
-
-  .note{
-    margin-top:10px;
-    padding:10px 12px;border-radius:14px;
-    border:1px solid rgba(148,163,184,.25);
-    background:rgba(255,255,255,.03);
-    color:var(--muted);
-    white-space:pre-wrap;
-    display:none;
-    font-size:12px;
-    line-height:1.4;
-  }
-  .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
-  .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
-  .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-
-  .ndBox{
-    margin-top:12px;
-    padding:12px;
-    border-radius:16px;
-    border:1px solid rgba(250,204,21,.35);
-    background:rgba(250,204,21,.08);
-  }
-  .ndTitle{font-size:13px;font-weight:950;color:#fde68a}
-  .ndTxt{margin-top:6px;font-size:12px;color:#e5e7eb;line-height:1.45}
-
-  footer{padding:10px 14px 14px;font-size:11px;color:var(--muted);text-align:center}
-
-  /* ===== MODAL ===== */
-  .overlay{
-    position:fixed;inset:0;
-    background:rgba(0,0,0,.55);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:14px;
-    z-index:9999;
-  }
-  .overlay.show{display:flex}
-  .modal{
-    width:100%;
-    max-width:540px;
-    border-radius:18px;
-    border:1px solid rgba(148,163,184,.25);
-    background:linear-gradient(135deg, rgba(2,6,23,.92), rgba(2,8,24,.92));
-    box-shadow:0 30px 80px rgba(0,0,0,.65);
-    overflow:hidden;
-  }
-  .mTop{
-    padding:14px;
-    border-bottom:1px solid rgba(148,163,184,.18);
-    display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
-    background:
-      radial-gradient(circle at 0% 0%, rgba(250,204,21,.14), transparent 55%),
-      radial-gradient(circle at 100% 100%, rgba(34,197,94,.12), transparent 50%),
-      rgba(2,6,23,.65);
-  }
-  .mTitle{font-weight:1100;color:#fde68a}
-  .mSub{margin-top:6px;color:#e5e7eb;font-weight:650;font-size:13px;line-height:1.45}
-  .mClose{
-    border-radius:999px;
-    padding:8px 10px;
-    border:1px solid rgba(148,163,184,.22);
-    background:rgba(15,23,42,.55);
-    color:#e5e7eb;
-    font-weight:950;
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  .mBody{padding:14px}
-  .mBody .row{display:flex;gap:10px;flex-wrap:wrap}
-  .mBody input, .mBody textarea{
-    width:100%;
-    padding:10px 12px;border-radius:12px;
-    border:1px solid rgba(148,163,184,.25);
-    background:rgba(2,6,23,.65);
-    color:#fff;font-weight:900;outline:none;
-  }
-  .mBody textarea{min-height:86px;resize:vertical;font-weight:750}
-  .mActions{
-    padding:12px 14px;
-    border-top:1px solid rgba(148,163,184,.18);
-    background:rgba(2,6,23,.55);
-    display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
-  }
-  .mBtn{
-    border-radius:999px;
-    padding:10px 12px;
-    font-weight:950;
-    cursor:pointer;
-    border:1px solid rgba(148,163,184,.22);
-    background:rgba(15,23,42,.55);
-    color:#e5e7eb;
-  }
-  .mBtn.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.12);color:#fde68a}
-  .mBtn.green{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0}
-
-  @media(max-width:720px){
-    header{padding:12px}
-  }
-</style>
+  <style>
+    :root{
+      --bg:#020617; --bg2:#0b1020; --line:#1f2937;
+      --ink:#f9fafb; --muted:#cbd5f5;
+      --gold:#facc15; --green:#22c55e; --danger:#ef4444;
+      --shadow:0 22px 50px rgba(0,0,0,.55);
+      --card:rgba(255,255,255,.03);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      padding:16px;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:900px;margin:0 auto}
+    .top{
+      display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      box-shadow:var(--shadow);
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{
+      width:46px;height:46px;border-radius:16px;
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+      border:1px solid rgba(250,204,21,.35);
+      box-shadow:0 0 22px rgba(250,204,21,.12);
+      display:grid;place-items:center;color:#061b14;font-weight:1100;
+    }
+    h1{font-size:1.15rem;margin:0}
+    .sub{color:var(--muted);font-weight:800;margin-top:4px;line-height:1.35}
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:.86rem;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:20px;box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px;border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    }
+    .head b{font-size:1rem}
+    .body{padding:14px}
+    .hero{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:18px;
+      padding:12px;
+    }
+    .title{font-weight:1100;font-size:1.25rem}
+    .meta{color:var(--muted);font-weight:850;margin-top:6px;line-height:1.4}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tag{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:6px 9px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      color:var(--muted);font-weight:950;font-size:.82rem;
+      background:rgba(255,255,255,.02);
+    }
+    .tag.dot::before{content:"";width:9px;height:9px;border-radius:99px;background:#94a3b8;display:inline-block}
+    .tag.live{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .tag.live.dot::before{background:var(--green);box-shadow:0 0 10px rgba(34,197,94,.75)}
+    .tag.nd{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{
+      flex:1;min-width:180px;
+      border-radius:16px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;font-weight:1100;font-size:16px;
+      padding:12px 12px;
+      cursor:pointer;text-align:center;
+      transition:.2s ease;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn.whats{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
+    .btn.call{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
+    .btn.loc{background:rgba(255,255,255,.03)}
+    .btn.pay{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35)}
+    .btn.declare{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
+    .box{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:18px;
+      padding:12px;
+    }
+    .kv{display:grid;grid-template-columns:120px 1fr;gap:10px;margin-top:8px}
+    .k{color:var(--muted);font-weight:950;font-size:.9rem}
+    .v{font-weight:950;word-break:break-word}
+    .note{
+      margin-top:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;display:none;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+    .footer{
+      margin-top:14px;
+      padding:10px 12px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      border-radius:16px;
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      color:var(--muted);
+      font-weight:850;font-size:.9rem;
+    }
+    code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:10px;border:1px solid rgba(148,163,184,.18)}
+    .small{font-size:.9rem;color:var(--muted);font-weight:850;line-height:1.4}
+    input{
+      width:100%;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.18);
+      color:var(--ink);
+      border-radius:14px;
+      padding:11px 12px;
+      font-weight:900;
+      outline:none;
+    }
+  </style>
 </head>
 
 <body>
-<div class="app">
-  <header>
-    <div class="brand" id="brandTop">DIGIY <span>LOC</span></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <div class="tag" id="tagTop">0% commission · Paiement direct</div>
-      <button class="miniBtn" id="btnCopyLink" type="button">🔗 Copier le lien</button>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">∞</div>
+        <div>
+          <h1>DIGIY GO PIN — Fiche publique</h1>
+          <div class="sub">Lien officiel du lieu • Contact direct • Paiement Wave • 0% commission</div>
+        </div>
+      </div>
+      <div class="pill" id="pillSlug">slug: —</div>
     </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <!-- gauche -->
-      <div>
-        <h1 id="title">—</h1>
-        <p id="desc">—</p>
-
-        <div class="chips" id="chips"></div>
-
-        <div class="hero-media">
-          <img id="photo" class="hero-photo" src="" alt="Photo du logement">
-          <div class="hero-caption">
-            <span class="mini" id="caption">—</span>
-            <button class="miniBtn" id="btnCopyWave" type="button">📋 Copier Wave</button>
-          </div>
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="head">
+          <b>📍 Le lieu</b>
+          <span class="pill" id="pillStatus">⏳ Chargement…</span>
         </div>
+        <div class="body">
+          <div class="hero">
+            <div class="title" id="tTitle">—</div>
+            <div class="meta" id="tMeta">—</div>
 
-        <div class="ndBox" id="ndBox" style="display:none">
-          <div class="ndTitle">🌙 NDIMBAL — nuits offertes (Lun→Jeu)</div>
-          <div class="ndTxt">
-            Offre locale : <b>2 nuits payées = 3ᵉ offerte</b> (selon disponibilité).<br>
-            Tu restes +1 nuit → tu fais vivre le quartier (restos, taxis, marché…).
+            <div class="tags" id="tagsRow">
+              <span class="tag dot live" id="tCat">Catégorie</span>
+              <span class="tag" id="tPhone">📞 —</span>
+              <span class="tag" id="tWhats">💬 —</span>
+            </div>
+
+            <div class="btnRow">
+              <a class="btn whats" id="btnWhats" href="#" target="_blank" rel="noopener">💬 WhatsApp</a>
+              <a class="btn call" id="btnCall" href="#">📞 Appeler</a>
+              <a class="btn loc" id="btnLoc" href="#">🏡 Galerie</a>
+            </div>
+
+            <div class="note warn" id="note"></div>
           </div>
-          <div style="margin-top:10px">
-            <button class="btn btn-ghost" id="btnNdimbal" type="button">🌙 Détails NDIMBAL</button>
+
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">💳 Paiement Wave (direct propriétaire)</div>
+            <div class="small" style="margin-top:6px">
+              DIGIY ne touche pas l’argent. Paiement direct au propriétaire.
+            </div>
+
+            <div class="kv">
+              <div class="k">Wave</div><div class="v" id="waveNum">—</div>
+              <div class="k">Montant</div><div class="v"><input id="amount" inputmode="numeric" placeholder="ex: 30000"></div>
+            </div>
+
+            <div class="btnRow" style="margin-top:10px">
+              <a class="btn pay" id="btnPay" href="#" target="_blank" rel="noopener">💳 Ouvrir Wave</a>
+              <button class="btn declare" id="btnDeclare" type="button">✅ J’ai payé (déclarer)</button>
+            </div>
+
+            <div class="small" style="margin-top:8px">
+              Astuce : après paiement, clique <b>“J’ai payé”</b> pour que le propriétaire voie ton paiement dans son cockpit.
+            </div>
+          </div>
+
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">🔗 Partage</div>
+            <div class="small" style="margin-top:6px">
+              Copie ce lien et envoie-le sur WhatsApp / SMS. Le QR peut pointer ici.
+            </div>
+            <div class="kv">
+              <div class="k">Lien</div>
+              <div class="v"><code id="shareUrl">—</code></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- droite -->
-      <div>
-        <div class="price-block">
-          <h2>Tarifs</h2>
-          <div class="tarifs">
-            <span><span>Nuit :</span><strong id="pNight">Sur demande</strong></span>
-            <span><span>Semaine :</span><strong id="pWeek">Sur demande</strong></span>
-            <span><span>Mois :</span><strong id="pMonth">Sur demande</strong></span>
-          </div>
-          <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="notes">Contact direct · Paiement Wave · 0% commission</div>
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="head">
+          <b>🧾 Infos</b>
+          <span class="pill">Public</span>
         </div>
-
-        <div class="wave-card">
-          <div class="wave-top">
-            <div class="wave-title">💳 Paiement direct propriétaire — Wave</div>
-            <button class="miniBtn" id="btnCopyWave2" type="button">📋 Copier</button>
-          </div>
-          <div class="wave-num" id="wave">—</div>
-          <div class="wave-note" id="waveNote">✔ À coller dans votre application Wave</div>
-          <div class="owner-line">Propriétaire : <strong id="ownerName">—</strong></div>
-          <div class="owner-line" style="color:var(--muted)" id="ownerPhone">—</div>
-        </div>
-
-        <div class="payBox">
-          <h3>✅ Après paiement Wave</h3>
-          <p>
-            Si tu as payé, déclare le montant ici. Ça aide le propriétaire à confirmer vite.
-            (DIGIY ne prend pas l’argent.)
-          </p>
-
-          <div class="payRow">
-            <input id="cName" placeholder="Ton nom (optionnel)" autocomplete="name">
-            <input id="cPhone" placeholder="Ton téléphone (optionnel)" autocomplete="tel">
-          </div>
-          <div class="payRow">
-            <input id="cAmt" placeholder="Montant payé (FCFA) ex: 30000" inputmode="numeric">
-            <input id="cNote" placeholder="Note (optionnel) ex: acompte / solde">
+        <div class="body">
+          <div class="box">
+            <div style="font-weight:1100">🧩 Détails</div>
+            <div class="kv">
+              <div class="k">Slug</div><div class="v" id="dSlug">—</div>
+              <div class="k">Titre</div><div class="v" id="dTitle">—</div>
+              <div class="k">Catégorie</div><div class="v" id="dCat">—</div>
+              <div class="k">Téléphone</div><div class="v" id="dPhone">—</div>
+              <div class="k">WhatsApp</div><div class="v" id="dWhats">—</div>
+            </div>
           </div>
 
-          <div class="payRow" style="margin-top:12px">
-            <button class="btn btn-pay" id="btnPaid" type="button">💛 Déclarer mon paiement</button>
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">🔐 Propriétaire</div>
+            <div class="small" style="margin-top:6px">
+              Accès réservé au propriétaire du lieu.
+            </div>
+            <a class="btn" id="btnPin" href="#" style="display:block;margin-top:10px">
+              🔐 Ouvrir le cockpit (PIN)
+            </a>
           </div>
 
-          <div class="note" id="payNote"></div>
-        </div>
-
-        <div class="cta-col">
-          <button class="btn btn-wa" id="btnWa">💬 Réserver par WhatsApp</button>
-          <button class="btn btn-call" id="btnCall">📞 Appeler le propriétaire</button>
-          <button class="btn btn-partner" id="btnPartner">📄 Fiche partenaire (détails + vidéo)</button>
-          <button class="btn btn-video" id="btnVideo">🎥 Voir la vidéo</button>
-        </div>
-
-        <div class="tag" style="margin-top:10px">
-          ✅ Contact direct · 💳 Wave · 🔒 Accès propriétaire (PIN)
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer id="foot">DIGIY LOC ♾️</footer>
-</div>
-
-<!-- MODAL NDIMBAL -->
-<div class="overlay" id="ndOverlay" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="NDIMBAL">
-    <div class="mTop">
-      <div>
-        <div class="mTitle">🌙 NDIMBAL — le pouvoir des nuits offertes</div>
-        <div class="mSub">
-          Tu restes +1 nuit → tu consommes +1 jour dans le quartier (retombées).<br>
-          Règle simple : <b>2 nuits payées = 3ᵉ offerte</b> (Lun→Jeu).
-        </div>
-      </div>
-      <button class="mClose" type="button" id="ndClose">✕ Fermer</button>
-    </div>
-    <div class="mBody">
-      <div class="mSub" style="margin:0">
-        ✅ Comment faire :
-        <div style="margin-top:8px;line-height:1.55">
-          1) Choisis tes dates<br>
-          2) Écris au propriétaire sur WhatsApp<br>
-          3) Dis : <b>“Je veux profiter de NDIMBAL”</b>
+          <div class="box" style="margin-top:12px">
+            <div style="font-weight:1100">🌙 NDIMBAL</div>
+            <div class="small" style="margin-top:6px">
+              Si activé sur le logement, tu verras un badge NDIMBAL (bonus).
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="mActions">
-      <button class="mBtn gold" type="button" id="ndOk">✅ J’ai compris</button>
-      <button class="mBtn green" type="button" id="ndTalk">💬 Parler à DIGIY</button>
+
+    <div class="footer">
+      <div>© DIGIYLYFE ♾️ — Paiement direct, 0% commission.</div>
+      <div>Astuce : ajoute <code>?slug=ton-lieu</code> à l’URL.</div>
     </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-(() => {
-  /* =========================
-     SUPABASE
-  ========================= */
+(function(){
+  "use strict";
+
+  // ========== SUPABASE ==========
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const FALLBACK_PHOTO = "https://digiylyfe.com/wp-content/uploads/2025/06/042-BAPTISTE.png";
+  const $ = (id)=>document.getElementById(id);
 
-  // RPC (Option A — phone-only)
-  const RPC_DECL = "loc_wave_payment_declare";
-
-  // contact digiy
-  const TEAM_WA = "+221771342889";
-
-  const pick = (o, keys, d=null) => {
-    for (const k of keys) if (o && o[k] !== null && o[k] !== undefined && o[k] !== "") return o[k];
-    return d;
-  };
-  const digits = (v) => (v ?? "").toString().replace(/\D/g,"");
-  const money = (v) => {
-    const n = Number(v);
-    if (Number.isFinite(n) && n > 0) return n.toLocaleString("fr-FR") + " F";
-    if (typeof v === "string" && v.trim()) {
-      const d = v.replace(/[^\d]/g,"");
-      if (d) return Number(d).toLocaleString("fr-FR") + " F";
-      return v;
-    }
-    return "Sur demande";
-  };
-
-  const showPayNote = (msg, cls) => {
-    const el = document.getElementById("payNote");
+  function setNote(msg, cls){
+    const el = $("note");
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
-  };
-
-  async function copyText(txt){
-    try{
-      await navigator.clipboard.writeText(txt);
-      return true;
-    }catch(_){
-      // fallback
-      const ta = document.createElement("textarea");
-      ta.value = txt;
-      ta.style.position="fixed";
-      ta.style.opacity="0";
-      document.body.appendChild(ta);
-      ta.select();
-      try{ document.execCommand("copy"); }catch(e){}
-      document.body.removeChild(ta);
-      return true;
-    }
   }
 
-  const slug = new URLSearchParams(location.search).get("slug");
-  if (!slug) { alert("Slug manquant. Exemple: go-pin.html?slug=chez-astou-saly"); return; }
+  function digitsOnly(p){ return String(p||"").replace(/\D/g,""); }
 
-  // state
-  let OWNER_WAVE = "";
-  let OWNER_PHONE = "";
-  let OWNER_NAME = "";
-  let CITY = "";
-  let TITLE = "";
-  let IS_NDIMBAL = false;
-
-  function waLink(phone, message){
-    const d = digits(phone);
-    if(!d) return "#";
-    return "https://wa.me/" + d + (message ? "?text=" + encodeURIComponent(message) : "");
+  function normPhone(p){
+    p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if (p.startsWith("00221")) p = "+221" + p.slice(5);
+    if (!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if (!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
   }
 
-  // NDIMBAL modal
-  const ndOverlay = document.getElementById("ndOverlay");
-  const openNd = ()=>{ ndOverlay.classList.add("show"); ndOverlay.setAttribute("aria-hidden","false"); };
-  const closeNd = ()=>{ ndOverlay.classList.remove("show"); ndOverlay.setAttribute("aria-hidden","true"); };
+  // slug
+  const u = new URL(location.href);
+  const SLUG = (u.searchParams.get("slug") || "").trim().replace(/\/+$/,"").toLowerCase();
+  $("pillSlug").textContent = "slug: " + (SLUG || "—");
 
-  document.getElementById("ndClose").onclick = closeNd;
-  document.getElementById("ndOk").onclick = closeNd;
-  ndOverlay.addEventListener("click",(e)=>{ if(e.target===ndOverlay) closeNd(); });
-  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeNd(); });
-
-  document.getElementById("ndTalk").onclick = ()=>{
-    const m = `Bonjour DIGIY 👋\nJe veux en savoir plus sur NDIMBAL LOC (2 nuits payées = 3ᵉ offerte Lun→Jeu).`;
-    window.open(waLink(TEAM_WA, m), "_blank", "noopener,noreferrer");
-  };
-
-  // Copy link
-  document.getElementById("btnCopyLink").addEventListener("click", async ()=>{
-    const ok = await copyText(location.href);
-    const btn = document.getElementById("btnCopyLink");
-    const old = btn.textContent;
-    btn.textContent = ok ? "✅ Lien copié" : "⚠️ Copie manuelle";
-    setTimeout(()=>btn.textContent=old, 1200);
-  });
-
-  // Copy wave (buttons wired later)
-  async function copyWave(){
-    if(!OWNER_WAVE) return;
-    const ok = await copyText(OWNER_WAVE);
-    const b1 = document.getElementById("btnCopyWave");
-    const b2 = document.getElementById("btnCopyWave2");
-    const old1 = b1.textContent, old2 = b2.textContent;
-    b1.textContent = ok ? "✅ Copié" : "⚠️";
-    b2.textContent = ok ? "✅ Copié" : "⚠️";
-    setTimeout(()=>{ b1.textContent=old1; b2.textContent=old2; }, 1200);
+  function withSlug(path){
+    if(!SLUG) return path;
+    const x = new URL(path, location.href);
+    if(!x.searchParams.get("slug")) x.searchParams.set("slug", SLUG);
+    return x.toString();
   }
-  document.getElementById("btnCopyWave").addEventListener("click", copyWave);
-  document.getElementById("btnCopyWave2").addEventListener("click", copyWave);
 
-  window.addEventListener("DOMContentLoaded", async () => {
-    const { data, error } = await sb.from("go_pins").select("*").eq("slug", slug).single();
-    if (error || !data) { alert("Lieu introuvable."); console.error(error); return; }
+  // liens internes repo
+  $("btnLoc").href = withSlug("./index.html");  // Galerie
+  $("btnPin").href = withSlug("./pin.html");
 
-    const title = pick(data, ["title","name","label","nom","titre"], "DIGIY LOC");
-    const city  = pick(data, ["address_label","city","ville","location","localite"], "");
-    const desc  = pick(data, ["description","desc","about","resume"], "");
-    const notes = pick(data, ["notes","note","details","infos"], "Contact direct · Paiement Wave · 0% commission");
+  async function load(){
+    $("shareUrl").textContent = location.href;
 
-    const maxGuests = pick(data, ["max_guests","guests","capacity","capacite"], "");
-    const photo = pick(data, ["photo_url","cover_url","image_url","photo","img","image"], null);
-    const video = pick(data, ["video_url","video","video_link","tour_video","youtube","drive_video"], null);
-
-    const pNight = pick(data, ["price_night","night_price","prix_nuit","tarif_nuit","nuit","price_per_night","prix"], null);
-    const pWeek  = pick(data, ["price_week","week_price","prix_semaine","tarif_semaine","semaine","price_per_week"], null);
-    const pMonth = pick(data, ["price_month","month_price","prix_mois","tarif_mois","mois","price_per_month"], null);
-
-    const ownerName = pick(data, ["owner_name","owner_full_name","proprietaire","proprietaire_nom","nom_proprio","contact_name","contact_nom","host_name"], "Propriétaire");
-    const ownerPhoneRaw = pick(data, ["owner_phone","phone","telephone","tel","call_phone","phone_call","contact_phone","contact_tel","host_phone"], "");
-    const ownerWaRaw    = pick(data, ["owner_whatsapp","whatsapp","wa","whatsapp_phone","wa_phone","contact_whatsapp","contact_wa","host_whatsapp"], ownerPhoneRaw);
-    const waveRaw       = pick(data, ["wave_phone","wave","payment_wave","paiement_wave","wave_tel"], ownerPhoneRaw);
-    const partnerUrl    = pick(data, ["partner_url","partner_link","partner_page_url","public_url","fiche_url"], null);
-    const ndEnabled     = (pick(data, ["ndimbal_enabled","ndimbal","ndimbal_loc"], false) === true);
-
-    const phoneDigits = digits(ownerPhoneRaw);
-    const waDigits = digits(ownerWaRaw);
-
-    // save state
-    OWNER_WAVE = waveRaw || ownerPhoneRaw || "";
-    OWNER_PHONE = ownerPhoneRaw || "";
-    OWNER_NAME = ownerName || "Propriétaire";
-    CITY = city || "";
-    TITLE = title || "DIGIY LOC";
-    IS_NDIMBAL = !!ndEnabled;
-
-    // UI
-    document.title = `${title} — DIGIY LOC`;
-    document.getElementById("brandTop").innerHTML = `${title} — <span>LOC</span>`;
-    document.getElementById("title").textContent = `${title}${city ? " — " + city : ""}`;
-    document.getElementById("desc").textContent = desc || "";
-    document.getElementById("notes").textContent = notes || "";
-
-    // Chips
-    const chips = [];
-    if (maxGuests) chips.push(`${maxGuests} pers max`);
-    chips.push("0% commission");
-    chips.push("Paiement Wave");
-    chips.push("WhatsApp direct");
-    if (ndEnabled) chips.push("NDIMBAL 🌙");
-    document.getElementById("chips").innerHTML = chips.map(t => `<span class="chip">${t}</span>`).join("");
-
-    // Photo
-    const img = document.getElementById("photo");
-    img.src = (photo && photo !== "—") ? photo : FALLBACK_PHOTO;
-    img.onerror = () => { img.onerror=null; img.src = FALLBACK_PHOTO; };
-    document.getElementById("caption").textContent = `Lieu: ${slug}`;
-
-    // Prices
-    document.getElementById("pNight").textContent = money(pNight);
-    document.getElementById("pWeek").textContent  = money(pWeek);
-    document.getElementById("pMonth").textContent = money(pMonth);
-
-    // Wave + owner
-    document.getElementById("wave").textContent = OWNER_WAVE || "—";
-    document.getElementById("ownerName").textContent = OWNER_NAME;
-    document.getElementById("ownerPhone").textContent = OWNER_PHONE ? `📞 ${OWNER_PHONE}` : "—";
-    if(!OWNER_WAVE){
-      document.getElementById("waveNote").textContent = "⚠️ Numéro Wave non renseigné pour ce lieu.";
-    }
-
-    // NDIMBAL
-    if (ndEnabled){
-      document.getElementById("ndBox").style.display = "block";
-      document.getElementById("btnNdimbal").onclick = openNd;
-    }
-
-    // CTA
-    document.getElementById("btnCall").onclick = () => { if (phoneDigits) location.href = `tel:${phoneDigits}`; };
-    document.getElementById("btnWa").onclick = () => {
-      if (!waDigits) return;
-      const msg = `Bonjour, je souhaite réserver ${title}${city ? " à " + city : ""}.`;
-      window.open(`https://wa.me/${waDigits}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
-    };
-
-    // Partner
-    const btnPartner = document.getElementById("btnPartner");
-    if (partnerUrl) btnPartner.onclick = () => window.open(partnerUrl, "_blank", "noopener,noreferrer");
-    else btnPartner.onclick = () => showPayNote("Fiche partenaire non renseignée (partner_url).", "warn");
-
-    // Video
-    const btnVideo = document.getElementById("btnVideo");
-    if (video) {
-      btnVideo.style.display = "flex";
-      btnVideo.onclick = () => window.open(video, "_blank", "noopener,noreferrer");
-    } else {
-      btnVideo.style.display = "none";
-    }
-
-    document.getElementById("foot").textContent = `${title} · DIGIY LOC ♾️`;
-
-    // Pay declare
-    document.getElementById("btnPaid").addEventListener("click", declarePaid);
-  });
-
-  async function declarePaid(){
-    showPayNote("", "");
-
-    const amtRaw = (document.getElementById("cAmt").value || "").trim();
-    const amt = Number(amtRaw.replace(/\D/g,""));
-
-    if(!amt || amt <= 0){
-      showPayNote("Montant invalide. Exemple: 30000", "warn");
-      return;
-    }
-    if(!OWNER_WAVE){
-      showPayNote("Numéro Wave introuvable pour ce logement.", "bad");
+    if(!SLUG){
+      $("pillStatus").textContent = "❌ Slug manquant";
+      setNote("⚠️ Il manque le slug.\n➡️ Exemple: go-pin.html?slug=chez-astou-saly", "bad");
       return;
     }
 
-    const clientName = (document.getElementById("cName").value || "").trim();
-    const clientPhone = (document.getElementById("cPhone").value || "").trim();
-    const note = (document.getElementById("cNote").value || "").trim();
-
-    const btn = document.getElementById("btnPaid");
-    const old = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "⏳ Envoi…";
+    $("pillStatus").textContent = "⏳ Vérification…";
+    setNote("⏳ Chargement du GO PIN…", "warn");
 
     try{
-      const { data, error } = await sb.rpc(RPC_DECL, {
-        p_slug: slug,
-        p_owner_phone: OWNER_PHONE || OWNER_WAVE,  // ownership phone match go_pins.phone
-        p_amount: amt,
-        p_client_name: clientName || null,
-        p_client_phone: clientPhone || null,
-        p_note: note || null,
-        p_proof_url: null
-      });
+      const { data, error } = await SB
+        .from("go_pins")
+        .select("slug,title,category,phone,whatsapp,address_label,ndimbal_enabled,is_public,is_active")
+        .eq("slug", SLUG)
+        .eq("is_public", true)
+        .eq("is_active", true)
+        .single();
+
       if(error) throw error;
 
-      if(!data || data.ok !== true){
-        showPayNote("⛔ Refus: " + (data?.reason || "not_owner_phone"), "bad");
-        btn.disabled = false; btn.textContent = old;
-        return;
+      const title = data.title || "Lieu DIGIY";
+      const cat = (data.category || "loc").toString();
+      const phone = normPhone(data.phone || "");
+      const whats = normPhone(data.whatsapp || data.phone || "");
+      const nd = (data.ndimbal_enabled === true);
+
+      $("pillStatus").textContent = "✅ En ligne";
+      setNote("", "");
+
+      $("tTitle").textContent = title;
+      $("tMeta").textContent = data.address_label ? ("📌 " + data.address_label) : "📌 Lieu vérifié — contact direct";
+
+      $("tCat").textContent = "🏷️ " + cat.toUpperCase();
+      $("tPhone").textContent = "📞 " + (phone || "—");
+      $("tWhats").textContent = "💬 " + (whats || "—");
+
+      $("dSlug").textContent = SLUG;
+      $("dTitle").textContent = title;
+      $("dCat").textContent = cat.toUpperCase();
+      $("dPhone").textContent = phone || "—";
+      $("dWhats").textContent = whats || "—";
+
+      // Badge NDIMBAL
+      if(nd){
+        const tagsRow = $("tagsRow");
+        const ndSpan = document.createElement("span");
+        ndSpan.className = "tag nd";
+        ndSpan.textContent = "🤍 NDIMBAL LOC · 1→2 • 2→3";
+        tagsRow.appendChild(ndSpan);
+        setNote("🤍 NDIMBAL activé — bonus +1 nuit : 1→2 • 2→3", "ok");
       }
 
-      showPayNote(
-        "✅ Merci ! Paiement déclaré.\n" +
-        "Le propriétaire pourra confirmer plus vite.\n" +
-        "Astuce : envoie aussi le message WhatsApp ci-dessous.",
-        "ok"
-      );
+      // Actions WA/CALL
+      const waMsg = `Bonjour ${title} 👋\nJe viens via DIGIY. Je veux des infos / réserver.`;
+      $("btnWhats").href = whats ? ("https://wa.me/" + digitsOnly(whats) + "?text=" + encodeURIComponent(waMsg)) : "#";
+      $("btnCall").href  = phone ? ("tel:" + digitsOnly(phone)) : "#";
+      if(!whats) $("btnWhats").style.opacity = 0.6;
+      if(!phone) $("btnCall").style.opacity = 0.6;
 
-      const msg =
-        `Bonjour ${TITLE} 👋\n` +
-        `J’ai payé ${amt.toLocaleString("fr-FR")} FCFA sur Wave (${OWNER_WAVE}).\n` +
-        (clientName ? `Nom: ${clientName}\n` : "") +
-        (clientPhone ? `Tel: ${clientPhone}\n` : "") +
-        (note ? `Note: ${note}\n` : "") +
-        `Je confirme via DIGIY LOC.`;
+      // Share canonique
+      const share = new URL(location.href);
+      share.searchParams.set("slug", SLUG);
+      $("shareUrl").textContent = share.toString();
 
-      const wa = waLink(OWNER_PHONE || OWNER_WAVE, msg);
-      if(wa !== "#") window.open(wa, "_blank", "noopener,noreferrer");
+      // ===== WAVE =====
+      const wavePhone = phone || whats || "";
+      $("waveNum").textContent = wavePhone ? wavePhone : "—";
 
-      btn.disabled = false; btn.textContent = "✅ Déclaré";
-      setTimeout(()=>{ btn.textContent = old; }, 1400);
+      // "Ouvrir Wave" => on met un lien WhatsApp fallback si pas Wave deep link
+      // (Wave n'a pas toujours un schéma universel web)
+      const waveHint = wavePhone ? digitsOnly(wavePhone) : "";
+      $("btnPay").href = waveHint
+        ? ("https://wa.me/" + waveHint + "?text=" + encodeURIComponent(`Bonjour 👋 Je vais effectuer un paiement Wave pour "${title}".`))
+        : "#";
+
+      // Declare (client) -> RPC declare (owner_phone = phone du go_pin)
+      $("btnDeclare").onclick = async ()=>{
+        const amtRaw = $("amount").value || "";
+        const amt = parseInt(String(amtRaw).replace(/\D/g,""), 10);
+
+        if(!amt || amt <= 0){
+          setNote("⚠️ Mets un montant (ex: 30000) puis clique “J’ai payé”.", "warn");
+          return;
+        }
+
+        if(!phone){
+          setNote("❌ Ce GO PIN n’a pas de téléphone propriétaire (champ phone).", "bad");
+          return;
+        }
+
+        // Infos client (léger)
+        const clientName = prompt("Ton nom (optionnel) :") || "";
+        const clientPhone = prompt("Ton téléphone (optionnel) :") || "";
+
+        setNote("⏳ Déclaration du paiement…", "warn");
+
+        try{
+          const { data: r, error: e } = await SB.rpc("loc_wave_payment_declare", {
+            p_slug: SLUG,
+            p_owner_phone: phone,          // IMPORTANT: ownership = go_pins.phone
+            p_amount: amt,
+            p_client_name: clientName,
+            p_client_phone: clientPhone,
+            p_note: `Déclaré depuis GO PIN public`,
+            p_proof_url: null
+          });
+          if(e) throw e;
+          if(!r || r.ok !== true) throw new Error(r?.reason || "declare_failed");
+
+          setNote("✅ Paiement déclaré ! Le propriétaire le voit dans son cockpit.", "ok");
+        }catch(err){
+          setNote("❌ Déclaration impossible.\nDétail: " + (err?.message || err), "bad");
+        }
+      };
 
     }catch(e){
       console.error(e);
-      showPayNote("❌ Erreur : " + (e?.message || e), "bad");
-      btn.disabled = false;
-      btn.textContent = old;
+      $("pillStatus").textContent = "⚠️ Erreur";
+      setNote("❌ Impossible de charger le GO PIN.\nDétail: " + (e?.message || e), "bad");
     }
   }
+
+  load();
 })();
 </script>
 </body>
