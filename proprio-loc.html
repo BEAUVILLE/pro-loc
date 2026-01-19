@@ -543,55 +543,59 @@ a{color:inherit}
   }
 
   $("btnDeclareOwner")?.addEventListener("click", async ()=>{
-    const sessOk = refreshSessionUI();
-    if(!sessOk) return;
+  const sessOk = refreshSessionUI();
+  if(!sessOk) return;
 
-    const sess = window.DIGIY_GUARD?.getSession?.() || {};
-    const ownerId = sess?.owner_id || sess?.ownerId || "";
-    if(!ownerId || !slug){
-      showNote("noteWave", "⚠️ Owner ID ou slug manquant.", "bad");
-      return;
-    }
+  const sess = window.DIGIY_GUARD?.getSession?.() || {};
+  const ownerId = sess.owner_id || ""; // ✅ UUID
+  const placeSlug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
 
-    const amount = prompt("Montant reçu (FCFA) ?");
-    if(!amount) return;
+  if(!ownerId || !placeSlug){
+    showNote("noteWave", "⚠️ owner_id ou slug manquant. Reconnecte-toi via PIN.", "bad");
+    return;
+  }
 
-    const amt = Number(String(amount).replace(/[^\d]/g,""));
-    if(!Number.isFinite(amt) || amt <= 0){
-      showNote("noteWave", "❌ Montant invalide.", "bad");
-      return;
-    }
+  // 1) Saisie
+  const amount = prompt("Montant reçu (FCFA) ?");
+  if(!amount) return;
 
-    const clientName = prompt("Nom du client (optionnel) ?") || "";
-    const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
-    const note = prompt("Note (dates, info) (optionnel) ?") || "";
+  const amt = Number(String(amount).replace(/[^\d]/g,""));
+  if(!Number.isFinite(amt) || amt <= 0){
+    showNote("noteWave", "❌ Montant invalide.", "bad");
+    return;
+  }
 
-    try{
-      showNote("noteWave", "⏳ Déclaration en cours…", "warn");
+  const clientName = prompt("Nom du client (optionnel) ?") || "";
+  const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
 
+  try{
+    showNote("noteWave", "⏳ Déclaration en cours…", "warn");
+
+    // 2) Claim owner si besoin (safe)
+    if(typeof claimOwnerIfNeeded === "function"){
       await claimOwnerIfNeeded(ownerId);
-
-      const { data, error } = await sb.rpc("loc_wave_payment_declare_owner", {
-        p_slug: slug,
-        p_owner_phone: ownerId,     // ✅ UUID owner_id
-        p_amount_fcfa: amt,
-        p_client_name: clientName,
-        p_client_phone: clientPhone,
-        p_note: note
-      });
-
-      if(error) throw error;
-      if(!data?.ok) throw new Error(data?.reason || "declare_failed");
-
-      showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
-      await loadWave();
-
-    }catch(e){
-      console.error(e);
-      showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail: " + (e?.message || e), "bad");
     }
-  });
 
+    // 3) ✅ RPC V2 (anti-RLS, anti-cache)
+    const { data, error } = await sb.rpc("loc_wave_payment_declare_owner_v2", {
+      p_slug: placeSlug,
+      p_owner_id: ownerId,
+      p_amount_fcfa: amt,
+      p_client_name: clientName,
+      p_client_phone: clientPhone
+    });
+
+    if(error) throw error;
+    if(!data?.ok) throw new Error(data?.reason || "declare_failed");
+
+    showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
+    await loadWave();
+
+  }catch(e){
+    console.error(e);
+    showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail: " + (e?.message || e), "bad");
+  }
+});
   // Boot final
   refreshSessionUI();
   loadWave();
