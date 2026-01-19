@@ -6,8 +6,7 @@
 <title>DIGIY LOC PRO ♾️ — Cockpit Propriétaire</title>
 <meta name="theme-color" content="#0b1020" />
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra"></script>
+const sb = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb;
 
 <style>
 :root{
