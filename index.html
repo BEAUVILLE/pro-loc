@@ -6,7 +6,8 @@
 <title>DIGIY LOC PRO ♾️ — Cockpit Propriétaire</title>
 <meta name="theme-color" content="#0b1020" />
 
-<!-- ✅ PAS de supabase-js ici : guard.js fournit sb -->
+<!-- ✅ Supabase CDN (obligatoire: guard.js construit sb via supabase.createClient) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./guard.js?v=locpro-wave-ultra-full"></script>
 
 <style>
@@ -127,9 +128,9 @@ a{color:inherit}
   white-space:pre-wrap;
   display:none;
 }
-.note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
-.note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
-.note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
+.note.ok{display:block;border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
+.note.bad{display:block;border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
+.note.warn{display:block;border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
 
 .kv{display:grid;grid-template-columns:160px 1fr;gap:8px;margin-top:10px}
 .kv div{padding:8px 10px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(255,255,255,.02)}
@@ -253,7 +254,7 @@ a{color:inherit}
 </div>
 
 <script>
-(function(){
+(async function(){
   "use strict";
 
   // Boot guard
@@ -265,7 +266,7 @@ a{color:inherit}
   });
 
   const $ = (id)=>document.getElementById(id);
-  const sb = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb;
+  const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 
   function money(v){
     const n = Number(v);
@@ -317,7 +318,29 @@ a{color:inherit}
     location.href = withSlug("./app.html");
   });
 
-  // Session pills
+  // Logout
+  $("btnLogout")?.addEventListener("click", ()=>{
+    window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
+  });
+
+  // ---- SB SAFE (attend guard, jamais figé null)
+  async function getSb(){
+    for(let i=0;i<80;i++){
+      const s = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb || window.sb || window.__sb;
+      if(s?.rpc) return s;
+      await sleep(50);
+    }
+    throw new Error("Supabase pas prêt (guard non prêt). Recharge ou reconnecte-toi.");
+  }
+
+  async function rpcSafe(fn, params){
+    const sb = await getSb();
+    const { data, error } = await sb.rpc(fn, params);
+    if(error) throw error;
+    return data;
+  }
+
+  // ---- UI Session
   function refreshSessionUI(){
     const sess = window.DIGIY_GUARD?.getSession?.();
     const phone = sess?.phone || "—";
@@ -337,10 +360,8 @@ a{color:inherit}
       }
       if($("btnLogout")) $("btnLogout").style.display = "inline-flex";
 
-      // note terrain
       showNote("noteMain",
-        "✅ Tout est OK. Tu peux gérer tes logements.\n" +
-        "Astuce terrain : envoie ton GO PIN public au client. Il voit la fiche + WhatsApp direct.",
+        "✅ Tout est OK.\nAstuce : partage ton GO PIN public au client. Il voit la fiche + WhatsApp direct.",
         "ok"
       );
       return true;
@@ -357,16 +378,12 @@ a{color:inherit}
     return false;
   }
 
-  $("btnRefresh")?.addEventListener("click", ()=>{
+  $("btnRefresh")?.addEventListener("click", async ()=>{
     refreshSessionUI();
-    loadWave();
+    await loadWave();
   });
 
-  $("btnLogout")?.addEventListener("click", ()=>{
-    window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
-  });
-
-  // ====== Helpers ======
+  // ===== helpers =====
   function rowBadge(status){
     status = String(status || "declared").toLowerCase();
     if(status === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
@@ -386,48 +403,7 @@ a{color:inherit}
     return escapeHtml(str).replaceAll("`","&#096;");
   }
 
-  async function claimOwnerIfNeeded(ownerId){
-    if(!sb?.rpc) return;
-    try{
-      await sb.rpc("go_pin_claim_owner", { p_slug: slug, p_owner_id: ownerId });
-    }catch(e){
-      // silent (pas bloquant)
-      console.warn("claimOwnerIfNeeded", e?.message || e);
-    }
-  }
-
-  // ====== RPC wrappers (owner param conservé mais on met UUID dedans) ======
-  async function loadStats(ownerId){
-    const { data, error } = await sb.rpc("loc_wave_payments_stats_owner", {
-      p_slug: slug,
-      p_owner_phone: ownerId
-    });
-    if(error) throw error;
-    if(!data || data.ok !== true) throw new Error(data?.reason || "stats_failed");
-    return data;
-  }
-
-  async function loadList(ownerId){
-    const { data, error } = await sb.rpc("loc_wave_payments_list_owner", {
-      p_slug: slug,
-      p_owner_phone: ownerId
-    });
-    if(error) throw error;
-    return Array.isArray(data) ? data : [];
-  }
-
-  async function verifyOne(id, ownerId){
-    const { data, error } = await sb.rpc("loc_wave_payment_verify", {
-      p_id: id,
-      p_slug: slug,
-      p_owner_phone: ownerId
-    });
-    if(error) throw error;
-    if(!data?.ok) throw new Error(data?.reason || "verify_failed");
-    return data;
-  }
-
-  function renderList(rows, ownerId){
+  function renderList(rows, ownerPhone){
     const box = $("waveList");
     if(!box) return;
 
@@ -441,7 +417,6 @@ a{color:inherit}
       const who = (r.client_name || "Client") + (r.client_phone ? " · " + r.client_phone : "");
       const status = String(r.status || "declared").toLowerCase();
 
-      // montant : supporte amount_fcfa OU amount
       const raw = (r.amount_fcfa ?? r.amount ?? 0);
       const amt = Number(raw);
       const amtTxt = (Number.isFinite(amt) && amt > 0) ? amt.toLocaleString("fr-FR") + " F" : (raw || "—");
@@ -474,7 +449,6 @@ a{color:inherit}
       `;
     }).join("");
 
-    // bind verify
     box.querySelectorAll(".jsVerify").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         const id = Number(btn.getAttribute("data-id"));
@@ -485,8 +459,12 @@ a{color:inherit}
         btn.textContent = "⏳ Vérification…";
 
         try{
-          await claimOwnerIfNeeded(ownerId);
-          await verifyOne(id, ownerId);
+          await rpcSafe("loc_wave_payment_verify", {
+            p_id: id,
+            p_slug: slug,
+            p_owner_phone: ownerPhone
+          });
+
           showNote("noteWave", "✅ Paiement vérifié.", "ok");
           await loadWave();
         }catch(e){
@@ -508,40 +486,50 @@ a{color:inherit}
     }
 
     const sess = window.DIGIY_GUARD?.getSession?.() || {};
+    const ownerPhone = sess.phone || "";
     const ownerId = sess.owner_id || "";
-    if(!ownerId || !slug){
-      showNote("noteWave", "⚠️ owner_id ou slug manquant. Reconnecte-toi via PIN.", "bad");
+
+    if(!ownerPhone || !slug){
+      showNote("noteWave", "⚠️ Téléphone ou slug manquant. Reconnecte-toi via PIN.", "bad");
       return;
     }
 
     try{
       showNote("noteWave", "⏳ Chargement des paiements…", "warn");
 
-      await claimOwnerIfNeeded(ownerId);
+      const st = await rpcSafe("loc_wave_payments_stats_owner", {
+        p_slug: slug,
+        p_owner_phone: ownerPhone
+      });
 
-      const st = await loadStats(ownerId);
-      $("stTotal").textContent = String(st.total_declared ?? 0);
-      $("stVerified").textContent = String(st.total_verified ?? 0);
-      $("stSumTotal").textContent = money(st.sum_declared_fcfa ?? st.sum_declared ?? 0);
+      $("stTotal").textContent = String(st.total_declared ?? st.count_total ?? 0);
+      $("stVerified").textContent = String(st.total_verified ?? st.count_verified ?? 0);
+      $("stSumTotal").textContent = money(st.sum_declared_fcfa ?? st.sum_total ?? 0);
       $("stSumVerified").textContent = money(st.sum_verified_fcfa ?? st.sum_verified ?? 0);
 
-      const rows = await loadList(ownerId);
-      renderList(rows, ownerId);
+      const rows = await rpcSafe("loc_wave_payments_list_owner", {
+        p_slug: slug,
+        p_owner_phone: ownerPhone
+      });
 
+      renderList(Array.isArray(rows) ? rows : [], ownerPhone);
       showNote("noteWave", "", "");
     }catch(e){
       console.error(e);
       showNote("noteWave", "❌ Erreur Wave : " + (e?.message || e), "bad");
     }
+
+    // ownerId reste utile pour DECLARE V2
+    if(ownerId && $("kvOwner")) $("kvOwner").textContent = ownerId;
   }
 
-  // ====== DECLARE (V2) ======
+  // ===== DECLARE (V2 avec owner_id UUID) =====
   $("btnDeclareOwner")?.addEventListener("click", async ()=>{
     const sessOk = refreshSessionUI();
     if(!sessOk) return;
 
     const sess = window.DIGIY_GUARD?.getSession?.() || {};
-    const ownerId = sess.owner_id || ""; // ✅ UUID
+    const ownerId = sess.owner_id || "";
     const placeSlug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
 
     if(!ownerId || !placeSlug){
@@ -560,29 +548,24 @@ a{color:inherit}
 
     const clientName = prompt("Nom du client (optionnel) ?") || "";
     const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
+    const note = prompt("Note (optionnel) ?") || "";
 
     try{
       showNote("noteWave", "⏳ Déclaration en cours…", "warn");
 
-      await claimOwnerIfNeeded(ownerId);
-
-      if(!sb?.rpc) throw new Error("supabase_not_ready");
-
-      // ✅ V2 ONLY (anti-RLS)
-      const { data, error } = await sb.rpc("loc_wave_payment_declare_owner_v2", {
+      const data = await rpcSafe("loc_wave_payment_declare_owner_v2", {
         p_slug: placeSlug,
         p_owner_id: ownerId,
         p_amount_fcfa: amt,
         p_client_name: clientName,
-        p_client_phone: clientPhone
+        p_client_phone: clientPhone,
+        p_note: note
       });
 
-      if(error) throw error;
       if(!data?.ok) throw new Error(data?.reason || "declare_failed");
 
       showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
       await loadWave();
-
     }catch(e){
       console.error(e);
       showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail: " + (e?.message || e), "bad");
@@ -591,7 +574,9 @@ a{color:inherit}
 
   // Boot final
   refreshSessionUI();
-  loadWave();
+  await getSb();   // <-- garantit sb prêt avant les RPC
+  await loadWave();
+
 })();
 </script>
 </body>
