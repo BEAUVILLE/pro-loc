@@ -472,12 +472,14 @@ a{color:inherit}
         btn.textContent = "⏳ Vérification…";
 
         try{
-          const { data, error } = await sb.rpc("loc_wave_payment_verify", {
-            p_id: id,
-            p_slug: placeSlug,
-            p_owner_phone: ownerId
-          });
-
+         const { data, error } = await sb.rpc("loc_wave_payment_declare_owner_v2", {
+  p_slug: slug,
+  p_owner_id: ownerId,      // ✅ UUID owner_id
+  p_amount_fcfa: amt,
+  p_client_name: clientName,
+  p_client_phone: clientPhone,
+  p_note: note
+});
           if(error) throw error;
           if(!data?.ok) throw new Error(data?.reason || "verify_failed");
 
