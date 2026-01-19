@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>DIGIY LOC PRO ♾️ — Cockpit Wave</title>
+<meta name="theme-color" content="#0b1020" />
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./guard.js?v=locpro-final"></script>
+
+<style>
+:root{
+  --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
+  --line:#1f2937; --ink:#f9fafb; --muted:#cbd5f5;
+  --gold:#facc15; --green:#22c55e; --danger:#ef4444; --shadow:0 22px 50px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+    radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+    linear-gradient(180deg, var(--bg2), var(--bg));
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.top{
+  display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow);
+}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{
+  width:40px;height:40px;border-radius:14px;
+  background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+  border:1px solid rgba(250,204,21,.35);
+  box-shadow:0 0 22px rgba(250,204,21,.12);
+}
+.brand h1{margin:0;font-size:1.05rem}
+.sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:2px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{
+  border:1px solid rgba(148,163,184,.35);
+  padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
+  color:var(--muted);font-weight:900;font-size:.86rem;
+}
+.pill strong{color:#fff}
+.pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+.pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+
+.btn{
+  border:0; cursor:pointer;
+  border-radius:14px; padding:11px 12px; font-weight:1000;
+  background:rgba(255,255,255,.03); border:1px solid var(--line); color:var(--muted);
+  transition:.2s ease; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
+.btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
+.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
+.btn.small{padding:9px 10px;border-radius:12px;min-height:44px}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.card{
+  border:1px solid var(--line); background:rgba(255,255,255,.03);
+  border-radius:20px; box-shadow:var(--shadow); overflow:hidden;
+}
+.cardHead{
+  padding:12px 14px; border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+}
+.cardHead h2{margin:0;font-size:1.02rem}
+.cardBody{padding:14px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:980px){.stats{grid-template-columns:repeat(2,1fr)}}
+.box{
+  border:1px solid rgba(148,163,184,.18);
+  background:rgba(255,255,255,.02);
+  border-radius:16px;
+  padding:12px;
+}
+.k{color:var(--muted);font-weight:900;font-size:.86rem}
+.v{margin-top:6px;font-weight:1100;font-size:1.05rem}
+.v.gold{color:#fde68a}
+.v.green{color:#bbf7d0}
+.v.red{color:#fecaca}
+
+.table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0 10px;
+}
+.tr{
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:16px;
+  overflow:hidden;
+}
+.row{
+  display:grid;
+  grid-template-columns:140px 1fr 160px 160px;
+  gap:10px;
+  padding:12px;
+  align-items:center;
+}
+@media(max-width:980px){.row{grid-template-columns:1fr;gap:8px}}
+.badge{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 9px;border-radius:999px;
+  border:1px solid rgba(148,163,184,.25);
+  color:var(--muted);font-weight:950;font-size:.82rem;
+  background:rgba(255,255,255,.02);
+}
+.badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+.badge.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+.badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+.note{
+  margin-top:10px;
+  padding:10px 12px;border-radius:14px;
+  border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  white-space:pre-wrap;
+  display:none;
+}
+.note.ok{display:block;border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
+.note.bad{display:block;border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
+.note.warn{display:block;border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
+
+@media (max-width:720px){
+  .wrap{padding:12px}
+  .btn{width:100%}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>DIGIY LOC PRO ♾️ — Cockpit Wave</h1>
+        <div class="sub">Déclarations clients → vérification propriétaire • 0% commission</div>
+      </div>
+    </div>
+
+    <div class="pills">
+      <div class="pill" id="pillPlace">📍 <strong>—</strong></div>
+      <div class="pill warn" id="pillState">🔒 Session</div>
+      <a class="btn small" id="btnBack" href="./index.html">⬅️ Retour cockpit</a>
+      <button class="btn danger small" id="btnLogout" style="display:none">🚪 Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <section class="card">
+      <div class="cardHead">
+        <h2>📊 Statistiques</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="btnReload" type="button">↻ Recharger</button>
+        </div>
+      </div>
+      <div class="cardBody">
+        <div class="stats">
+          <div class="box"><div class="k">Déclarations</div><div class="v gold" id="stCount">—</div></div>
+          <div class="box"><div class="k">Vérifiées</div><div class="v green" id="stVerified">—</div></div>
+          <div class="box"><div class="k">Total déclaré</div><div class="v gold" id="stSum">—</div></div>
+          <div class="box"><div class="k">Total vérifié</div><div class="v green" id="stSumVerified">—</div></div>
+        </div>
+        <div class="note" id="note"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="cardHead">
+        <h2>🧾 Déclarations paiements</h2>
+        <small>Tu vérifies en 1 clic. (La preuve photo viendra après.)</small>
+      </div>
+      <div class="cardBody">
+        <div id="list">Chargement…</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Guard
+  window.DIGIY_GUARD?.boot({
+    module: "loc",
+    login: "./pin.html",
+    dashboard: "./index.html",
+    requireSlug: true
+  });
+
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const RPC_STATS = "loc_wave_payments_stats_owner";
+  const RPC_LIST  = "loc_wave_payments_list_owner";
+  const RPC_VERIFY= "loc_wave_payment_verify";
+
+  const $ = (id)=>document.getElementById(id);
+
+  const slug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+  const sess = window.DIGIY_GUARD?.getSession?.() || null;
+
+  function showNote(msg, type){
+    const el = $("note");
+    el.style.display = msg ? "block" : "none";
+    el.className = "note " + (type || "warn");
+    el.textContent = msg || "";
+  }
+
+  function money(n){
+    const x = Number(n||0);
+    return x.toLocaleString("fr-FR") + " F";
+  }
+
+  function setSessionPills(){
+    $("pillPlace").innerHTML = `📍 <strong>${slug || "—"}</strong>`;
+
+    if(sess?.ok && sess?.phone){
+      $("pillState").textContent = "✅ Connecté";
+      $("pillState").classList.remove("warn");
+      $("pillState").classList.add("ok");
+      $("btnLogout").style.display = "inline-flex";
+    } else {
+      $("pillState").textContent = "🔒 Session";
+      $("pillState").classList.remove("ok");
+      $("pillState").classList.add("warn");
+      $("btnLogout").style.display = "none";
+    }
+  }
+
+  async function loadStats(){
+    if(!sess?.ok || !sess?.phone || !slug){
+      showNote("🔒 Session manquante.\n➡️ Reviens via PIN.", "bad");
+      return null;
+    }
+    const { data, error } = await sb.rpc(RPC_STATS, {
+      p_slug: slug,
+      p_owner_phone: sess.phone
+    });
+    if(error) throw error;
+    if(!data || data.ok !== true) throw new Error(data?.reason || "stats_denied");
+
+    $("stCount").textContent = String(data.count_total ?? 0);
+    $("stVerified").textContent = String(data.count_verified ?? 0);
+    $("stSum").textContent = money(data.sum_total ?? 0);
+    $("stSumVerified").textContent = money(data.sum_verified ?? 0);
+
+    return data;
+  }
+
+  function statusBadge(s){
+    const st = String(s||"declared");
+    if(st === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
+    if(st === "rejected") return `<span class="badge bad">⛔ Rejeté</span>`;
+    return `<span class="badge warn">⏳ Déclaré</span>`;
+  }
+
+  async function loadList(){
+    if(!sess?.ok || !sess?.phone || !slug){
+      $("list").innerHTML = "🔒 Session manquante. Reviens via PIN.";
+      return;
+    }
+
+    const { data, error } = await sb.rpc(RPC_LIST, {
+      p_slug: slug,
+      p_owner_phone: sess.phone
+    });
+    if(error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    if(!rows.length){
+      $("list").innerHTML = "Aucune déclaration pour l’instant.";
+      return;
+    }
+
+    $("list").innerHTML = rows.map(r=>{
+      const when = new Date(r.created_at).toLocaleString("fr-FR");
+      const btn = (r.status === "verified")
+        ? `<button class="btn small" disabled>✅ Déjà vérifié</button>`
+        : `<button class="btn small primary" data-verify="${r.id}">✅ Vérifier</button>`;
+
+      const client = [r.client_name, r.client_phone].filter(Boolean).join(" · ") || "Client: —";
+      const note = r.note ? `<div style="color:#cbd5e1;font-weight:800;font-size:.9rem;line-height:1.35">📝 ${escapeHtml(r.note)}</div>` : "";
+
+      return `
+        <div class="tr">
+          <div class="row">
+            <div>
+              <div style="font-weight:1100">${money(r.amount_fcfa)}</div>
+              <div style="color:#cbd5f5;font-weight:850;font-size:.85rem">${when}</div>
+            </div>
+            <div>
+              ${statusBadge(r.status)}
+              <div style="margin-top:8px;color:#e5e7eb;font-weight:950">${escapeHtml(client)}</div>
+              ${note}
+            </div>
+            <div>${btn}</div>
+            <div style="color:#cbd5f5;font-weight:850;font-size:.9rem">
+              ${r.verified_at ? ("Vérifié: " + new Date(r.verified_at).toLocaleString("fr-FR")) : "—"}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // bind verify
+    document.querySelectorAll("[data-verify]").forEach(b=>{
+      b.addEventListener("click", async ()=>{
+        const id = Number(b.getAttribute("data-verify"));
+        if(!id) return;
+
+        b.disabled = true;
+        const old = b.textContent;
+        b.textContent = "⏳ …";
+
+        try{
+          const { data, error } = await sb.rpc(RPC_VERIFY, {
+            p_id: id,
+            p_slug: slug,
+            p_owner_phone: sess.phone
+          });
+          if(error) throw error;
+          if(!data || data.ok !== true) throw new Error(data?.reason || "verify_denied");
+
+          showNote("✅ Paiement vérifié. Merci !", "ok");
+          await reloadAll();
+        }catch(e){
+          console.error(e);
+          showNote("❌ Vérification impossible : " + (e?.message || e), "bad");
+          b.disabled = false;
+          b.textContent = old;
+        }
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  async function reloadAll(){
+    showNote("⏳ Chargement…", "warn");
+    await loadStats();
+    await loadList();
+    showNote("", "");
+  }
+
+  $("btnReload").addEventListener("click", reloadAll);
+
+  $("btnLogout").addEventListener("click", ()=>{
+    const url = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html";
+    window.DIGIY_GUARD?.logout?.(url);
+  });
+
+  setSessionPills();
+  reloadAll().catch(e=>{
+    console.error(e);
+    showNote("❌ Erreur cockpit Wave : " + (e?.message || e), "bad");
+  });
+
+})();
+</script>
+</body>
+</html>
