@@ -6,7 +6,7 @@
 <title>DIGIY LOC PRO ♾️ — Cockpit Propriétaire</title>
 <meta name="theme-color" content="#0b1020" />
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ✅ PAS de supabase-js ici : guard.js gère déjà le client (évite Multiple GoTrueClient) -->
 <script src="./guard.js?v=locpro-wave-ultra"></script>
 
 <style>
@@ -234,7 +234,6 @@ a{color:inherit}
         </div>
         <button class="btn gold" id="btnDeclareOwner" type="button">➕ Ajouter un paiement</button>
       </div>
-
       <div class="cardBody">
         <div class="kv">
           <div class="k">Total déclarés</div><div class="v" id="stTotal">—</div>
@@ -244,6 +243,7 @@ a{color:inherit}
         </div>
 
         <div class="note" id="noteWave"></div>
+
         <div class="table" id="waveList"></div>
       </div>
     </section>
@@ -255,6 +255,7 @@ a{color:inherit}
 (function(){
   "use strict";
 
+  // Boot guard
   window.DIGIY_GUARD?.boot({
     module: "loc",
     login: "./pin.html",
@@ -280,6 +281,18 @@ a{color:inherit}
     el.textContent = msg || "";
   }
 
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+  function escapeAttr(str){
+    return escapeHtml(str).replaceAll("`","&#096;");
+  }
+
   const slug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
   if($("navPlace")) $("navPlace").textContent = "Lieu : " + (slug || "—");
   if($("kvSlug")) $("kvSlug").textContent = slug || "—";
@@ -288,6 +301,7 @@ a{color:inherit}
     return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
   }
 
+  // HREF sur <a>
   const links = [
     ["btnBack","./index.html"],
     ["goToday","./today.html"],
@@ -303,26 +317,29 @@ a{color:inherit}
     if(el && el.tagName === "A") el.href = withSlug(path);
   });
 
+  // GO PIN public
   const pub = new URL("./go-pin.html", location.href);
   if(slug) pub.searchParams.set("slug", slug);
   if($("btnPublic")) $("btnPublic").href = pub.toString();
 
+  // APP bouton
   $("goApp")?.addEventListener("click", (e)=>{
     e.preventDefault();
     location.href = withSlug("./app.html");
   });
 
+  // Session pills
   function refreshSessionUI(){
-    const sess = window.DIGIY_GUARD?.getSession?.() || {};
-    const phone = sess.phone || "—";
-    const owner = sess.owner_id || "—";
-    const exp = sess.exp ? new Date(Number(sess.exp)).toISOString().slice(0,16).replace("T"," ") : "";
+    const sess = window.DIGIY_GUARD?.getSession?.();
+    const phone = sess?.phone || "—";
+    const ownerId = sess?.owner_id || sess?.ownerId || sess?.owner || sess?.owner_uuid || "—";
+    const exp = sess?.exp ? new Date(Number(sess.exp)).toISOString().slice(0,16).replace("T"," ") : "";
 
     if($("kvPhone")) $("kvPhone").textContent = phone;
-    if($("kvOwner")) $("kvOwner").textContent = owner;
-    if($("kvSess")) $("kvSess").textContent = sess.ok ? ("OK" + (exp ? " (expire : " + exp + ")" : "")) : "—";
+    if($("kvOwner")) $("kvOwner").textContent = ownerId;
+    if($("kvSess")) $("kvSess").textContent = sess?.ok ? ("OK" + (exp ? " (expire : " + exp + ")" : "")) : "—";
 
-    if(sess.ok && sess.phone){
+    if(sess?.ok && sess?.phone){
       if($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${phone}</strong>`;
       if($("pillState")){
         $("pillState").textContent = "✅ Connecté";
@@ -330,7 +347,6 @@ a{color:inherit}
         $("pillState").classList.add("ok");
       }
       if($("btnLogout")) $("btnLogout").style.display = "inline-flex";
-      showNote("noteMain", "✅ Tout est OK. Tu peux gérer tes logements.\n\nAstuce terrain : envoie ton GO PIN public au client. Il voit la fiche + WhatsApp direct.", "ok");
       return true;
     }
 
@@ -341,7 +357,6 @@ a{color:inherit}
       $("pillState").classList.add("warn");
     }
     if($("btnLogout")) $("btnLogout").style.display = "none";
-    showNote("noteMain", "🔒 Accès non ouvert.\n➡️ Mets ton téléphone + PIN pour entrer.", "warn");
     return false;
   }
 
@@ -354,20 +369,21 @@ a{color:inherit}
     window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
   });
 
-  async function loadStats(ownerPhone){
+  // ========== WAVE RPC ==========
+  async function loadStats(ownerId){
     const { data, error } = await sb.rpc("loc_wave_payments_stats_owner", {
       p_slug: slug,
-      p_owner_phone: ownerPhone
+      p_owner_phone: ownerId   // ✅ param conservé, contenu = UUID owner_id
     });
     if(error) throw error;
     if(!data || data.ok !== true) throw new Error(data?.reason || "stats_failed");
     return data;
   }
 
-  async function loadList(ownerPhone){
+  async function loadList(ownerId){
     const { data, error } = await sb.rpc("loc_wave_payments_list_owner", {
       p_slug: slug,
-      p_owner_phone: ownerPhone
+      p_owner_phone: ownerId   // ✅ param conservé, contenu = UUID owner_id
     });
     if(error) throw error;
     return Array.isArray(data) ? data : [];
@@ -378,18 +394,6 @@ a{color:inherit}
     if(status === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
     if(status === "rejected") return `<span class="badge bad">⛔ Refusé</span>`;
     return `<span class="badge warn">⏳ Déclaré</span>`;
-  }
-
-  function escapeHtml(str){
-    return String(str ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-  function escapeAttr(str){
-    return escapeHtml(str).replaceAll("`","&#096;");
   }
 
   function renderList(rows){
@@ -404,8 +408,8 @@ a{color:inherit}
     box.innerHTML = rows.map(r=>{
       const dt = r.created_at ? new Date(r.created_at).toLocaleString("fr-FR") : "";
       const who = (r.client_name || "Client") + (r.client_phone ? " · " + r.client_phone : "");
-
       const noteTxt = (r.note ?? r.comment ?? r.message ?? "");
+
       const note = noteTxt
         ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`
         : "";
@@ -416,11 +420,12 @@ a{color:inherit}
 
       const status = String(r.status || "declared").toLowerCase();
 
-      const rawAmt = (r.amount_fcfa ?? r.amount ?? r.amount_xof ?? 0);
-      const amt = Number(rawAmt || 0);
+      // ✅ amount supporte les 2 noms : amount_fcfa / amount
+      const rawAmt = (r.amount_fcfa ?? r.amount ?? 0);
+      const amt = Number(rawAmt);
       const amtTxt = (Number.isFinite(amt) && amt > 0)
         ? amt.toLocaleString("fr-FR") + " F"
-        : (rawAmt || "—");
+        : (rawAmt ? String(rawAmt) : "—");
 
       const verifyBtn = (status === "verified")
         ? `<button class="btn small" disabled>✅ Déjà vérifié</button>`
@@ -447,17 +452,18 @@ a{color:inherit}
       `;
     }).join("");
 
+    // Bind verify
     box.querySelectorAll(".jsVerify").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         const id = Number(btn.getAttribute("data-id"));
         if(!id) return;
 
         const sess = window.DIGIY_GUARD?.getSession?.() || {};
-        const ownerPhone = sess.phone || "";
+        const ownerId = sess?.owner_id || sess?.ownerId || "";
         const placeSlug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
 
-        if(!ownerPhone || !placeSlug){
-          showNote("noteWave", "❌ Session / slug manquants. Reconnecte-toi via PIN.", "bad");
+        if(!ownerId || !placeSlug){
+          showNote("noteWave", "❌ Owner ID / slug manquants. Reconnecte-toi via PIN.", "bad");
           return;
         }
 
@@ -469,7 +475,7 @@ a{color:inherit}
           const { data, error } = await sb.rpc("loc_wave_payment_verify", {
             p_id: id,
             p_slug: placeSlug,
-            p_owner_phone: ownerPhone
+            p_owner_phone: ownerId
           });
 
           if(error) throw error;
@@ -488,6 +494,16 @@ a{color:inherit}
     });
   }
 
+  async function claimOwnerIfNeeded(ownerId){
+    // ✅ Optionnel : si tu as installé la RPC go_pin_claim_owner
+    try{
+      if(!ownerId || !slug) return;
+      await sb.rpc("go_pin_claim_owner", { p_slug: slug, p_owner_id: ownerId });
+    }catch(_e){
+      // silencieux: pas bloquant
+    }
+  }
+
   async function loadWave(){
     const sessOk = refreshSessionUI();
     if(!sessOk){
@@ -497,23 +513,24 @@ a{color:inherit}
     }
 
     const sess = window.DIGIY_GUARD?.getSession?.() || {};
-    const ownerPhone = sess.phone || "";
-
-    if(!ownerPhone || !slug){
-      showNote("noteWave", "⚠️ Téléphone ou slug manquant.", "bad");
+    const ownerId = sess?.owner_id || sess?.ownerId || "";
+    if(!ownerId || !slug){
+      showNote("noteWave", "⚠️ Owner ID ou slug manquant.", "bad");
       return;
     }
 
     try{
       showNote("noteWave", "⏳ Chargement des paiements…", "warn");
 
-      const st = await loadStats(ownerPhone);
+      await claimOwnerIfNeeded(ownerId);
+
+      const st = await loadStats(ownerId);
       $("stTotal").textContent = String(st.total_declared ?? 0);
       $("stVerified").textContent = String(st.total_verified ?? 0);
       $("stSumTotal").textContent = money(st.sum_declared_fcfa ?? 0);
       $("stSumVerified").textContent = money(st.sum_verified_fcfa ?? 0);
 
-      const rows = await loadList(ownerPhone);
+      const rows = await loadList(ownerId);
       renderList(rows);
 
       showNote("noteWave", "", "");
@@ -524,56 +541,56 @@ a{color:inherit}
   }
 
   $("btnDeclareOwner")?.addEventListener("click", async ()=>{
-  const sessOk = refreshSessionUI();
-  if(!sessOk) return;
+    const sessOk = refreshSessionUI();
+    if(!sessOk) return;
 
-  const sess = window.DIGIY_GUARD?.getSession?.() || {};
-  const ownerPhone = sess.phone || "";
-  const placeSlug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+    const sess = window.DIGIY_GUARD?.getSession?.() || {};
+    const ownerId = sess?.owner_id || sess?.ownerId || "";
+    if(!ownerId || !slug){
+      showNote("noteWave", "⚠️ Owner ID ou slug manquant.", "bad");
+      return;
+    }
 
-  if(!ownerPhone || !placeSlug){
-    showNote("noteWave", "⚠️ Téléphone ou slug manquant.", "bad");
-    return;
-  }
+    const amount = prompt("Montant reçu (FCFA) ?");
+    if(!amount) return;
 
-  const amount = prompt("Montant reçu (FCFA) ?");
-  if(!amount) return;
+    const amt = Number(String(amount).replace(/[^\d]/g,""));
+    if(!Number.isFinite(amt) || amt <= 0){
+      showNote("noteWave", "❌ Montant invalide.", "bad");
+      return;
+    }
 
-  const amt = Number(String(amount).replace(/[^\d]/g,""));
-  if(!Number.isFinite(amt) || amt <= 0){
-    showNote("noteWave", "❌ Montant invalide.", "bad");
-    return;
-  }
+    const clientName = prompt("Nom du client (optionnel) ?") || "";
+    const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
+    const note = prompt("Note (dates, info) (optionnel) ?") || "";
 
-  const clientName = prompt("Nom du client (optionnel) ?") || "";
-  const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
-  const note = prompt("Note (dates, info) (optionnel) ?") || "";
+    try{
+      showNote("noteWave", "⏳ Déclaration en cours…", "warn");
 
-  try{
-    showNote("noteWave", "⏳ Déclaration en cours…", "warn");
+      await claimOwnerIfNeeded(ownerId);
 
-    // ✅ RPC ONLY (sinon RLS va te frapper)
-    const { data, error } = await sb.rpc("loc_wave_payment_declare_owner", {
-      p_slug: placeSlug,
-      p_owner_phone: ownerPhone,
-      p_amount_fcfa: amt,
-      p_client_name: clientName,
-      p_client_phone: clientPhone,
-      p_note: note
-    });
+      const { data, error } = await sb.rpc("loc_wave_payment_declare_owner", {
+        p_slug: slug,
+        p_owner_phone: ownerId,     // ✅ UUID owner_id
+        p_amount_fcfa: amt,
+        p_client_name: clientName,
+        p_client_phone: clientPhone,
+        p_note: note
+      });
 
-    if(error) throw error;
-    if(!data?.ok) throw new Error(data?.reason || "declare_failed");
+      if(error) throw error;
+      if(!data?.ok) throw new Error(data?.reason || "declare_failed");
 
-    showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
-    await loadWave();
+      showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
+      await loadWave();
 
-  }catch(e){
-    console.error(e);
-    showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail: " + (e?.message || e), "bad");
-  }
-});
+    }catch(e){
+      console.error(e);
+      showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail: " + (e?.message || e), "bad");
+    }
+  });
 
+  // Boot final
   refreshSessionUI();
   loadWave();
 })();
