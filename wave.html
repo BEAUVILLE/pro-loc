@@ -6,10 +6,10 @@
 <title>DIGIY LOC PRO ♾️ — Cockpit Wave</title>
 <meta name="theme-color" content="#0b1020" />
 
-<!-- ✅ supabase-js pour le fallback RPC-only -->
+<!-- ✅ supabase-js (fallback RPC-only) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- ✅ guard -->
-<script src="./guard.js?v=locpro-wave-v3"></script>
+<script src="./guard.js?v=locpro-wave-v2"></script>
 
 <style>
 :root{
@@ -136,7 +136,7 @@ a{color:inherit;text-decoration:none}
       <div class="logo"></div>
       <div>
         <h1>DIGIY LOC PRO ♾️ — Cockpit Wave</h1>
-        <div class="sub">Déclarations clients → vérification propriétaire • 0% commission</div>
+        <div class="sub">Déclarations → vérification propriétaire • 0% commission</div>
       </div>
     </div>
 
@@ -162,8 +162,8 @@ a{color:inherit;text-decoration:none}
         <div class="stats">
           <div class="box"><div class="k">Déclarations</div><div class="v gold" id="stCount">—</div></div>
           <div class="box"><div class="k">Vérifiées</div><div class="v green" id="stVerified">—</div></div>
-          <div class="box"><div class="k">Somme déclarée</div><div class="v gold" id="stSum">—</div></div>
-          <div class="box"><div class="k">Somme vérifiée</div><div class="v green" id="stSumVerified">—</div></div>
+          <div class="box"><div class="k">Total déclaré</div><div class="v gold" id="stSum">—</div></div>
+          <div class="box"><div class="k">Total vérifié</div><div class="v green" id="stSumVerified">—</div></div>
         </div>
         <div class="note" id="note"></div>
       </div>
@@ -186,12 +186,12 @@ a{color:inherit;text-decoration:none}
 (async function(){
   "use strict";
 
-  // ---- CONFIG (fallback RPC-only)
+  // ---- SUPABASE fallback
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  // RPC V2 (tes fonctions SQL V2)
+  // RPC V2 (SQL ci-dessus)
   const RPC_STATS   = "loc_wave_payments_stats_owner_v2";
   const RPC_LIST    = "loc_wave_payments_list_owner_v2";
   const RPC_VERIFY  = "loc_wave_payment_verify_v2";
@@ -199,7 +199,7 @@ a{color:inherit;text-decoration:none}
 
   const $ = (id)=>document.getElementById(id);
 
-  // Boot guard
+  // Boot guard (protection)
   window.DIGIY_GUARD?.boot({
     module: "loc",
     login: "./pin.html",
@@ -207,18 +207,13 @@ a{color:inherit;text-decoration:none}
     requireSlug: true
   });
 
-  // ---- sb getter: guard OR fallback
+  // ---- sb stable
   async function getSBStable(){
-    // 1) attend guard (sb exposé)
     for(let i=0;i<40;i++){
-      const s =
-        window.DIGIY_GUARD?.getSupabase?.() ||
-        window.DIGIY_GUARD?.sb ||
-        window.sb;
+      const s = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb || window.sb;
       if(s?.rpc) return s;
       await new Promise(r=>setTimeout(r, 50));
     }
-    // 2) fallback RPC-only
     if(!window.DIGIY_RPC_SB){
       if(!window.supabase?.createClient) return null;
       window.DIGIY_RPC_SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -231,15 +226,10 @@ a{color:inherit;text-decoration:none}
     return s;
   }
 
-  // ---- session / slug
-  function getSlug(){ return (window.DIGIY_GUARD?.getSlug?.() || "").trim(); }
-  function getSess(){ return window.DIGIY_GUARD?.getSession?.() || null; }
-
-  // ✅ FIX CRITIQUE : owner_id métier (GO PIN), PAS owner_user_id
-  function getOwnerId(){
-    const sess = getSess();
-    return (sess?.owner_id || "").trim(); // ✅ owner métier
-  }
+  // ---- session/slug
+  const getSlug = ()=> (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+  const getSess = ()=> window.DIGIY_GUARD?.getSession?.() || null;
+  const getOwnerId = ()=> (getSess()?.owner_id || ""); // ✅ UUID métier
 
   function showNote(msg, type){
     const el = $("note");
@@ -248,15 +238,30 @@ a{color:inherit;text-decoration:none}
     el.style.display = msg ? "block" : "none";
   }
 
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
   function money(n){
     const x = Number(n||0);
     return x.toLocaleString("fr-FR") + " FCFA";
   }
 
+  // ✅ ton helper (béton)
+  function getAmountFcfa(r){
+    const v = (r?.amount_fcfa ?? r?.amount ?? 0);
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   function setSessionPills(){
     const slug = getSlug();
     const sess = getSess();
-
     $("pillPlace").innerHTML = `📍 <strong>${slug || "—"}</strong>`;
 
     if(sess?.ok && sess?.phone){
@@ -277,22 +282,6 @@ a{color:inherit;text-decoration:none}
     if(st === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
     if(st === "rejected") return `<span class="badge bad">⛔ Rejeté</span>`;
     return `<span class="badge warn">⏳ Déclaré</span>`;
-  }
-
-  function escapeHtml(str){
-    return String(str ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  // ✅ ton helper demandé
-  function getAmountFcfa(r){
-    const v = (r?.amount_fcfa ?? r?.amount ?? 0);
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
   }
 
   async function loadStats(){
@@ -341,13 +330,13 @@ a{color:inherit;text-decoration:none}
     $("list").innerHTML = rows.map(r=>{
       const when = r.created_at ? new Date(r.created_at).toLocaleString("fr-FR") : "";
       const amt = getAmountFcfa(r);
-      const amtTxt = amt > 0 ? (amt.toLocaleString("fr-FR") + " F") : "—";
+      const amtTxt = (amt > 0) ? (amt.toLocaleString("fr-FR") + " F") : "—";
 
       const client = [r.client_name, r.client_phone].filter(Boolean).join(" · ") || "Client: —";
 
       const btn = (String(r.status||"").toLowerCase() === "verified")
         ? `<button class="btn small" disabled>✅ Déjà vérifié</button>`
-        : `<button class="btn small primary jsVerify" data-id="${escapeHtml(r.id)}">✅ Vérifier</button>`;
+        : `<button class="btn small primary jsVerify" data-id="${r.id}">✅ Vérifier</button>`;
 
       const proof = r.proof_url
         ? `<div class="mini" style="margin-top:6px"><a href="${escapeHtml(r.proof_url)}" target="_blank" rel="noopener" style="color:#facc15;font-weight:900">📎 Voir preuve</a></div>`
