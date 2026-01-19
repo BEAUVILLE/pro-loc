@@ -417,9 +417,10 @@ input{
       const dt = r.created_at ? new Date(r.created_at).toLocaleString("fr-FR") : "";
       const who = (r.client_name || "Client") + (r.client_phone ? " · " + r.client_phone : "");
 
-      const note = r.note
-        ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(r.note)}</div>`
-        : "";
+      const noteTxt = (r.note ?? r.comment ?? r.message ?? "");
+const note = noteTxt
+  ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`
+  : "";
 
       const proof = r.proof_url
         ? `<div style="margin-top:6px"><a href="${escapeAttr(r.proof_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#facc15;font-weight:900">📎 Voir preuve</a></div>`
