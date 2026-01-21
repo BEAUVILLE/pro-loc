@@ -140,15 +140,44 @@
   $("pillLieu").textContent = "Lieu : " + (LIEU || "—");
 
   // --- Retour GO PIN (public) ---
-  // IMPORTANT: le fichier est "go-pin.html" (pas "go pin.html")
   const back = new URL("./go-pin.html", location.href);
   if (LIEU) back.searchParams.set("slug", LIEU);
   $("btnPublic").href = back.toString();
 
-  // Si pas de lieu -> message terrain
   if(!LIEU){
     show("⚠️ Lien incomplet.\n➡️ Ouvre cette page via ton QR / lien GO PIN.\nExemple : pin.html?slug=chez-astou-saly", "bad");
     $("hintBox").style.display = "block";
+  }
+
+  async function ensureProIdFromSlug(){
+    // Si déjà présent, on ne refait pas
+    if (localStorage.getItem("DIGIY_PRO_ID")) return true;
+
+    // On récupère le client Supabase via guard.js (plus robuste)
+    const sb = window.DIGIY_GUARD && window.DIGIY_GUARD._getSb ? window.DIGIY_GUARD._getSb() : null;
+    if(!sb) return false;
+
+    try{
+      const { data, error } = await sb.rpc("resolve_slug_to_pro_id", { p_slug: LIEU });
+      const row = Array.isArray(data) ? data[0] : data;
+
+      if(error || !row?.pro_id) {
+        console.warn("resolve_slug_to_pro_id error:", error, data);
+        return false;
+      }
+
+      localStorage.setItem("DIGIY_PRO_ID", row.pro_id);
+      localStorage.setItem("DIGIY_SLUG", LIEU);
+      if (row.phone) localStorage.setItem("DIGIY_PHONE", row.phone);
+      if (row.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", row.business_name);
+
+      console.log("✅ DIGIY_PRO_ID injecté:", row.pro_id);
+      return true;
+
+    }catch(e){
+      console.warn("resolve_slug_to_pro_id exception:", e);
+      return false;
+    }
   }
 
   async function doLogin(){
@@ -170,10 +199,23 @@
     show("⏳ Vérification…", "warn");
 
     try{
-      const res = await window.DIGIY_GUARD.loginWithPin(phone, pin, "LOC");
+      // 1) Bridge slug -> pro_id (important pour la suite)
+      const okBridge = await ensureProIdFromSlug();
+      if(!okBridge){
+        show("❌ Impossible de relier ce lieu au PRO.\n➡️ Vérifie le RPC resolve_slug_to_pro_id (RLS / SECURITY DEFINER / GRANT).", "bad");
+        return;
+      }
+
+      // 2) ✅ APPEL CORRECT DU GUARD
+      // module: garde "loc_pro" (ou enlève module pour laisser par défaut)
+      const res = await window.DIGIY_GUARD.loginWithPin({
+        phone,
+        pin,
+        module: "loc_pro",
+        slug: LIEU
+      });
 
       if(!res || res.ok !== true){
-        // messages humains (pas “accès refusé” brut)
         show("❌ PIN incorrect ou téléphone non autorisé.\n➡️ Vérifie puis réessaie.", "bad");
         return;
       }
