@@ -88,11 +88,7 @@
     box-shadow:0 0 16px rgba(250,204,21,.35);
     flex:0 0 auto;
   }
-  .statusTxt{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
+  .statusTxt{display:flex;flex-direction:column;gap:2px}
   .statusBig{font-weight:950}
   .statusSmall{font-size:12px;color:var(--muted)}
   .actions{
@@ -110,10 +106,6 @@
     min-height:44px;
     white-space:nowrap;
     touch-action:manipulation;
-  }
-  .btn.primary{
-    background:linear-gradient(135deg,#facc15,#f97316);
-    color:#111;
   }
   .btn.ghost{
     background:rgba(15,23,42,.6);
@@ -149,11 +141,9 @@
 
   <div class="card">
     <div class="title" id="ttl">Ouverture du PIN…</div>
-    <div class="sub" id="sub">
-      On vérifie le logement et on te redirige automatiquement.
-    </div>
+    <div class="sub" id="sub">On vérifie le logement et on te redirige automatiquement.</div>
 
-    <div class="status" id="statusBox">
+    <div class="status">
       <div class="dot" id="dot"></div>
       <div class="statusTxt">
         <div class="statusBig" id="stBig">Chargement</div>
@@ -174,19 +164,19 @@
 <script>
 (() => {
   "use strict";
-  console.log("GO-PIN VERSION:", "2026-01-21-proid-bridge-v2");
+  console.log("GO-PIN VERSION:", "2026-01-21-proid-bridge-FINAL");
 
   /* =========================
      CONFIG
   ========================= */
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
-    "TON_ANON_KEY_ICI"; // <-- remets ta clé complète ici
+    "COLLE_ICI_TA_CLE_ANON_COMPLETE_SANS_LES_GUILLEMETS_FRANCAIS"; // <-- IMPORTANT
 
   const GALLERY_URL = "https://beauville.github.io/digiy-loc/";
   const LOC_PRO_URL = "https://beauville.github.io/digiy-loc-pro/";
-  const PIN_PAGE = "https://beauville.github.io/digiy-loc-pro/pin.html";
-  const TEAM_WA = "+221771342889";
+  const PIN_PAGE    = "https://beauville.github.io/digiy-loc-pro/pin.html";
+  const TEAM_WA     = "+221771342889";
 
   /* =========================
      UI refs
@@ -198,7 +188,6 @@
   const stSmall = document.getElementById("stSmall");
   const btnBack = document.getElementById("btnBack");
   const btnWa = document.getElementById("btnWa");
-
   btnBack.href = GALLERY_URL || LOC_PRO_URL;
 
   /* =========================
@@ -218,9 +207,6 @@
     if (mode === "ok"){
       dot.style.background = "var(--ok)";
       dot.style.boxShadow = "0 0 16px rgba(34,197,94,.35)";
-    } else if (mode === "warn"){
-      dot.style.background = "var(--accent)";
-      dot.style.boxShadow = "0 0 16px rgba(250,204,21,.35)";
     } else if (mode === "err"){
       dot.style.background = "var(--danger)";
       dot.style.boxShadow = "0 0 16px rgba(251,113,133,.35)";
@@ -246,21 +232,11 @@
   }
 
   async function resolveProIdFromSlug(sb, slug){
-    try{
-      const { data, error } = await sb.rpc("resolve_slug_to_pro_id", { p_slug: slug });
-      console.log("RPC resolve_slug_to_pro_id =>", { data, error });
-      if (error) return { pro_id:null, business_name:null, phone:null, error };
-      const row = Array.isArray(data) ? data[0] : data;
-      return {
-        pro_id: row?.pro_id || null,
-        business_name: row?.business_name || null,
-        phone: row?.phone || null,
-        error: null
-      };
-    }catch(e){
-      console.log("RPC exception =>", e);
-      return { pro_id:null, business_name:null, phone:null, error: e };
-    }
+    const { data, error } = await sb.rpc("resolve_slug_to_pro_id", { p_slug: slug });
+    console.log("RPC resolve_slug_to_pro_id =>", { data, error });
+    if (error) return { ok:false, error };
+    const row = Array.isArray(data) ? data[0] : data;
+    return { ok:true, row };
   }
 
   /* =========================
@@ -277,76 +253,98 @@
   });
 
   window.addEventListener("DOMContentLoaded", async () => {
+    console.log("ORIGIN", location.origin);
+    console.log("SLUG", slug);
+    console.log("KEY_LEN", (SUPABASE_ANON_KEY || "").length);
+
     if (!slug){
       ttl.textContent = "Slug manquant";
-      sub.textContent = "Le lien est incomplet. Reviens à la galerie et clique sur “Voir le PIN”.";
+      sub.textContent = "Lien incomplet. Reviens à la galerie et clique sur “Voir le PIN”.";
       setStatus("err","Lien incomplet","Exemple : go-pin.html?slug=chez-astou-saly");
       return;
     }
 
-    ttl.textContent = "Ouverture du PIN…";
-    sub.textContent = "On vérifie l’accès public puis on te redirige.";
-    setStatus("warn","Vérification en cours","On regarde si le logement est public & actif…");
+    if (!SUPABASE_ANON_KEY || (SUPABASE_ANON_KEY || "").length < 80){
+      ttl.textContent = "Clé Supabase absente";
+      sub.textContent = "Tu dois coller la clé ANON complète dans le fichier go-pin.html.";
+      setStatus("err","Config invalide","ANON KEY manquante ou tronquée.");
+      return;
+    }
+
+    setStatus("warn","Connexion…","Initialisation Supabase…");
 
     let sb;
     try{
       sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }catch(e){
-      setStatus("err","Erreur de configuration","Supabase non chargé. Vérifie le script CDN.");
+      ttl.textContent = "Erreur Supabase";
+      sub.textContent = "Supabase non chargé. Vérifie le script CDN.";
+      setStatus("err","Supabase KO","CDN/clé/JS.");
       return;
     }
 
-    // Gate public pin
-    const { data, error } = await sb
+    // Gate public pin (safe)
+    setStatus("warn","Vérification logement","Lecture go_pins…");
+    const r = await sb
       .from("go_pins")
       .select("slug,title,is_public,is_active,category")
       .eq("slug", slug)
-      .single();
+      .maybeSingle();
 
-    if (error || !data){
-      ttl.textContent = "PIN introuvable";
-      sub.textContent = "Ce logement n’existe pas (ou n’est plus publié).";
-      setStatus("err","Introuvable","Retour galerie ou contacte DIGIY.");
+    console.log("go_pins result =>", r);
+
+    if (r.error){
+      ttl.textContent = "Erreur lecture";
+      sub.textContent = "La lecture go_pins a échoué (RLS/clé).";
+      setStatus("err","Lecture refusée", r.error.message || "Erreur");
       return;
     }
 
-    if (data.category && String(data.category).toLowerCase() !== "loc"){
+    if (!r.data){
+      ttl.textContent = "PIN introuvable";
+      sub.textContent = "Aucune ligne trouvée pour ce slug.";
+      setStatus("err","Introuvable","Slug KO ou RLS filtre.");
+      return;
+    }
+
+    const pin = r.data;
+    const title = pin.title || pin.slug;
+
+    if (pin.category && String(pin.category).toLowerCase() !== "loc"){
       ttl.textContent = "PIN non compatible";
       sub.textContent = "Ce PIN n’est pas un logement (catégorie différente).";
       setStatus("err","Catégorie différente","Retour galerie.");
       return;
     }
 
-    const title = data.title || data.slug;
-
-    if (!data.is_active){
+    if (!pin.is_active){
       ttl.textContent = title;
       sub.textContent = "Ce logement est en pause pour le moment.";
       setStatus("err","Logement inactif","Retour galerie ou contacte DIGIY.");
       return;
     }
 
-    // Bridge slug -> pro_id
-    setStatus("warn","Préparation accès PRO","On relie le slug au PRO ID…");
-    const resolved = await resolveProIdFromSlug(sb, slug);
+    // Bridge slug -> pro_id (OBLIGATOIRE pour la porte)
+    setStatus("warn","Préparation accès PRO","Bridge slug → pro_id…");
+    const brid = await resolveProIdFromSlug(sb, slug);
 
-    if (resolved?.pro_id){
-      safeSet("DIGIY_PRO_ID", resolved.pro_id);
-      safeSet("DIGIY_SLUG", slug);
-      safeSet("DIGIY_TITLE", title);
-      safeSet("DIGIY_BUSINESS_NAME", resolved.business_name || "");
-      safeSet("DIGIY_PHONE", resolved.phone || "");
-
-      console.log("✅ STORED DIGIY_PRO_ID =", localStorage.getItem("DIGIY_PRO_ID"));
-    } else {
+    if (!brid.ok || !brid.row?.pro_id){
       ttl.textContent = title;
-      sub.textContent = "Accès public OK, mais PRO_ID introuvable (caisse/guard bloqués).";
-      setStatus("err","PRO_ID introuvable","Vérifie GRANT/SECURITY DEFINER du RPC.");
-      return; // STOP: pas de redirection tant que pas bon
+      sub.textContent = "Accès public OK, mais pro_id introuvable (guard/caisse bloqués).";
+      setStatus("err","Bridge pro_id KO","Vérifie GRANT/SECURITY DEFINER du RPC.");
+      return;
     }
 
+    safeSet("DIGIY_PRO_ID", brid.row.pro_id);
+    safeSet("DIGIY_SLUG", slug);
+    safeSet("DIGIY_TITLE", title);
+    safeSet("DIGIY_BUSINESS_NAME", brid.row.business_name || "");
+    safeSet("DIGIY_PHONE", brid.row.phone || "");
+
+    console.log("✅ STORED DIGIY_PRO_ID =", localStorage.getItem("DIGIY_PRO_ID"));
+
     // Private -> pro
-    if (!data.is_public){
+    if (!pin.is_public){
       ttl.textContent = title;
       sub.textContent = "Ce PIN est réservé (accès propriétaire).";
       setStatus("warn","Accès propriétaire","Redirection vers l’espace PRO…");
@@ -356,9 +354,9 @@
 
     // Public -> pin
     ttl.textContent = title;
-    sub.textContent = "Accès public OK. Redirection…";
+    sub.textContent = "Accès public OK + pro_id OK. Redirection…";
     setStatus("ok","Accès validé","On t’ouvre la fiche PIN maintenant.");
-    setTimeout(()=> redirectToPin(slug), 2500); // 2.5s pour voir les logs
+    setTimeout(()=> redirectToPin(slug), 2500);
   });
 })();
 </script>
