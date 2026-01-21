@@ -248,21 +248,33 @@
     if (slug) setSlugInUrl(slug);
     return { session: s, slug };
   }
+async function boot(options){
+  // compat: options peut contenir { module, redirect, slug }
+  const moduleName = (options?.module || "loc_pro").trim();
+  const redirect = options?.redirect || "pin.html";
+  const slug = (options?.slug || "").trim();
 
+  if (slug) setSlugInUrl(slug);
+
+  // Vérifie session
+  const s = requireSession({ module: moduleName, redirect });
+
+  // renvoie un objet standard
+  return { ok: !!s, session: s, slug: getSlug() };
+}
+   
   // =============================
   // EXPORT GLOBAL + HELPERS
   // =============================
   window.DIGIY_GUARD = {
-    // actions
-    loginWithPin,
-    requireSession,
-    logout,
-    // utils
-    withSlug,
-    go,
-    getCurrent,
-    // low-level (debug)
-    _getSb: getSb
-  };
+  boot,
+  loginWithPin,
+  requireSession,
+  logout,
+  withSlug,
+  go,
+  getCurrent,
+  _getSb: getSb
+};
 
 })();
