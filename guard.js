@@ -108,6 +108,21 @@
   }
 
   // =============================
+  // BOOT (pour app.html)
+  // =============================
+  async function boot(options) {
+    const redirect = options?.login || "pin.html";
+    const s = requireSession(redirect);
+    
+    if (!s) return { ok: false };
+    
+    return { 
+      ok: true, 
+      session: s 
+    };
+  }
+
+  // =============================
   // LOGOUT
   // =============================
   function logout(redirect = "index.html") {
@@ -119,6 +134,7 @@
   // EXPORT
   // =============================
   window.DIGIY_GUARD = {
+    boot,
     loginWithPin,
     requireSession,
     logout,
