@@ -212,7 +212,6 @@
 
     return { ok: true, session: s };
   }
-
   function requireSession(options) {
     // options: { module?, redirect?, onFail? }
     const moduleName = (options?.module || "loc_pro").trim();
