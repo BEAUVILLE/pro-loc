@@ -167,8 +167,8 @@
   // =============================
   async function loginWithPin(opts) {
     // opts: { phone, pin, module?, slug?, rememberSlug? }
-    const phone = (opts?.phone || "").trim();
-    const pin = (opts?.pin || "").trim();
+    const phone = (opts?.phone || "").replace(/\s+/g, "").trim();
+const pin   = (opts?.pin || "").replace(/\s+/g, "").trim();
     const moduleName = (opts?.module || "loc_pro").trim();
     const forcedSlug = (opts?.slug || "").trim();
 
