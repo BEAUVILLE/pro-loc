@@ -1,9 +1,6 @@
 /* =========================
-   DIGIY LOC PRO — GUARD (GO PIN PHASE 2) ✅
+   DIGIY LOC PRO — GUARD (GO PIN PHASE 2) ✅ + SLUG→PRO_ID BRIDGE
    GitHub Pages SAFE • Slug conservé • Session 8h • Logout propre
-   - Expose: window.DIGIY_GUARD.loginWithPin(...)
-   - Expose: window.DIGIY_GUARD.requireSession(...)
-   - Expose: window.DIGIY_GUARD.logout(...)
 ========================= */
 (function () {
   "use strict";
@@ -13,7 +10,7 @@
   // =============================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA"; 
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXqiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
   // =============================
   // CONSTANTES SESSION
@@ -28,6 +25,14 @@
 
   function safeJsonParse(s) {
     try { return JSON.parse(s); } catch { return null; }
+  }
+
+  function safeSet(k, v){
+    try{ localStorage.setItem(k, String(v ?? "")); }catch(_){}
+  }
+
+  function safeGet(k){
+    try{ return localStorage.getItem(k); }catch(_){ return null; }
   }
 
   function getSlugFromUrl() {
@@ -53,7 +58,6 @@
       base.searchParams.set("slug", slug);
       return base.toString();
     } catch {
-      // fallback simple
       const sep = url.includes("?") ? "&" : "?";
       return url + sep + "slug=" + encodeURIComponent(slug);
     }
@@ -99,7 +103,6 @@
   // SUPABASE INIT (robuste)
   // =============================
   function getSb() {
-    // supabase-js v2 doit être chargé via CDN: window.supabase
     if (!window.supabase || !window.supabase.createClient) return null;
     if (!window.__digiy_sb__) {
       window.__digiy_sb__ = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -118,44 +121,68 @@
   }
 
   // =============================
+  // SLUG → PRO_ID BRIDGE ✅
+  // =============================
+  async function resolveProIdFromSlug(slug){
+    const sb = await waitSupabase();
+    if (!sb || !slug) return null;
+
+    // Lecture directe sur go_pins (RLS OK chez toi)
+    const { data, error } = await sb
+      .from("go_pins")
+      .select("owner_id,title,phone")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error || !data?.owner_id) return null;
+
+    return {
+      pro_id: data.owner_id,
+      title: data.title || null,
+      phone: data.phone || null
+    };
+  }
+
+  async function ensureProIdBridge(slug){
+    if (!slug) return null;
+    const already = safeGet("DIGIY_PRO_ID");
+    if (already && /^[0-9a-f-]{36}$/i.test(already)) return already;
+
+    const bridged = await resolveProIdFromSlug(slug);
+    if (bridged?.pro_id){
+      safeSet("DIGIY_PRO_ID", bridged.pro_id);
+      safeSet("DIGIY_SLUG", slug);
+      if (bridged.title) safeSet("DIGIY_TITLE", bridged.title);
+      if (bridged.phone) safeSet("DIGIY_PHONE", bridged.phone);
+      return bridged.pro_id;
+    }
+    return null;
+  }
+
+  // =============================
   // RPC SAFE (ton infra)
   // =============================
   async function rpcVerifyAccessPin(phone, pin, moduleName = "loc_pro") {
     const sb = await waitSupabase();
-    if (!sb) {
-      return { ok: false, reason: "SUPABASE_NOT_READY" };
-    }
+    if (!sb) return { ok: false, reason: "SUPABASE_NOT_READY" };
 
-    // RPC attendue: verify_access_pin(p_phone,p_pin,p_module) -> json { ok:true|false, reason, owner_id? }
-    // Si ton RPC a un autre nom, change ici seulement.
     const { data, error } = await sb.rpc("verify_access_pin", {
       p_phone: phone,
       p_pin: pin,
       p_module: moduleName
     });
 
-    if (error) {
-      return { ok: false, reason: error.message || "RPC_ERROR" };
-    }
-
-    // certains RPC renvoient json direct ou string json
+    if (error) return { ok: false, reason: error.message || "RPC_ERROR" };
     const out = (typeof data === "string") ? safeJsonParse(data) : data;
-    if (!out || typeof out !== "object") {
-      return { ok: false, reason: "RPC_BAD_RESPONSE" };
-    }
+    if (!out || typeof out !== "object") return { ok: false, reason: "RPC_BAD_RESPONSE" };
     return out;
   }
 
   async function rpcGoPinCheck(slug) {
     const sb = await waitSupabase();
-    if (!sb) {
-      return { ok: false, reason: "SUPABASE_NOT_READY" };
-    }
+    if (!sb) return { ok: false, reason: "SUPABASE_NOT_READY" };
 
-    // RPC attendue: go_pin_check(p_slug) -> json { ok:true|false, ... }
-    // Si tu ne l’utilises plus, tu peux ignorer.
     const { data, error } = await sb.rpc("go_pin_check", { p_slug: slug });
-
     if (error) return { ok: false, reason: error.message || "RPC_ERROR" };
     const out = (typeof data === "string") ? safeJsonParse(data) : data;
     if (!out || typeof out !== "object") return { ok: false, reason: "RPC_BAD_RESPONSE" };
@@ -166,37 +193,24 @@
   // API PUBLIQUE
   // =============================
   async function loginWithPin(opts) {
-    // opts: { phone, pin, module?, slug?, rememberSlug? }
     const phone = (opts?.phone || "").replace(/\s+/g, "").trim();
-const pin   = (opts?.pin || "").replace(/\s+/g, "").trim();
+    const pin   = (opts?.pin   || "").replace(/\s+/g, "").trim();
     const moduleName = (opts?.module || "loc_pro").trim();
     const forcedSlug = (opts?.slug || "").trim();
 
-    if (!phone || !pin) {
-      return { ok: false, reason: "MISSING_PHONE_OR_PIN" };
-    }
+    if (!phone || !pin) return { ok: false, reason: "MISSING_PHONE_OR_PIN" };
 
-    // slug: priorité param, sinon URL/session
     const slug = forcedSlug || getSlug();
 
-    // Optionnel: check slug (si tu veux forcer un slug valide)
-    if (slug) {
-      const chk = await rpcGoPinCheck(slug);
-      // si ton go_pin_check bloque trop, commente les 4 lignes ci-dessous
-      if (chk && chk.ok === false && chk.reason) {
-        // on ne bloque pas la connexion PIN si le slug check est “accessory”
-        // mais on garde l’info en debug
-        // return { ok:false, reason: "SLUG_CHECK_FAILED", detail: chk.reason };
-      }
-    }
+    // ✅ bridge slug → pro_id AVANT (pour que tout l’intérieur ait la clé)
+    if (slug) await ensureProIdBridge(slug);
+
+    // (optionnel) check slug
+    if (slug) await rpcGoPinCheck(slug);
 
     const out = await rpcVerifyAccessPin(phone, pin, moduleName);
+    if (!out.ok) return { ok: false, reason: out.reason || "INVALID_PIN" };
 
-    if (!out.ok) {
-      return { ok: false, reason: out.reason || "INVALID_PIN" };
-    }
-
-    // owner_id si dispo (utile pour RLS & requêtes futures)
     const owner_id = out.owner_id || null;
 
     const s = setSession({
@@ -207,18 +221,16 @@ const pin   = (opts?.pin || "").replace(/\s+/g, "").trim();
       slug: slug || null
     });
 
-    // garantir slug dans URL
     if (s.slug) setSlugInUrl(s.slug);
 
     return { ok: true, session: s };
   }
+
   function requireSession(options) {
-    // options: { module?, redirect?, onFail? }
     const moduleName = (options?.module || "loc_pro").trim();
     const redirect = options?.redirect || "pin.html";
     const s = getSession();
 
-    // slugs
     const slug = getSlug();
     if (slug) setSlugInUrl(slug);
 
@@ -230,51 +242,48 @@ const pin   = (opts?.pin || "").replace(/\s+/g, "").trim();
       go(redirect);
       return null;
     }
-
-    // session ok: renvoie la session
     return s;
   }
 
   function logout(redirect = "index.html") {
     clearSession();
-    // on conserve slug si présent (option)
     go(redirect);
   }
 
   function getCurrent() {
-  const s = getSession();
-  const slug = getSlug();
-  if (slug) setSlugInUrl(slug);
-  return { session: s, slug };
-}
+    const s = getSession();
+    const slug = getSlug();
+    if (slug) setSlugInUrl(slug);
+    return { session: s, slug, pro_id: safeGet("DIGIY_PRO_ID") || null };
+  }
 
-async function boot(options){
-  // compat: options peut contenir { module, redirect, slug }
-  const moduleName = (options?.module || "loc_pro").trim();
-  const redirect = options?.redirect || "pin.html";
-  const slug = (options?.slug || "").trim();
+  async function boot(options){
+    const moduleName = (options?.module || "loc_pro").trim();
+    const redirect = options?.redirect || "pin.html";
+    const slug = (options?.slug || "").trim();
 
-  if (slug) setSlugInUrl(slug);
+    if (slug) setSlugInUrl(slug);
 
-  // Vérifie session
-  const s = requireSession({ module: moduleName, redirect });
+    // ✅ bridge slug → pro_id au boot (cas “je reviens plus tard”)
+    const currentSlug = getSlug();
+    if (currentSlug) await ensureProIdBridge(currentSlug);
 
-  // renvoie un objet standard
-  return { ok: !!s, session: s, slug: getSlug() };
-}
+    const s = requireSession({ module: moduleName, redirect });
+    return { ok: !!s, session: s, slug: getSlug(), pro_id: safeGet("DIGIY_PRO_ID") || null };
+  }
 
-// =============================
-// EXPORT GLOBAL + HELPERS
-// =============================
-window.DIGIY_GUARD = {
-  boot,
-  loginWithPin,
-  requireSession,
-  logout,
-  withSlug,
-  go,
-  getCurrent,
-  _getSb: getSb
-};
+  // =============================
+  // EXPORT GLOBAL
+  // =============================
+  window.DIGIY_GUARD = {
+    boot,
+    loginWithPin,
+    requireSession,
+    logout,
+    withSlug,
+    go,
+    getCurrent,
+    _getSb: getSb
+  };
 
 })();
