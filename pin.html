@@ -175,10 +175,11 @@
 
       show("✅ OK. Ouverture du cockpit…", "ok");
       
-      // Redirige vers cockpit
-      setTimeout(() => {const dash = new URL("./app.html", location.href);
-       const dash = new URL("./app.html", location.href);
-        location.replace(dash.toString());
+      // ✅ Redirige vers app.html
+      setTimeout(() => {
+        const dashboardUrl = new URL("./app.html", location.href);
+        dashboardUrl.searchParams.set("slug", LIEU);
+        location.replace(dashboardUrl.toString());
       }, 800);
 
     }catch(e){
