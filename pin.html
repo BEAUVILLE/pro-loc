@@ -186,10 +186,10 @@
       return;
     }
 
-    const phone = $("phone").value;
+    const phone = "+" + String($("phone").value||"").replace(/\D/g,""); // +221771234567
     const pin = cleanPin($("pin").value);
     $("pin").value = pin;
-
+   console.log("PHONE_SENT", phone, "PIN_SENT", pin);
     if(pin.length < 4){
       show("⚠️ Mets au moins 4 chiffres pour ton PIN.", "warn");
       return;
