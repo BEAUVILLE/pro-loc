@@ -1,54 +1,164 @@
 /* =========================
-   DIGIY LOC PRO — GUARD SIMPLIFIÉ
-   Slug + PIN → owner_id → Session 8h
+   DIGIY LOC PRO — GUARD CONSOLIDÉ (FINAL)
+   - Session 8h
+   - RPC verify_access_pin(p_slug,p_pin) -> {ok, owner_id, slug, title, phone, ...}
+   - Slug source of truth: URL > session > localStorage
+   - Sync slug localStorage si URL.slug existe (anti slug fantôme)
+   - Supabase ready lock (évite: "Supabase pas prêt")
 ========================= */
-(function () {
+(function(){
   "use strict";
 
   // =============================
-  // SUPABASE
+  // CONFIG
   // =============================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
-  const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8h
+  const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";        // ✅ unifié
+  const SESSION_TTL_MS = 8 * 60 * 60 * 1000;          // 8h
 
-  function now() { return Date.now(); }
+  const LS = {
+    SLUG: "DIGIY_SLUG",
+    PRO_ID: "DIGIY_PRO_ID",
+    TITLE: "DIGIY_TITLE",
+    PHONE: "DIGIY_PHONE"
+  };
+
+  function now(){ return Date.now(); }
 
   // =============================
-  // SESSION
+  // SAFE localStorage
   // =============================
-  function getSession() {
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
+  function lsGet(k){
+    try{ return localStorage.getItem(k); }catch(_){ return null; }
+  }
+  function lsSet(k,v){
+    try{ localStorage.setItem(k, String(v ?? "")); }catch(_){}
+  }
+  function lsDel(k){
+    try{ localStorage.removeItem(k); }catch(_){}
+  }
+
+  // =============================
+  // SLUG HELPERS (SOURCE OF TRUTH)
+  // =============================
+  function urlSlugRaw(){
+    try{
+      return (new URLSearchParams(location.search).get("slug") || "").trim();
+    }catch(_){
+      return "";
+    }
+  }
+  function cleanSlug(s){
+    const x = String(s || "").trim();
+    if(!x) return "";
+    return x
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"")
+      .replace(/-+/g,"-")
+      .replace(/^_+|_+$/g,"");
+  }
+
+  function getSessionUnsafe(){
+    try{
+      const raw = lsGet(SESSION_KEY);
+      if(!raw) return null;
       const s = JSON.parse(raw);
       if (!s || !s.expires_at || now() > s.expires_at) return null;
       return s;
-    } catch {
+    }catch(_){
       return null;
     }
   }
 
-  function setSession(data) {
-    const session = {
-      ...data,
-      created_at: now(),
-      expires_at: now() + SESSION_TTL_MS
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    return session;
+  function getSlug(){
+    const u = cleanSlug(urlSlugRaw());
+    if(u) return u;
+
+    const s = getSessionUnsafe();
+    const ss = cleanSlug(s?.slug || "");
+    if(ss) return ss;
+
+    return cleanSlug(lsGet(LS.SLUG) || "");
   }
 
-  function clearSession() {
-    localStorage.removeItem(SESSION_KEY);
+  function syncSlugFromUrl(){
+    const u = cleanSlug(urlSlugRaw());
+    if(!u) return null;
+    const cur = cleanSlug(lsGet(LS.SLUG) || "");
+    if(cur !== u) lsSet(LS.SLUG, u);
+    return u;
+  }
+
+  function withSlug(url){
+    const s = getSlug();
+    try{
+      const u = new URL(url, location.href);
+      if(s) u.searchParams.set("slug", s);
+      return u.toString();
+    }catch(_){
+      if(!s) return url;
+      return url + (url.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(s);
+    }
+  }
+
+  function go(url){
+    location.replace(withSlug(url));
+  }
+
+  // 🔥 sync asap (anti slug fantôme)
+  syncSlugFromUrl();
+
+  // =============================
+  // READY LOCK
+  // =============================
+  const READY = (function(){
+    let _resolve, _reject;
+    const promise = new Promise((res, rej)=>{ _resolve = res; _reject = rej; });
+    return { promise, resolve:_resolve, reject:_reject, done:false };
+  })();
+
+  async function ready(timeoutMs = 8000){
+    if(READY.done) return true;
+
+    let t;
+    const timeout = new Promise((_, rej)=>{
+      t = setTimeout(()=>rej(new Error("GUARD_READY_TIMEOUT")), timeoutMs);
+    });
+
+    try{
+      await Promise.race([READY.promise, timeout]);
+      return true;
+    } finally {
+      clearTimeout(t);
+    }
   }
 
   // =============================
-  // SUPABASE
+  // SUPABASE (SAFE / LAZY)
   // =============================
-  function getSb() {
+  async function waitSupabaseCDN(timeoutMs = 8000){
+    const start = now();
+    while(now() - start < timeoutMs){
+      if (window.supabase?.createClient) return true;
+      await new Promise(r=>setTimeout(r, 25));
+    }
+    throw new Error("SUPABASE_CDN_NOT_READY");
+  }
+
+  async function getSbAsync(){
+    await waitSupabaseCDN(8000);
+    if (!window.__digiy_sb__) {
+      window.__digiy_sb__ = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return window.__digiy_sb__;
+  }
+
+  // version sync (peut être null si pas prêt)
+  function getSb(){
     if (!window.supabase?.createClient) return null;
     if (!window.__digiy_sb__) {
       window.__digiy_sb__ = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -57,77 +167,122 @@
   }
 
   // =============================
-  // LOGIN AVEC SLUG + PIN
+  // SESSION (8h)
   // =============================
-  async function loginWithPin(slug, pin) {
-    const sb = getSb();
-    if (!sb) return { ok: false, error: "Supabase non initialisé" };
+  function getSession(){
+    return getSessionUnsafe();
+  }
 
-    slug = (slug || "").trim();
-    pin = (pin || "").trim();
+  function setSession(data){
+    const session = {
+      ...data,
+      created_at: now(),
+      expires_at: now() + SESSION_TTL_MS
+    };
+    lsSet(SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
 
-    if (!slug || !pin) return { ok: false, error: "Slug et PIN requis" };
-
-    // ✅ Appel RPC verify_access_pin(slug, pin)
-    const { data, error } = await sb.rpc("verify_access_pin", {
-      p_slug: slug,
-      p_pin: pin
-    });
-
-    if (error) return { ok: false, error: error.message };
-
-    // Parse si string JSON
-    const result = typeof data === "string" ? JSON.parse(data) : data;
-
-    if (!result?.ok || !result?.owner_id) {
-      return { ok: false, error: result?.error || "PIN invalide" };
-    }
-
-    // ✅ STOCKER owner_id + infos en session
-    const session = setSession({
-      ok: true,
-      owner_id: result.owner_id,
-      slug: result.slug,
-      title: result.title,
-      phone: result.phone
-    });
-
-    return { ok: true, session };
+  function clearSession(){
+    lsDel(SESSION_KEY);
   }
 
   // =============================
-  // PROTECTION DE PAGE
+  // LOGIN (slug + pin)
   // =============================
-  function requireSession(redirect = "pin.html") {
-    const s = getSession();
-    if (!s || !s.owner_id) {
-      location.replace(redirect);
+  async function loginWithPin(slug, pin){
+    const s = cleanSlug(slug);
+    const p = String(pin || "").trim();
+
+    if(!s || !p) return { ok:false, error:"Slug et PIN requis" };
+
+    const sb = await getSbAsync().catch(e => null);
+    if(!sb) return { ok:false, error:"Supabase non initialisé" };
+
+    const { data, error } = await sb.rpc("verify_access_pin", {
+      p_slug: s,
+      p_pin: p
+    });
+
+    if(error) return { ok:false, error: error.message || String(error) };
+
+    const result = (typeof data === "string") ? (function(){
+      try{ return JSON.parse(data); }catch(_){ return null; }
+    })() : data;
+
+    if(!result?.ok || !result?.owner_id){
+      return { ok:false, error: result?.error || "PIN invalide" };
+    }
+
+    // ✅ session
+    const session = setSession({
+      ok: true,
+      owner_id: result.owner_id,
+      slug: cleanSlug(result.slug || s),
+      title: result.title || "",
+      phone: result.phone || ""
+    });
+
+    // ✅ sync LS utile
+    lsSet(LS.PRO_ID, session.owner_id);          // si pro_id != owner_id un jour, tu changes ici
+    lsSet(LS.SLUG, session.slug);
+    if(session.title) lsSet(LS.TITLE, session.title);
+    if(session.phone) lsSet(LS.PHONE, session.phone);
+
+    READY.done = true;
+    READY.resolve(true);
+
+    return { ok:true, session };
+  }
+
+  // =============================
+  // REQUIRE SESSION
+  // =============================
+  function requireSession(redirect = "pin.html"){
+    const s = getSessionUnsafe();
+    if(!s || !s.owner_id){
+      location.replace(withSlug(redirect));
       return null;
     }
     return s;
   }
 
   // =============================
-  // BOOT (pour app.html)
+  // BOOT (pages privées)
   // =============================
-  async function boot(options) {
-    const redirect = options?.login || "pin.html";
-    const s = requireSession(redirect);
-    
-    if (!s) return { ok: false };
-    
-    return { 
-      ok: true, 
-      session: s 
-    };
+  async function boot(options){
+    const loginUrl = options?.login || "pin.html";
+
+    // 🔥 autorité URL slug -> écrase LS
+    syncSlugFromUrl();
+
+    // session required
+    const s = requireSession(loginUrl);
+    if(!s) return { ok:false };
+
+    // ensure supabase is ready for the app
+    try{
+      await getSbAsync();
+      READY.done = true;
+      READY.resolve(true);
+    }catch(e){
+      // si CDN supabase pas prêt => on bloque proprement
+      READY.reject(e);
+      throw new Error("Supabase pas prêt (guard non prêt). Recharge ou reconnecte-toi.");
+    }
+
+    return { ok:true, session: s };
   }
 
   // =============================
   // LOGOUT
   // =============================
-  function logout(redirect = "index.html") {
+  function logout(redirect = "index.html"){
     clearSession();
-    location.replace(redirect);
+    // on garde slug si tu veux; sinon décommente:
+    // lsDel(LS.SLUG);
+    // lsDel(LS.PRO_ID);
+    location.replace(withSlug(redirect));
   }
 
   // =============================
@@ -139,120 +294,13 @@
     requireSession,
     logout,
     getSession,
-    getSb
+    getSb,          // sync (nullable)
+    getSbAsync,     // ✅ recommended
+    ready,          // ✅ await guard readiness
+    getSlug,
+    withSlug,
+    go,
+    syncSlugFromUrl
   };
-
-})();
-/* =========================
-   DIGIY GUARD — SLUG SOURCE OF TRUTH (PATCH)
-   Objectif:
-   - Slug priorité: URL > session > localStorage
-   - Si URL.slug existe => synchronise localStorage (anti "slug fantôme")
-   - withSlug() injecte toujours le bon slug
-========================= */
-
-(function(){
-  "use strict";
-
-  // --- storage keys (stables) ---
-  const K = {
-    SLUG: "DIGIY_SLUG",
-    PRO_ID: "DIGIY_PRO_ID",     // si chez toi c'est owner_id, ok; sinon adapte
-    TITLE: "DIGIY_TITLE",
-    PHONE: "DIGIY_PHONE",
-    SESSION: "DIGIY_LOC_PRO_SESSION_V1" // adapte si ton guard utilise un autre nom
-  };
-
-  // --- safe localStorage ---
-  function lsGet(k){
-    try{ return localStorage.getItem(k); }catch(_){ return null; }
-  }
-  function lsSet(k,v){
-    try{ localStorage.setItem(k, String(v ?? "")); }catch(_){}
-  }
-
-  // --- read slug from URL (strict) ---
-  function urlSlug(){
-    try{
-      const s = new URLSearchParams(location.search).get("slug");
-      return (s || "").trim();
-    }catch(_){
-      return "";
-    }
-  }
-
-  // --- normalize slug safely (optional but recommended) ---
-  function cleanSlug(s){
-    const x = String(s || "").trim();
-    if(!x) return "";
-    return x
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")   // enlève accents
-      .replace(/[^a-z0-9\-_]/g,"")                      // garde safe
-      .replace(/-+/g,"-")
-      .replace(/^_+|_+$/g,"");
-  }
-
-  // --- get current session object from guard (if exists) ---
-  // Si ton guard expose déjà getSession(), on l'utilise.
-  function safeSession(){
-    try{
-      const s = window.DIGIY_GUARD?.getSession?.();
-      return s && typeof s === "object" ? s : null;
-    }catch(_){
-      return null;
-    }
-  }
-
-  // ✅ SOURCE OF TRUTH
-  function getSlug(){
-    const u = cleanSlug(urlSlug());
-    if(u) return u;
-
-    const sess = safeSession();
-    const ss = cleanSlug(sess?.slug || "");
-    if(ss) return ss;
-
-    return cleanSlug(lsGet(K.SLUG) || "");
-  }
-
-  // ✅ Sync localStorage ONLY when URL gives slug (authoritative)
-  function syncSlugFromUrl(){
-    const u = cleanSlug(urlSlug());
-    if(!u) return null;
-    const cur = cleanSlug(lsGet(K.SLUG) || "");
-    if(cur !== u) lsSet(K.SLUG, u);
-    return u;
-  }
-
-  // ✅ Inject slug into urls
-  function withSlug(url){
-    const s = getSlug();
-    try{
-      const u = new URL(url, location.href);
-      if(s) u.searchParams.set("slug", s);
-      return u.toString();
-    }catch(_){
-      // fallback simple
-      if(!s) return url;
-      return url + (url.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(s);
-    }
-  }
-
-  // ✅ Convenience: redirect safe
-  function go(url){
-    location.replace(withSlug(url));
-  }
-
-  // --- Attach to guard (non destructif) ---
-  window.DIGIY_GUARD = window.DIGIY_GUARD || {};
-  window.DIGIY_GUARD.getSlug = getSlug;
-  window.DIGIY_GUARD.withSlug = withSlug;
-  window.DIGIY_GUARD.go = go;
-  window.DIGIY_GUARD.syncSlugFromUrl = syncSlugFromUrl;
-
-  // 🔥 Execute sync ASAP when script loads
-  // (Résout ton cas: URL=chez-astou-boutique, LS=chez-astou-saly)
-  syncSlugFromUrl();
 
 })();
