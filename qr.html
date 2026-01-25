@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DIGIY LOC PRO — QR</title>
+
+  <!-- QR lib -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+
+  <!-- Guard (slug + session) -->
+  <script src="./guard.js?v=locpro-final"></script>
+
+  <style>
+    :root{
+      --bg:#020617;
+      --card:#052e16;
+      --accent:#facc15;
+      --muted:#9ca3af;
+      --text:#e5e7eb;
+      --line:rgba(148,163,184,0.18);
+      --danger:#ef4444;
+      --ok:#22c55e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:system-ui;
+      background:linear-gradient(135deg,#020617,#062e16);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .wrap{max-width:720px;margin:auto;padding:18px}
+    h1{font-size:1.4rem;margin-bottom:6px}
+    p{color:var(--muted);margin-bottom:14px;line-height:1.35}
+    .card{
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      margin-top:14px;
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      font-weight:900;
+      border:none;
+      cursor:pointer;
+      margin-top:10px;
+    }
+    .btn.primary{background:var(--accent);color:#022c22}
+    .btn.ghost{
+      background:transparent;
+      border:1px solid rgba(250,204,21,0.35);
+      color:#fff;
+    }
+    .mini{margin-top:10px;color:var(--muted);font-size:.9rem}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
+    .note{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      display:none;
+      white-space:pre-wrap;
+      line-height:1.35;
+    }
+    .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca}
+    .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+
+    .qrbox{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:16px;
+      border-radius:16px;
+      border:1px dashed rgba(250,204,21,0.35);
+      background:rgba(0,0,0,0.12);
+      margin-top:12px;
+    }
+    canvas{max-width:100%;height:auto;border-radius:12px}
+    .label{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,0.12);
+      line-height:1.35;
+    }
+    .label b{color:#fff}
+    .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:12px}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>📎 QR du logement</h1>
+  <p>Télécharge le QR (PNG) pour afficher au comptoir / sur la porte / WhatsApp.</p>
+
+  <div class="card">
+    <div class="row">
+      <button class="btn ghost" id="btnBack">⬅️ Retour</button>
+      <button class="btn primary" id="btnDownload">⬇️ Télécharger QR (PNG)</button>
+    </div>
+
+    <div class="qrbox">
+      <canvas id="qr"></canvas>
+    </div>
+
+    <div class="label mono" id="urlBox">URL: —</div>
+
+    <div class="note" id="note"></div>
+
+    <div class="hr"></div>
+    <div class="mini mono" id="dbg"></div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  "use strict";
+
+  // ✅ protège (même logique que tes pages pro)
+  const boot = await window.DIGIY_GUARD?.boot?.({
+    module:"loc",
+    dashboard:"./qr.html",
+    login:"./pin.html",
+    requireSlug:true
+  });
+
+  if(!boot?.ok){
+    // si guard absent / pas ok, on tente quand même slug URL
+    // (mais en PRO normal: ça passe)
+  }
+
+  const slug = (window.DIGIY_GUARD?.getSlug?.() || new URLSearchParams(location.search).get("slug") || "").trim();
+  if(!slug){
+    alert("❌ slug manquant. Ouvre avec ?slug=chez-xxx");
+    return;
+  }
+
+  // ✅ URL publique du client (ADAPTE si besoin)
+  // Si ta fiche publique est sur digiy-loc/index.html?slug=...
+  // ou bien fiche.html?slug=...
+  const PUBLIC_BASE = "https://beauville.github.io/digiy-loc/";
+  const PUBLIC_PAGE = "fiche.html"; // <- change si ta fiche client s'appelle autrement
+  const publicUrl = `${PUBLIC_BASE}${PUBLIC_PAGE}?slug=${encodeURIComponent(slug)}`;
+
+  // UI
+  const qrCanvas = document.getElementById("qr");
+  const urlBox = document.getElementById("urlBox");
+  const noteEl = document.getElementById("note");
+  const dbgEl = document.getElementById("dbg");
+  const btnDownload = document.getElementById("btnDownload");
+  const btnBack = document.getElementById("btnBack");
+
+  function note(msg,type){
+    noteEl.style.display = msg ? "block" : "none";
+    noteEl.className = "note " + (type||"");
+    noteEl.textContent = msg || "";
+  }
+
+  urlBox.textContent = `URL: ${publicUrl}`;
+  dbgEl.textContent = `slug: ${slug}`;
+
+  // ✅ bouton retour -> vers index pro (ou page que tu veux)
+  btnBack.onclick = ()=>{
+    const go = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./index.html") : "./index.html?slug=" + encodeURIComponent(slug);
+    location.href = go;
+  };
+
+  // ✅ génère QR
+  try{
+    await QRCode.toCanvas(qrCanvas, publicUrl, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 520
+    });
+    note("✅ QR prêt.", "ok");
+  }catch(e){
+    console.error(e);
+    note("❌ Erreur QR: " + (e?.message || e), "bad");
+    return;
+  }
+
+  // ✅ download PNG
+  btnDownload.onclick = ()=>{
+    try{
+      const a = document.createElement("a");
+      a.download = `DIGIY-LOC-QR-${slug}.png`;
+      a.href = qrCanvas.toDataURL("image/png");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      note("✅ Téléchargement lancé.", "ok");
+    }catch(e){
+      console.error(e);
+      note("❌ Download KO: " + (e?.message || e), "bad");
+    }
+  };
+
+})();
+</script>
+</body>
+</html>
