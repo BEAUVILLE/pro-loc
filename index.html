@@ -6,14 +6,13 @@
 <title>DIGIY LOC PRO ♾️ — Cockpit Propriétaire</title>
 <meta name="theme-color" content="#0b1020" />
 
-<!-- ✅ Supabase CDN (obligatoire: guard.js construit sb via supabase.createClient) -->
+<!-- ✅ Supabase CDN + Guard -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./guard.js?v=locpro-wave-ultra-full"></script>
 
 <style>
 :root{
-  --bg:#020617;
-  --bg2:#0b1020;
+  --bg:#020617; --bg2:#0b1020;
   --card:rgba(255,255,255,.03);
   --line:#1f2937;
   --ink:#f9fafb;
@@ -35,6 +34,7 @@ body{
 }
 a{color:inherit}
 .wrap{max-width:1100px;margin:0 auto;padding:14px}
+
 .top{
   display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
   padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
@@ -184,6 +184,7 @@ a{color:inherit}
       <button class="btn danger small" id="btnLogout" style="display:none">🚪 Déconnexion</button>
     </div>
 
+    <!-- ✅ NAV -->
     <div class="navRow">
       <div class="navLeft">
         <a class="btn ghost small" id="btnBack" href="#">⬅️ Retour</a>
@@ -257,11 +258,8 @@ a{color:inherit}
 (async function(){
   "use strict";
 
-  // Boot guard (bloque si pas de session)
-  window.DIGIY_GUARD.requireSession({
-    module: "loc_pro",
-    redirect: "./pin.html"
-  });
+  // ✅ Session obligatoire (signature correcte)
+  window.DIGIY_GUARD.requireSession("./pin.html");
 
   const $ = (id)=>document.getElementById(id);
   const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
@@ -281,65 +279,64 @@ a{color:inherit}
     el.textContent = msg || "";
   }
 
-  const slug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+  // ✅ Slug source-of-truth
+  const slug = (window.DIGIY_GUARD.getSlug() || "").trim();
   if($("navPlace")) $("navPlace").textContent = "Lieu : " + (slug || "—");
   if($("kvSlug")) $("kvSlug").textContent = slug || "—";
 
-  function withSlug(path){
-    return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
-  }
+  function withSlug(path){ return window.DIGIY_GUARD.withSlug(path); }
 
-  // ✅ GO ANTI [object Object]
-  function go(path){
+  // ✅ GO SAFE anti [object Object]
+  function go(input){
+    let path = input;
     if(path && typeof path === "object"){
       path = path.currentTarget?.getAttribute?.("data-go") || "";
     }
-    if(typeof path !== "string" || !path.trim()) return;
+    path = String(path || "").trim();
+    if(!path) return;
     location.href = withSlug(path);
   }
 
-  // ✅ Nav links internes (slug conservé)
-  const links = [
-    ["btnBack","./index.html"],
-    ["goToday","./today.html"],
-    ["goPulse","./proprio-loc.html"],
-    ["goPlanning","./planning.html"],
-    ["goListing","./listing.html"],
-    ["goLinks","./manage-links.html"],
-    ["goHealth","./health-loc.html"],
-    ["btnOpenPin","./pin.html"],
+  // ✅ Nav wiring (slug conservé)
+  const NAV = [
+    { id:"btnBack",    type:"a",      path:"./index.html" },
+    { id:"goToday",    type:"a",      path:"./today.html" },
+    { id:"goPulse",    type:"a",      path:"./proprio-loc.html" },
+    { id:"goPlanning", type:"a",      path:"./planning.html" },
+    { id:"goListing",  type:"a",      path:"./listing.html" },
+    { id:"goLinks",    type:"a",      path:"./manage-links.html" },
+    { id:"goHealth",   type:"a",      path:"./health-loc.html" },
+    { id:"btnOpenPin", type:"a",      path:"./pin.html" },
+    { id:"goApp",      type:"button", path:"./app.html" },
   ];
-  links.forEach(([id, path])=>{
+
+  NAV.forEach(({id,type,path})=>{
     const el = $(id);
-    if(el && el.tagName === "A") el.href = withSlug(path);
+    if(!el) return;
+    if(type === "a" && el.tagName === "A"){
+      el.href = withSlug(path);
+      return;
+    }
+    el.setAttribute("data-go", path);
+    el.addEventListener("click", go);
   });
 
-  // ✅ Bouton APP (data-go + go safe)
-  $("goApp")?.addEventListener("click", go);
-
-  // ✅ Fiche publique client (externe, PAS withSlug)
+  // ✅ Fiche publique (externe)
   if ($("btnPublic")) {
-    const url = "https://beauville.github.io/digiy-loc/fiche.html"
-      + (slug ? `?slug=${encodeURIComponent(slug)}` : "");
+    const url = "https://beauville.github.io/digiy-loc/fiche.html" + (slug ? `?slug=${encodeURIComponent(slug)}` : "");
     $("btnPublic").href = url;
     $("btnPublic").target = "_blank";
     $("btnPublic").rel = "noopener noreferrer";
-    $("btnPublic").textContent = "👁️ Ma fiche publique";
   }
 
-  // Logout
+  // ✅ Logout safe
   $("btnLogout")?.addEventListener("click", ()=>{
-    window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
+    window.DIGIY_GUARD.logout("./pin.html");
   });
 
-  // ---- SB SAFE (attend guard, jamais figé null)
+  // ✅ Supabase ready (correct)
   async function getSb(){
-    for(let i=0;i<80;i++){
-      const s = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb || window.sb || window.__sb;
-      if(s?.rpc) return s;
-      await sleep(50);
-    }
-    throw new Error("Supabase pas prêt (guard non prêt). Recharge ou reconnecte-toi.");
+    return await window.DIGIY_GUARD.getSbAsync();
   }
 
   async function rpcSafe(fn, params){
@@ -351,10 +348,10 @@ a{color:inherit}
 
   // ---- UI Session
   function refreshSessionUI(){
-    const sess = window.DIGIY_GUARD?.getSession?.();
+    const sess = window.DIGIY_GUARD.getSession();
     const phone = sess?.phone || "—";
     const ownerId = sess?.owner_id || "—";
-    const exp = sess?.exp ? new Date(Number(sess.exp)).toISOString().slice(0,16).replace("T"," ") : "";
+    const exp = sess?.expires_at ? new Date(Number(sess.expires_at)).toLocaleString("fr-FR") : "";
 
     if($("kvPhone")) $("kvPhone").textContent = phone;
     if($("kvOwner")) $("kvOwner").textContent = ownerId;
@@ -368,10 +365,7 @@ a{color:inherit}
         $("pillState").classList.add("ok");
       }
       if($("btnLogout")) $("btnLogout").style.display = "inline-flex";
-      showNote("noteMain",
-        "✅ Tout est OK.\nAstuce : partage la fiche publique au client. Il voit la galerie + WhatsApp direct.",
-        "ok"
-      );
+      showNote("noteMain","✅ Tout est OK.\nAstuce : partage la fiche publique au client (WhatsApp direct).","ok");
       return true;
     }
 
@@ -382,7 +376,7 @@ a{color:inherit}
       $("pillState").classList.add("warn");
     }
     if($("btnLogout")) $("btnLogout").style.display = "none";
-    showNote("noteMain", "🔒 Accès non ouvert. Entre ton téléphone + PIN.", "warn");
+    showNote("noteMain","🔒 Accès non ouvert. Entre ton téléphone + PIN.","warn");
     return false;
   }
 
@@ -411,7 +405,6 @@ a{color:inherit}
     return escapeHtml(str).replaceAll("`","&#096;");
   }
 
-  // ✅ renderList (UUID + verify_v2)
   function renderList(rows, ownerId){
     const box = $("waveList");
     if(!box) return;
@@ -460,7 +453,7 @@ a{color:inherit}
 
     box.querySelectorAll(".jsVerify").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
-        const id = String(btn.getAttribute("data-id") || "").trim(); // ✅ UUID
+        const id = String(btn.getAttribute("data-id") || "").trim();
         if(!id) return;
 
         const old = btn.textContent;
@@ -494,7 +487,7 @@ a{color:inherit}
       return;
     }
 
-    const sess = window.DIGIY_GUARD?.getSession?.() || {};
+    const sess = window.DIGIY_GUARD.getSession() || {};
     const ownerPhone = sess.phone || "";
     const ownerId = sess.owner_id || "";
 
@@ -531,14 +524,13 @@ a{color:inherit}
     if(ownerId && $("kvOwner")) $("kvOwner").textContent = ownerId;
   }
 
-  // ===== DECLARE (V2 avec owner_id UUID) =====
   $("btnDeclareOwner")?.addEventListener("click", async ()=>{
     const sessOk = refreshSessionUI();
     if(!sessOk) return;
 
-    const sess = window.DIGIY_GUARD?.getSession?.() || {};
+    const sess = window.DIGIY_GUARD.getSession() || {};
     const ownerId = sess.owner_id || "";
-    const placeSlug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+    const placeSlug = (window.DIGIY_GUARD.getSlug() || "").trim();
 
     if(!ownerId || !placeSlug){
       showNote("noteWave", "⚠️ owner_id ou slug manquant. Reconnecte-toi via PIN.", "bad");
