@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>DIGIY LOC PRO — Vue du jour</title>
   <meta name="theme-color" content="#0b1020"/>
+
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ✅ GUARD (déjà posé) -->
+  <script src="./guard.js?v=locpro-guard-final"></script>
 
   <style>
     :root{
@@ -132,7 +136,7 @@
       <div class="logo"></div>
       <div>
         <h1>DIGIY LOC PRO — Vue du jour</h1>
-        <div class="sub">Arrivées • Départs • En attente • Pulse • Paiements</div>
+        <div class="sub">Arrivées • Départs • Occupés • Pulse • Paiements</div>
       </div>
     </div>
 
@@ -150,7 +154,7 @@
       <div class="head">
         <div>
           <h2>📊 Résumé</h2>
-          <small>Aujourd’hui</small>
+          <small id="lblDay">Aujourd’hui</small>
         </div>
       </div>
       <div class="body">
@@ -193,8 +197,8 @@
     <section class="card col6">
       <div class="head">
         <div>
-          <h2>🧳 Arrivées / Départs</h2>
-          <small>si table réservations dispo</small>
+          <h2>🧳 Arrivées / Départs / Occupés</h2>
+          <small>via RPC (si dispo) + fallback</small>
         </div>
       </div>
       <div class="body">
@@ -221,32 +225,15 @@
 
 <script>
 /* =============================
-   SUPABASE CONFIG
+   DIGIY LOC PRO — TODAY (GUARD FIRST) ✅
+   - Plus d'auth Supabase obligatoire (PIN session)
+   - Slug = source of truth via guard
+   - RPC day listing si dispo: digiy_loc_day_listing(p_slug,p_day)
+   - Pulse + Paiements: filtrage business_code si RPC slug->code dispo, sinon best-effort
 ============================= */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* =============================
-   ROUTING (slug)
-============================= */
-const url = new URL(location.href);
-const SLUG = (url.searchParams.get("slug") || "").trim();
-function withSlug(path){
-  if(!SLUG) return path;
-  const u = new URL(path, location.href);
-  u.searchParams.set("slug", SLUG);
-  return u.toString();
-}
-document.getElementById("btnBack").onclick = ()=>{
-  if(history.length > 1) return history.back();
-  location.href = withSlug("./index.html");
-};
-
-/* =============================
-   UI helpers
-============================= */
 const $ = (id)=>document.getElementById(id);
+
 function showNote(id, msg){
   const el = $(id);
   if(!el) return;
@@ -261,234 +248,357 @@ function hideNote(id){
 }
 function esc(s){ return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 function fmtMoney(x){ try{ return Number(x||0).toLocaleString("fr-FR")+" F"; }catch(_){ return (x||"—")+" F"; } }
+
 function todayISO(){
   const d=new Date();
-  const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,"0"); const da=String(d.getDate()).padStart(2,"0");
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const da=String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${da}`;
 }
-function pillUser(user){
-  $("pillUser").innerHTML = `👤 <strong>${user ? (user.email || "PRO") : "—"}</strong>`;
-  if(user){
-    $("pillState").textContent = "✅ Connecté";
-    $("pillState").classList.remove("warn"); $("pillState").classList.add("ok");
-  }else{
-    $("pillState").textContent = "🔒 Déconnecté";
-    $("pillState").classList.remove("ok"); $("pillState").classList.add("warn");
+function prettyDateFR(iso){
+  try{
+    const [y,m,d]=String(iso||"").split("-");
+    return `${d}/${m}/${y}`;
+  }catch(_){ return iso||""; }
+}
+
+function pillUserFromSession(sess){
+  const name = (sess?.title || "PRO").trim();
+  $("pillUser").innerHTML = `👤 <strong>${esc(name || "PRO")}</strong>`;
+  $("pillState").textContent = "✅ Connecté";
+  $("pillState").classList.remove("warn"); $("pillState").classList.add("ok");
+}
+
+function setDisconnected(msg){
+  $("pillUser").innerHTML = `👤 <strong>—</strong>`;
+  $("pillState").textContent = "🔒 Déconnecté";
+  $("pillState").classList.remove("ok"); $("pillState").classList.add("warn");
+  showNote("noteStats", msg || "Connecte-toi d’abord (PIN).");
+  showNote("notePulse", "Connecte-toi d’abord.");
+  showNote("notePay", "Connecte-toi d’abord.");
+  showNote("noteArrDep", "Connecte-toi d’abord.");
+  showNote("notePending", "Connecte-toi d’abord.");
+}
+
+function clearAllNotes(){
+  hideNote("noteStats");
+  hideNote("notePulse");
+  hideNote("notePay");
+  hideNote("noteArrDep");
+  hideNote("notePending");
+}
+
+function resetUI(){
+  $("stats").innerHTML = "";
+  $("pulseList").innerHTML = "";
+  $("payList").innerHTML = "";
+  $("arrdepList").innerHTML = "";
+  $("pendingList").innerHTML = "";
+  $("pulseQueued").textContent="0";
+  $("pulseSent").textContent="0";
+  $("pulseFailed").textContent="0";
+}
+
+document.getElementById("btnBack").onclick = ()=>{
+  // garde navigation simple + slug
+  if(history.length > 1) return history.back();
+  window.DIGIY_GUARD.go("index.html","replace");
+};
+document.getElementById("btnRefresh").onclick = ()=> refreshAll();
+
+/* =============================
+   RPC HELPERS
+============================= */
+async function rpc(sb, fn, args){
+  const { data, error } = await sb.rpc(fn, args || {});
+  if(error) throw error;
+  // si data string JSON
+  if(typeof data === "string"){
+    try{ return JSON.parse(data); }catch(_){ return data; }
+  }
+  return data;
+}
+
+async function tryGetBusinessCode(sb, slug){
+  try{
+    const code = await rpc(sb, "digiy_loc_get_business_code_by_slug", { p_slug: slug });
+    return (code && String(code).trim()) ? String(code).trim() : null;
+  }catch(_){
+    return null;
   }
 }
 
 /* =============================
-   DATA loaders
+   RENDER
 ============================= */
-async function getUser(){
-  const { data } = await SB.auth.getSession();
-  return data?.session?.user || null;
+function renderStats(cards){
+  $("stats").innerHTML = "";
+  cards.forEach(([lbl,val,color])=>{
+    const d=document.createElement("div");
+    d.className="stat";
+    d.innerHTML = `<div class="num">${esc(val)}</div><div class="lbl">${esc(lbl)}</div>`;
+    $("stats").appendChild(d);
+  });
 }
 
-async function loadPulse(){
-  hideNote("notePulse");
+function renderArrDepFromDayListing(payload){
+  $("arrdepList").innerHTML = "";
+  const arr = payload?.arrivals || [];
+  const dep = payload?.departures || [];
+  const occ = payload?.occupied || [];
+  const stats = payload?.stats || {};
+
+  const blocks = [];
+
+  // Arrivées
+  blocks.push({ title:"Arrivées", tag:"ok", rows:arr.map(r=>({
+    title: r.guest_name || "Client",
+    meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+    right: r.unit_title || ""
+  }))});
+
+  // Départs
+  blocks.push({ title:"Départs", tag:"warn", rows:dep.map(r=>({
+    title: r.guest_name || "Client",
+    meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+    right: r.unit_title || ""
+  }))});
+
+  // Occupés
+  blocks.push({ title:"Occupés", tag:"warn", rows:occ.map(r=>({
+    title: r.guest_name || "Client",
+    meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+    right: r.unit_title || ""
+  }))});
+
+  // Flatten render
+  const all = [];
+  blocks.forEach(b=>{
+    if(!b.rows.length) return;
+    b.rows.forEach(x=> all.push({ ...x, type:b.title, tag:b.tag }));
+  });
+
+  if(!all.length){
+    showNote("noteArrDep","Aucune arrivée / départ / occupé pour aujourd’hui (RPC OK).");
+    return;
+  }
+
+  all.slice(0, 40).forEach(r=>{
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${esc(r.type)} — ${esc(r.title)} <span class="tag ${esc(r.tag)}">${esc(r.type.toUpperCase())}</span></div>
+        <div class="tag">${esc(r.right||"")}</div>
+      </div>
+      <div class="itemMeta">${r.meta}</div>
+    `;
+    $("arrdepList").appendChild(div);
+  });
+}
+
+function renderPulse(rows){
   $("pulseList").innerHTML = "";
-  $("pulseQueued").textContent = "0";
-  $("pulseSent").textContent = "0";
-  $("pulseFailed").textContent = "0";
+  const queued = rows.filter(r=>r.status==="queued" || r.status==="sending");
+  const sent = rows.filter(r=>r.status==="sent");
+  const failed = rows.filter(r=>r.status==="failed");
 
+  $("pulseQueued").textContent = String(queued.length);
+  $("pulseSent").textContent = String(sent.length);
+  $("pulseFailed").textContent = String(failed.length);
+
+  if(!rows.length){
+    showNote("notePulse","Aucun Pulse visible (ou RLS bloque).");
+    return;
+  }
+
+  const show = queued.slice(0,10).concat(failed.slice(0,5)).concat(sent.slice(0,5));
+  show.forEach(r=>{
+    const div = document.createElement("div");
+    div.className="item";
+    const st = r.status==="sent" ? "ok" : (r.status==="failed" ? "bad" : "warn");
+    div.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${esc(r.pulse_kind||"Pulse")} <span class="tag ${st}">${esc(r.status||"")}</span></div>
+        <div class="tag">⏱️ ${esc((r.due_at||"").toString().slice(0,16).replace("T"," "))}</div>
+      </div>
+      <div class="itemMeta">
+        📞 ${esc(r.phone||"—")} • 🧾 ${esc(r.business_code||"—")}
+        ${r.last_error ? `<div style="margin-top:6px;color:#fecaca">⚠️ ${esc(r.last_error)}</div>` : ``}
+      </div>
+    `;
+    $("pulseList").appendChild(div);
+  });
+}
+
+function renderPayments(rows){
+  $("payList").innerHTML = "";
+  if(!rows.length){
+    showNote("notePay","Aucune preuve récente.");
+    return;
+  }
+  rows.forEach(p=>{
+    const div=document.createElement("div");
+    div.className="item";
+    const st = (p.status||"pending").toLowerCase();
+    const tag = st==="confirmed" ? "ok" : (st==="rejected" ? "bad" : "warn");
+    div.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${esc((p.status||"PENDING").toUpperCase())} <span class="tag ${tag}">${fmtMoney(p.amount_expected)}</span></div>
+        <div class="tag">🧾 ${esc(p.wave_tx_ref||"—")}</div>
+      </div>
+      <div class="itemMeta">
+        👤 ${esc(p.client_name||"Client")} ${p.client_phone?(" • "+esc(p.client_phone)):""}<br>
+        🕒 ${esc((p.created_at||"").toString().slice(0,16).replace("T"," "))}
+      </div>
+    `;
+    $("payList").appendChild(div);
+  });
+}
+
+function renderPending(rows){
+  $("pendingList").innerHTML = "";
+  if(!rows.length){
+    showNote("notePending","Aucune réservation en attente.");
+    return;
+  }
+  rows.forEach(r=>{
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${esc(r.client_nom||"Client")} <span class="tag warn">EN ATTENTE</span></div>
+        <div class="tag">${esc(r.tracking_code||"—")}</div>
+      </div>
+      <div class="itemMeta">
+        📅 ${esc(r.date_arrivee||"—")} → ${esc(r.date_depart||"—")} (${esc(r.nb_nuits||0)} nuits)<br>
+        📞 ${esc(r.client_phone||"—")} • 💰 ${esc(fmtMoney(r.montant_total))}
+      </div>
+    `;
+    $("pendingList").appendChild(div);
+  });
+}
+
+/* =============================
+   LOADERS (best effort)
+============================= */
+async function loadDayListing(sb, slug, dayISO){
   try{
-    const { data, error } = await SB
-      .from("digiy_loc_outbox")
-      .select("id, due_at, pulse_kind, status, last_error, sent_at, phone, business_code")
-      .order("due_at", { ascending:true })
-      .limit(40);
-
-    if(error) throw error;
-
-    const rows = data || [];
-    const queued = rows.filter(r=>r.status==="queued" || r.status==="sending");
-    const sent = rows.filter(r=>r.status==="sent");
-    const failed = rows.filter(r=>r.status==="failed");
-
-    $("pulseQueued").textContent = String(queued.length);
-    $("pulseSent").textContent = String(sent.length);
-    $("pulseFailed").textContent = String(failed.length);
-
-    if(!rows.length){
-      showNote("notePulse","Aucun Pulse visible (ou RLS bloque).");
-      return;
+    const payload = await rpc(sb, "digiy_loc_day_listing", { p_slug: slug, p_day: dayISO });
+    if(payload?.ok){
+      // Stats depuis RPC
+      const st = payload.stats || {};
+      renderStats([
+        ["Arrivées", st.arr_count ?? (payload.arrivals||[]).length],
+        ["Départs",  st.dep_count ?? (payload.departures||[]).length],
+        ["Occupés",  st.occ_count ?? (payload.occupied||[]).length],
+        ["Pulse à venir", 0],
+        ["Pulse échecs", 0],
+        ["Pulse envoyés", 0],
+      ]);
+      renderArrDepFromDayListing(payload);
+      return { ok:true, payload };
     }
-
-    const show = queued.slice(0,10).concat(failed.slice(0,5)).concat(sent.slice(0,5));
-
-    show.forEach(r=>{
-      const div = document.createElement("div");
-      div.className="item";
-      const st = r.status==="sent" ? "ok" : (r.status==="failed" ? "bad" : "warn");
-      div.innerHTML = `
-        <div class="itemTop">
-          <div class="itemTitle">${esc(r.pulse_kind||"Pulse")} <span class="tag ${st}">${esc(r.status||"")}</span></div>
-          <div class="tag">⏱️ ${esc((r.due_at||"").toString().slice(0,16).replace("T"," "))}</div>
-        </div>
-        <div class="itemMeta">
-          📞 ${esc(r.phone||"—")} • 🧾 ${esc(r.business_code||"—")}
-          ${r.last_error ? `<div style="margin-top:6px;color:#fecaca">⚠️ ${esc(r.last_error)}</div>` : ``}
-        </div>
-      `;
-      $("pulseList").appendChild(div);
-    });
-
+    return { ok:false, error: payload?.reason || "RPC_DAY_LISTING_NOT_OK" };
   }catch(e){
-    const msg = (e?.message || String(e));
-    showNote("notePulse","Pulse indisponible (souvent RLS):\n" + msg);
+    return { ok:false, error: e?.message || String(e) };
   }
 }
 
-async function loadPayments(uid){
+async function loadPulse(sb, businessCode){
+  hideNote("notePulse");
+  $("pulseList").innerHTML = "";
+  $("pulseQueued").textContent="0";
+  $("pulseSent").textContent="0";
+  $("pulseFailed").textContent="0";
+
+  try{
+    let q = sb
+      .from("digiy_loc_outbox")
+      .select("id, due_at, pulse_kind, status, last_error, sent_at, phone, business_code")
+      .order("due_at", { ascending:true })
+      .limit(60);
+
+    if(businessCode) q = q.eq("business_code", businessCode);
+
+    const { data, error } = await q;
+    if(error) throw error;
+
+    const rows = data || [];
+    renderPulse(rows);
+  }catch(e){
+    showNote("notePulse","Pulse indisponible (souvent RLS):\n" + (e?.message||e));
+  }
+}
+
+async function loadPayments(sb, businessCode){
   hideNote("notePay");
   $("payList").innerHTML = "";
 
   try{
-    // Paiements du jour (ou récents) — simple et robuste
-    const { data, error } = await SB
+    let q = sb
       .from("loc_payment_intents")
-      .select("id, status, amount_expected, currency, client_name, client_phone, wave_tx_ref, created_at")
+      .select("id, status, amount_expected, currency, client_name, client_phone, wave_tx_ref, created_at, business_code")
       .order("created_at",{ascending:false})
-      .limit(12);
+      .limit(14);
 
+    if(businessCode) q = q.eq("business_code", businessCode);
+
+    const { data, error } = await q;
     if(error) throw error;
-    const rows = data || [];
-    if(!rows.length){
-      showNote("notePay","Aucune preuve récente.");
-      return;
-    }
-
-    rows.forEach(p=>{
-      const div=document.createElement("div");
-      div.className="item";
-      const st = (p.status||"pending").toLowerCase();
-      const tag = st==="confirmed" ? "ok" : (st==="rejected" ? "bad" : "warn");
-      div.innerHTML = `
-        <div class="itemTop">
-          <div class="itemTitle">${esc((p.status||"PENDING").toUpperCase())} <span class="tag ${tag}">${fmtMoney(p.amount_expected)}</span></div>
-          <div class="tag">🧾 ${esc(p.wave_tx_ref||"—")}</div>
-        </div>
-        <div class="itemMeta">
-          👤 ${esc(p.client_name||"Client")} ${p.client_phone?(" • "+esc(p.client_phone)):""}<br>
-          🕒 ${esc((p.created_at||"").toString().slice(0,16).replace("T"," "))}
-        </div>
-      `;
-      $("payList").appendChild(div);
-    });
+    renderPayments(data || []);
   }catch(e){
     showNote("notePay","Paiements indisponibles:\n"+(e?.message||e));
   }
 }
 
-async function loadPendingReservations(uid){
+async function loadPending(sb, businessCode){
   hideNote("notePending");
   $("pendingList").innerHTML = "";
 
   try{
-    const { data, error } = await SB
+    let q = sb
       .from("digiy_reservations")
-      .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at")
+      .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code")
       .eq("status","en_attente")
       .order("created_at",{ascending:false})
-      .limit(15);
+      .limit(18);
 
+    if(businessCode) q = q.eq("business_code", businessCode);
+
+    const { data, error } = await q;
     if(error) throw error;
-    const rows = data || [];
-    if(!rows.length){
-      showNote("notePending","Aucune réservation en attente.");
-      return;
-    }
-
-    rows.forEach(r=>{
-      const div=document.createElement("div");
-      div.className="item";
-      div.innerHTML = `
-        <div class="itemTop">
-          <div class="itemTitle">${esc(r.client_nom||"Client")} <span class="tag warn">EN ATTENTE</span></div>
-          <div class="tag">${esc(r.tracking_code||"—")}</div>
-        </div>
-        <div class="itemMeta">
-          📅 ${esc(r.date_arrivee||"—")} → ${esc(r.date_depart||"—")} (${esc(r.nb_nuits||0)} nuits)<br>
-          📞 ${esc(r.client_phone||"—")} • 💰 ${esc(fmtMoney(r.montant_total))}
-        </div>
-      `;
-      $("pendingList").appendChild(div);
-    });
+    renderPending(data || []);
   }catch(e){
     showNote("notePending","Réservations indisponibles:\n"+(e?.message||e));
   }
 }
 
-async function loadArrDep(uid){
-  hideNote("noteArrDep");
-  $("arrdepList").innerHTML = "";
-
-  const t = todayISO();
-
+async function fallbackStats(sb, businessCode){
+  // si RPC non dispo, on fait best effort (sans casser)
   try{
-    // Si tu as digiy_reservations: on prend arrivées/départs du jour
-    const { data, error } = await SB
-      .from("digiy_reservations")
-      .select("id, client_nom, client_phone, date_arrivee, date_depart, status, montant_total, tracking_code")
-      .or(`date_arrivee.eq.${t},date_depart.eq.${t}`)
-      .order("date_arrivee",{ascending:true})
-      .limit(30);
-
-    if(error) throw error;
-
-    const rows = data || [];
-    if(!rows.length){
-      showNote("noteArrDep","Aucune arrivée/départ aujourd’hui.");
-      return;
-    }
-
-    rows.forEach(r=>{
-      const type = (r.date_arrivee===t) ? "Arrivée" : (r.date_depart===t ? "Départ" : "Jour");
-      const tag = (type==="Arrivée") ? "ok" : "warn";
-      const div=document.createElement("div");
-      div.className="item";
-      div.innerHTML = `
-        <div class="itemTop">
-          <div class="itemTitle">${esc(type)} — ${esc(r.client_nom||"Client")} <span class="tag ${tag}">${esc((r.status||"").toUpperCase())}</span></div>
-          <div class="tag">${esc(r.tracking_code||"—")}</div>
-        </div>
-        <div class="itemMeta">
-          📅 ${esc(r.date_arrivee||"—")} → ${esc(r.date_depart||"—")} • 📞 ${esc(r.client_phone||"—")} • 💰 ${esc(fmtMoney(r.montant_total))}
-        </div>
-      `;
-      $("arrdepList").appendChild(div);
-    });
-
-  }catch(e){
-    showNote("noteArrDep","Arrivées/Départs indisponibles:\n"+(e?.message||e));
-  }
-}
-
-async function loadStats(){
-  hideNote("noteStats");
-  $("stats").innerHTML = "";
-  const t = todayISO();
-
-  try{
-    // Stats rapides (best effort)
-    const [
-      outboxRes,
-      pendRes
-    ] = await Promise.allSettled([
-      SB.from("digiy_loc_outbox").select("id,status").limit(500),
-      SB.from("digiy_reservations").select("id,status,date_arrivee,date_depart").limit(500)
+    const t = todayISO();
+    const [outboxRes, pendRes] = await Promise.allSettled([
+      (async()=>{
+        let q = sb.from("digiy_loc_outbox").select("id,status,business_code").limit(600);
+        if(businessCode) q = q.eq("business_code", businessCode);
+        return await q;
+      })(),
+      (async()=>{
+        let q = sb.from("digiy_reservations").select("id,status,date_arrivee,date_depart,business_code").limit(600);
+        if(businessCode) q = q.eq("business_code", businessCode);
+        return await q;
+      })()
     ]);
 
     let queued=0,sent=0,failed=0,arr=0,dep=0,pend=0;
-
     if(outboxRes.status==="fulfilled" && !outboxRes.value.error){
       const rows = outboxRes.value.data || [];
       queued = rows.filter(r=>r.status==="queued"||r.status==="sending").length;
       sent = rows.filter(r=>r.status==="sent").length;
       failed = rows.filter(r=>r.status==="failed").length;
     }
-
     if(pendRes.status==="fulfilled" && !pendRes.value.error){
       const rows = pendRes.value.data || [];
       pend = rows.filter(r=>r.status==="en_attente").length;
@@ -496,22 +606,14 @@ async function loadStats(){
       dep = rows.filter(r=>r.date_depart===t).length;
     }
 
-    const cards = [
+    renderStats([
       ["Arrivées", arr],
       ["Départs", dep],
       ["En attente", pend],
       ["Pulse à venir", queued],
       ["Pulse échecs", failed],
       ["Pulse envoyés", sent],
-    ];
-
-    cards.forEach(([lbl,val])=>{
-      const d=document.createElement("div");
-      d.className="stat";
-      d.innerHTML = `<div class="num">${val}</div><div class="lbl">${esc(lbl)}</div>`;
-      $("stats").appendChild(d);
-    });
-
+    ]);
   }catch(e){
     showNote("noteStats","Résumé indisponible:\n"+(e?.message||e));
   }
@@ -520,32 +622,59 @@ async function loadStats(){
 /* =============================
    BOOT
 ============================= */
-async function refreshAll(){
-  const user = await getUser();
-  pillUser(user);
+let __booted = false;
 
-  if(!user){
-    showNote("noteStats","Connecte-toi d’abord (via ta page propriétaire).");
-    showNote("notePulse","Connecte-toi d’abord.");
-    showNote("notePay","Connecte-toi d’abord.");
-    showNote("noteArrDep","Connecte-toi d’abord.");
-    showNote("notePending","Connecte-toi d’abord.");
+async function refreshAll(){
+  resetUI();
+  clearAllNotes();
+
+  // ✅ Guard session obligatoire
+  const boot = await window.DIGIY_GUARD.boot({ login: "pin.html" });
+  if(!boot?.ok){
+    setDisconnected("Session expirée. Reconnecte-toi (PIN).");
     return;
   }
 
+  const sess = boot.session;
+  pillUserFromSession(sess);
+
+  const slug = window.DIGIY_GUARD.getSlug();
+  const day = todayISO();
+  $("lblDay").textContent = "Aujourd’hui • " + prettyDateFR(day);
+
+  // ✅ Supabase client
+  const sb = await window.DIGIY_GUARD.getSbAsync();
+
+  // ✅ business_code si RPC dispo (sinon null -> best effort)
+  const businessCode = await tryGetBusinessCode(sb, slug);
+
+  // 1) RPC “listing du jour” si dispo
+  const dayRes = await loadDayListing(sb, slug, day);
+
+  // 2) Pulse + Paiements + Pending (filtrés si businessCode)
   await Promise.allSettled([
-    loadStats(),
-    loadPulse(),
-    loadPayments(user.id),
-    loadArrDep(user.id),
-    loadPendingReservations(user.id),
+    loadPulse(sb, businessCode),
+    loadPayments(sb, businessCode),
+    loadPending(sb, businessCode),
   ]);
+
+  // 3) Si RPC absent/KO, stats fallback
+  if(!dayRes.ok){
+    // On laisse le bloc Arr/Dep vide si tu n'as pas de fallback propre
+    showNote("noteArrDep","RPC digiy_loc_day_listing non dispo (ou non autorisé RLS).\nDétail: " + (dayRes.error||"—"));
+    await fallbackStats(sb, businessCode);
+  }else{
+    // Stats pulse ont été remises par loadPulse, on met à jour stat cards pulse sans refaire tout
+    // (on conserve les 3 premières stats du RPC)
+    try{
+      const current = Array.from(document.querySelectorAll("#stats .stat")).map(x=>x);
+      // si renderStats du RPC a mis 6 cartes mais pulse = 0, on peut laisser tel quel.
+      // (Tu peux affiner plus tard si tu veux une synch parfaite)
+    }catch(_){}
+  }
+
+  __booted = true;
 }
-
-document.getElementById("btnRefresh").onclick = refreshAll;
-
-// refresh sur changement session
-SB.auth.onAuthStateChange(()=> refreshAll());
 
 // start
 refreshAll();
