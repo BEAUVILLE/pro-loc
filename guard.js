@@ -2,12 +2,15 @@
    DIGIY LOC PRO — GUARD CONSOLIDÉ (FINAL PROPRE) ✅ GITHUB PAGES SAFE
    - Session 8h
    - RPC verify_access_pin(p_slug,p_pin) -> {ok, owner_id, slug, title, phone, error?}
+     + ✅ Fallback compat (legacy signatures)
    - Slug source of truth: URL > session > localStorage
    - Sync slug localStorage si URL.slug existe (anti slug fantôme)
    - Compat session keys (V1/V2) -> migration auto vers clé unifiée
    - Supabase ready lock (évite: "Supabase pas prêt")
    - No crash: fallback redirect propre si Supabase CDN KO
    - ✅ GitHub Pages SAFE: navigation relative + basePath auto
+     -> Fix: custom domain safe (évite /planning.html/ )
+   - ✅ withSlug safe: URLs absolues + ancres # non cassées
 ========================= */
 (function () {
   "use strict";
@@ -79,7 +82,7 @@
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\-_]/g, "")
       .replace(/-+/g, "-")
-      .replace(/^[-_]+|[-_]+$/g, ""); // ✅ nettoie - et _
+      .replace(/^[-_]+|[-_]+$/g, "");
   }
 
   // =============================
@@ -157,24 +160,31 @@
   syncSlugFromUrl();
 
   // =============================
-  // GITHUB PAGES SAFE BASE PATH ✅
+  // GITHUB PAGES SAFE BASE PATH ✅ (custom domain safe)
   // =============================
   function basePath() {
-    // Ex: /digiy-loc-pro/planning.html -> ["digiy-loc-pro","planning.html"]
     const parts = location.pathname.split("/").filter(Boolean);
+    const isGithubPages = /\.github\.io$/i.test(location.hostname);
 
-    // ✅ GitHub Pages (repo site): /<repo>/
-    if (parts.length > 0) return "/" + parts[0] + "/";
+    // ✅ Repo site: https://user.github.io/<repo>/...
+    if (isGithubPages && parts.length > 0) return "/" + parts[0] + "/";
 
+    // ✅ Custom domain / normal hosting
     return "/";
   }
 
   function withSlug(url) {
     const s = getSlug();
+    let clean = String(url || "").trim();
 
-    // ✅ force relatif (évite double dossier / 404)
-    let clean = String(url || "").trim().replace(/^\/+/, "");
+    // ✅ URL absolue: ne pas casser
+    if (/^https?:\/\//i.test(clean)) return clean;
 
+    // ✅ ancre seule
+    if (clean.startsWith("#")) return clean;
+
+    // ✅ force relatif
+    clean = clean.replace(/^\/+/, "");
     if (!clean) clean = "index.html";
 
     if (s) {
@@ -184,12 +194,14 @@
     return basePath() + clean;
   }
 
-  function go(url) {
-    location.replace(withSlug(url));
+  function go(url, mode = "assign") {
+    const dest = withSlug(url);
+    if (mode === "replace") location.replace(dest);
+    else location.assign(dest);
   }
 
   // =============================
-  // READY LOCK
+  // READY LOCK (safe)
   // =============================
   const READY = (function () {
     let _resolve, _reject;
@@ -199,6 +211,12 @@
     });
     return { promise, resolve: _resolve, reject: _reject, done: false };
   })();
+
+  function markReady() {
+    if (READY.done) return;
+    READY.done = true;
+    READY.resolve(true);
+  }
 
   async function ready(timeoutMs = 8000) {
     if (READY.done) return true;
@@ -246,6 +264,31 @@
   }
 
   // =============================
+  // RPC COMPAT: verify_access_pin
+  // =============================
+  async function rpcVerifyAccessPin(sb, slug, pin) {
+    // A) signature moderne: (p_slug, p_pin)
+    let res = await sb.rpc("verify_access_pin", { p_slug: slug, p_pin: pin });
+
+    if (res?.error) {
+      const msg = String(res.error.message || "");
+      const shouldFallback =
+        /not exist|function|parameter|argument|p_phone|p_module|expects|unknown/i.test(msg);
+
+      if (shouldFallback) {
+        // B) fallback legacy: (p_phone, p_pin, p_module)
+        // ⚠️ Si ton legacy n'est pas ça, adapte ici une seule fois.
+        res = await sb.rpc("verify_access_pin", {
+          p_phone: slug,
+          p_pin: pin,
+          p_module: "loc_pro",
+        });
+      }
+    }
+    return res;
+  }
+
+  // =============================
   // LOGIN (slug + pin)
   // =============================
   async function loginWithPin(slug, pin) {
@@ -262,11 +305,7 @@
     }
     if (!sb) return { ok: false, error: "Supabase non initialisé" };
 
-    const { data, error } = await sb.rpc("verify_access_pin", {
-      p_slug: s,
-      p_pin: p,
-    });
-
+    const { data, error } = await rpcVerifyAccessPin(sb, s, p);
     if (error) return { ok: false, error: error.message || String(error) };
 
     const result =
@@ -301,9 +340,7 @@
     if (session.title) lsSet(LS.TITLE, session.title);
     if (session.phone) lsSet(LS.PHONE, session.phone);
 
-    READY.done = true;
-    READY.resolve(true);
-
+    markReady();
     return { ok: true, session };
   }
 
@@ -315,9 +352,8 @@
     syncSlugFromUrl();
 
     const s = getSessionUnsafe();
-
     if (!s || !String(s.owner_id || "").trim()) {
-      location.replace(withSlug(redirect));
+      go(redirect, "replace");
       return null;
     }
     return s;
@@ -336,12 +372,11 @@
     // ensure supabase is ready for the app
     try {
       await getSbAsync();
-      READY.done = true;
-      READY.resolve(true);
+      markReady();
       return { ok: true, session: s };
     } catch (e) {
       console.warn("[GUARD] Supabase not ready:", e);
-      location.replace(withSlug(loginUrl));
+      go(loginUrl, "replace");
       return { ok: false, error: "SUPABASE_NOT_READY" };
     }
   }
@@ -351,11 +386,7 @@
   // =============================
   function logout(redirect = "index.html") {
     clearSession();
-
-    // Tu peux garder slug si tu veux. Pour purge totale:
-    // lsDel(LS.SLUG); lsDel(LS.PRO_ID); lsDel(LS.TITLE); lsDel(LS.PHONE);
-
-    location.replace(withSlug(redirect));
+    go(redirect, "replace");
   }
 
   // =============================
