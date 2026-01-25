@@ -8,7 +8,7 @@
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ✅ GUARD (déjà posé) -->
+  <!-- ✅ GUARD -->
   <script src="./guard.js?v=locpro-guard-final"></script>
 
   <style>
@@ -61,6 +61,11 @@
       color:var(--muted);
       transition:all .2s ease;
       min-height:44px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
     }
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
@@ -143,8 +148,10 @@
     <div class="pills">
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
       <div class="pill warn" id="pillState">🔒 Déconnecté</div>
-      <button class="btn ghost" id="btnBack">⬅️ Retour</button>
-      <button class="btn gold" id="btnRefresh">↻ Rafraîchir</button>
+
+      <!-- ✅ NAV AUTO -->
+      <a class="btn ghost" data-go="__back__" href="#">⬅️ Retour</a>
+      <button class="btn gold" data-action="refresh" type="button">↻ Rafraîchir</button>
     </div>
   </div>
 
@@ -224,12 +231,46 @@
 </div>
 
 <script>
+/* =========================
+   DIGIY NAV AUTO — QR SAFE ✅
+   - Tous les éléments avec data-go gardent le slug via DIGIY_GUARD.go()
+   - data-mode="replace" optionnel
+========================= */
+(function(){
+  "use strict";
+  function bindNav(){
+    if(!window.DIGIY_GUARD?.go) return;
+
+    document.querySelectorAll("[data-go]").forEach((el)=>{
+      if(el.__digiy_bound) return;
+      el.__digiy_bound = true;
+
+      const target = (el.getAttribute("data-go") || "").trim();
+      const mode = (el.getAttribute("data-mode") || "assign").trim();
+
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        if(!target) return;
+
+        if(target === "__back__"){
+          if(history.length > 1) return history.back();
+          return window.DIGIY_GUARD.go("index.html", "replace");
+        }
+
+        window.DIGIY_GUARD.go(target, mode);
+      });
+    });
+  }
+
+  bindNav();
+  const mo = new MutationObserver(()=>bindNav());
+  mo.observe(document.documentElement, { childList:true, subtree:true });
+})();
+</script>
+
+<script>
 /* =============================
    DIGIY LOC PRO — TODAY (GUARD FIRST) ✅
-   - Plus d'auth Supabase obligatoire (PIN session)
-   - Slug = source of truth via guard
-   - RPC day listing si dispo: digiy_loc_day_listing(p_slug,p_day)
-   - Pulse + Paiements: filtrage business_code si RPC slug->code dispo, sinon best-effort
 ============================= */
 
 const $ = (id)=>document.getElementById(id);
@@ -300,26 +341,17 @@ function resetUI(){
   $("pulseFailed").textContent="0";
 }
 
-document.getElementById("btnBack").onclick = ()=>{
-  // garde navigation simple + slug
-  if(history.length > 1) return history.back();
-  window.DIGIY_GUARD.go("index.html","replace");
-};
-document.getElementById("btnRefresh").onclick = ()=> refreshAll();
-
 /* =============================
    RPC HELPERS
 ============================= */
 async function rpc(sb, fn, args){
   const { data, error } = await sb.rpc(fn, args || {});
   if(error) throw error;
-  // si data string JSON
   if(typeof data === "string"){
     try{ return JSON.parse(data); }catch(_){ return data; }
   }
   return data;
 }
-
 async function tryGetBusinessCode(sb, slug){
   try{
     const code = await rpc(sb, "digiy_loc_get_business_code_by_slug", { p_slug: slug });
@@ -334,7 +366,7 @@ async function tryGetBusinessCode(sb, slug){
 ============================= */
 function renderStats(cards){
   $("stats").innerHTML = "";
-  cards.forEach(([lbl,val,color])=>{
+  cards.forEach(([lbl,val])=>{
     const d=document.createElement("div");
     d.className="stat";
     d.innerHTML = `<div class="num">${esc(val)}</div><div class="lbl">${esc(lbl)}</div>`;
@@ -347,32 +379,24 @@ function renderArrDepFromDayListing(payload){
   const arr = payload?.arrivals || [];
   const dep = payload?.departures || [];
   const occ = payload?.occupied || [];
-  const stats = payload?.stats || {};
 
   const blocks = [];
-
-  // Arrivées
   blocks.push({ title:"Arrivées", tag:"ok", rows:arr.map(r=>({
     title: r.guest_name || "Client",
     meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
     right: r.unit_title || ""
   }))});
-
-  // Départs
   blocks.push({ title:"Départs", tag:"warn", rows:dep.map(r=>({
     title: r.guest_name || "Client",
     meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
     right: r.unit_title || ""
   }))});
-
-  // Occupés
   blocks.push({ title:"Occupés", tag:"warn", rows:occ.map(r=>({
     title: r.guest_name || "Client",
     meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
     right: r.unit_title || ""
   }))});
 
-  // Flatten render
   const all = [];
   blocks.forEach(b=>{
     if(!b.rows.length) return;
@@ -481,13 +505,12 @@ function renderPending(rows){
 }
 
 /* =============================
-   LOADERS (best effort)
+   LOADERS
 ============================= */
 async function loadDayListing(sb, slug, dayISO){
   try{
     const payload = await rpc(sb, "digiy_loc_day_listing", { p_slug: slug, p_day: dayISO });
     if(payload?.ok){
-      // Stats depuis RPC
       const st = payload.stats || {};
       renderStats([
         ["Arrivées", st.arr_count ?? (payload.arrivals||[]).length],
@@ -525,8 +548,7 @@ async function loadPulse(sb, businessCode){
     const { data, error } = await q;
     if(error) throw error;
 
-    const rows = data || [];
-    renderPulse(rows);
+    renderPulse(data || []);
   }catch(e){
     showNote("notePulse","Pulse indisponible (souvent RLS):\n" + (e?.message||e));
   }
@@ -576,7 +598,6 @@ async function loadPending(sb, businessCode){
 }
 
 async function fallbackStats(sb, businessCode){
-  // si RPC non dispo, on fait best effort (sans casser)
   try{
     const t = todayISO();
     const [outboxRes, pendRes] = await Promise.allSettled([
@@ -622,8 +643,6 @@ async function fallbackStats(sb, businessCode){
 /* =============================
    BOOT
 ============================= */
-let __booted = false;
-
 async function refreshAll(){
   resetUI();
   clearAllNotes();
@@ -635,8 +654,7 @@ async function refreshAll(){
     return;
   }
 
-  const sess = boot.session;
-  pillUserFromSession(sess);
+  pillUserFromSession(boot.session);
 
   const slug = window.DIGIY_GUARD.getSlug();
   const day = todayISO();
@@ -651,30 +669,33 @@ async function refreshAll(){
   // 1) RPC “listing du jour” si dispo
   const dayRes = await loadDayListing(sb, slug, day);
 
-  // 2) Pulse + Paiements + Pending (filtrés si businessCode)
+  // 2) Pulse + Paiements + Pending
   await Promise.allSettled([
     loadPulse(sb, businessCode),
     loadPayments(sb, businessCode),
     loadPending(sb, businessCode),
   ]);
 
-  // 3) Si RPC absent/KO, stats fallback
+  // 3) fallback stats si RPC absent/KO
   if(!dayRes.ok){
-    // On laisse le bloc Arr/Dep vide si tu n'as pas de fallback propre
     showNote("noteArrDep","RPC digiy_loc_day_listing non dispo (ou non autorisé RLS).\nDétail: " + (dayRes.error||"—"));
     await fallbackStats(sb, businessCode);
-  }else{
-    // Stats pulse ont été remises par loadPulse, on met à jour stat cards pulse sans refaire tout
-    // (on conserve les 3 premières stats du RPC)
-    try{
-      const current = Array.from(document.querySelectorAll("#stats .stat")).map(x=>x);
-      // si renderStats du RPC a mis 6 cartes mais pulse = 0, on peut laisser tel quel.
-      // (Tu peux affiner plus tard si tu veux une synch parfaite)
-    }catch(_){}
   }
-
-  __booted = true;
 }
+
+/* =============================
+   ACTIONS (data-action)
+============================= */
+(function bindActions(){
+  document.querySelectorAll("[data-action='refresh']").forEach(el=>{
+    if(el.__digiy_bound_action) return;
+    el.__digiy_bound_action = true;
+    el.addEventListener("click", (e)=>{
+      e.preventDefault();
+      refreshAll();
+    });
+  });
+})();
 
 // start
 refreshAll();
