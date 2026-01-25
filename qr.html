@@ -29,9 +29,10 @@
       color:var(--text);
       min-height:100vh;
     }
-    .wrap{max-width:720px;margin:auto;padding:18px}
+    .wrap{max-width:760px;margin:auto;padding:18px}
     h1{font-size:1.4rem;margin-bottom:6px}
     p{color:var(--muted);margin-bottom:14px;line-height:1.35}
+
     .card{
       background:rgba(255,255,255,0.03);
       border:1px solid var(--line);
@@ -39,7 +40,9 @@
       padding:16px;
       margin-top:14px;
     }
+
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
     .btn{
       width:100%;
       padding:12px;
@@ -55,8 +58,15 @@
       border:1px solid rgba(250,204,21,0.35);
       color:#fff;
     }
+    .btn.good{
+      background:rgba(34,197,94,.14);
+      border:1px solid rgba(34,197,94,.35);
+      color:#bbf7d0;
+    }
+
     .mini{margin-top:10px;color:var(--muted);font-size:.9rem}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
+
     .note{
       margin-top:10px;
       padding:10px 12px;
@@ -66,9 +76,9 @@
       white-space:pre-wrap;
       line-height:1.35;
     }
-    .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0}
-    .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca}
-    .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);color:#fde68a}
 
     .qrbox{
       display:flex;
@@ -80,7 +90,8 @@
       background:rgba(0,0,0,0.12);
       margin-top:12px;
     }
-    canvas{max-width:100%;height:auto;border-radius:12px}
+    canvas{max-width:100%;height:auto;border-radius:12px;background:#fff;padding:10px}
+
     .label{
       margin-top:10px;
       padding:10px 12px;
@@ -88,6 +99,7 @@
       border:1px solid var(--line);
       background:rgba(0,0,0,0.12);
       line-height:1.35;
+      word-break:break-all;
     }
     .label b{color:#fff}
     .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:12px}
@@ -97,12 +109,18 @@
 <body>
 <div class="wrap">
   <h1>📎 QR du logement</h1>
-  <p>Télécharge le QR (PNG) pour afficher au comptoir / sur la porte / WhatsApp.</p>
+  <p>Un seul QR = <b>QR-PRO</b>. Derrière, QR-PRO propose APP / Public / Accès.</p>
 
   <div class="card">
     <div class="row">
-      <button class="btn ghost" id="btnBack">⬅️ Retour</button>
+      <button class="btn ghost" id="btnBack">⬅️ Retour cockpit</button>
+      <button class="btn primary" id="btnCopy">📋 Copier lien QR-PRO</button>
+    </div>
+
+    <div class="row">
+      <button class="btn good" id="btnOpen">↗️ Ouvrir QR-PRO</button>
       <button class="btn primary" id="btnDownload">⬇️ Télécharger QR (PNG)</button>
+      <button class="btn ghost" id="btnSticker">🟩 Télécharger Sticker XL (PNG)</button>
     </div>
 
     <div class="qrbox">
@@ -110,8 +128,7 @@
     </div>
 
     <div class="label mono" id="urlBox">URL: —</div>
-
-    <div class="note" id="note"></div>
+    <div class="note warn" id="note"></div>
 
     <div class="hr"></div>
     <div class="mini mono" id="dbg"></div>
@@ -122,82 +139,121 @@
 (async function(){
   "use strict";
 
-  // ✅ protège (même logique que tes pages pro)
-  const boot = await window.DIGIY_GUARD?.boot?.({
-    module:"loc",
-    dashboard:"./qr.html",
-    login:"./pin.html",
-    requireSlug:true
-  });
+  // ✅ Guard obligatoire (PRO)
+  try{
+    await window.DIGIY_GUARD?.boot?.({
+      module:"loc",
+      dashboard:"./qr.html",
+      login:"./pin.html",
+      requireSlug:true
+    });
+  }catch(_){}
 
-  if(!boot?.ok){
-    // si guard absent / pas ok, on tente quand même slug URL
-    // (mais en PRO normal: ça passe)
-  }
-
+  // ✅ slug
   const slug = (window.DIGIY_GUARD?.getSlug?.() || new URLSearchParams(location.search).get("slug") || "").trim();
   if(!slug){
-    alert("❌ slug manquant. Ouvre avec ?slug=chez-xxx");
+    alert("❌ slug manquant. Ouvre via cockpit (slug obligatoire).");
     return;
   }
 
-  // ✅ URL publique du client (ADAPTE si besoin)
-  // Si ta fiche publique est sur digiy-loc/index.html?slug=...
-  // ou bien fiche.html?slug=...
-  const PUBLIC_BASE = "https://beauville.github.io/digiy-loc/";
-  const PUBLIC_PAGE = "fiche.html"; // <- change si ta fiche client s'appelle autrement
-  const publicUrl = `${PUBLIC_BASE}${PUBLIC_PAGE}?slug=${encodeURIComponent(slug)}`;
+  // ✅ LA VÉRITÉ DIGIY : 1 QR = QR-PRO
+  const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
+  const qrProUrl = new URL(QR_PRO_BASE);
+  qrProUrl.searchParams.set("slug", slug);
 
   // UI
   const qrCanvas = document.getElementById("qr");
   const urlBox = document.getElementById("urlBox");
   const noteEl = document.getElementById("note");
   const dbgEl = document.getElementById("dbg");
+
   const btnDownload = document.getElementById("btnDownload");
-  const btnBack = document.getElementById("btnBack");
+  const btnSticker  = document.getElementById("btnSticker");
+  const btnBack     = document.getElementById("btnBack");
+  const btnCopy     = document.getElementById("btnCopy");
+  const btnOpen     = document.getElementById("btnOpen");
 
   function note(msg,type){
-    noteEl.style.display = msg ? "block" : "none";
-    noteEl.className = "note " + (type||"");
+    noteEl.className = "note " + (type||"warn");
     noteEl.textContent = msg || "";
+    noteEl.style.display = msg ? "block" : "none";
   }
 
-  urlBox.textContent = `URL: ${publicUrl}`;
+  const url = qrProUrl.toString();
+  urlBox.textContent = `URL: ${url}`;
   dbgEl.textContent = `slug: ${slug}`;
 
-  // ✅ bouton retour -> vers index pro (ou page que tu veux)
+  // ✅ retour cockpit
   btnBack.onclick = ()=>{
-    const go = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./index.html") : "./index.html?slug=" + encodeURIComponent(slug);
+    const go = window.DIGIY_GUARD?.withSlug
+      ? window.DIGIY_GUARD.withSlug("./index.html")
+      : ("./index.html?slug=" + encodeURIComponent(slug));
     location.href = go;
   };
 
-  // ✅ génère QR
-  try{
-    await QRCode.toCanvas(qrCanvas, publicUrl, {
+  // ✅ copy / open
+  btnCopy.onclick = async()=>{
+    try{
+      await navigator.clipboard.writeText(url);
+      note("✅ Lien QR-PRO copié.", "ok");
+    }catch(e){
+      note("⚠️ Clipboard bloqué. Copie manuelle dans l’URL.", "warn");
+    }
+  };
+
+  btnOpen.onclick = ()=> window.open(url, "_blank", "noopener");
+
+  // ✅ gen QR normal
+  async function gen(size){
+    await QRCode.toCanvas(qrCanvas, url, {
       errorCorrectionLevel: "M",
       margin: 2,
-      width: 520
+      width: size
     });
-    note("✅ QR prêt.", "ok");
+  }
+
+  try{
+    await gen(520);
+    note("✅ QR-PRO prêt. Test téléphone avant impression.", "ok");
   }catch(e){
     console.error(e);
     note("❌ Erreur QR: " + (e?.message || e), "bad");
     return;
   }
 
-  // ✅ download PNG
-  btnDownload.onclick = ()=>{
+  function downloadCanvasPng(filename){
+    const a = document.createElement("a");
+    a.download = filename;
+    a.href = qrCanvas.toDataURL("image/png");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // ✅ download normal
+  btnDownload.onclick = async()=>{
     try{
-      const a = document.createElement("a");
-      a.download = `DIGIY-LOC-QR-${slug}.png`;
-      a.href = qrCanvas.toDataURL("image/png");
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      note("✅ Téléchargement lancé.", "ok");
+      await gen(520);
+      downloadCanvasPng(`DIGIY_QR_PRO_${slug}.png`);
+      note("⬇️ Téléchargement lancé (QR normal).", "ok");
     }catch(e){
       console.error(e);
       note("❌ Download KO: " + (e?.message || e), "bad");
+    }
+  };
+
+  // ✅ download sticker XL
+  btnSticker.onclick = async()=>{
+    try{
+      note("🟩 Génération Sticker XL…", "warn");
+      await gen(900);
+      downloadCanvasPng(`DIGIY_STICKER_XL_${slug}.png`);
+      note("⬇️ Sticker XL téléchargé.", "ok");
+      // reviens au normal pour l’écran
+      await gen(520);
+    }catch(e){
+      console.error(e);
+      note("❌ Sticker XL KO: " + (e?.message || e), "bad");
     }
   };
 
