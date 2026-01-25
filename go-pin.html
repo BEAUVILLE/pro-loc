@@ -256,12 +256,26 @@
   }
 
   async function resolveProIdFromSlug(sb, slug){
-    const { data, error } = await sb.rpc("resolve_slug_to_pro_id", { p_slug: slug });
-    console.log("RPC resolve_slug_to_pro_id =>", { data, error });
-    if (error) return { ok:false, error };
-    const row = Array.isArray(data) ? data[0] : data;
-    return { ok:true, row };
-  }
+   const { data, error } = await sb
+  .from("digiy_loc_businesses")
+  .select("id,slug,title,phone")
+  .eq("slug", slug)
+  .maybeSingle();
+
+if (error) {
+  console.error(error);
+  showError("Erreur technique. Réessaie.");
+  return;
+}
+
+if (!data) {
+  showError("Slug introuvable (ou accès bloqué). Vérifie le lien.");
+  return;
+}
+
+// OK: data présent
+renderBusiness(data);
+
 
   /* =========================
      Main
