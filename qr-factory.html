@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#0A0E1A"/>
   <title>DIGIY QR FACTORY ♾️ — Générateur Pro</title>
-  <meta name="description" content="Génère les QR & liens DIGIY par slug (HUB, CAISSE, LOC, RESTO, LOC PRO, etc.)."/>
+  <meta name="description" content="Génère un QR unique qui ouvre DIGIY QR PRO avec le slug."/>
 
   <!-- ✅ QR local (pas d’API externe) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -28,7 +28,7 @@
         rgba(2,6,23,1);
       padding:16px;
     }
-    .wrap{max-width:1100px;margin:0 auto}
+    .wrap{max-width:980px;margin:0 auto}
     .top{
       border:1px solid rgba(148,163,184,.22);
       background:rgba(2,6,23,.75);
@@ -60,12 +60,6 @@
       border-radius:18px;
       box-shadow:var(--shadow);
       padding:14px;
-    }
-    .grid{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-      gap:12px;
     }
     label{display:block;color:#fff;font-weight:900;margin:8px 0 6px}
     input{
@@ -106,13 +100,15 @@
       white-space:pre-wrap;
     }
     .note.show{display:block}
+
     .item{
+      margin-top:12px;
       border:1px solid rgba(148,163,184,.20);
       border-radius:16px;
       padding:12px;
       background:radial-gradient(circle at top left,rgba(34,211,238,.10),transparent 55%),rgba(2,6,23,.55);
     }
-    .itemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .itemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .name{font-weight:950}
     .tag{color:var(--muted);font-weight:800;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
     .link{
@@ -122,27 +118,17 @@
     }
     .qrBox{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .qrLink{
-      display:inline-block;
-      border-radius:14px;
-      overflow:hidden;
+      display:inline-block;border-radius:14px;overflow:hidden;
       transition:transform .12s ease, box-shadow .12s ease;
     }
-    .qrLink:hover{
-      transform:scale(1.03);
-      box-shadow:0 10px 24px rgba(0,0,0,.35);
-    }
+    .qrLink:hover{transform:scale(1.03);box-shadow:0 10px 24px rgba(0,0,0,.35)}
     .qrImg{
-      width:110px;height:110px;
-      border-radius:14px;
-      background:#fff;
-      padding:10px;
-      border:1px solid rgba(148,163,184,.22);
-      display:block;
+      width:150px;height:150px;border-radius:14px;background:#fff;padding:10px;
+      border:1px solid rgba(148,163,184,.22);display:block;
     }
     .miniBtns{display:flex;gap:8px;flex-wrap:wrap}
     .mini{
-      padding:8px 10px;border-radius:12px;
-      font-weight:900;font-size:12px;
+      padding:8px 10px;border-radius:12px;font-weight:900;font-size:12px;
       border:1px solid rgba(148,163,184,.25);
       background:rgba(255,255,255,.05);
       color:#fff;cursor:pointer;
@@ -158,7 +144,7 @@
         <div class="logo">♾️</div>
         <div>
           <h1>DIGIY QR FACTORY</h1>
-          <div class="sub">Slug → QR + liens (HUB / CAISSE / LOC / RESTO / LOC PRO / etc.)</div>
+          <div class="sub">Un seul QR → ouvre DIGIY QR PRO (tout le reste derrière)</div>
         </div>
       </div>
       <div class="pill" id="pill">Slug : —</div>
@@ -170,12 +156,29 @@
 
       <div class="row">
         <button class="btn primary" id="btnGen" type="button">⚡ Générer</button>
-        <button class="btn" id="btnCopyAll" type="button" disabled>📋 Copier tous les liens</button>
-        <button class="btn good" id="btnZip" type="button" disabled title="ZIP auto à activer plus tard">⬇️ ZIP (bientôt)</button>
+        <button class="btn" id="btnCopy" type="button" disabled>📋 Copier le lien</button>
+        <button class="btn good" id="btnDl" type="button" disabled>⬇️ PNG</button>
       </div>
 
       <div class="note" id="note"></div>
-      <div class="grid" id="grid"></div>
+
+      <div class="item" id="out" style="display:none">
+        <div class="itemTop">
+          <div>
+            <div class="name">DIGIY QR PRO — HUB PRO</div>
+            <div class="tag">UN SEUL LIEN • UN SEUL QR</div>
+          </div>
+          <div class="miniBtns">
+            <button class="mini" id="btnOpen">Ouvrir</button>
+          </div>
+        </div>
+        <div class="link" id="linkText"></div>
+        <div class="qrBox">
+          <a class="qrLink" id="qrLink" href="#" target="_blank" rel="noopener">
+            <img class="qrImg" id="qrImg" alt="QR DIGIY QR PRO" />
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -184,50 +187,20 @@ window.addEventListener("DOMContentLoaded", () => {
   "use strict";
   const $ = (id)=>document.getElementById(id);
 
-  // ✅ bases officielles
-  const BASE = {
-    // Core
-    hub:          "https://beauville.github.io/digiy-hub/",
-    caisse:       "https://beauville.github.io/Digiy-caisse-pro/index.html",
-    loc:          "https://beauville.github.io/digiy-loc/",
-    resto:        "https://beauville.github.io/digiy-resto/",
-    resaTable:    "https://beauville.github.io/digiy-resa-table/",
-    notable:      "https://beauville.github.io/digiy-notable/",
-    espacePro:    "https://beauville.github.io/espace-pro/",
-    espaceClient: "https://beauville.github.io/digiy-espace-client/",
-    ndimbalMap:   "https://beauville.github.io/digiy-ndimbal-map/",
-
-    // ✅ LOC PRO (tes 3 liens QR)
-    locProApp:    "https://beauville.github.io/digiy-loc-pro/index.html",
-    locProPublic: "https://beauville.github.io/digiy-loc-pro/go-pin-public.html",
-    locProAccess: "https://beauville.github.io/digiy-loc-pro/pin.html",
-  };
-
-  const MODULES = [
-    // ✅ LOC PRO d’abord
-    { key:"locProApp",    name:"DIGIY LOC PRO — APP",    tag:"PROPRIO • COCKPIT", qrf:"QR_APP" },
-    { key:"locProPublic", name:"DIGIY LOC PRO — PUBLIC", tag:"GO PIN • PUBLIC",  qrf:"QR_PUBLIC" },
-    { key:"locProAccess", name:"DIGIY LOC PRO — ACCÈS",  tag:"PIN • ACCÈS PRO",  qrf:"QR_ACCES" },
-
-    // autres modules
-    { key:"hub",          name:"DIGIY HUB",        tag:"ENTRÉE • COCKPIT", qrf:"QR_HUB" },
-    { key:"caisse",       name:"DIGIY CAISSE PRO", tag:"POS • PRO",        qrf:"QR_CAISSE" },
-    { key:"espacePro",    name:"ESPACE PRO",       tag:"PORTAIL • OUTILS", qrf:"QR_ESPACE_PRO" },
-    { key:"espaceClient", name:"ESPACE CLIENT",    tag:"COMPTE • SUIVI",   qrf:"QR_CLIENT" },
-    { key:"loc",          name:"DIGIY LOC",        tag:"LOCATION",         qrf:"QR_LOC" },
-    { key:"resto",        name:"DIGIY RESTO",      tag:"RESTAURANT",       qrf:"QR_RESTO" },
-    { key:"resaTable",    name:"RESA TABLE",       tag:"RÉSERVATIONS",     qrf:"QR_RESA" },
-    { key:"notable",      name:"DIGIY NOTABLE",    tag:"VISIBILITÉ",       qrf:"QR_NOTABLE" },
-    { key:"ndimbalMap",   name:"NDIMBAL MAP",      tag:"CARTE",            qrf:"QR_NDIMBAL" }
-  ];
+  // ✅ LA VÉRITÉ: tous les QR ouvrent ça
+  const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
 
   const elSlug = $("slug");
   const btnGen = $("btnGen");
-  const btnCopyAll = $("btnCopyAll");
-  const btnZip = $("btnZip");
-  const grid = $("grid");
+  const btnCopy = $("btnCopy");
+  const btnDl = $("btnDl");
+  const btnOpen = $("btnOpen");
   const pill = $("pill");
   const note = $("note");
+  const out = $("out");
+  const linkText = $("linkText");
+  const qrImg = $("qrImg");
+  const qrLink = $("qrLink");
 
   function showNote(msg){
     note.textContent = msg || "";
@@ -235,15 +208,11 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function slugClean(v){
-    return (v||"")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g,"-")
-      .replace(/\/+$/,"");
+    return (v||"").trim().toLowerCase().replace(/\s+/g,"-").replace(/\/+$/,"");
   }
 
-  function buildUrl(baseUrl, slug){
-    const u = new URL(baseUrl, location.href);
+  function buildQrProUrl(slug){
+    const u = new URL(QR_PRO_BASE, location.href);
     u.searchParams.set("slug", slug);
     return u.toString();
   }
@@ -267,117 +236,71 @@ window.addEventListener("DOMContentLoaded", () => {
 
   async function makeQrDataUrl(url){
     if(!window.QRCode) throw new Error("QRCode lib missing");
-    return await QRCode.toDataURL(url, { margin: 1, width: 240 });
+    return await QRCode.toDataURL(url, { margin: 1, width: 320 });
   }
 
-  let last = []; // {name,url,filename}
+  let current = { slug:"", url:"", dataUrl:"" };
 
   async function generate(){
     const slug = slugClean(elSlug.value);
     pill.textContent = "Slug : " + (slug || "—");
-    grid.innerHTML = "";
-    last = [];
-    btnCopyAll.disabled = true;
-    btnZip.disabled = true;
+
+    btnCopy.disabled = true;
+    btnDl.disabled = true;
+    out.style.display = "none";
+    current = { slug:"", url:"", dataUrl:"" };
 
     if(!slug){
       showNote("⚠️ Entre un slug (ex: chez-astou-saly).");
       return;
     }
 
-    showNote("✅ Génération en cours (QR local + téléchargement)…");
+    showNote("✅ Génération en cours…");
 
-    for(const m of MODULES){
-      const baseUrl = BASE[m.key];
-      if(!baseUrl) continue;
+    const url = buildQrProUrl(slug);
+    let dataUrl = "";
 
-      const url = buildUrl(baseUrl, slug);
-
-      const item = document.createElement("div");
-      item.className = "item";
-      item.innerHTML = `
-        <div class="itemTop">
-          <div>
-            <div class="name">${m.name}</div>
-            <div class="tag">${m.tag}</div>
-          </div>
-          <div class="miniBtns">
-            <button class="mini" data-act="copy">Copier</button>
-            <button class="mini" data-act="open">Ouvrir</button>
-            <button class="mini" data-act="dl">⬇️ PNG</button>
-          </div>
-        </div>
-        <div class="link">${url}</div>
-        <div class="qrBox">
-          <a class="qrLink" href="" target="_blank" rel="noopener">
-            <img class="qrImg" alt="QR DIGIY" />
-          </a>
-        </div>
-      `;
-
-      const img  = item.querySelector(".qrImg");
-      const link = item.querySelector(".qrLink");
-
-      let dataUrl = "";
-      try{
-        dataUrl = await makeQrDataUrl(url);
-      }catch(e){
-        console.error("QR local error", e);
-        dataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
-            <rect width="100%" height="100%" fill="#fff"/>
-            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#111" font-size="14" font-family="Arial">
-              QR KO
-            </text>
-          </svg>`
-        );
-      }
-
-      img.src = dataUrl;
-
-      // ✅ cliquer sur le QR ouvre le lien
-      link.href = url;
-      img.style.cursor = "pointer";
-      img.addEventListener("click", (e)=>{
-        e.preventDefault();
-        openUrl(url);
-      });
-
-      item.querySelector('[data-act="copy"]').addEventListener("click", async ()=>{
-        await copy(url);
-        showNote("✅ Lien copié : " + m.name);
-      });
-
-      item.querySelector('[data-act="open"]').addEventListener("click", ()=>{
-        openUrl(url);
-      });
-
-      item.querySelector('[data-act="dl"]').addEventListener("click", ()=>{
-        const filename = `${m.qrf || "QR"}_${slug}.png`;
-        downloadPngFromDataUrl(dataUrl, filename);
-        showNote("⬇️ PNG téléchargé : " + filename);
-      });
-
-      grid.appendChild(item);
-      last.push({ name:m.name, url, filename:`${m.qrf || "QR"}_${slug}.png` });
+    try{
+      dataUrl = await makeQrDataUrl(url);
+    }catch(e){
+      console.error("QR local error", e);
+      showNote("❌ QR KO (lib). Recharge la page.");
+      return;
     }
 
-    btnCopyAll.disabled = false;
-    showNote("✅ OK. “Ouvrir” = ouvre le lien. “⬇️ PNG” = télécharge le QR local (propre).");
+    current = { slug, url, dataUrl };
+
+    linkText.textContent = url;
+    qrImg.src = dataUrl;
+    qrLink.href = url;
+
+    // cliquer sur l’image => ouvre QR PRO
+    qrImg.style.cursor = "pointer";
+    qrImg.onclick = (e)=>{ e.preventDefault(); openUrl(url); };
+
+    btnOpen.onclick = ()=> openUrl(url);
+
+    btnCopy.disabled = false;
+    btnDl.disabled = false;
+    out.style.display = "block";
+
+    showNote("✅ OK. Scanne → ça ouvre DIGIY QR PRO. Ensuite QR PRO te donne APP/Public/Accès.");
   }
 
   btnGen.addEventListener("click", (e)=>{ e.preventDefault(); generate(); });
   elSlug.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); generate(); }});
 
-  btnCopyAll.addEventListener("click", async ()=>{
-    const txt = last.map(x=>`${x.name} — ${x.url}`).join("\n");
-    await copy(txt);
-    showNote("✅ Tous les liens copiés.");
+  btnCopy.addEventListener("click", async ()=>{
+    if(!current.url) return;
+    await copy(current.url);
+    showNote("✅ Lien copié.");
   });
 
-  btnZip.addEventListener("click", (e)=>{
-    e.preventDefault();
-    showNote("ℹ️ ZIP auto: on l’active plus tard (batch download). Pour l’instant: ⬇️ PNG par module.");
+  btnDl.addEventListener("click", ()=>{
+    if(!current.dataUrl) return;
+    const filename = `QR_PRO_${current.slug}.png`;
+    downloadPngFromDataUrl(current.dataUrl, filename);
+    showNote("⬇️ PNG téléchargé : " + filename);
   });
 
   // Auto ?slug=
@@ -393,7 +316,7 @@ window.addEventListener("DOMContentLoaded", () => {
     showNote("Astuce: ouvre avec ?slug=chez-astou-saly pour générer direct.");
   }
 
-  console.log("✅ DIGIY QR FACTORY READY (LOCAL QR + DOWNLOAD OK)");
+  console.log("✅ QR FACTORY ONE-URL READY →", QR_PRO_BASE);
 });
 </script>
 
