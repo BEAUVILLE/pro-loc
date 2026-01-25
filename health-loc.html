@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>DIGIY LOC — Health Check</title>
+  <title>DIGIY LOC PRO — Health</title>
   <meta name="theme-color" content="#16a34a" />
 
   <style>
@@ -48,49 +48,38 @@
       padding:10px 12px;border-radius:14px;font-weight:900
     }
     button:hover{background:rgba(255,255,255,.09)}
-    input{
-      flex:1;min-width:240px;
-      padding:10px 12px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.18);color:#eafff1;font-weight:800
-    }
-    input::placeholder{color:rgba(234,255,241,.55)}
     .small{font-size:12px;color:var(--muted);line-height:1.35}
   </style>
 
+  <!-- Supabase (CDN) + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ✅ Guard repo-safe + slug keep -->
-  <script src="./guard.js?v=locpro-2"></script>
+  <script src="./guard.js?v=locpro-final"></script>
 </head>
 
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>DIGIY LOC — Health Check</h1>
+      <h1>DIGIY LOC PRO — Health</h1>
       <div class="muted">
-        Contrôle qualité (preuve “CLEAN”). Module: <b>LOC</b> · slug: <b id="pillSlug">—</b>
+        Contrôle qualité PRO (preuve “CLEAN”). Module: <b id="pillModule">LOC</b> · slug: <b id="pillSlug">—</b>
       </div>
 
       <div class="row" id="pills" style="margin-top:10px"></div>
 
       <div class="row" style="margin-top:12px">
         <button id="btnRun">🔁 Re-tester</button>
-        <button id="btnClear">🧹 Clear cache phone</button>
-        <button id="btnGoPlanning">✅ Planning</button>
-        <button id="btnGoLogin">🔐 Login</button>
+        <button id="btnClear">🧹 Clear cache</button>
+        <button id="btnGoApp">🏠 APP</button>
+        <button id="btnGoPlanning">🗓️ Planning</button>
+        <button id="btnGoLinks">🔗 Manage Links</button>
+        <button id="btnGoLogin">🔐 PIN</button>
         <button id="btnGoPay">💳 Paiement</button>
-        <button id="btnLogout">🚪 Logout (guard)</button>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <input id="email" placeholder="Email (optionnel) pour Magic Link Supabase"/>
-        <button id="btnMagic">📩 Envoyer Magic Link</button>
-        <button id="btnSbLogout">⛔ Logout Supabase</button>
+        <button id="btnLogout">🚪 Logout</button>
       </div>
 
       <div class="muted" id="msg" style="margin-top:10px"></div>
       <div class="small" style="margin-top:8px">
-        Astuce: pour tester “ABO OFF”, mets <code>current_period_end</code> dans le passé, puis recharge.
+        Astuce : si tu vois “slug —”, ouvre cette page via un lien avec <code>?slug=chez-astou-saly</code>.
       </div>
     </div>
 
@@ -106,28 +95,27 @@
   // =============================
   // CONFIG
   // =============================
-  const MODULE = "LOC";
+  const MODULE = "loc";
   const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
-
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const $ = (id)=>document.getElementById(id);
   const msg = $("msg");
+
+  function setMsg(t){ msg.textContent = t || ""; }
 
   const hasGuard = !!(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.withSlug === "function");
 
   function safeWithSlug(url){
     return hasGuard ? window.DIGIY_GUARD.withSlug(url) : url;
   }
+
   function getSlug(){
-    if(hasGuard && typeof window.DIGIY_GUARD.getSlug === "function") return window.DIGIY_GUARD.getSlug();
-    try{ return new URL(location.href).searchParams.get("slug") || ""; }catch(_){ return ""; }
+    try{
+      const s = window.DIGIY_GUARD?.getSlug?.();
+      if(s) return String(s||"").trim();
+    }catch(_){}
+    try{ return (new URL(location.href).searchParams.get("slug") || "").trim(); }catch(_){ return ""; }
   }
-  function setMsg(t){ msg.textContent = t || ""; }
 
   function pill(text, kind){
     const el = document.createElement("div");
@@ -154,9 +142,6 @@
     });
   }
 
-  // =============================
-  // PHONE (via guard, sinon fallback)
-  // =============================
   function normPhone(p){
     p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
     if(p.startsWith("00221")) p = "+221" + p.slice(5);
@@ -165,186 +150,38 @@
     return p;
   }
 
-  function getPhone(){
-    // ✅ priorité Guard
-    try{
-      const p = window.DIGIY_GUARD?.getPhone?.();
-      if(p) return p;
-      const s = window.DIGIY_GUARD?.getSession?.();
-      if(s?.phone) return s.phone;
-    }catch(_){}
-
-    // fallback ancien cache
-    const s = sessionStorage.getItem("digiy_phone") || sessionStorage.getItem("digiy_driver_phone");
-    if (s) return s;
-
-    try{
-      const a = JSON.parse(localStorage.getItem("digiy_access_pin")||"null");
-      if(a?.phone) return a.phone;
-    }catch(_){}
-
-    try{
-      const b = JSON.parse(localStorage.getItem("digiy_driver_access_pin")||"null");
-      if(b?.phone) return b.phone;
-    }catch(_){}
-
-    // fallback session guard key (si tu l’utilises)
-    try{
-      const sess = JSON.parse(localStorage.getItem("digiy_loc_pro_session")||"null");
-      if(sess?.phone) return sess.phone;
-    }catch(_){}
-
-    return null;
-  }
-
-  function clearPhoneCache(){
+  function clearCache(){
+    // cache legacy
     sessionStorage.removeItem("digiy_phone");
     sessionStorage.removeItem("digiy_driver_phone");
     localStorage.removeItem("digiy_access_pin");
     localStorage.removeItem("digiy_driver_access_pin");
     localStorage.removeItem("digiy_loc_pro_session");
+    // cache session V1 (nouveau)
+    localStorage.removeItem("DIGIY_LOC_PRO_SESSION_V1");
     // cache abo guard
     localStorage.removeItem("digiy_loc_subs_cache_v1");
   }
 
-  // =============================
-  // RUN CHECKS
-  // =============================
-  async function run(){
-    const rows = [];
-    const pills = [];
-
-    const slug = getSlug();
-    $("pillSlug").textContent = slug || "—";
-
-    const rawPhone = getPhone();
-    const phone = rawPhone ? normPhone(rawPhone) : null;
-
-    rows.push({k:"URL", v: location.href});
-    rows.push({k:"slug", v: slug || "—"});
-    rows.push({k:"Phone (local)", v: rawPhone || "—"});
-    rows.push({k:"Phone (normalisé)", v: phone || "—"});
-    rows.push({k:"Module", v: MODULE});
-    rows.push({k:"Guard trouvé", v: String(hasGuard)});
-
-    // Session guard
-    let guardSess = null;
-    try{ guardSess = window.DIGIY_GUARD?.getSession?.() || null; }catch(_){}
-    rows.push({k:"Session guard", v: guardSess ? JSON.stringify(guardSess) : "—"});
-
-    // Supabase Auth user
-    let user = null;
-    try{
-      const { data, error } = await sb.auth.getUser();
-      if(error) throw error;
-      user = data?.user || null;
-    }catch(e){
-      rows.push({k:"Supabase Auth", v: "Erreur: " + (e?.message || e)});
-    }
-
-    if(user){
-      pills.push({text:"Auth Supabase ✅", kind:"ok"});
-      rows.push({k:"User ID", v: user.id});
-      rows.push({k:"Email", v: user.email || "—"});
-    }else{
-      pills.push({text:"Auth Supabase ❌", kind:"bad"});
-      rows.push({k:"User ID", v: "—"});
-      rows.push({k:"Email", v: "—"});
-    }
-
-    // ensure_profile_phone (si tu l'as)
-    let ensured = false;
-    if(phone){
-      try{
-        const { data, error } = await sb.rpc("ensure_profile_phone", { p_phone: phone });
-        if(error) throw error;
-        ensured = true;
-        rows.push({k:"ensure_profile_phone", v: "OK" + (data ? " • " + JSON.stringify(data) : "")});
-      }catch(e){
-        rows.push({k:"ensure_profile_phone", v: "Non/Erreur: " + (e?.message || e)});
-      }
-    }else{
-      rows.push({k:"ensure_profile_phone", v: "Skippé (pas de phone)"});
-    }
-    pills.push({text: ensured ? "Profile ✅" : "Profile ⚠️", kind: ensured ? "ok" : "warn"});
-
-    // is_module_active — ✅ version téléphone (celle de ton guard)
-    let active = null;
-    if(phone){
-      try{
-        const { data, error } = await sb.rpc("is_module_active", {
-          p_phone: phone,
-          p_module: MODULE
-        });
-        if(error) throw error;
-        active = !!data;
-      }catch(e){
-        rows.push({k:"is_module_active(p_phone,p_module)", v: "Erreur: " + (e?.message || e)});
-      }
-    }else{
-      rows.push({k:"is_module_active", v: "Skippé (pas de phone)"});
-    }
-
-    if(active === true){
-      pills.push({text:"LOC ✅ ACTIVE", kind:"ok"});
-      pills.push({text:"CLEAN ✅", kind:"ok"});
-    }else if(active === false){
-      pills.push({text:"LOC ❌ INACTIVE", kind:"bad"});
-      pills.push({text:"BLOQUÉ ❌", kind:"bad"});
-    }else{
-      pills.push({text:"LOC ? (non testé)", kind:"warn"});
-    }
-
-    rows.push({k:"Active", v: active === null ? "—" : String(active)});
-    rows.push({k:"Date/heure", v: new Date().toString()});
-
-    setPills(pills);
-    setGrid(rows);
-    setMsg("");
-  }
-
-  // =============================
-  // ACTIONS
-  // =============================
-  async function sendMagicLink(){
-    const email = ($("email").value || "").trim();
-    if(!email) return alert("Mets un email");
-
-    setMsg("Envoi du magic link…");
-    const emailRedirectTo = location.href;
-
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo }
-    });
-
-    if(error){
-      setMsg("Erreur: " + error.message);
-      return;
-    }
-    setMsg("✅ Lien envoyé. Ouvre ton email, clique, puis reviens ici.");
-  }
-
-  async function sbLogout(){
-    await sb.auth.signOut();
-    setMsg("Déconnecté (Supabase).");
-    run();
-  }
-
   function guardLogout(){
+    const go = safeWithSlug("./pin.html");
+    try{
+      window.DIGIY_GUARD?.logout?.(go);
+      return;
+    }catch(_){}
     try{ window.DIGIY_GUARD?.clearSession?.(); }catch(_){}
-    location.replace(safeWithSlug("./login.html"));
+    location.replace(go);
   }
 
   function goPay(){
     const slug = getSlug();
-    const phone = normPhone(getPhone() || "");
+    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+    const phone = normPhone(sess?.phone || "");
     const from = location.href;
 
-    // ✅ on passe phone/module/from/slug pour retour propre
     const url =
       PAY_URL
-      + "?module=" + encodeURIComponent(MODULE)
+      + "?module=" + encodeURIComponent("LOC")
       + (phone ? "&phone=" + encodeURIComponent(phone) : "")
       + "&from=" + encodeURIComponent(from)
       + (slug ? "&slug=" + encodeURIComponent(slug) : "");
@@ -352,23 +189,113 @@
     location.href = url;
   }
 
+  // =============================
+  // RUN CHECKS (GUARD FIRST)
+  // =============================
+  async function run(){
+    const rows = [];
+    const pills = [];
+
+    $("pillModule").textContent = "LOC";
+    const slug = getSlug();
+    $("pillSlug").textContent = slug || "—";
+
+    rows.push({k:"URL", v: location.href});
+    rows.push({k:"slug", v: slug || "—"});
+    rows.push({k:"Guard trouvé", v: String(hasGuard)});
+
+    if(!hasGuard){
+      pills.push({text:"GUARD ❌", kind:"bad"});
+      setPills(pills);
+      setGrid(rows);
+      setMsg("❌ guard.js manquant ou non chargé.");
+      return;
+    }
+
+    setMsg("⏳ Boot guard…");
+
+    const guardRes = await window.DIGIY_GUARD.boot({
+      module: MODULE,
+      dashboard: "./app.html",
+      login: "./pin.html",
+      pay: PAY_URL,
+      requireSlug: true,
+      checkSubscription: true
+    });
+
+    if(!guardRes?.ok){
+      pills.push({text:"BOOT ⚠️", kind:"warn"});
+      rows.push({k:"boot", v: JSON.stringify(guardRes || {})});
+      setPills(pills);
+      setGrid(rows);
+      setMsg("⚠️ boot non OK (redirection possible).");
+      return;
+    }
+
+    pills.push({text:"GUARD ✅", kind:"ok"});
+
+    const sess = window.DIGIY_GUARD.getSession?.() || null;
+    const sb = window.DIGIY_GUARD.getSb?.() || window.DIGIY_GUARD.sb || null;
+
+    rows.push({k:"Session ok", v: String(!!sess?.ok)});
+    rows.push({k:"Phone", v: sess?.phone || "—"});
+    rows.push({k:"Owner ID", v: sess?.owner_id || "—"});
+    rows.push({k:"Business code", v: sess?.business_code || sess?.businessCode || "—"});
+    rows.push({k:"Supabase (guard)", v: sb?.from ? "OK" : "NO"});
+
+    if(sess?.ok && sess?.owner_id) pills.push({text:"SESSION ✅", kind:"ok"});
+    else pills.push({text:"SESSION ❌", kind:"bad"});
+
+    if(guardRes?.subscription_ok === true) pills.push({text:"ABO ✅", kind:"ok"});
+    else if(guardRes?.subscription_ok === false) pills.push({text:"ABO ❌", kind:"bad"});
+    else pills.push({text:"ABO —", kind:"warn"});
+
+    // Optional: test RPC is_module_active (si disponible)
+    try{
+      const phone = normPhone(sess?.phone || "");
+      if(sb?.rpc && phone){
+        const { data, error } = await sb.rpc("is_module_active", { p_phone: phone, p_module: "LOC" });
+        if(error) throw error;
+        rows.push({k:"is_module_active", v: String(!!data)});
+        pills.push({text: data ? "LOC ✅ ACTIVE" : "LOC ❌ INACTIVE", kind: data ? "ok" : "bad"});
+      }else{
+        rows.push({k:"is_module_active", v: "Skippé (sb/phone)"});
+      }
+    }catch(e){
+      rows.push({k:"is_module_active", v: "Erreur: " + (e?.message || e)});
+      pills.push({text:"RPC ⚠️", kind:"warn"});
+    }
+
+    rows.push({k:"Date/heure", v: new Date().toString()});
+
+    setPills(pills);
+    setGrid(rows);
+    setMsg("✅ OK. Health validé.");
+  }
+
+  // =============================
+  // ACTIONS
+  // =============================
   $("btnRun").addEventListener("click", run);
+
   $("btnClear").addEventListener("click", function(){
-    clearPhoneCache();
-    alert("Cache phone (et cache abo) effacé. Recharge / reconnecte.");
+    clearCache();
+    alert("Cache effacé. Recharge / reconnecte si besoin.");
     run();
   });
 
+  $("btnGoApp").addEventListener("click", ()=> location.href = safeWithSlug("./app.html"));
   $("btnGoPlanning").addEventListener("click", ()=> location.href = safeWithSlug("./planning.html"));
-  $("btnGoLogin").addEventListener("click", ()=> location.href = safeWithSlug("./login.html"));
+
+  // ✅ ICI : Manage Links = manage-links.html (slug conservé)
+  $("btnGoLinks").addEventListener("click", ()=> location.href = safeWithSlug("./manage-links.html"));
+
+  // ✅ Login PRO = PIN (pas login email)
+  $("btnGoLogin").addEventListener("click", ()=> location.href = safeWithSlug("./pin.html"));
+
   $("btnGoPay").addEventListener("click", goPay);
+
   $("btnLogout").addEventListener("click", guardLogout);
-
-  $("btnMagic").addEventListener("click", sendMagicLink);
-  $("btnSbLogout").addEventListener("click", sbLogout);
-
-  // auto refresh on auth state changes
-  sb.auth.onAuthStateChange(() => run());
 
   run();
 })();
