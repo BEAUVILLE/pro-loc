@@ -3,25 +3,19 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY ♾️ — GO PIN • Manage Links</title>
+  <title>DIGIY ♾️ — GO PIN • Liens / QR</title>
   <meta name="theme-color" content="#0b1020"/>
 
-  <!-- Supabase JS -->
+  <!-- Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- QR generator (canvas) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
-  <!-- ✅ Guard (si présent, on réutilise SON client Supabase) -->
   <script src="./guard.js?v=locpro-final"></script>
 
   <style>
     :root{
-      --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
-      --line:rgba(148,163,184,.20);
+      --bg:#020617; --bg2:#0b1020; --line:rgba(148,163,184,.22);
       --ink:#f9fafb; --muted:#cbd5f5;
-      --gold:#facc15; --green:#22c55e; --red:#ef4444; --orange:#f59e0b;
-      --shadow:0 22px 55px rgba(0,0,0,.55);
+      --gold:#facc15; --green:#22c55e; --red:#ef4444;
+      --card:rgba(255,255,255,.03); --shadow:0 22px 50px rgba(0,0,0,.55);
       --r:18px;
     }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -35,131 +29,66 @@
         linear-gradient(180deg, var(--bg2), var(--bg));
       padding:16px;
     }
-    .wrap{max-width:1100px;margin:0 auto}
+    .wrap{max-width:980px;margin:0 auto}
     .top{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:22px;
+      display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
       box-shadow:var(--shadow);
-      padding:14px;
-      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
     }
     .brand{display:flex;gap:10px;align-items:center}
     .logo{
       width:44px;height:44px;border-radius:16px;
       background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
       border:1px solid rgba(250,204,21,.35);
-      box-shadow:0 0 22px rgba(250,204,21,.12);
       display:grid;place-items:center;color:#061b14;font-weight:1100;
     }
-    h1{font-size:1.05rem;margin:0}
-    .sub{color:var(--muted);font-weight:850;margin-top:4px;line-height:1.35}
+    h1{font-size:1.06rem}
+    .sub{color:var(--muted);font-weight:850;margin-top:4px}
     .pill{
       border:1px solid rgba(148,163,184,.35);
       padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
       color:var(--muted);font-weight:900;font-size:.86rem;
-      display:flex;gap:8px;align-items:center;white-space:nowrap;
     }
-    .dot{width:10px;height:10px;border-radius:99px;background:rgba(148,163,184,.6)}
-    .dot.ok{background:rgba(34,197,94,.9)}
-    .dot.bad{background:rgba(239,68,68,.9)}
-    .grid{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
-    @media(min-width:980px){
-      .grid{grid-template-columns: 420px 1fr}
-    }
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
     .card{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      padding:14px;
+      border:1px solid var(--line);background:rgba(255,255,255,.03);
+      border-radius:20px;box-shadow:var(--shadow);padding:16px;
     }
-    .card h2{font-size:1rem;margin:0 0 10px;color:#fff}
-    label{display:block;margin:10px 0 6px;font-weight:950;color:#fff}
-    input,select,textarea{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
-      color:var(--ink);
-      padding:10px 12px;
-      font-weight:900;
-      outline:none;
-    }
-    input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(250,204,21,.15)}
-    textarea{min-height:84px;resize:vertical}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .btn{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      font-weight:1100;
-      border-radius:14px;
-      padding:10px 12px;
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      min-height:44px;
+    label{display:block;margin:12px 0 6px;font-weight:950;color:#fff}
+    input{
+      width:100%;border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.18);color:var(--ink);
+      padding:12px 12px;font-weight:900;outline:none;
     }
-    .btn:hover{background:rgba(255,255,255,.07)}
+    input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(250,204,21,.15)}
+    .btn{
+      min-height:46px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);color:#fff;font-weight:1100;font-size:15px;
+      cursor:pointer;text-decoration:none; padding:10px 12px;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
     .btn.primary{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
-    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
-    .btn.danger{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
-    .btn.small{padding:8px 10px;min-height:40px;font-size:.92rem}
-    .muted{color:var(--muted);font-weight:850;line-height:1.35}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fff}
+    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
     .note{
-      margin-top:10px;
-      padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
+      margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
       background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;display:none;
     }
     .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
     .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+
     table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:10px;border-bottom:1px solid rgba(148,163,184,.18);text-align:left;vertical-align:top}
-    th{color:rgba(203,213,245,.85);font-weight:1000;font-size:.85rem;text-transform:uppercase}
-    td{font-weight:850;color:rgba(249,250,251,.95)}
-    .tag{
-      display:inline-flex;align-items:center;gap:6px;
-      border:1px solid rgba(148,163,184,.25);
-      padding:6px 10px;border-radius:999px;
-      font-weight:1000;font-size:.82rem;color:rgba(203,213,245,.95);
-      background:rgba(255,255,255,.02);
-    }
-    .tag.on{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .tag.off{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-weight:900}
-    .qrs{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-      margin-top:10px;
-    }
-    @media(min-width:720px){
-      .qrs{grid-template-columns:1fr 1fr 1fr}
-    }
-    .qrbox{
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.02);
-      border-radius:18px;
-      padding:12px;
-    }
-    .qrtitle{font-weight:1100;margin-bottom:8px}
-    .qrpreview{
-      display:grid;place-items:center;
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:14px;
-      padding:10px;
-      min-height:220px;
-    }
-    .small{font-size:.9rem}
-    .sep{height:1px;background:rgba(148,163,184,.16);margin:12px 0}
+    th,td{padding:10px;border-bottom:1px solid rgba(148,163,184,.18);text-align:left;font-weight:850}
+    th{color:rgba(203,213,245,.9);font-size:.85rem}
+    td{color:#f9fafb;font-size:.95rem}
+    .tiny{color:rgba(203,213,245,.9);font-weight:850;font-size:.9rem;line-height:1.35;margin-top:10px}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:860px){.two{grid-template-columns:1fr}}
+    canvas{background:#fff;border-radius:12px}
   </style>
 </head>
 
@@ -169,166 +98,82 @@
     <div class="brand">
       <div class="logo">∞</div>
       <div>
-        <h1>DIGIY ♾️ — GO PIN</h1>
-        <div class="sub">Manage Links · Connexion · QR</div>
+        <h1>DIGIY ♾️ — GO LINKS</h1>
+        <div class="sub">Liens + QR (simple terrain) · <b>slug</b> + <b>PIN (4 chiffres)</b></div>
       </div>
     </div>
-
-    <div class="row">
-      <div class="pill" title="Statut Auth Supabase">
-        <span class="dot" id="authDot"></span>
-        <span id="authTxt">Auth —</span>
-      </div>
-      <div class="pill" title="Slug (lieu)">
-        <span>slug:</span>
-        <span class="mono" id="slugPill">—</span>
-      </div>
-    </div>
+    <div class="pill" id="pillSlug">slug : —</div>
   </div>
 
   <div class="grid">
-    <!-- LEFT: AUTH + PINS -->
     <div class="card">
-      <h2>Connexion</h2>
-      <div class="muted">
-        Tu peux te connecter en <b>email + mot de passe</b>, ou demander un <b>Magic Link</b>.<br/>
-        ⚠️ Le owner ne voit que ses PINs (RLS).
-      </div>
-
-      <label>Email</label>
-      <input id="email" type="email" placeholder="pro@digiylyfe.com"/>
-
-      <label>Mot de passe <span class="muted small">(optionnel si magic link)</span></label>
-      <input id="password" type="password" placeholder="••••••••"/>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" id="btnLogin">Login</button>
-        <button class="btn gold" id="btnMagic">Envoyer Magic Link</button>
-        <button class="btn danger" id="btnLogout">Logout</button>
-      </div>
-
-      <div class="sep"></div>
-
       <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">PINs</h2>
-        <button class="btn small" id="btnRefreshPins">↻ Rafraîchir PINs</button>
+        <div style="font-weight:950">🔐 Accès</div>
+        <div class="pill" id="pillStatus">Session : —</div>
       </div>
 
-      <label>Choisir un PIN / Lieu (slug)</label>
-      <select id="pinSelect">
-        <option value="">— choisir —</option>
-      </select>
-
-      <div class="row" style="margin-top:10px">
-        <a class="btn small" id="btnOpenApp" href="#" target="_blank" rel="noopener">🏠 Ouvrir APP</a>
-        <a class="btn small" id="btnOpenPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
-        <a class="btn small" id="btnOpenAccess" href="#" target="_blank" rel="noopener">🔑 Ouvrir l’accès (PIN)</a>
+      <div class="two" style="margin-top:10px">
+        <div>
+          <label>Téléphone (Wave)</label>
+          <input id="phone" type="tel" inputmode="tel" placeholder="+22177..." autocomplete="off"/>
+          <div class="tiny">Astuce : PIN = <b>4 derniers chiffres</b> de ce téléphone.</div>
+        </div>
+        <div>
+          <label>PIN (4 chiffres)</label>
+          <input id="pin4" type="tel" inputmode="numeric" maxlength="4" placeholder="5785" autocomplete="off"/>
+          <div class="tiny">Si le proprio oublie : tu lui dis “c’est les 4 derniers chiffres”.</div>
+        </div>
       </div>
 
-      <div class="note warn" id="noteAuth"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnLoad">↻ Charger mes liens</button>
+        <button class="btn gold" id="btnSave">💾 Enregistrer</button>
+        <button class="btn red" id="btnReset">🧹 Vider la liste</button>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <a class="btn" id="btnOpenApp" href="#">🏠 Ouvrir APP</a>
+        <a class="btn" id="btnOpenPublic" href="#">👁️ GO PIN public</a>
+        <a class="btn" id="btnOpenPin" href="#">🔑 Ouvrir l’accès (PIN)</a>
+      </div>
+
+      <div class="note warn" id="note"></div>
     </div>
 
-    <!-- RIGHT: LINKS + QR -->
     <div class="card">
-      <h2>GO LINKS</h2>
-      <div class="muted">Ajoute les boutons “Commander / Réserver / Demander course / etc.”</div>
-
-      <div class="sep"></div>
-
-      <div id="needPinBlock" class="note warn" style="display:block">
-        👉 Connecte-toi puis choisis un PIN pour gérer ses liens.
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-weight:950">🔗 GO LINKS</div>
+        <button class="btn" id="btnAdd">➕ Nouveau lien</button>
       </div>
 
-      <div id="linksBlock" style="display:none">
-        <div class="row" style="gap:12px">
-          <div style="flex:1;min-width:220px">
-            <label>Label <span class="muted small">(ex: Commander / Réserver / Voir catalogue)</span></label>
-            <input id="linkLabel" placeholder="Commander / Réserver / Voir catalogue"/>
-          </div>
-          <div style="flex:1;min-width:260px">
-            <label>URL</label>
-            <input id="linkUrl" placeholder="https://..."/>
-          </div>
-        </div>
+      <div class="tiny">Un lien = un bouton sur la page GO PIN (Commander / Réserver / Demander course…).</div>
 
-        <div class="row" style="margin-top:10px">
-          <div style="width:180px">
-            <label>Ordre <span class="muted small">(petit = en haut)</span></label>
-            <input id="linkOrder" type="number" value="100" min="0"/>
-          </div>
-          <div style="width:180px">
-            <label>Actif</label>
-            <select id="linkActive">
-              <option value="true">Oui</option>
-              <option value="false">Non</option>
-            </select>
-          </div>
-          <div class="row" style="flex:1;justify-content:flex-end;margin-top:18px">
-            <button class="btn primary" id="btnSaveLink">Enregistrer</button>
-            <button class="btn" id="btnNewLink">Nouveau</button>
-            <button class="btn" id="btnReloadLinks">↻ Recharger</button>
-          </div>
-        </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px">Ordre</th>
+            <th>Label</th>
+            <th>URL</th>
+            <th style="width:90px">Actif</th>
+            <th style="width:110px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
 
-        <div class="note" id="noteLinks"></div>
-
-        <div class="sep"></div>
-
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <h2 style="margin:0">Liste des liens</h2>
-          <span class="muted small">Stockage: <span class="mono" id="storageMode">—</span></span>
-        </div>
-
-        <div style="overflow:auto">
-          <table>
-            <thead>
-              <tr>
-                <th>Ordre</th>
-                <th>Label</th>
-                <th>URL</th>
-                <th>Actif</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="linksTable">
-              <tr><td colspan="5" class="muted">— chargement —</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="sep"></div>
-
-        <h2 style="margin:0">QR (pour app / public / accès)</h2>
-        <div class="muted small">slug: <span class="mono" id="qrSlug">—</span></div>
-
-        <div class="qrs">
-          <div class="qrbox">
-            <div class="qrtitle">⬇️ QR APP</div>
-            <div class="qrpreview"><canvas id="qrApp"></canvas></div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn small" id="btnDlQrApp">Télécharger</button>
-            </div>
-          </div>
-
-          <div class="qrbox">
-            <div class="qrtitle">⬇️ QR Public</div>
-            <div class="qrpreview"><canvas id="qrPublic"></canvas></div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn small" id="btnDlQrPublic">Télécharger</button>
-            </div>
-          </div>
-
-          <div class="qrbox">
-            <div class="qrtitle">⬇️ QR Accès (PIN)</div>
-            <div class="qrpreview"><canvas id="qrAccess"></canvas></div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn small" id="btnDlQrAccess">Télécharger</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="note ok" id="noteUrls" style="display:block;margin-top:12px"></div>
+    <div class="card">
+      <div style="font-weight:950">⬇️ QR (téléchargement)</div>
+      <div class="tiny">Ces QR pointent vers : <span class="mono" id="qrAppUrl">—</span></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="btnQrApp">⬇️ QR APP</button>
+        <button class="btn" id="btnQrPublic">⬇️ QR Public</button>
+        <button class="btn" id="btnQrPin">⬇️ QR Accès (PIN)</button>
       </div>
+      <div class="row" style="margin-top:10px">
+        <canvas id="qrCanvas" width="260" height="260" style="display:none"></canvas>
+      </div>
+      <div class="tiny" id="qrInfo">Choisis un slug (via lien) + charge tes liens.</div>
     </div>
   </div>
 </div>
@@ -336,632 +181,258 @@
 <script>
 (function(){
   "use strict";
-
-  // =========================
-  // CONFIG
-  // =========================
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
-  // Tables
-  const T_PINS = "digiy_admin_pins";      // ✅ confirmée
-  const T_SETTINGS = "digiy_loc_settings"; // ✅ confirmée (k,v)
-
-  // Pages (repo-safe)
-  const PAGE_APP = "./app.html";
-  const PAGE_PUBLIC = "./go-pin-public.html";
-  const PAGE_ACCESS = "./pin.html";
-
   const $ = (id)=>document.getElementById(id);
 
-  // =========================
-  // SINGLE SUPABASE CLIENT (NO DUPLICATE GOTRUE)
-  // =========================
-  function getSb(){
-    // ✅ priorité au client du Guard (évite "Multiple GoTrueClient instances")
-    const gsb = window.DIGIY_GUARD?.getSb?.() || window.DIGIY_GUARD?.sb || null;
-    if(gsb) return gsb;
-
-    // fallback: client unique global
-    if(window.__DIGIY_SB__) return window.__DIGIY_SB__;
-    window.__DIGIY_SB__ = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    return window.__DIGIY_SB__;
-  }
-  const sb = getSb();
-
-  // =========================
-  // UI HELPERS
-  // =========================
-  function setNote(el, msg, cls){
+  function show(msg, cls){
+    const el = $("note");
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
   }
-  function setAuthStatus(ok, label){
-    const dot = $("authDot");
-    const txt = $("authTxt");
-    dot.className = "dot " + (ok ? "ok":"bad");
-    txt.textContent = label || (ok ? "Auth ✅" : "Auth ❌");
-  }
-  function pickSlugFromPinRow(row){
-    // On s’adapte aux noms de colonnes possibles
-    return (
-      row?.slug ||
-      row?.pin_slug ||
-      row?.loc_slug ||
-      row?.business_slug ||
-      row?.place_slug ||
-      row?.code ||
-      row?.business_code ||
-      ""
-    );
-  }
-  function pinLabel(row){
-    const slug = pickSlugFromPinRow(row) || "—";
-    const last4 =
-      row?.last4 ||
-      row?.pin_last4 ||
-      row?.phone_last4 ||
-      row?.access_pin ||
-      row?.pin ||
-      row?.code4 ||
-      "";
-    const phone = row?.phone || row?.owner_phone || "";
-    const extra = last4 ? ` • ${String(last4)}` : (phone ? ` • ${String(phone).slice(-4)}` : "");
-    return `${slug}${extra}`;
+
+  function getSlug(){
+    return (window.DIGIY_GUARD?.getSlug?.() || new URL(location.href).searchParams.get("slug") || "").trim();
   }
 
-  function withSlug(url, slug){
-    // On garde le style guard si dispo (safe)
-    if(window.DIGIY_GUARD?.withSlug) {
-      // withSlug lit le slug depuis URL ou session, mais nous on force:
-      const u = new URL(url, location.href);
-      if(slug) u.searchParams.set("slug", slug);
-      return u.toString();
-    }
-    const u = new URL(url, location.href);
-    if(slug) u.searchParams.set("slug", slug);
-    return u.toString();
+  function withSlug(url){
+    return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(url) : url;
   }
 
-  function currentBase(){
-    // base du site (GitHub pages)
-    // ex: https://beauville.github.io/digiy-loc-pro/manage-links.html
-    // => base dossier: https://beauville.github.io/digiy-loc-pro/
-    const u = new URL(location.href);
-    u.hash = "";
-    u.search = "";
-    // retire le dernier segment
-    u.pathname = u.pathname.replace(/\/[^\/]*$/, "/");
-    return u.toString();
+  function normPhone(p){
+    p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if(p.startsWith("00221")) p = "+221" + p.slice(5);
+    if(!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
   }
 
-  // =========================
-  // STATE
-  // =========================
-  const State = {
-    pins: [],
-    slug: "",
-    links: [],
-    editingId: null,
-    storage: "settings", // pour l’instant: digiy_loc_settings (k,v)
-  };
+  const SLUG = getSlug();
+  $("pillSlug").textContent = "slug : " + (SLUG || "—");
 
-  // =========================
-  // AUTH
-  // =========================
-  async function refreshAuth(){
-    try{
-      const { data, error } = await sb.auth.getSession();
-      if(error) throw error;
-      const sess = data?.session || null;
-      if(sess?.user){
-        setAuthStatus(true, "Auth ✅ " + (sess.user.email || ""));
-        return sess.user;
-      }
-      setAuthStatus(false, "Auth ❌");
-      return null;
-    }catch(e){
-      setAuthStatus(false, "Auth ❌");
-      return null;
-    }
+  // Raccord app/public/pin
+  const appUrl = new URL("./app.html", location.href);
+  const pubUrl = new URL("./go-pin-public.html", location.href);
+  const pinUrl = new URL("./pin.html", location.href);
+  if(SLUG){
+    appUrl.searchParams.set("slug", SLUG);
+    pubUrl.searchParams.set("slug", SLUG);
+    pinUrl.searchParams.set("slug", SLUG);
+  }
+  $("btnOpenApp").href = appUrl.toString();
+  $("btnOpenPublic").href = pubUrl.toString();
+  $("btnOpenPin").href = pinUrl.toString();
+  $("qrAppUrl").textContent = appUrl.toString();
+
+  // Prefill phone depuis session guard si dispo
+  try{
+    const sess = window.DIGIY_GUARD?.getSession?.();
+    if(sess?.phone) $("phone").value = sess.phone;
+  }catch(_){}
+
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.() || window.DIGIY_GUARD?.sb || window.sb || null;
   }
 
-  async function loginPassword(){
-    const email = ($("email").value || "").trim();
-    const password = ($("password").value || "").trim();
-    if(!email || !password){
-      setNote($("noteAuth"), "⚠️ Mets email + mot de passe (ou utilise Magic Link).", "warn");
+  function setStatus(ok){
+    $("pillStatus").textContent = "Session : " + (ok ? "OK" : "—");
+    $("pillStatus").style.borderColor = ok ? "rgba(34,197,94,.35)" : "rgba(148,163,184,.35)";
+  }
+
+  // ---------------------------
+  // LINKS MODEL
+  // { order:number, label:string, url:string, active:boolean }
+  // ---------------------------
+  let LINKS = [];
+
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function render(){
+    const tb = $("rows");
+    if(!LINKS.length){
+      tb.innerHTML = `<tr><td colspan="5" style="color:rgba(203,213,245,.9)">— aucun lien —</td></tr>`;
       return;
     }
-    setNote($("noteAuth"), "⏳ Connexion…", "warn");
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if(error){
-      setNote($("noteAuth"), "❌ " + error.message, "bad");
-      await refreshAuth();
-      return;
-    }
-    setNote($("noteAuth"), "✅ Connecté.", "ok");
-    await refreshAuth();
-    await loadPins();
-  }
-
-  async function sendMagic(){
-    const email = ($("email").value || "").trim();
-    if(!email){
-      setNote($("noteAuth"), "⚠️ Mets ton email.", "warn");
-      return;
-    }
-    // Magic link => revenir ICI (avec slug si présent)
-    const redirectTo = location.href;
-
-    setNote($("noteAuth"), "📩 Envoi du Magic Link… Ouvre ton email, clique, puis reviens ici.", "warn");
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirectTo }
-    });
-    if(error){
-      setNote($("noteAuth"), "❌ " + error.message, "bad");
-      return;
-    }
-    setNote($("noteAuth"), "✅ Magic Link envoyé. Clique dans l’email puis tu reviens ici automatiquement.", "ok");
-  }
-
-  async function logout(){
-    await sb.auth.signOut().catch(()=>{});
-    setNote($("noteAuth"), "✅ Déconnecté.", "ok");
-    await refreshAuth();
-    State.pins = [];
-    renderPins();
-    setSelectedSlug("");
-  }
-
-  // =========================
-  // PINS
-  // =========================
-  async function loadPins(){
-    const user = await refreshAuth();
-    if(!user){
-      setNote($("noteAuth"),
-        "⚠️ Aucun PIN. Vérifie que tu es bien connecté (Magic Link).\n⚠️ Le owner ne voit que ses PINs (RLS). Si tu vois “— aucun PIN —”, fais un Magic Link puis “Rafraîchir”.",
-        "warn"
-      );
-      State.pins = [];
-      renderPins();
-      setSelectedSlug("");
-      return;
-    }
-
-    setNote($("noteAuth"), "⏳ Chargement des PINs…", "warn");
-
-    const { data, error } = await sb.from(T_PINS).select("*").order("created_at", { ascending:false }).limit(200);
-    if(error){
-      setNote($("noteAuth"), "❌ Erreur PINs: " + error.message, "bad");
-      State.pins = [];
-      renderPins();
-      setSelectedSlug("");
-      return;
-    }
-
-    State.pins = Array.isArray(data) ? data : [];
-    renderPins();
-
-    if(!State.pins.length){
-      setNote($("noteAuth"),
-        "⚠️ Aucun PIN visible.\n➡️ Assure-toi d’être connecté avec le bon email (RLS).",
-        "warn"
-      );
-      setSelectedSlug("");
-      return;
-    }
-
-    setNote($("noteAuth"), "✅ PINs chargés (" + State.pins.length + "). Choisis un PIN.", "ok");
-  }
-
-  function renderPins(){
-    const sel = $("pinSelect");
-    const keep = sel.value;
-    sel.innerHTML = `<option value="">— choisir —</option>`;
-
-    State.pins.forEach((row, idx)=>{
-      const slug = pickSlugFromPinRow(row);
-      if(!slug) return;
-      const opt = document.createElement("option");
-      opt.value = slug;
-      opt.textContent = pinLabel(row);
-      sel.appendChild(opt);
-    });
-
-    // restaure si possible
-    if(keep && Array.from(sel.options).some(o=>o.value===keep)){
-      sel.value = keep;
-    }
-  }
-
-  function setSelectedSlug(slug){
-    State.slug = (slug || "").trim();
-    $("slugPill").textContent = State.slug || "—";
-    $("qrSlug").textContent = State.slug || "—";
-
-    // update action links
-    const appUrl = State.slug ? withSlug(PAGE_APP, State.slug) : "#";
-    const pubUrl = State.slug ? withSlug(PAGE_PUBLIC, State.slug) : "#";
-    const accUrl = State.slug ? withSlug(PAGE_ACCESS, State.slug) : "#";
-
-    $("btnOpenApp").href = appUrl;
-    $("btnOpenPublic").href = pubUrl;
-    $("btnOpenAccess").href = accUrl;
-
-    // show/hide blocks
-    const has = !!State.slug;
-    $("needPinBlock").style.display = has ? "none" : "block";
-    $("linksBlock").style.display = has ? "block" : "none";
-
-    if(has){
-      // build QR + load links
-      renderAllQrs();
-      loadLinks().catch(()=>{});
-    }else{
-      // clear QRs + table
-      $("linksTable").innerHTML = `<tr><td colspan="5" class="muted">— aucun lien —</td></tr>`;
-      setNote($("noteLinks"), "", "warn");
-      setNote($("noteUrls"), "Les QR pointent vers :\nAPP\n—\nPublic\n—\nAccès\n—", "ok");
-      clearCanvas($("qrApp"));
-      clearCanvas($("qrPublic"));
-      clearCanvas($("qrAccess"));
-    }
-  }
-
-  // =========================
-  // LINKS STORAGE (digiy_loc_settings)
-  // k = "go_links:<slug>"
-  // v = JSON string (array)
-  // =========================
-  function linksKey(slug){
-    return `go_links:${slug}`;
-  }
-
-  async function loadLinks(){
-    if(!State.slug) return;
-
-    $("storageMode").textContent = "digiy_loc_settings (k/v)";
-    State.storage = "settings";
-
-    setNote($("noteLinks"), "⏳ Chargement des liens…", "warn");
-
-    const key = linksKey(State.slug);
-    const { data, error } = await sb.from(T_SETTINGS).select("*").eq("k", key).maybeSingle();
-    if(error){
-      setNote($("noteLinks"), "❌ Erreur chargement: " + error.message, "bad");
-      State.links = [];
-      renderLinks();
-      return;
-    }
-
-    let arr = [];
-    try{
-      const raw = data?.v || "";
-      arr = raw ? JSON.parse(raw) : [];
-      if(!Array.isArray(arr)) arr = [];
-    }catch(_){
-      arr = [];
-    }
-
-    // normalize
-    State.links = arr.map((x, i)=>({
-      id: x.id || `l_${Date.now()}_${i}`,
-      label: String(x.label || "").trim(),
-      url: String(x.url || "").trim(),
-      order: Number.isFinite(Number(x.order)) ? Number(x.order) : 100,
-      active: (x.active === false) ? false : true
-    }));
-
-    setNote($("noteLinks"), "✅ Liens chargés (" + State.links.length + ").", "ok");
-    renderLinks();
-    updateUrlsNote();
-  }
-
-  async function saveLinks(){
-    if(!State.slug) return;
-    const key = linksKey(State.slug);
-
-    // tri
-    const payloadArr = [...State.links].sort((a,b)=>Number(a.order)-Number(b.order));
-
-    const { error } = await sb.from(T_SETTINGS).upsert({
-      k: key,
-      v: JSON.stringify(payloadArr)
-    }, { onConflict: "k" });
-
-    if(error) throw error;
-  }
-
-  function renderLinks(){
-    const tb = $("linksTable");
-    const list = [...State.links].sort((a,b)=>Number(a.order)-Number(b.order));
-
-    if(!list.length){
-      tb.innerHTML = `<tr><td colspan="5" class="muted">— aucun lien —</td></tr>`;
-      return;
-    }
-
-    tb.innerHTML = list.map(l=>{
-      const tag = l.active
-        ? `<span class="tag on">Actif</span>`
-        : `<span class="tag off">Off</span>`;
-
+    LINKS.sort((a,b)=>(a.order||999)-(b.order||999));
+    tb.innerHTML = LINKS.map((x,i)=>{
+      const ord = Number(x.order||100);
+      const lab = escapeHtml(x.label||"");
+      const url = escapeHtml(x.url||"");
+      const act = !!x.active;
       return `
         <tr>
-          <td class="mono">${Number(l.order)}</td>
-          <td>${escapeHtml(l.label || "—")}</td>
-          <td><a class="mono" href="${escapeAttr(l.url)}" target="_blank" rel="noopener" style="color:#fde68a;text-decoration:none">${escapeHtml(l.url || "—")}</a></td>
-          <td>${tag}</td>
+          <td><input data-i="${i}" data-k="order" value="${ord}" style="padding:10px;border-radius:12px;border:1px solid rgba(148,163,184,.22);background:rgba(0,0,0,.18);color:#fff;font-weight:900;width:90px"/></td>
+          <td><input data-i="${i}" data-k="label" value="${lab}" style="padding:10px;border-radius:12px;border:1px solid rgba(148,163,184,.22);background:rgba(0,0,0,.18);color:#fff;font-weight:900;width:100%"/></td>
+          <td><input data-i="${i}" data-k="url" value="${url}" style="padding:10px;border-radius:12px;border:1px solid rgba(148,163,184,.22);background:rgba(0,0,0,.18);color:#fff;font-weight:900;width:100%"/></td>
           <td>
-            <div class="row" style="gap:8px">
-              <button class="btn small" data-act="edit" data-id="${escapeAttr(l.id)}">✏️</button>
-              <button class="btn small" data-act="toggle" data-id="${escapeAttr(l.id)}">${l.active ? "⏸" : "▶️"}</button>
-              <button class="btn small danger" data-act="del" data-id="${escapeAttr(l.id)}">🗑️</button>
-            </div>
+            <select data-i="${i}" data-k="active" style="padding:10px;border-radius:12px;border:1px solid rgba(148,163,184,.22);background:rgba(0,0,0,.18);color:#fff;font-weight:900;width:90px">
+              <option value="true" ${act?"selected":""}>Oui</option>
+              <option value="false" ${!act?"selected":""}>Non</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn red" style="min-height:40px;padding:8px 10px" data-del="${i}">🗑️</button>
           </td>
         </tr>
       `;
     }).join("");
 
-    // bind actions
-    tb.querySelectorAll("button[data-act]").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
-        const act = btn.getAttribute("data-act");
-        const id = btn.getAttribute("data-id");
-        if(act === "edit") return startEdit(id);
-        if(act === "toggle") return toggleLink(id);
-        if(act === "del") return deleteLink(id);
+    // bind changes
+    tb.querySelectorAll("input,select").forEach(el=>{
+      el.addEventListener("change", ()=>{
+        const i = Number(el.getAttribute("data-i"));
+        const k = el.getAttribute("data-k");
+        if(!Number.isFinite(i) || !k) return;
+        if(k==="order") LINKS[i].order = Number(el.value||100);
+        if(k==="label") LINKS[i].label = String(el.value||"").trim();
+        if(k==="url") LINKS[i].url = String(el.value||"").trim();
+        if(k==="active") LINKS[i].active = (String(el.value)==="true");
+      });
+    });
+    tb.querySelectorAll("button[data-del]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const i = Number(btn.getAttribute("data-del"));
+        LINKS.splice(i,1);
+        render();
       });
     });
   }
 
-  function startEdit(id){
-    const l = State.links.find(x=>x.id===id);
-    if(!l) return;
-    State.editingId = id;
-    $("linkLabel").value = l.label || "";
-    $("linkUrl").value = l.url || "";
-    $("linkOrder").value = String(l.order ?? 100);
-    $("linkActive").value = String(l.active ? "true" : "false");
-    setNote($("noteLinks"), "✏️ Édition en cours. Modifie puis “Enregistrer”.", "warn");
+  function validateLinks(list){
+    const clean = [];
+    for(const x of (list||[])){
+      const label = String(x.label||"").trim();
+      const url = String(x.url||"").trim();
+      const order = Number(x.order||100);
+      const active = !!x.active;
+      if(!label || !url) continue;
+      clean.push({ order, label, url, active });
+    }
+    return clean;
   }
 
-  function clearForm(){
-    State.editingId = null;
-    $("linkLabel").value = "";
-    $("linkUrl").value = "";
-    $("linkOrder").value = "100";
-    $("linkActive").value = "true";
-  }
+  // ---------------------------
+  // RPC calls
+  // ---------------------------
+  async function loadLinks(){
+    const sb = getSB();
+    if(!sb) return show("❌ Supabase pas prêt (sb null). Recharge ou reconnecte via PIN.", "bad");
 
-  async function upsertLinkFromForm(){
-    if(!State.slug){
-      setNote($("noteLinks"), "⚠️ Choisis un PIN (slug) d’abord.", "warn");
-      return;
-    }
+    if(!SLUG) return show("⚠️ Lien incomplet: ajoute ?slug=chez-astou-saly", "bad");
 
-    const label = ($("linkLabel").value || "").trim();
-    const url = ($("linkUrl").value || "").trim();
-    const order = Number($("linkOrder").value || 100);
-    const active = ($("linkActive").value === "true");
+    const phone = normPhone($("phone").value);
+    const pin4 = String($("pin4").value||"").trim();
 
-    if(!label || !url){
-      setNote($("noteLinks"), "⚠️ Label + URL requis.", "warn");
-      return;
-    }
-    if(!/^https?:\/\//i.test(url)){
-      setNote($("noteLinks"), "⚠️ URL doit commencer par http:// ou https://", "warn");
-      return;
-    }
+    if(!phone) return show("⚠️ Mets le téléphone Wave du proprio.", "warn");
+    if(pin4.length !== 4) return show("⚠️ Mets le PIN (4 chiffres).", "warn");
 
-    setNote($("noteLinks"), "⏳ Sauvegarde…", "warn");
+    show("⏳ Chargement…", "warn");
+    setStatus(true);
 
-    const id = State.editingId || `l_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    const existing = State.links.find(x=>x.id===id);
-
-    if(existing){
-      existing.label = label;
-      existing.url = url;
-      existing.order = Number.isFinite(order) ? order : 100;
-      existing.active = active;
-    }else{
-      State.links.push({ id, label, url, order: Number.isFinite(order) ? order : 100, active });
-    }
-
-    try{
-      await saveLinks();
-      setNote($("noteLinks"), "✅ Enregistré.", "ok");
-      clearForm();
-      renderLinks();
-      updateUrlsNote();
-    }catch(e){
-      console.error(e);
-      setNote($("noteLinks"), "❌ Sauvegarde impossible: " + (e?.message || e), "bad");
-    }
-  }
-
-  async function toggleLink(id){
-    const l = State.links.find(x=>x.id===id);
-    if(!l) return;
-    l.active = !l.active;
-    try{
-      await saveLinks();
-      renderLinks();
-      updateUrlsNote();
-      setNote($("noteLinks"), "✅ OK.", "ok");
-    }catch(e){
-      l.active = !l.active; // revert
-      setNote($("noteLinks"), "❌ " + (e?.message || e), "bad");
-    }
-  }
-
-  async function deleteLink(id){
-    if(!confirm("Supprimer ce lien ?")) return;
-    const before = State.links.length;
-    State.links = State.links.filter(x=>x.id!==id);
-    try{
-      await saveLinks();
-      renderLinks();
-      updateUrlsNote();
-      setNote($("noteLinks"), "✅ Supprimé.", "ok");
-    }catch(e){
-      setNote($("noteLinks"), "❌ " + (e?.message || e), "bad");
-      // best effort: reload from DB
-      await loadLinks().catch(()=>{});
-    }
-  }
-
-  // =========================
-  // QR
-  // =========================
-  function clearCanvas(canvas){
-    if(!canvas) return;
-    const ctx = canvas.getContext("2d");
-    canvas.width = 1; canvas.height = 1;
-    ctx.clearRect(0,0,1,1);
-  }
-
-  async function renderQr(canvas, text){
-    if(!canvas) return;
-    // ensure size stable
-    canvas.width = 260;
-    canvas.height = 260;
-    await QRCode.toCanvas(canvas, text, {
-      width: 260,
-      margin: 1
+    const { data, error } = await sb.rpc("digiy_go_links_get", {
+      p_slug: SLUG,
+      p_phone: phone,
+      p_pin4: pin4
     });
+
+    if(error){
+      console.error(error);
+      return show("❌ Erreur: " + (error.message || error), "bad");
+    }
+    if(!data?.ok){
+      return show("❌ Accès refusé: " + (data?.error || "unknown"), "bad");
+    }
+
+    LINKS = Array.isArray(data.links) ? data.links : [];
+    render();
+    show("✅ Liens chargés.", "ok");
   }
 
-  function downloadCanvas(canvas, filename){
+  async function saveLinks(){
+    const sb = getSB();
+    if(!sb) return show("❌ Supabase pas prêt (sb null).", "bad");
+    if(!SLUG) return show("⚠️ Lien incomplet: ajoute ?slug=...", "bad");
+
+    const phone = normPhone($("phone").value);
+    const pin4 = String($("pin4").value||"").trim();
+
+    if(!phone) return show("⚠️ Mets le téléphone Wave du proprio.", "warn");
+    if(pin4.length !== 4) return show("⚠️ Mets le PIN (4 chiffres).", "warn");
+
+    const clean = validateLinks(LINKS);
+    show("⏳ Enregistrement…", "warn");
+    setStatus(true);
+
+    const { data, error } = await sb.rpc("digiy_go_links_save", {
+      p_slug: SLUG,
+      p_phone: phone,
+      p_pin4: pin4,
+      p_links: clean
+    });
+
+    if(error){
+      console.error(error);
+      return show("❌ Erreur: " + (error.message || error), "bad");
+    }
+    if(!data?.ok){
+      return show("❌ Accès refusé: " + (data?.error || "unknown"), "bad");
+    }
+
+    show("✅ Enregistré. (" + (data.count ?? clean.length) + " lien(s))", "ok");
+  }
+
+  // ---------------------------
+  // QR download (sans lib externe)
+  // -> On génère un QR via API simple (Google chart) MAIS offline = non.
+  // Comme tu es en prod web, ça passe.
+  // Si tu veux 100% offline: on met une lib QR plus tard.
+  // ---------------------------
+  function downloadQr(label, url){
+    if(!SLUG) return show("Choisis un slug.", "warn");
+    const api = "https://chart.googleapis.com/chart?cht=qr&chs=600x600&chld=M|0&chl=" + encodeURIComponent(url);
     const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = filename;
+    a.href = api;
+    a.download = `digiy-qr-${label}-${SLUG}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+    $("qrInfo").textContent = label + " → " + url;
   }
 
-  async function renderAllQrs(){
-    if(!State.slug) return;
+  // ---------------------------
+  // Bind UI
+  // ---------------------------
+  $("btnAdd").addEventListener("click", ()=>{
+    LINKS.push({ order: 100, label:"Commander / Réserver", url:"https://", active:true });
+    render();
+  });
 
-    // On fabrique les URLs absolues (mieux pour QR)
-    const base = currentBase();
-    const appUrl = new URL(PAGE_APP, base); appUrl.searchParams.set("slug", State.slug);
-    const pubUrl = new URL(PAGE_PUBLIC, base); pubUrl.searchParams.set("slug", State.slug);
-    const accUrl = new URL(PAGE_ACCESS, base); accUrl.searchParams.set("slug", State.slug);
+  $("btnReset").addEventListener("click", ()=>{
+    if(!confirm("Vider la liste ?")) return;
+    LINKS = [];
+    render();
+    show("Liste vidée. Pense à Enregistrer.", "warn");
+  });
 
-    await renderQr($("qrApp"), appUrl.toString());
-    await renderQr($("qrPublic"), pubUrl.toString());
-    await renderQr($("qrAccess"), accUrl.toString());
+  $("btnLoad").addEventListener("click", loadLinks);
+  $("btnSave").addEventListener("click", saveLinks);
 
-    updateUrlsNote();
+  $("btnQrApp").addEventListener("click", ()=> downloadQr("app", appUrl.toString()));
+  $("btnQrPublic").addEventListener("click", ()=> downloadQr("public", pubUrl.toString()));
+  $("btnQrPin").addEventListener("click", ()=> downloadQr("acces", pinUrl.toString()));
+
+  // init
+  render();
+
+  if(!SLUG){
+    show("⚠️ Ouvre ce fichier via un lien avec slug.\nEx: manage-links.html?slug=chez-astou-saly", "bad");
+  }else{
+    show("✅ Slug reconnu. Mets téléphone + PIN4 puis “Charger mes liens”.", "ok");
   }
 
-  function updateUrlsNote(){
-    if(!State.slug){
-      setNote($("noteUrls"), "Les QR pointent vers :\nAPP\n—\nPublic\n—\nAccès\n—", "ok");
-      return;
-    }
-    const base = currentBase();
-    const appUrl = new URL(PAGE_APP, base); appUrl.searchParams.set("slug", State.slug);
-    const pubUrl = new URL(PAGE_PUBLIC, base); pubUrl.searchParams.set("slug", State.slug);
-    const accUrl = new URL(PAGE_ACCESS, base); accUrl.searchParams.set("slug", State.slug);
-
-    setNote($("noteUrls"),
-      "Les QR pointent vers :\nAPP\n" + appUrl.toString()
-      + "\n\nPublic\n" + pubUrl.toString()
-      + "\n\nAccès\n" + accUrl.toString(),
-      "ok"
-    );
-  }
-
-  // =========================
-  // HTML escape
-  // =========================
-  function escapeHtml(s){
-    return String(s||"").replace(/[&<>"']/g, (c)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-  function escapeAttr(s){
-    return String(s||"").replace(/"/g,"&quot;");
-  }
-
-  // =========================
-  // EVENTS
-  // =========================
-  $("btnLogin").addEventListener("click", loginPassword);
-  $("btnMagic").addEventListener("click", sendMagic);
-  $("btnLogout").addEventListener("click", logout);
-
-  $("btnRefreshPins").addEventListener("click", loadPins);
-
-  $("pinSelect").addEventListener("change", ()=>{
-    const slug = $("pinSelect").value || "";
-    setSelectedSlug(slug);
-  });
-
-  $("btnSaveLink").addEventListener("click", upsertLinkFromForm);
-  $("btnNewLink").addEventListener("click", ()=>{
-    clearForm();
-    setNote($("noteLinks"), "🧾 Nouveau lien.", "warn");
-  });
-  $("btnReloadLinks").addEventListener("click", ()=>{
-    if(!State.slug) return;
-    loadLinks().catch(()=>{});
-  });
-
-  $("btnDlQrApp").addEventListener("click", ()=>{
-    if(!State.slug) return alert("Choisis un PIN (slug) d’abord.");
-    downloadCanvas($("qrApp"), `QR_APP_${State.slug}.png`);
-  });
-  $("btnDlQrPublic").addEventListener("click", ()=>{
-    if(!State.slug) return alert("Choisis un PIN (slug) d’abord.");
-    downloadCanvas($("qrPublic"), `QR_PUBLIC_${State.slug}.png`);
-  });
-  $("btnDlQrAccess").addEventListener("click", ()=>{
-    if(!State.slug) return alert("Choisis un PIN (slug) d’abord.");
-    downloadCanvas($("qrAccess"), `QR_ACCES_${State.slug}.png`);
-  });
-
-  // Auto refresh when auth changes (magic link return)
-  sb.auth.onAuthStateChange(async ()=>{
-    await refreshAuth();
-    await loadPins().catch(()=>{});
-  });
-
-  // =========================
-  // BOOT
-  // =========================
-  (async function boot(){
-    await refreshAuth();
-
-    // si slug est passé dans l’URL, on pré-remplit visuellement
-    const urlSlug = (()=>{ try{ return new URL(location.href).searchParams.get("slug") || ""; }catch(_){ return ""; }})();
-    if(urlSlug){
-      $("slugPill").textContent = urlSlug;
-      $("qrSlug").textContent = urlSlug;
-    }
-
-    // charge pins si déjà loggé
-    await loadPins().catch(()=>{});
-
-    // si URL avait slug et qu’il est dans la liste, on sélectionne
-    if(urlSlug){
-      const opt = Array.from($("pinSelect").options).find(o=>o.value===urlSlug);
-      if(opt){
-        $("pinSelect").value = urlSlug;
-        setSelectedSlug(urlSlug);
-      }
-    }else{
-      setSelectedSlug("");
-    }
-  })();
 })();
 </script>
 </body>
