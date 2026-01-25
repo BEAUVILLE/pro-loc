@@ -57,6 +57,14 @@
     }
     .header-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
 
+    /* MINI NAV TOP (facultatif mais pratique) */
+    .miniNav{
+      display:flex;
+      gap:.5rem;
+      flex-wrap:wrap;
+      margin-top:.6rem;
+    }
+
     /* TABS */
     .tabs{
       display:flex;
@@ -75,6 +83,7 @@
       white-space:nowrap;
       font-weight:600;
       font-size:0.9rem;
+      user-select:none;
     }
     .tab:hover{background:rgba(255,255,255,0.1);border-color:var(--accent);}
     .tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
@@ -136,12 +145,18 @@
       display:inline-flex;
       align-items:center;
       gap:0.5rem;
+      background:rgba(255,255,255,0.1);
+      color:var(--text);
+      border:1px solid var(--border);
+      text-decoration:none;
+      line-height:1;
+      user-select:none;
     }
-    .btn-primary{background:var(--accent);color:#000;}
+    .btn-primary{background:var(--accent);color:#000;border-color:rgba(250,204,21,.35);}
     .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(250,204,21,0.3);}
-    .btn-success{background:var(--success);color:#fff;}
-    .btn-danger{background:var(--danger);color:#fff;}
-    .btn-secondary{background:rgba(255,255,255,0.1);color:var(--text);border:1px solid var(--border);}
+    .btn-success{background:var(--success);color:#fff;border-color:rgba(34,197,94,.3);}
+    .btn-danger{background:var(--danger);color:#fff;border-color:rgba(239,68,68,.3);}
+    .btn-secondary{background:rgba(255,255,255,0.08);color:var(--text);border:1px solid var(--border);}
 
     /* TABLE */
     table{width:100%;border-collapse:collapse;}
@@ -308,36 +323,46 @@
         <span id="userName">Gestionnaire</span> ·
         <span id="userPhone">—</span>
       </p>
+
+      <!-- ✅ MINI NAV TOP (slug conservé automatiquement) -->
+      <div class="miniNav">
+        <a class="btn btn-secondary" data-go="./index.html" data-mode="replace" href="#">🏠 Cockpit</a>
+        <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
+        <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
+        <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
+      </div>
     </div>
 
     <div class="header-actions">
-      <button class="btn btn-primary" onclick="openAddLogement()">
+      <button class="btn btn-primary" data-action="openAddLogement" type="button">
         ➕ Ajouter un logement
       </button>
 
-      <!-- ✅ Liens/QR (slug conservé) -->
-      <button class="btn btn-secondary" onclick="goLinks()">
+      <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
         🔗 Liens / QR
       </button>
 
-      <!-- ✅ Photos (slug conservé) -->
-      <button class="btn btn-secondary" onclick="goPhotos()">
+      <button class="btn btn-secondary" data-go="./photos.html" type="button">
         🖼️ Photos
       </button>
 
-      <button class="btn btn-danger" onclick="logout()">
+      <button class="btn btn-secondary" data-go="./ndimbal.html" id="quickNdimbal" type="button">
+        ♾️ NDIMBAL
+      </button>
+
+      <button class="btn btn-danger" data-action="logout" type="button">
         🚪 Déconnexion
       </button>
     </div>
   </div>
 
   <!-- TABS -->
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('dashboard', event)">📊 Dashboard</div>
-    <div class="tab" onclick="switchTab('logements', event)">🏠 Mes logements</div>
-    <div class="tab" onclick="switchTab('reservations', event)">📅 Réservations</div>
-    <div class="tab" onclick="switchTab('calendrier', event)">📆 Calendrier</div>
-    <div class="tab" onclick="switchTab('stats', event)">📈 Statistiques</div>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
+    <div class="tab" data-tab="logements">🏠 Mes logements</div>
+    <div class="tab" data-tab="reservations">📅 Réservations</div>
+    <div class="tab" data-tab="calendrier">📆 Calendrier</div>
+    <div class="tab" data-tab="stats">📈 Statistiques</div>
   </div>
 
   <!-- CONTENT: DASHBOARD -->
@@ -382,7 +407,7 @@
         Test d’envoi via l’API. (Désactive PULSE.enabled si tu veux.)
       </p>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-secondary" onclick="pulseTest()">🚀 Envoyer test WhatsApp</button>
+        <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
         <span id="pulseMsg" style="color:var(--muted)"></span>
       </div>
     </div>
@@ -450,10 +475,10 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3>➕ Ajouter un logement</h3>
-      <button class="modal-close" onclick="closeModal('modalAddLogement')">✕</button>
+      <button class="modal-close" data-action="closeAddModal" type="button">✕</button>
     </div>
 
-    <form id="formAddLogement" onsubmit="saveLogement(event)">
+    <form id="formAddLogement">
       <div class="form-grid">
         <div class="form-group">
           <label>Nom du logement *</label>
@@ -497,7 +522,7 @@
       </div>
 
       <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
-        <button type="button" class="btn btn-secondary" onclick="closeModal('modalAddLogement')">
+        <button type="button" class="btn btn-secondary" data-action="closeAddModal">
           Annuler
         </button>
         <button type="submit" class="btn btn-primary">
@@ -507,6 +532,87 @@
     </form>
   </div>
 </div>
+
+<script>
+/* =========================================================
+   ✅ DIGIY NAV AUTO — QR SAFE (data-go) + Actions (data-action)
+   - data-go="./page.html" => window.DIGIY_GUARD.go(page, mode)
+   - data-mode="replace" optionnel (assign par défaut)
+   - data-action="..." => dispatch vers handlers
+========================================================= */
+(function(){
+  "use strict";
+
+  const Actions = {};
+
+  function withSlug(url){
+    try{
+      if(window.DIGIY_GUARD?.withSlug) return window.DIGIY_GUARD.withSlug(url);
+    }catch(_){}
+    return url;
+  }
+
+  function go(target, mode){
+    // Si guard.go existe, on l’utilise pour centraliser slug + navigation
+    try{
+      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(target, mode || "assign");
+    }catch(_){}
+    // fallback
+    const u = withSlug(target);
+    if((mode||"assign")==="replace") location.replace(u);
+    else location.href = u;
+  }
+
+  function bindNav(){
+    document.querySelectorAll("[data-go]").forEach((el)=>{
+      if(el.__digiy_go_bound) return;
+      el.__digiy_go_bound = true;
+
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        const target = (el.getAttribute("data-go") || "").trim();
+        const mode = (el.getAttribute("data-mode") || "assign").trim();
+        if(!target) return;
+        go(target, mode);
+      });
+    });
+  }
+
+  function bindActions(){
+    document.querySelectorAll("[data-action]").forEach((el)=>{
+      if(el.__digiy_action_bound) return;
+      el.__digiy_action_bound = true;
+
+      el.addEventListener("click", (e)=>{
+        const name = (el.getAttribute("data-action") || "").trim();
+        if(!name) return;
+        const fn = Actions[name];
+        if(typeof fn !== "function") return;
+        e.preventDefault();
+        fn(el, e);
+      });
+    });
+  }
+
+  // Expose minimal helpers if needed
+  window.DIGIY_NAV = { go, withSlug, Actions };
+
+  function boot(){
+    bindNav();
+    bindActions();
+  }
+
+  boot();
+  const mo = new MutationObserver(()=>boot());
+  mo.observe(document.documentElement, { childList:true, subtree:true });
+
+  // Register actions (les fonctions app utiliseront ça)
+  Actions.openAddLogement = ()=> openAddLogement();
+  Actions.closeAddModal = ()=> closeModal("modalAddLogement");
+  Actions.logout = ()=> logout();
+  Actions.pulseTest = ()=> pulseTest();
+})();
+</script>
 
 <script>
 /* =============================
@@ -610,37 +716,14 @@ function badgeForStatus(res){
 }
 
 /* =============================
-   NAV (slug conservé)
-============================= */
-function goLinks(){
-  if(!window.DIGIY_GUARD?.withSlug){
-    location.href = "./manage-links.html";
-    return;
-  }
-  location.href = window.DIGIY_GUARD.withSlug("./manage-links.html");
-}
-function goPhotos(){
-  if(!window.DIGIY_GUARD?.withSlug){
-    location.href = "./photos.html";
-    return;
-  }
-  location.href = window.DIGIY_GUARD.withSlug("./photos.html");
-}
-function goNdimbal(){
-  if(!window.DIGIY_GUARD){
-    alert("Guard DIGIY absent.");
-    return;
-  }
-  location.href = window.DIGIY_GUARD.withSlug("./ndimbal.html");
-}
-
-/* =============================
    UI
 ============================= */
-function switchTab(tabName, ev) {
+function switchTab(tabName) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-  if(ev && ev.target) ev.target.classList.add('active');
+
+  const t = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  if(t) t.classList.add('active');
 
   const el = document.getElementById(tabName);
   if(el) el.classList.add('active');
@@ -649,6 +732,17 @@ function switchTab(tabName, ev) {
   if (tabName === 'reservations') loadReservations();
   if (tabName === 'calendrier') loadCalendar();
 }
+(function bindTabs(){
+  const tabs = document.getElementById("tabs");
+  if(!tabs) return;
+  tabs.addEventListener("click", (e)=>{
+    const el = e.target.closest(".tab");
+    if(!el) return;
+    const tab = (el.getAttribute("data-tab") || "").trim();
+    if(tab) switchTab(tab);
+  });
+})();
+
 function openAddLogement() {
   document.getElementById('modalAddLogement').classList.add('active');
 }
@@ -657,8 +751,13 @@ function closeModal(modalId) {
 }
 function logout() {
   if (!confirm("Se déconnecter ?")) return;
-  const go = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html";
-  window.DIGIY_GUARD?.logout?.(go);
+  const go = window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") :
+             (window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html");
+  try{
+    window.DIGIY_GUARD?.logout?.(go);
+  }catch(_){
+    location.href = go;
+  }
 }
 function hydrateHeader() {
   const phoneEl = document.getElementById("userPhone");
@@ -748,9 +847,9 @@ function renderRooms(list) {
           <p style="margin-top:0.5rem">${badge}</p>
         </div>
         <div class="logement-actions">
-          <button class="btn btn-secondary" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
-          <button class="btn btn-secondary" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
-          <button class="btn btn-danger" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
+          <button class="btn btn-secondary" type="button" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
+          <button class="btn btn-secondary" type="button" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
+          <button class="btn btn-danger" type="button" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
         </div>
       </div>
     `;
@@ -775,9 +874,7 @@ async function loadLogements() {
 /* =============================
    CRUD: LOGEMENT
 ============================= */
-async function saveLogement(e) {
-  e.preventDefault();
-
+async function saveLogementFromForm(formEl) {
   try{
     const sb = getSB();
     if(!sb) throw new Error("supabase_not_ready");
@@ -787,7 +884,7 @@ async function saveLogement(e) {
       return;
     }
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(formEl);
     const data = Object.fromEntries(formData);
 
     const payload = {
@@ -810,10 +907,11 @@ async function saveLogement(e) {
 
     alert("✅ Logement enregistré !");
     closeModal('modalAddLogement');
-    e.target.reset();
+    formEl.reset();
 
     await loadLogements();
     await loadDashboard();
+    switchTab("logements");
   }catch(err){
     console.error(err);
     alert("❌ Erreur: " + (err?.message || err));
@@ -878,7 +976,7 @@ async function deleteLogement(roomId){
 }
 
 function goCalendarRoom(roomId){
-  switchTab("calendrier", null);
+  switchTab("calendrier");
   loadCalendar(roomId);
 }
 
@@ -912,7 +1010,7 @@ function renderReservations(list){
         <td><strong>${amount}</strong></td>
         <td>${status}</td>
         <td>
-          <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
+          <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
         </td>
       </tr>
     `;
@@ -1124,9 +1222,9 @@ function buildCalendar(monthDate, reservations, roomIdFilter=null){
         <div class="cal-head">
           <div style="font-weight:900;text-transform:capitalize">${monthLabel}${filterLabel}</div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" onclick="calPrev()">◀</button>
-            <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" onclick="calNext()">▶</button>
-            ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" onclick="loadCalendar()">Tout voir</button>` : ``}
+            <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
+            <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
+            ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="loadCalendar()">Tout voir</button>` : ``}
           </div>
         </div>
         <div class="cal-grid">${dows}${cells}</div>
@@ -1225,11 +1323,22 @@ async function pulseTest(){
 
   if(!State.ownerId){
     console.warn("owner_id introuvable, retour PIN.");
-    window.location.replace(window.DIGIY_GUARD.withSlug("./pin.html"));
+    const go = (window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") : window.DIGIY_GUARD.withSlug("./pin.html"));
+    window.location.replace(go);
     return;
   }
 
   hydrateHeader();
+
+  // Bind submit formulaire modal
+  const form = document.getElementById("formAddLogement");
+  if(form && !form.__digiy_bound_submit){
+    form.__digiy_bound_submit = true;
+    form.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      await saveLogementFromForm(form);
+    });
+  }
 
   try{
     State.rooms = await fetchRooms();
@@ -1243,11 +1352,6 @@ async function pulseTest(){
   }catch(e){
     console.warn("Init error:", e);
   }
-
-  document.getElementById("quickNdimbal")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    goNdimbal();
-  });
 })();
 </script>
 
