@@ -2,92 +2,61 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>DIGIY LOC PRO — Photos</title>
 
-  <!-- UI GLOBAL DIGIY -->
-  <link rel="stylesheet" href="ui.css" />
-
-  <!-- Supabase + Guard -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-photos-phase1"></script>
+
+  <!-- Guard -->
+  <script src="./guard.js?v=locpro-final"></script>
 
   <style>
-    .top-nav{
-      display:flex; gap:12px;
-      padding:12px 16px;
-      background:var(--bg, #022c22);
-      border-bottom:1px solid rgba(250,204,21,0.2);
-      flex-wrap:wrap;
+    :root{
+      --bg:#020617;
+      --card:#052e16;
+      --accent:#facc15;
+      --muted:#9ca3af;
+      --text:#e5e7eb;
+      --line:rgba(148,163,184,0.18);
+      --danger:#ef4444;
+      --ok:#22c55e;
     }
-    .top-nav a{color:var(--text,#e5e7eb); text-decoration:none; font-weight:700; font-size:.92rem}
-    .top-nav a.active{color:var(--accent,#facc15)}
-    .top-nav .right{
-      margin-left:auto;
-      display:flex; gap:10px; align-items:center;
-      flex-wrap:wrap;
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:system-ui;
+      background:linear-gradient(135deg,#020617,#062e16);
+      color:var(--text);
+      min-height:100vh;
     }
-    .pill{
-      font-size:.78rem;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(250,204,21,0.28);
-      color:var(--text,#e5e7eb);
-      background:rgba(15,23,42,0.25);
-    }
-
-    .medias-page{padding:16px; max-width:640px; margin:auto; color:var(--text,#e5e7eb)}
-    .page-header h1{font-size:1.35rem; margin:0 0 6px}
-    .page-header p{margin:0; color:var(--muted,#9ca3af); font-size:.95rem}
+    .wrap{max-width:720px;margin:auto;padding:18px}
+    h1{font-size:1.4rem;margin-bottom:6px}
+    p{color:var(--muted);margin-bottom:14px}
 
     .card{
-      background:var(--card,#052e16);
-      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--line);
+      border-radius:16px;
       padding:16px;
-      margin-top:16px;
-      border:1px solid rgba(250,204,21,0.18);
+      margin-top:14px;
     }
-    .card.highlight{background:linear-gradient(135deg,var(--bg,#022c22),var(--bg2,#065f46))}
-    h2{margin:0 0 10px; font-size:1.05rem}
-    .hint{margin:0 0 12px; color:#e5e7eb; font-size:.9rem; line-height:1.35}
 
     .btn{
       width:100%;
       padding:12px;
-      border-radius:10px;
+      border-radius:12px;
+      font-weight:900;
       border:none;
-      font-weight:800;
-      font-size:.95rem;
       cursor:pointer;
-    }
-    .btn-primary{background:var(--accent,#facc15); color:#022c22}
-    .btn-secondary{background:#16a34a; color:#fff}
-    .btn-ghost{
-      background:transparent;
-      border:1px solid rgba(250,204,21,0.35);
-      color:var(--text,#e5e7eb);
       margin-top:10px;
     }
-
-    /* Champs */
-    .field{margin-top:10px}
-    .field label{display:block; font-weight:800; margin-bottom:6px; font-size:.9rem}
-    .field input, .field textarea{
-      width:100%;
-      padding:12px;
-      border-radius:10px;
-      border:1px solid rgba(148,163,184,0.35);
-      background:rgba(15,23,42,0.5);
-      color:var(--text,#e5e7eb);
-      outline:none;
+    .btn.primary{background:var(--accent);color:#022c22}
+    .btn.ghost{
+      background:transparent;
+      border:1px solid rgba(250,204,21,0.35);
+      color:#fff;
     }
-    .field textarea{min-height:120px; resize:vertical}
-    .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    .row .btn{flex:1}
 
-    /* Galerie */
-    .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    .toolbar .btn{flex:1}
     .gallery{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -96,541 +65,229 @@
     }
     .tile{
       position:relative;
-      border-radius:12px;
+      border-radius:14px;
       overflow:hidden;
-      background:var(--bg,#022c22);
       aspect-ratio:1/1;
       border:1px solid rgba(250,204,21,0.14);
+      background:#022c22;
     }
     .tile img{
-      width:100%; height:100%;
+      width:100%;height:100%;
       object-fit:cover;
       display:block;
     }
-    .tile .empty{
-      width:100%; height:100%;
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.6rem; color:var(--accent,#facc15);
+    .empty{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.8rem;
       font-weight:900;
+      color:var(--accent);
+      height:100%;
     }
+
     .badge{
       position:absolute;
-      left:8px; top:8px;
-      background:rgba(2,44,34,0.75);
-      border:1px solid rgba(250,204,21,0.35);
-      color:#fff;
-      padding:4px 8px;
-      border-radius:999px;
+      top:8px;left:8px;
+      background:rgba(0,0,0,0.65);
+      padding:5px 9px;
       font-size:.72rem;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,0.35);
       font-weight:800;
-      backdrop-filter: blur(6px);
     }
-    .actions{
-      position:absolute;
-      right:8px; top:8px;
-      display:flex; gap:6px;
-    }
+
     .iconbtn{
-      width:34px; height:34px;
+      position:absolute;
+      top:8px;right:8px;
+      width:32px;height:32px;
       border-radius:10px;
       border:none;
-      background:rgba(15,23,42,0.7);
-      color:#fff;
+      font-weight:900;
       cursor:pointer;
-      font-weight:900;
-    }
-    .iconbtn:hover{filter:brightness(1.1)}
-    .tile-footer{
-      position:absolute; left:0; right:0; bottom:0;
-      display:flex; gap:8px;
-      padding:8px;
-      background:linear-gradient(180deg, transparent, rgba(0,0,0,.65));
-      align-items:center;
-      justify-content:space-between;
-    }
-    .smallbtn{
-      border:none; cursor:pointer;
-      background:rgba(250,204,21,0.95);
-      color:#022c22;
-      font-weight:900;
-      font-size:.72rem;
-      padding:7px 10px;
-      border-radius:10px;
-      white-space:nowrap;
-    }
-    .smallbtn.secondary{
-      background:rgba(255,255,255,0.12);
+      background:rgba(239,68,68,.75);
       color:#fff;
-      border:1px solid rgba(255,255,255,0.15);
     }
 
     .note{
       margin-top:10px;
-      color:var(--muted,#9ca3af);
-      font-size:.85rem;
-      line-height:1.35;
-    }
-
-    .status{
-      margin-top:10px;
       padding:10px 12px;
       border-radius:12px;
-      border:1px solid rgba(148,163,184,0.22);
-      background:rgba(15,23,42,0.35);
-      color:#e5e7eb;
-      font-size:.9rem;
-      line-height:1.35;
+      border:1px solid var(--line);
+      display:none;
+      white-space:pre-wrap;
     }
-    .status.ok{border-color:rgba(34,197,94,.35)}
-    .status.bad{border-color:rgba(251,113,133,.45)}
-    .status small{color:var(--muted,#9ca3af)}
-    code.k{font-weight:900;color:var(--accent,#facc15)}
+    .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca}
+    .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
   </style>
 </head>
 
 <body>
+<div class="wrap">
 
-  <nav class="top-nav">
-    <a href="dashboard.html">🏠 Accueil</a>
-    <a href="planning.html">📅 Planning</a>
-    <a href="reservations.html">🧾 Réservations</a>
-    <a href="encaissements.html">💰 Encaissements</a>
-    <a href="photos.html" class="active">🖼️ Photos</a>
+  <h1>🖼️ Photos logement</h1>
+  <p>Ajoute une cover + une galerie. Tout est stocké comme URL (léger Afrique).</p>
 
-    <div class="right">
-      <span class="pill" id="pillSlug">slug: —</span>
-      <button class="btn btn-ghost" style="width:auto;padding:10px 12px;margin-top:0" id="btnReload">↻ Recharger</button>
-      <button class="btn btn-primary" style="width:auto;padding:10px 12px;margin-top:0" id="btnSave">💾 Enregistrer</button>
-    </div>
-  </nav>
+  <div class="card">
+    <h2 style="margin-bottom:8px">📸 Galerie</h2>
 
-  <main class="medias-page">
+    <input id="fileInput" type="file" accept="image/*" multiple hidden />
 
-    <header class="page-header">
-      <h1>🖼️ Photos logement</h1>
-      <p>Phase 1 : on stocke seulement des <b>URLs</b> (WordPress Media / Cloudinary / etc.). Léger. Pro. Terrain.</p>
-    </header>
+    <button class="btn primary" id="btnAdd">➕ Ajouter photos (URL)</button>
+    <button class="btn ghost" id="btnSave">💾 Sauvegarder</button>
 
-    <!-- PHOTOS -->
-    <section class="card">
-      <h2>📸 Galerie</h2>
-      <p class="hint">
-        Colle des URLs (HTTPS). Si tu n’as pas d’URL : envoie sur WhatsApp DIGIY, on te renvoie les liens WordPress officiels.
-      </p>
+    <div class="gallery" id="gallery"></div>
 
-      <div class="field">
-        <label>Photo principale (cover_url)</label>
-        <input id="coverUrl" type="text" placeholder="https://... (URL officielle)" />
-      </div>
+    <div class="note" id="note"></div>
+  </div>
 
-      <div class="field">
-        <label>Ajouter des photos (1 URL par ligne — max 12)</label>
-        <textarea id="addUrls" placeholder="https://...
-https://...
-https://..."></textarea>
-      </div>
+</div>
 
-      <div class="toolbar">
-        <button class="btn btn-secondary" id="btnAddUrls">➕ Ajouter ces URLs à la galerie</button>
-        <button class="btn btn-ghost" id="btnClear">🧹 Vider la galerie</button>
-      </div>
+<script>
+(async function(){
+  "use strict";
 
-      <div class="status" id="statusBox">
-        <div><b>État</b> : prêt.</div>
-        <small>Astuce : la galerie affiche ce que tu vas sauver dans Supabase (URLs only).</small>
-      </div>
+  // ✅ Protect page
+  const boot = await window.DIGIY_GUARD.boot({
+    module:"loc",
+    dashboard:"./photos.html",
+    login:"./pin.html",
+    requireSlug:true
+  });
+  if(!boot?.ok) return;
 
-      <div class="gallery" id="gallery"></div>
+  const sb = window.DIGIY_GUARD.getSb?.() || window.sb;
+  if(!sb?.rpc) return alert("Supabase non prêt.");
 
-      <p class="note">
-        ✅ Cache offline : on garde une copie légère (URLs) en LocalStorage si le réseau saute.
-        <br>⛔️ On ne stocke jamais les images (pas de base64).
-      </p>
-    </section>
+  const slug = window.DIGIY_GUARD.getSlug();
+  const sess = window.DIGIY_GUARD.getSession();
+  const token = sess?.pro_token;
 
-    <!-- WHATSAPP (fallback terrain) -->
-    <section class="card highlight">
-      <h2>📲 Fallback terrain (WhatsApp → WordPress Media)</h2>
-      <p class="hint">
-        Si tu galères avec les liens : envoie tes photos sur WhatsApp, DIGIY les upload en WordPress Media et te renvoie les URLs officielles.
-      </p>
+  if(!token){
+    alert("❌ pro_token manquant. Passe par APP d'abord.");
+    return;
+  }
 
-      <div class="row">
-        <button class="btn btn-secondary" id="btnWA">📲 Envoyer des photos sur WhatsApp DIGIY</button>
-        <button class="btn btn-ghost" id="btnPasteHelp">📌 Comment récupérer une URL WordPress</button>
-      </div>
+  // UI
+  const fileInput = document.getElementById("fileInput");
+  const btnAdd = document.getElementById("btnAdd");
+  const btnSave = document.getElementById("btnSave");
+  const galleryEl = document.getElementById("gallery");
+  const noteEl = document.getElementById("note");
 
-      <div class="note" id="helpBox" style="display:none">
-        <b>Procédure rapide :</b>
-        <ol style="margin:8px 0 0 18px; color:#e5e7eb; font-size:.9rem; line-height:1.4">
-          <li>DIGIY upload la photo dans WordPress Media</li>
-          <li>On copie le lien direct du fichier (HTTPS)</li>
-          <li>Tu colles ici : cover + galerie</li>
-        </ol>
-      </div>
-    </section>
+  let photos = [];
+  let cover = null;
 
-  </main>
+  function note(msg,type){
+    noteEl.style.display = msg ? "block" : "none";
+    noteEl.className = "note " + (type||"");
+    noteEl.textContent = msg || "";
+  }
 
-  <script>
-    (() => {
-      "use strict";
+  // ✅ Load existing photos from SQL
+  async function loadPhotos(){
+    note("⏳ Chargement photos…","warn");
 
-      // ✅ SUPABASE (déjà intégré)
-      const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2i";
+    const { data, error } = await sb
+      .from("digiy_loc_businesses")
+      .select("cover_url,gallery_urls")
+      .eq("slug", slug)
+      .limit(1)
+      .single();
 
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    if(error) throw error;
 
-      // ====== Helpers ======
-      const $ = (id) => document.getElementById(id);
-      const qs = new URL(location.href).searchParams;
-      const slug = (qs.get("slug") || "").trim();
+    cover = data.cover_url || null;
+    photos = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
 
-      const LS_KEY = (s) => `digiy_loc_pro_photos_phase1_${s}`;
+    render();
+    note("","");
 
-      function setStatus(text, ok=true){
-        const box = $("statusBox");
-        box.className = "status " + (ok ? "ok" : "bad");
-        box.innerHTML = `<div><b>${ok ? "✅" : "❌"} ${text}</b></div>
-          <small>slug: <code class="k">${escapeHtml(slug || "—")}</code></small>`;
-      }
+  }
 
-      function escapeHtml(str){
-        return (str||"").replace(/[&<>"']/g, (m) => ({
-          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-        }[m]));
-      }
+  function render(){
+    galleryEl.innerHTML = "";
 
-      function isHttps(u){
-        u = (u||"").trim();
-        return /^https:\/\/.+/i.test(u);
-      }
+    const all = [];
+    if(cover) all.push({url:cover,cover:true});
+    photos.forEach(u => all.push({url:u,cover:false}));
 
-      function uniqPush(arr, u){
-        if(!arr.includes(u)) arr.push(u);
-      }
+    if(!all.length){
+      galleryEl.innerHTML = `
+        <div class="tile"><div class="empty">+</div></div>
+        <div class="tile"><div class="empty">+</div></div>
+        <div class="tile"><div class="empty">+</div></div>
+      `;
+      galleryEl.querySelectorAll(".tile").forEach(t=>{
+        t.onclick = ()=> fileInput.click();
+      });
+      return;
+    }
 
-      function parseLines(text){
-        const out = [];
-        (text||"").split("\n").map(s => (s||"").trim()).forEach(u => {
-          if(isHttps(u)) uniqPush(out, u);
-        });
-        return out;
-      }
+    all.forEach((p,idx)=>{
+      const tile = document.createElement("div");
+      tile.className="tile";
 
-      function getOwnerIdFromSession(){
-        const raw = localStorage.getItem("DIGIY_LOC_PRO_SESSION_V1");
-        try{
-          const s = JSON.parse(raw||"{}");
-          return (s.owner_id || "").trim();
-        }catch(e){
-          return "";
+      tile.innerHTML = `
+        ${p.cover ? `<div class="badge">Cover</div>` : ``}
+        <button class="iconbtn" title="Supprimer">✕</button>
+        <img src="${p.url}">
+      `;
+
+      tile.querySelector(".iconbtn").onclick = ()=>{
+        if(p.cover){
+          cover=null;
+        }else{
+          photos.splice(idx-1,1);
         }
-      }
-
-      // ====== State (URLs only) ======
-      let state = {
-        cover_url: "",
-        gallery_urls: [],
-        coverIndex: 0
+        render();
       };
 
-      function saveCache(){
-        if(!slug) return;
-        localStorage.setItem(LS_KEY(slug), JSON.stringify(state));
-      }
+      galleryEl.appendChild(tile);
+    });
+  }
 
-      function loadCache(){
-        if(!slug) return null;
-        try{
-          return JSON.parse(localStorage.getItem(LS_KEY(slug)) || "null");
-        }catch(e){
-          return null;
-        }
-      }
+  // ✅ Add URLs (terrain simple)
+  btnAdd.onclick = ()=>{
+    const url = prompt("Colle une URL image (https://...)");
+    if(!url) return;
 
-      // ====== Render gallery ======
-      function render(){
-        const galleryEl = $("gallery");
-        galleryEl.innerHTML = "";
+    if(!cover){
+      cover=url.trim();
+    }else{
+      photos.push(url.trim());
+    }
+    render();
+  };
 
-        const urls = Array.isArray(state.gallery_urls) ? state.gallery_urls.slice(0, 12) : [];
-        if(!urls.length){
-          for(let i=0;i<3;i++){
-            const tile = document.createElement("div");
-            tile.className = "tile";
-            tile.innerHTML = `<div class="empty">+</div>`;
-            tile.addEventListener("click", () => $("addUrls").focus());
-            galleryEl.appendChild(tile);
-          }
-          return;
-        }
+  // ✅ SAVE via RPC token
+  btnSave.onclick = async ()=>{
+    try{
+      note("⏳ Sauvegarde…","warn");
 
-        urls.forEach((src, idx) => {
-          const tile = document.createElement("div");
-          tile.className = "tile";
-
-          const isCover = idx === (state.coverIndex ?? 0);
-
-          tile.innerHTML = `
-            ${isCover ? `<div class="badge">Photo principale</div>` : ``}
-            <div class="actions">
-              <button class="iconbtn" title="Supprimer" data-del="${idx}">✕</button>
-            </div>
-            <img loading="lazy" decoding="async" src="${src}" alt="Photo ${idx+1}" onerror="this.style.opacity=.25">
-            <div class="tile-footer">
-              <button class="smallbtn" data-cover="${idx}">★ Principal</button>
-              <button class="smallbtn secondary" data-moveleft="${idx}">←</button>
-              <button class="smallbtn secondary" data-moveright="${idx}">→</button>
-            </div>
-          `;
-
-          galleryEl.appendChild(tile);
-        });
-
-        // bind actions
-        galleryEl.querySelectorAll("[data-del]").forEach(b=>{
-          b.addEventListener("click", (e)=>{
-            e.stopPropagation();
-            const i = Number(b.getAttribute("data-del"));
-            state.gallery_urls.splice(i,1);
-            if(state.coverIndex >= state.gallery_urls.length) state.coverIndex = 0;
-            // Sync coverUrl input if cover was deleted
-            if(state.cover_url && !isHttps(state.cover_url)) state.cover_url = "";
-            saveCache(); render();
-            setStatus("Galerie mise à jour (non enregistrée).");
-          });
-        });
-
-        galleryEl.querySelectorAll("[data-cover]").forEach(b=>{
-          b.addEventListener("click",(e)=>{
-            e.stopPropagation();
-            state.coverIndex = Number(b.getAttribute("data-cover"));
-            // Auto: cover_url prend l’URL sélectionnée
-            state.cover_url = state.gallery_urls[state.coverIndex] || "";
-            $("coverUrl").value = state.cover_url;
-            saveCache(); render();
-            setStatus("Cover sélectionnée (non enregistrée).");
-          });
-        });
-
-        galleryEl.querySelectorAll("[data-moveleft]").forEach(b=>{
-          b.addEventListener("click",(e)=>{
-            e.stopPropagation();
-            const i = Number(b.getAttribute("data-moveleft"));
-            if(i<=0) return;
-            const tmp = state.gallery_urls[i-1];
-            state.gallery_urls[i-1] = state.gallery_urls[i];
-            state.gallery_urls[i] = tmp;
-
-            if(state.coverIndex === i) state.coverIndex = i-1;
-            else if(state.coverIndex === i-1) state.coverIndex = i;
-
-            // refresh cover_url from index
-            state.cover_url = state.gallery_urls[state.coverIndex] || state.cover_url;
-            $("coverUrl").value = state.cover_url;
-
-            saveCache(); render();
-            setStatus("Ordre modifié (non enregistré).");
-          });
-        });
-
-        galleryEl.querySelectorAll("[data-moveright]").forEach(b=>{
-          b.addEventListener("click",(e)=>{
-            e.stopPropagation();
-            const i = Number(b.getAttribute("data-moveright"));
-            if(i>=state.gallery_urls.length-1) return;
-            const tmp = state.gallery_urls[i+1];
-            state.gallery_urls[i+1] = state.gallery_urls[i];
-            state.gallery_urls[i] = tmp;
-
-            if(state.coverIndex === i) state.coverIndex = i+1;
-            else if(state.coverIndex === i+1) state.coverIndex = i;
-
-            state.cover_url = state.gallery_urls[state.coverIndex] || state.cover_url;
-            $("coverUrl").value = state.cover_url;
-
-            saveCache(); render();
-            setStatus("Ordre modifié (non enregistré).");
-          });
-        });
-      }
-
-      // ====== Load from Supabase (RPC) ======
-      async function loadFromSupabase(){
-        if(!slug){
-          setStatus("Slug manquant. Exemple: photos.html?slug=chez-astou-saly", false);
-          return;
-        }
-
-        $("pillSlug").textContent = "slug: " + slug;
-
-        setStatus("Chargement Supabase…");
-        const { data, error } = await sb.rpc("digiy_loc_get_photos_by_slug", { p_slug: slug });
-
-        if(error){
-          // fallback cache
-          const cached = loadCache();
-          if(cached){
-            state = cached;
-            $("coverUrl").value = state.cover_url || "";
-            setStatus("Supabase indisponible. Cache offline chargé.", false);
-            render();
-            return;
-          }
-          setStatus("Erreur RPC GET: " + error.message, false);
-          return;
-        }
-
-        const row = Array.isArray(data) ? data[0] : data;
-        const cover = isHttps(row?.cover_url) ? row.cover_url.trim() : "";
-        const gallery = Array.isArray(row?.gallery_urls) ? row.gallery_urls.filter(isHttps).slice(0, 12) : [];
-
-        state.cover_url = cover;
-        state.gallery_urls = gallery;
-
-        // coverIndex = index dans la galerie si cover existe, sinon 0
-        const idx = cover ? gallery.indexOf(cover) : -1;
-        state.coverIndex = idx >= 0 ? idx : 0;
-
-        $("coverUrl").value = state.cover_url || "";
-        saveCache();
-        render();
-        setStatus("Chargé depuis Supabase.");
-      }
-
-      // ====== Save to Supabase (RPC) ======
-      async function saveToSupabase(){
-        if(!slug){
-          setStatus("Slug manquant. Exemple: photos.html?slug=chez-astou-saly", false);
-          return;
-        }
-
-        const ownerId = getOwnerIdFromSession();
-        if(!ownerId){
-          setStatus("Session PRO absente (owner_id). Reconnecte-toi via GO PIN.", false);
-          return;
-        }
-
-        // read inputs
-        const cover = isHttps($("coverUrl").value) ? $("coverUrl").value.trim() : "";
-        // keep gallery max 12 and only https
-        const gallery = (Array.isArray(state.gallery_urls) ? state.gallery_urls : []).filter(isHttps).slice(0, 12);
-
-        // If cover is set but not in gallery, push it first
-        if(cover && !gallery.includes(cover)){
-          gallery.unshift(cover);
-        }
-
-        // update state
-        state.cover_url = cover;
-        state.gallery_urls = gallery;
-        state.coverIndex = cover ? Math.max(0, gallery.indexOf(cover)) : 0;
-
-        saveCache();
-        render();
-
-        setStatus("Enregistrement Supabase…");
-        const { data, error } = await sb.rpc("digiy_loc_set_photos", {
-          p_slug: slug,
-          p_owner_id: ownerId,
-          p_cover_url: cover || null,
-          p_gallery_urls: gallery,
-          p_media_provider: "wp"
-        });
-
-        if(error){
-          setStatus("Erreur RPC SAVE: " + error.message, false);
-          return;
-        }
-        if(!data?.ok){
-          setStatus("Refus SAVE: " + (data?.reason || "unknown"), false);
-          return;
-        }
-
-        setStatus("✅ Enregistré. Galerie: " + (data.gallery_count || 0));
-      }
-
-      // ====== Add URLs to gallery ======
-      $("btnAddUrls").addEventListener("click", () => {
-        const add = parseLines($("addUrls").value);
-        if(!add.length){
-          setStatus("Colle au moins une URL HTTPS.", false);
-          return;
-        }
-
-        if(!Array.isArray(state.gallery_urls)) state.gallery_urls = [];
-        add.forEach(u => uniqPush(state.gallery_urls, u));
-
-        // cap 12
-        state.gallery_urls = state.gallery_urls.filter(isHttps).slice(0, 12);
-
-        // if no cover_url, set cover to first
-        if(!isHttps(state.cover_url) && state.gallery_urls.length){
-          state.cover_url = state.gallery_urls[0];
-          state.coverIndex = 0;
-          $("coverUrl").value = state.cover_url;
-        }
-
-        $("addUrls").value = "";
-        saveCache();
-        render();
-        setStatus("URLs ajoutées (non enregistrées).");
+      const { data, error } = await sb.rpc("digiy_loc_set_photos_by_token", {
+        p_slug: slug,
+        p_pro_token: token,
+        p_cover_url: cover,
+        p_gallery_urls: photos,
+        p_provider: "external"
       });
 
-      // cover input changes
-      $("coverUrl").addEventListener("input", () => {
-        const cover = isHttps($("coverUrl").value) ? $("coverUrl").value.trim() : "";
-        state.cover_url = cover;
-        if(cover && Array.isArray(state.gallery_urls)){
-          const idx = state.gallery_urls.indexOf(cover);
-          if(idx >= 0) state.coverIndex = idx;
-        }
-        saveCache();
-      });
+      if(error) throw error;
+      if(!data?.ok) throw new Error(data?.reason || "save_failed");
 
-      // Clear gallery
-      $("btnClear").addEventListener("click", () => {
-        if(!confirm("Vider la galerie (non enregistré) ?")) return;
-        state.gallery_urls = [];
-        state.cover_url = "";
-        state.coverIndex = 0;
-        $("coverUrl").value = "";
-        $("addUrls").value = "";
-        saveCache();
-        render();
-        setStatus("Galerie vidée (non enregistrée).");
-      });
+      note("✅ Photos sauvegardées avec succès.","ok");
+    }catch(e){
+      console.error(e);
+      note("❌ Erreur save: " + (e.message||e),"bad");
+    }
+  };
 
-      // Save / Reload
-      $("btnSave").addEventListener("click", saveToSupabase);
-      $("btnReload").addEventListener("click", loadFromSupabase);
+  // GO
+  await loadPhotos();
 
-      // WhatsApp
-      $("btnWA").addEventListener("click", () => {
-        // Numéro support DIGIY (reset PIN / support) déjà connu — on l’utilise en canal terrain
-        const phone = "+221771342889";
-        const txt = `DIGIY LOC PRO — Photos\\nSlug: ${slug || "(à préciser)"}\\nBonjour, je vous envoie les photos du logement. Merci de me renvoyer les URLs WordPress Media (HTTPS) pour cover + galerie.`;
-        const url = `https://wa.me/${phone.replace("+","")}?text=${encodeURIComponent(txt)}`;
-        window.open(url, "_blank");
-      });
-
-      $("btnPasteHelp").addEventListener("click", () => {
-        const box = $("helpBox");
-        box.style.display = (box.style.display === "none" ? "block" : "none");
-      });
-
-      // ====== Init ======
-      $("pillSlug").textContent = "slug: " + (slug || "—");
-
-      // Quick guard: if guard exposes a method, you can enforce login here (optional)
-      // if(window.DIGIY_GUARD?.requireSession) window.DIGIY_GUARD.requireSession();
-
-      loadFromSupabase();
-    })();
-  </script>
-
+})();
+</script>
 </body>
 </html>
