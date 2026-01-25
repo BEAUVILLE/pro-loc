@@ -108,7 +108,7 @@
         <a class="btn gold" id="btnPublic" href="#">👁️ Retour GO PIN (public)</a>
       </div>
 
-      <!-- ✅ NOTE unique (pas de doublon) -->
+      <!-- ✅ NOTE unique -->
       <div class="note warn" id="note"></div>
 
       <div class="tiny" id="hintBox" style="display:none">
@@ -129,8 +129,17 @@
     el.style.display = msg ? "block" : "none";
   }
 
-  // ✅ Slug source-of-truth = guard (URL > session > LS)
+  // ✅ Slug source-of-truth = guard (URL > session > localStorage)
   const LIEU = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+
+  // ✅ Stabilise l’URL si le slug vient de session/LS
+  if(LIEU){
+    const u = new URL(location.href);
+    if(!u.searchParams.get("slug")){
+      u.searchParams.set("slug", LIEU);
+      history.replaceState(null, "", u.toString());
+    }
+  }
 
   $("pillLieu").textContent = "Lieu : " + (LIEU || "—");
 
@@ -180,9 +189,9 @@
 
       show("✅ OK. Ouverture du cockpit…", "ok");
 
-      // ✅ Redirect safe (slug conservé via guard)
+      // ✅ Destination finale = APP (slug conservé via guard)
       setTimeout(() => {
-        window.DIGIY_GUARD.go("app.html");
+        window.DIGIY_GUARD.go("./app.html");
       }, 500);
 
     }catch(e){
