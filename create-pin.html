@@ -13,28 +13,71 @@
   <script src="./guard.js?v=locpro-2"></script>
 
   <style>
-    :root{--bg:#061b14;--card:#0b2a1f;--line:rgba(255,255,255,.14);--text:#eafff1;--muted:rgba(234,255,241,.78);--g:#16a34a;--r:18px}
+    :root{
+      --bg:#061b14;
+      --card:#0b2a1f;
+      --line:rgba(255,255,255,.14);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.78);
+      --g:#16a34a;
+      --gold:#facc15;
+      --danger:#fb7185;
+      --ok:#22c55e;
+      --r:18px
+    }
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:18px}
-    .wrap{max-width:820px;margin:0 auto}
+    .wrap{max-width:920px;margin:0 auto}
     .card{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:var(--r);padding:16px}
     h1{margin:0 0 12px;font-size:18px}
     label{display:block;margin:10px 0 6px;color:var(--muted);font-size:12px}
-    input{width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);outline:none}
+    input{
+      width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(255,255,255,.03);color:var(--text);outline:none
+    }
+    input:focus{border-color:rgba(250,204,21,.45);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .btn{margin-top:12px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:var(--text);font-weight:800;cursor:pointer}
+    .btn{
+      margin-top:12px;width:100%;padding:12px;border-radius:14px;
+      border:1px solid rgba(34,197,94,.35);
+      background:rgba(34,197,94,.12);color:var(--text);
+      font-weight:900;cursor:pointer
+    }
     .btn:disabled{opacity:.6;cursor:not-allowed}
     .row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:14px}
     .qr{background:#fff;border-radius:14px;padding:10px}
-    .muted{color:var(--muted);font-size:12px;line-height:1.35}
-    pre{white-space:pre-wrap;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:12px;border-radius:14px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.45}
+    pre{white-space:pre-wrap;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:12px;border-radius:14px;overflow:auto}
     .top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
     .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
     .pill b{color:var(--text)}
     .actions{display:flex;gap:8px;flex-wrap:wrap}
-    .mini{padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:800;cursor:pointer}
+    .mini{
+      padding:10px 12px;border-radius:14px;border:1px solid var(--line);
+      background:transparent;color:var(--text);font-weight:900;cursor:pointer
+    }
     .mini.ok{border-color:rgba(34,197,94,.45)}
     .mini.bad{border-color:rgba(239,68,68,.45)}
+    .mini.gold{border-color:rgba(250,204,21,.45)}
+    .line{height:1px;background:rgba(255,255,255,.10);margin:14px 0}
+    .hint{margin-top:8px;font-size:12px;color:rgba(234,255,241,.70);line-height:1.45}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:7px 10px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.02);
+      color:var(--muted);font-weight:900;font-size:12px
+    }
+    .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+    .krow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .kbtn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;font-weight:900;cursor:pointer;text-decoration:none;
+      border-radius:14px;padding:10px 12px;display:inline-flex;align-items:center;gap:8px;
+    }
+    @media(max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 
@@ -45,44 +88,56 @@
       <div class="top">
         <div class="pill">Module: <b>GO PIN</b> · slug: <b id="pillSlug">—</b></div>
         <div class="actions">
-          <button class="mini ok" id="btnPlanning">✅ Planning</button>
-          <button class="mini" id="btnLogin">🔐 Login</button>
-          <button class="mini bad" id="btnLogout">🚪 Déconnexion</button>
+          <button class="mini ok" id="btnPlanning" type="button">✅ Planning</button>
+          <button class="mini gold" id="btnPin" type="button">🔐 PIN</button>
+          <button class="mini" id="btnApp" type="button">🏠 Cockpit</button>
+          <button class="mini bad" id="btnLogout" type="button">🚪 Déconnexion</button>
         </div>
       </div>
 
-      <h1>GO PIN — création (DAK-XXXXX)</h1>
+      <h1>GO PIN — création</h1>
       <div class="muted">
-        ⚠️ Cette page crée un GO PIN via RPC <b>create_go_pin</b>.<br/>
-        Elle peut utiliser : <b>(1)</b> ta session DIGIY_GUARD (téléphone/slug) pour pré-remplir,
+        Cette page crée un GO PIN via RPC <b>create_go_pin</b>.<br/>
+        Elle peut utiliser :
+        <b>(1)</b> ta session DIGIY_GUARD (téléphone/slug) pour pré-remplir,
         et <b>(2)</b> une session Supabase (si ton RPC exige auth).<br/>
-        Si ton RPC ne demande pas auth, ça marche quand même.
+        <span class="hint">
+          Conseil terrain : si tu veux que seuls les proprios créent un GO PIN, ton RPC doit être <b>SECURITY DEFINER</b>
+          + vérifier <b>auth.uid()</b> + owner_user_id.
+        </span>
       </div>
 
-      <div class="grid" style="margin-top:10px">
+      <div class="line"></div>
+
+      <div class="grid">
         <div>
-          <label>Nom / Titre</label>
+          <label>Nom / Titre *</label>
           <input id="title" placeholder="Chez Astou Boutique" />
+          <div class="hint">Nom visible dans la fiche GO PIN publique.</div>
         </div>
         <div>
-          <label>Catégorie</label>
+          <label>Catégorie *</label>
           <input id="category" placeholder="shop / food / stay / driver / service" value="shop" />
+          <div class="hint">Astuce : garde court (ex: <b>loc</b>, <b>shop</b>, <b>food</b>).</div>
         </div>
       </div>
 
       <div class="grid">
         <div>
-          <label>Téléphone</label>
+          <label>Téléphone (propriétaire)</label>
           <input id="phone" placeholder="+221771234567" />
+          <div class="hint">Numéro principal (appel + Wave + cockpit).</div>
         </div>
         <div>
-          <label>WhatsApp</label>
+          <label>WhatsApp (contact client)</label>
           <input id="whatsapp" placeholder="+221771234567" />
+          <div class="hint">Si vide, on peut reprendre le téléphone.</div>
         </div>
       </div>
 
       <label>Adresse (texte)</label>
       <input id="address_label" placeholder="Saly Centre, près du marché" />
+      <div class="hint">Texte libre. Visible côté public.</div>
 
       <div class="grid">
         <div>
@@ -97,19 +152,38 @@
 
       <label>Slug (optionnel)</label>
       <input id="slug" placeholder="chez-astou-saly (sinon auto)" />
+      <div class="hint">
+        Si vide, le RPC peut générer automatiquement.  
+        Si tu mets un slug, il sera nettoyé (minuscules, sans accents).
+      </div>
 
-      <button class="btn" id="create">Créer le GO PIN</button>
+      <button class="btn" id="create" type="button">Créer le GO PIN</button>
+
+      <div class="krow">
+        <button class="kbtn" id="btnPrefill" type="button">⚡ Remplir depuis session</button>
+        <button class="kbtn" id="btnClear" type="button">🧹 Vider</button>
+      </div>
+
+      <div id="status" style="margin-top:12px;display:none"></div>
 
       <div id="out" style="margin-top:12px;display:none">
         <div class="row">
           <div style="flex:1;min-width:280px">
-            <div class="muted">Résultat</div>
+            <div class="muted">Résultat RPC</div>
             <pre id="json"></pre>
 
-            <div class="muted" style="margin-top:10px">Lien public (à mettre dans le QR)</div>
+            <div class="muted" style="margin-top:10px">Lien public (QR)</div>
             <pre id="link"></pre>
 
-            <div class="muted" style="margin-top:10px">Astuce: ce lien ouvre <b>pin.html</b> (public) avec <b>?slug=</b></div>
+            <div class="krow">
+              <a class="kbtn" id="btnOpen" href="#" target="_blank" rel="noopener">🔗 Ouvrir</a>
+              <button class="kbtn" id="btnCopy" type="button">📋 Copier</button>
+              <button class="kbtn" id="btnReQR" type="button">♻️ Regénérer QR</button>
+            </div>
+
+            <div class="hint" style="margin-top:8px">
+              Ce lien doit pointer vers la fiche publique (ou pin public) : <b>pin.html?slug=...</b>
+            </div>
           </div>
 
           <div>
@@ -128,16 +202,27 @@
   "use strict";
 
   // =============================
-  // SUPABASE
+  // CONFIG (à adapter une fois et basta)
   // =============================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ✅ IMPORTANT : URL publique sûre pour le QR (évite le bug “mauvais dossier”)
+  // Mets ici le chemin exact de ton pin public (GO PIN public)
+  const PUBLIC_PIN_URL = "https://beauville.github.io/digiy-loc/pin.html";
 
+  // Pages internes (repo)
+  const PLANNING_PAGE = "./planning.html";
+  const PIN_PAGE      = "./pin.html";
+  const APP_PAGE      = "./app.html";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const $ = (id)=>document.getElementById(id);
 
+  // =============================
+  // HELPERS
+  // =============================
   function numOrNull(v){
     const t = String(v||"").trim();
     if(!t) return null;
@@ -145,22 +230,73 @@
     return Number.isFinite(n) ? n : null;
   }
 
+  function digitsOnly(v){ return String(v||"").replace(/\D/g,""); }
+
+  function normPhone(p){
+    p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if (p.startsWith("00221")) p = "+221" + p.slice(5);
+    if (!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if (!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
+  }
+
+  function cleanSlug(s){
+    const x = String(s || "").trim();
+    if(!x) return "";
+    return x
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"")
+      .replace(/-+/g,"-")
+      .replace(/^_+|_+$/g,"");
+  }
+
   function setErr(msg){
     $("err").textContent = msg || "";
     $("err").style.display = msg ? "block" : "none";
   }
 
-  function setOut(on){
-    $("out").style.display = on ? "block" : "none";
+  function setStatus(kind, text){
+    const box = $("status");
+    if(!text){
+      box.style.display = "none";
+      box.innerHTML = "";
+      return;
+    }
+    box.style.display = "block";
+    const cls = kind === "ok" ? "badge ok" : (kind === "bad" ? "badge bad" : "badge");
+    box.innerHTML = `<span class="${cls}">${escapeHtml(text)}</span>`;
   }
+
+  function setOut(on){ $("out").style.display = on ? "block" : "none"; }
 
   function setBusy(on){
     $("create").disabled = !!on;
     $("create").textContent = on ? "⏳ Création..." : "Créer le GO PIN";
   }
 
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function copyToClipboard(txt){
+    try{
+      navigator.clipboard.writeText(txt);
+      return true;
+    }catch(_){
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = txt; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy");
+        ta.remove(); return true;
+      }catch(__){ return false; }
+    }
+  }
+
   // =============================
-  // GUARD (slug + liens + préfill)
+  // GUARD (liens + préfill)
   // =============================
   const hasGuard = !!(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.withSlug === "function");
 
@@ -175,79 +311,152 @@
   }
 
   // Top pills + buttons
-  const slug = getSlug();
-  $("pillSlug").textContent = slug || "—";
+  const guardSlug = getSlug();
+  $("pillSlug").textContent = guardSlug || "—";
 
-  $("btnPlanning").onclick = ()=> location.href = safeWithSlug("./planning.html");
-  $("btnLogin").onclick = ()=> location.href = safeWithSlug("./login.html");
+  $("btnPlanning").onclick = ()=> location.href = safeWithSlug(PLANNING_PAGE);
+  $("btnPin").onclick      = ()=> location.href = safeWithSlug(PIN_PAGE);
+  $("btnApp").onclick      = ()=> location.href = safeWithSlug(APP_PAGE);
+
   $("btnLogout").onclick = ()=>{
+    const next = safeWithSlug(PIN_PAGE);
+    if(window.DIGIY_GUARD?.logout) return window.DIGIY_GUARD.logout(next);
     try{ window.DIGIY_GUARD?.clearSession?.(); }catch(_){}
-    location.replace(safeWithSlug("./login.html"));
+    location.replace(next);
   };
 
-  // Prefill phone/whatsapp from guard session if possible
-  try{
-    const sess = window.DIGIY_GUARD?.getSession?.();
-    const phone = sess?.phone || window.DIGIY_GUARD?.getPhone?.() || "";
-    if(phone){
-      $("phone").value = phone;
-      $("whatsapp").value = phone;
+  function prefillFromSession(){
+    try{
+      const sess = window.DIGIY_GUARD?.getSession?.() || null;
+      const p = sess?.phone || window.DIGIY_GUARD?.getPhone?.() || "";
+      if(p){
+        $("phone").value = normPhone(p);
+        if(!$("whatsapp").value.trim()) $("whatsapp").value = normPhone(p);
+      }
+      if(guardSlug && !$("slug").value.trim()) $("slug").value = guardSlug;
+      setStatus("ok", "Pré-rempli depuis session.");
+    }catch(e){
+      console.warn(e);
+      setStatus("bad", "Impossible de lire la session Guard.");
     }
-  }catch(_){}
+  }
 
-  // Prefill slug input with current slug
-  if(slug && !$("slug").value) $("slug").value = slug;
+  $("btnPrefill").addEventListener("click", prefillFromSession);
+
+  $("btnClear").addEventListener("click", ()=>{
+    ["title","category","phone","whatsapp","address_label","lat","lng","slug"].forEach(id=> $(id).value = "");
+    $("category").value = "shop";
+    $("qrcode").innerHTML = "";
+    setOut(false);
+    setErr("");
+    setStatus("", "");
+  });
+
+  // Prefill auto au chargement (soft)
+  prefillFromSession();
+  if(guardSlug && !$("slug").value) $("slug").value = guardSlug;
 
   // =============================
   // Create GO PIN
   // =============================
+  function buildPublicLink(slug){
+    const u = new URL(PUBLIC_PIN_URL);
+    u.searchParams.set("slug", slug);
+    return u.toString();
+  }
+
+  function renderQR(link){
+    $("qrcode").innerHTML = "";
+    new QRCode($("qrcode"), { text: link, width: 180, height: 180 });
+  }
+
+  $("btnCopy").addEventListener("click", ()=>{
+    const txt = $("link").textContent || "";
+    if(!txt) return;
+    const ok = copyToClipboard(txt);
+    setStatus(ok ? "ok" : "bad", ok ? "Lien copié." : "Copie impossible (navigateur).");
+  });
+
+  $("btnReQR").addEventListener("click", ()=>{
+    const txt = $("link").textContent || "";
+    if(!txt) return;
+    renderQR(txt);
+    setStatus("ok", "QR régénéré.");
+  });
+
   $("create").addEventListener("click", async ()=>{
     setErr("");
+    setStatus("", "");
     setOut(false);
     $("qrcode").innerHTML = "";
 
-    const payload = {
-      p_title: $("title").value.trim(),
-      p_category: ($("category").value.trim() || "service"),
-      p_phone: ($("phone").value.trim() || null),
-      p_whatsapp: ($("whatsapp").value.trim() || null),
-      p_address_label: ($("address_label").value.trim() || null),
-      p_lat: numOrNull($("lat").value),
-      p_lng: numOrNull($("lng").value),
-      p_slug: ($("slug").value.trim() || null)
-    };
+    // ✅ Normalize
+    const title = $("title").value.trim();
+    const category = ($("category").value.trim() || "service");
+    const phone = normPhone($("phone").value.trim());
+    const whatsapp = normPhone($("whatsapp").value.trim()) || phone || null;
+    const addr = $("address_label").value.trim() || null;
+    const lat = numOrNull($("lat").value);
+    const lng = numOrNull($("lng").value);
+    const slugInput = cleanSlug($("slug").value.trim());
 
-    if(!payload.p_title){
+    if(!title){
       setErr("Titre obligatoire.");
       return;
     }
 
+    const payload = {
+      p_title: title,
+      p_category: category,
+      p_phone: phone || null,
+      p_whatsapp: whatsapp || null,
+      p_address_label: addr,
+      p_lat: lat,
+      p_lng: lng,
+      p_slug: slugInput || null
+    };
+
     setBusy(true);
+    setStatus("warn", "Appel RPC create_go_pin…");
+
     try{
       const { data, error } = await sb.rpc("create_go_pin", payload);
 
       if(error){
-        setErr("Erreur: " + (error.message || "inconnue") + " (si ton RPC exige auth: connecte-toi d’abord)");
+        const msg = (error.message || "inconnue");
+        // 🧠 aide au diagnostic
+        if(/JWT|auth|permission|not authorized/i.test(msg)){
+          setErr("Erreur: " + msg + "\n➡️ Ton RPC semble exiger une session auth. Connecte-toi d’abord via PIN.");
+        }else{
+          setErr("Erreur: " + msg + "\n➡️ Vérifie RLS / GRANT / SECURITY DEFINER du RPC.");
+        }
+        setStatus("bad", "Création refusée.");
+        return;
+      }
+
+      if(!data || !data.slug){
+        setErr("RPC OK mais réponse invalide (slug manquant).");
+        setStatus("bad", "Réponse RPC incomplète.");
         return;
       }
 
       setOut(true);
       $("json").textContent = JSON.stringify(data, null, 2);
 
-      // Base folder (robuste)
-      const u = new URL(location.href);
-      u.hash = "";
-      u.search = "";
-      u.pathname = u.pathname.replace(/[^/]*$/, ""); // keep folder
-
-      const publicLink = u.toString() + "pin.html?slug=" + encodeURIComponent(data.slug);
+      const publicLink = buildPublicLink(data.slug);
       $("link").textContent = publicLink;
+      $("btnOpen").href = publicLink;
 
-      new QRCode($("qrcode"), { text: publicLink, width: 180, height: 180 });
+      renderQR(publicLink);
+      setStatus("ok", "GO PIN créé ✅");
+
+      // ✅ met à jour le pill slug si on vient de créer un nouveau slug
+      $("pillSlug").textContent = data.slug;
 
     }catch(e){
       console.error(e);
       setErr("Erreur runtime: " + String(e?.message || e));
+      setStatus("bad", "Crash JS.");
     }finally{
       setBusy(false);
     }
