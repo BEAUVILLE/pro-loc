@@ -19,8 +19,11 @@
     .sub{margin:4px 0 0;color:var(--muted);font-weight:700}
     label{display:block;margin:12px 0 8px;font-weight:950}
     input{width:100%;border:1px solid var(--line);border-radius:16px;padding:12px;font-size:15px;outline:none}
+    input:focus{border-color:rgba(234,179,8,.65);box-shadow:0 0 0 3px rgba(234,179,8,.18)}
     .btn{width:100%;border:0;border-radius:16px;padding:12px 14px;min-height:44px;font-weight:950;cursor:pointer;margin-top:14px;background:linear-gradient(135deg,#FFF7D6,#FDE68A);color:#78350F}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
     .btn2{width:100%;border:1px solid var(--line);border-radius:16px;padding:12px 14px;min-height:44px;font-weight:950;cursor:pointer;margin-top:10px;background:#fff;color:#111827}
+    .btn2:disabled{opacity:.6;cursor:not-allowed}
     .msg{margin-top:12px;padding:12px;border-radius:16px;border:1px solid var(--line);background:#F9FAFB;color:var(--muted);font-weight:800;white-space:pre-wrap}
     .msg.bad{border-color:rgba(239,68,68,.22);background:rgba(239,68,68,.06);color:#7f1d1d}
     .msg.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.07);color:#14532d}
@@ -37,7 +40,7 @@
     <div class="sub">Connexion gestionnaire (téléphone + PIN)</div>
 
     <div class="row">
-      <span class="pill">module: <span class="mono">LOC</span></span>
+      <span class="pill">module: <span class="mono" id="pillModule">—</span></span>
       <span class="pill mono" id="pillSlug">slug: —</span>
     </div>
 
@@ -54,8 +57,11 @@
   </div>
 
   <script>
-  (function(){
-    const MODULE = "LOC";
+  (async function(){
+    // ✅ MODULE (reco: "loc" en minuscule, cohérent RPC)
+    const MODULE = "loc";
+
+    // ✅ Support WhatsApp (DIGIY LOC PRO PIN reset)
     const SUPPORT_WA = "+221771342889";
 
     const msg = document.getElementById("msg");
@@ -64,6 +70,9 @@
     const phoneEl = document.getElementById("phone");
     const pinEl = document.getElementById("pin");
     const pillSlug = document.getElementById("pillSlug");
+    const pillModule = document.getElementById("pillModule");
+
+    pillModule.textContent = MODULE;
 
     function setMsg(t, cls){
       msg.className = "msg" + (cls ? (" " + cls) : "");
@@ -71,20 +80,62 @@
     }
 
     function lock(on){
-      btn.disabled = !!on;
-      btnForgot.disabled = !!on;
-      phoneEl.disabled = !!on;
-      pinEl.disabled = !!on;
+      const v = !!on;
+      btn.disabled = v;
+      btnForgot.disabled = v;
+      phoneEl.disabled = v;
+      pinEl.disabled = v;
     }
 
-    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.loginWithPin !== "function"){
+    function digitsOnly(v){ return String(v || "").replace(/\D/g, ""); }
+
+    function nextUrl(path){
+      return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
+    }
+
+    // ✅ Guard présent ?
+    if(!window.DIGIY_GUARD){
       setMsg("❌ Guard absent. Vérifie que ./guard.js est bien chargé.", "bad");
       return;
     }
+    if(typeof window.DIGIY_GUARD.boot !== "function"){
+      setMsg("❌ Guard incomplet: boot() manquant.", "bad");
+      return;
+    }
+    if(typeof window.DIGIY_GUARD.loginWithPin !== "function"){
+      setMsg("❌ Guard incomplet: loginWithPin() manquant.", "bad");
+      return;
+    }
 
-    // slug UI + storage
+    // ✅ Boot guard (slug obligatoire + abonnement si tu veux)
+    setMsg("⏳ Initialisation…", "");
+    lock(true);
+
+    const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
+    const bootRes = await window.DIGIY_GUARD.boot({
+      module: MODULE,
+      login: "./pin.html",
+      dashboard: "./planning.html",     // destination après login
+      pay: PAY_URL,
+      requireSlug: true,
+      checkSubscription: true
+    });
+
+    // Si boot refuse -> guard gère souvent la redirection, sinon on affiche
+    if(!bootRes?.ok){
+      lock(false);
+      setMsg("🔒 Accès non ouvert.\n➡️ Vérifie le lien (slug) ou l’abonnement.", "bad");
+      return;
+    }
+
+    // slug UI
     const slug = window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "";
     pillSlug.textContent = "slug: " + (slug || "—");
+    if(!slug){
+      lock(false);
+      setMsg("⚠️ Slug manquant.\n➡️ Ouvre depuis GO PIN / galerie (lien avec ?slug=...).", "bad");
+      return;
+    }
 
     // Prefill phone
     try{
@@ -92,15 +143,22 @@
       if(p) phoneEl.value = p;
     }catch(_){}
 
-    // Si session déjà OK -> direct planning
+    // Si session déjà OK -> direct planning (mais seulement si ok + owner_id)
     try{
       const s = window.DIGIY_GUARD.getSession && window.DIGIY_GUARD.getSession();
-      if(s && s.phone){
-        const next = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./planning.html") : "./planning.html";
+      if(s && s.ok === true && s.phone && (s.owner_id || s.ownerId)){
+        const next = nextUrl("./planning.html");
         location.replace(next);
         return;
       }
     }catch(_){}
+
+    lock(false);
+    setMsg("Entre ton téléphone + PIN.", "");
+
+    // Focus intelligent
+    if(!phoneEl.value) phoneEl.focus();
+    else pinEl.focus();
 
     async function doLogin(){
       const rawPhone = (phoneEl.value || "").trim();
@@ -108,12 +166,12 @@
       const phone = window.DIGIY_GUARD.normPhone ? window.DIGIY_GUARD.normPhone(rawPhone) : rawPhone;
 
       if(!phone){
-        setMsg("⚠️ Téléphone requis. Exemple: +221771234567", "bad");
+        setMsg("⚠️ Téléphone requis.\nExemple: +221771234567", "bad");
         phoneEl.focus();
         return;
       }
-      if(pin.length < 4){
-        setMsg("⚠️ PIN invalide (4–8 chiffres).", "bad");
+      if(!/^\d{4,8}$/.test(pin)){
+        setMsg("⚠️ PIN invalide.\n➡️ 4 à 8 chiffres.", "bad");
         pinEl.focus();
         return;
       }
@@ -123,16 +181,29 @@
 
       try{
         const out = await window.DIGIY_GUARD.loginWithPin(phone, pin, MODULE);
+
         if(!out || out.ok !== true){
           const reason = out?.res?.reason ? String(out.res.reason) : "";
-          setMsg("❌ PIN incorrect. Réessaie.", "bad");
-          if(reason) setMsg("❌ PIN incorrect.\n" + "Raison: " + reason, "bad");
+          setMsg(
+            "❌ PIN incorrect.\n" + (reason ? ("Raison: " + reason) : "Réessaie."),
+            "bad"
+          );
+          lock(false);
+          pinEl.focus();
+          pinEl.select();
+          return;
+        }
+
+        // sécurité: session doit avoir owner_id
+        const s = window.DIGIY_GUARD.getSession && window.DIGIY_GUARD.getSession();
+        if(!s || s.ok !== true || !(s.owner_id || s.ownerId)){
+          setMsg("⚠️ Session incomplète (owner_id manquant).\n➡️ Retour PIN.", "bad");
           lock(false);
           return;
         }
 
         setMsg("✅ OK. Ouverture du planning…", "ok");
-        const next = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./planning.html") : "./planning.html";
+        const next = nextUrl("./planning.html");
         location.replace(next);
 
       }catch(e){
@@ -144,6 +215,7 @@
 
     btn.addEventListener("click", doLogin);
     pinEl.addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") doLogin(); });
+    phoneEl.addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") { pinEl.focus(); } });
 
     btnForgot.addEventListener("click", ()=>{
       const rawPhone = (phoneEl.value || "").trim();
@@ -160,11 +232,11 @@ Téléphone: ${phone || "—"}
 
 Merci. — DIGIY`;
 
-      location.href = "https://wa.me/" + SUPPORT_WA.replace(/\+/g,"") + "?text=" + encodeURIComponent(msgTxt);
+      const wa = "https://wa.me/" + digitsOnly(SUPPORT_WA) + "?text=" + encodeURIComponent(msgTxt);
+      location.href = wa;
     });
 
   })();
   </script>
 </body>
 </html>
-
