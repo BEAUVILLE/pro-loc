@@ -166,7 +166,6 @@
 (async function(){
   "use strict";
 
-  // ✅ Protect page
   const boot = await window.DIGIY_GUARD.boot({
     module:"loc",
     dashboard:"./photos.html",
@@ -175,31 +174,23 @@
   });
   if(!boot?.ok) return;
 
-  // ✅ Always take sb from guard (async, unique client)
   const sb = await window.DIGIY_GUARD.getSbAsync();
-  if(!sb?.rpc) return alert("Supabase non prêt (sb.rpc absent).");
+  if(!sb?.rpc) return alert("Supabase non prêt.");
 
   const slug = (window.DIGIY_GUARD.getSlug() || "").trim();
   const sess = window.DIGIY_GUARD.getSession() || {};
   const ownerPhone = String(sess?.phone || "").trim();
 
-  const dbgEl = document.getElementById("dbg");
-  dbgEl.textContent = `slug: ${slug || "—"} · phone: ${ownerPhone || "—"}`;
-
-  if(!slug){
-    alert("❌ slug manquant. Ouvre la page avec ?slug=...");
-    return;
-  }
-  if(!ownerPhone){
-    alert("❌ Téléphone manquant en session. Reconnecte-toi via PIN.");
-    return;
-  }
-
-  // UI
-  const btnAdd = document.getElementById("btnAdd");
-  const btnSave = document.getElementById("btnSave");
   const galleryEl = document.getElementById("gallery");
   const noteEl = document.getElementById("note");
+  const btnAdd = document.getElementById("btnAdd");
+  const btnSave = document.getElementById("btnSave");
+  const dbgEl = document.getElementById("dbg");
+
+  dbgEl.textContent = `slug: ${slug || "—"} · phone: ${ownerPhone || "—"}`;
+
+  if(!slug) return alert("❌ slug manquant. Ouvre la page avec ?slug=...");
+  if(!ownerPhone) return alert("❌ Téléphone manquant en session. Reconnecte-toi via PIN.");
 
   const LS_KEY = "DIGIY_LOC_PHOTOS_CACHE_V1";
 
@@ -268,7 +259,6 @@
     all.forEach((p,idx)=>{
       const tile = document.createElement("div");
       tile.className="tile";
-
       tile.innerHTML = `
         ${p.cover ? `<div class="badge">Cover</div>` : ``}
         <button class="iconbtn" title="Supprimer">✕</button>
@@ -290,91 +280,51 @@
     });
   }
 
-  // ✅ Load photos (RPC if exists -> else SELECT). No .single()
+  // ✅ LOAD via RPC EXISTANTE
   async function loadPhotos(){
     note("⏳ Chargement photos…","warn");
 
-    // 1) Try RPC getter if you have it
-    try{
-      const r = await sb.rpc("digiy_loc_get_photos_owner", {
-        p_slug: slug,
-        p_owner_phone: ownerPhone
-      });
+    const { data, error } = await sb.rpc("digiy_loc_get_photos_owner", {
+      p_slug: slug,
+      p_owner_phone: ownerPhone
+    });
 
-      if(r?.error){
-        // If function doesn't exist, we'll fallback to select
-        if(String(r.error?.code || "") === "PGRST202") throw r.error;
-        // Other error (RLS, etc.)
-        throw r.error;
-      }
+    if(error) throw error;
 
-      const res = (typeof r.data === "string") ? JSON.parse(r.data) : r.data;
-      if(res?.ok){
-        cover = res.cover_url || null;
-        photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
-        cacheSave();
-        render();
-        note("✅ Photos chargées depuis Supabase.", "ok");
-        return;
-      }
-      // If RPC exists but returns not ok -> treat as fallback warning
-      throw new Error(res?.reason || "load_failed");
-    }catch(e){
-      // continue to SELECT fallback (unless you want to stop on hard errors)
-      // console.log("RPC get failed, fallback select:", e);
-    }
+    const res = (typeof data === "string") ? JSON.parse(data) : data;
+    if(!res?.ok) throw new Error(res?.reason || "load_failed");
 
-    // 2) Fallback SELECT (may be blocked by RLS)
-    const { data, error } = await sb
-      .from("digiy_loc_businesses")
-      .select("cover_url,gallery_urls")
-      .eq("slug", slug)
-      .limit(1);
-
-    if(error){
-      // don't throw hard; we want cache fallback
-      throw error;
-    }
-
-    const row = Array.isArray(data) && data.length ? data[0] : null;
-    if(!row){
-      note("⚠️ Lieu introuvable (0 ligne) ou accès lecture bloqué. Tu peux quand même coller des URLs et sauvegarder.", "warn");
-      render();
-      return;
-    }
-
-    cover = row.cover_url || null;
-    photos = Array.isArray(row.gallery_urls) ? row.gallery_urls : [];
+    cover = res.cover_url || null;
+    photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
 
     cacheSave();
     render();
     note("✅ Photos chargées depuis Supabase.", "ok");
   }
 
-  // ✅ Add URL (terrain simple)
+  // ✅ ADD url
   btnAdd.onclick = ()=>{
     const url = prompt("Colle une URL image (https://...)");
     if(!url) return;
-
     const u = url.trim();
+
     if(!isHttpsUrl(u)){
       note("⚠️ URL invalide. Il faut https://...", "warn");
       return;
     }
 
     if(!cover){
-      cover=u;
+      cover = u;
     }else{
       photos.push(u);
       photos = uniq(photos).slice(0, 12);
     }
-
     cacheSave();
     render();
     note("✅ Ajouté (local). Clique Sauvegarder pour pousser SQL.", "ok");
   };
 
-  // ✅ SAVE via RPC that you already have: digiy_loc_set_photos_owner
+  // ✅ SAVE via RPC EXISTANTE
   btnSave.onclick = async ()=>{
     try{
       note("⏳ Sauvegarde…","warn");
@@ -391,9 +341,7 @@
       });
 
       if(error) throw error;
-
-      const res = (typeof data === "string") ? JSON.parse(data) : data;
-      if(!res?.ok) throw new Error(res?.reason || "save_failed");
+      if(!data?.ok) throw new Error(data?.reason || "save_failed");
 
       cover = cleanCover;
       photos = cleanGallery;
@@ -403,14 +351,6 @@
     }catch(e){
       console.error(e);
       note("❌ Erreur save: " + (e?.message || e), "bad");
-
-      // fallback cache (offline)
-      const cached = cacheLoad();
-      if(cached){
-        cover = cached.cover || cover;
-        photos = Array.isArray(cached.photos) ? cached.photos : photos;
-        render();
-      }
     }
   };
 
@@ -424,7 +364,7 @@
       cover = cached.cover || null;
       photos = Array.isArray(cached.photos) ? cached.photos : [];
       render();
-      note("⚠️ Réseau/Supabase KO. Cache local chargé (URLs). Clique Sauvegarder plus tard.", "warn");
+      note("⚠️ Supabase KO / lecture bloquée. Cache local chargé. Clique Sauvegarder plus tard.", "warn");
     }else{
       render();
       note("❌ Erreur load: " + (e?.message || e), "bad");
@@ -433,5 +373,6 @@
 
 })();
 </script>
+  
 </body>
 </html>
