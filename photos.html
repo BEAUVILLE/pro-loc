@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Guard (cache-bust) -->
-  <script src="./guard.js?v=locpro-photos-A-004"></script>
+  <script src="./guard.js?v=locpro-photos-owner-v1"></script>
 
   <style>
     :root{
@@ -33,6 +33,19 @@
     h1{font-size:1.4rem;margin-bottom:6px}
     p{color:var(--muted);margin-bottom:14px;line-height:1.35}
 
+    .topNav{
+      display:flex;gap:10px;flex-wrap:wrap;
+      margin:10px 0 14px;
+    }
+    .linkbtn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 12px;border-radius:12px;
+      border:1px solid rgba(250,204,21,0.25);
+      background:rgba(255,255,255,0.02);
+      color:#fff;text-decoration:none;font-weight:900;
+    }
+    .linkbtn:hover{filter:brightness(1.08)}
+
     .card{
       background:rgba(255,255,255,0.03);
       border:1px solid var(--line);
@@ -55,6 +68,11 @@
       background:transparent;
       border:1px solid rgba(250,204,21,0.35);
       color:#fff;
+    }
+    .btn.danger{
+      background:rgba(239,68,68,0.14);
+      border:1px solid rgba(239,68,68,0.35);
+      color:#fecaca;
     }
 
     .gallery{
@@ -121,6 +139,7 @@
     .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0}
     .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca}
     .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+
     .mini{margin-top:10px;color:var(--muted);font-size:.9rem}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
     .help{
@@ -131,6 +150,10 @@
     }
     .help b{color:#fff}
     .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:12px}
+
+    @media (max-width:520px){
+      .gallery{grid-template-columns:repeat(2,1fr)}
+    }
   </style>
 </head>
 
@@ -138,13 +161,19 @@
 <div class="wrap">
 
   <h1>🖼️ Photos logement</h1>
-  <p>Ajoute une cover + une galerie. On stocke seulement des <b>URLs</b> (léger Afrique).</p>
+  <p>Ajoute une <b>cover</b> + une <b>galerie</b>. On stocke seulement des <b>URLs HTTPS</b> (léger Afrique).</p>
+
+  <div class="topNav">
+    <a class="linkbtn" id="btnBack" href="#">⬅️ Retour Cockpit</a>
+    <a class="linkbtn" id="btnApp" href="#">🏠 APP</a>
+  </div>
 
   <div class="card">
     <h2 style="margin-bottom:8px">📸 Galerie</h2>
 
     <button class="btn primary" id="btnAdd">➕ Ajouter photo (URL)</button>
     <button class="btn ghost" id="btnSave">💾 Sauvegarder</button>
+    <button class="btn danger" id="btnClear">🧹 Vider la galerie</button>
 
     <div class="gallery" id="gallery"></div>
 
@@ -166,24 +195,42 @@
 (async function(){
   "use strict";
 
-  // ✅ Protect page
-  const boot = await window.DIGIY_GUARD.boot({
+  // ============================
+  // GUARD
+  // ============================
+  const boot = await window.DIGIY_GUARD?.boot?.({
     module:"loc",
     dashboard:"./photos.html",
     login:"./pin.html",
     requireSlug:true
   });
+
   if(!boot?.ok) return;
 
-  // ✅ Always take sb from guard (async, unique client)
+  // Supabase (unique) via guard
   const sb = await window.DIGIY_GUARD.getSbAsync();
-  if(!sb?.rpc) return alert("Supabase non prêt (sb.rpc absent).");
+  if(!sb?.rpc) { alert("Supabase non prêt (sb.rpc absent)."); return; }
 
+  // Slug + session
   const slug = (window.DIGIY_GUARD.getSlug() || "").trim();
-  const sess = window.DIGIY_GUARD.getSession() || {};
+  const sess = window.DIGIY_GUARD.getSession?.() || {};
   const ownerPhone = String(sess?.phone || "").trim();
 
+  // UI refs
+  const btnAdd = document.getElementById("btnAdd");
+  const btnSave = document.getElementById("btnSave");
+  const btnClear = document.getElementById("btnClear");
+  const galleryEl = document.getElementById("gallery");
+  const noteEl = document.getElementById("note");
   const dbgEl = document.getElementById("dbg");
+
+  // Nav links (slug safe)
+  function withSlug(path){
+    return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
+  }
+  document.getElementById("btnBack").href = withSlug("./index.html");
+  document.getElementById("btnApp").href  = withSlug("./app.html");
+
   dbgEl.textContent = `slug: ${slug || "—"} · phone: ${ownerPhone || "—"}`;
 
   if(!slug){
@@ -195,14 +242,10 @@
     return;
   }
 
-  // UI
-  const btnAdd = document.getElementById("btnAdd");
-  const btnSave = document.getElementById("btnSave");
-  const galleryEl = document.getElementById("gallery");
-  const noteEl = document.getElementById("note");
-
+  // ============================
+  // STATE + CACHE
+  // ============================
   const LS_KEY = "DIGIY_LOC_PHOTOS_CACHE_V1";
-
   let photos = [];
   let cover = null;
 
@@ -238,6 +281,7 @@
       localStorage.setItem(LS_KEY + ":" + slug, JSON.stringify(payload));
     }catch(_){}
   }
+
   function cacheLoad(){
     try{
       const raw = localStorage.getItem(LS_KEY + ":" + slug);
@@ -246,29 +290,9 @@
     }catch(_){ return null; }
   }
 
-  // ✅ Load existing photos from SQL (SAFE: 0 ou 1 ligne)
-async function loadPhotos(){
-  note("⏳ Chargement photos…","warn");
-
-  const { data, error } = await sb.rpc("digiy_loc_get_photos_by_token", {
-    p_slug: slug,
-    p_pro_token: token
-  });
-
-  if(error) throw error;
-
-  const res = (typeof data === "string") ? JSON.parse(data) : data;
-  if(!res?.ok) throw new Error(res?.reason || "load_failed");
-
-  cover = res.cover_url || null;
-  photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
-
-  cacheSave();
-  render();
-  note("✅ Photos chargées depuis Supabase.", "ok");
-}
-
-
+  // ============================
+  // RENDER
+  // ============================
   function render(){
     galleryEl.innerHTML = "";
 
@@ -300,7 +324,7 @@ async function loadPhotos(){
 
       tile.querySelector(".iconbtn").onclick = ()=>{
         if(p.cover){
-          cover=null;
+          cover = null;
         }else{
           const i = cover ? (idx - 1) : idx;
           if(i >= 0) photos.splice(i, 1);
@@ -313,7 +337,42 @@ async function loadPhotos(){
     });
   }
 
-  // ✅ Add URL (terrain simple)
+  // ============================
+  // LOAD (RPC OWNER)
+  // Requires SQL function: digiy_loc_get_photos_owner(p_slug,p_owner_phone) -> json
+  // ============================
+  async function loadPhotos(){
+    note("⏳ Chargement photos…","warn");
+
+    const { data, error } = await sb.rpc("digiy_loc_get_photos_owner", {
+      p_slug: slug,
+      p_owner_phone: ownerPhone
+    });
+
+    if(error) throw error;
+
+    const res = (typeof data === "string") ? (function(){ try{return JSON.parse(data);}catch{ return null; } })() : data;
+    if(!res?.ok){
+      // si pas trouvé/forbidden -> on laisse vide mais on autorise ajout + save
+      cover = null;
+      photos = [];
+      cacheSave();
+      render();
+      note("⚠️ Lieu introuvable (0 ligne) ou accès lecture bloqué. Tu peux quand même coller des URLs et sauvegarder.", "warn");
+      return;
+    }
+
+    cover = res.cover_url || null;
+    photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
+
+    cacheSave();
+    render();
+    note("✅ Photos chargées depuis Supabase.", "ok");
+  }
+
+  // ============================
+  // ADD URL
+  // ============================
   btnAdd.onclick = ()=>{
     const url = prompt("Colle une URL image (https://...)");
     if(!url) return;
@@ -325,18 +384,34 @@ async function loadPhotos(){
     }
 
     if(!cover){
-      cover=u;
+      cover = u;
+      note("✅ Cover posée (local). Clique Sauvegarder pour pousser SQL.", "ok");
     }else{
       photos.push(u);
       photos = uniq(photos).slice(0, 12);
+      note("✅ Ajouté (local). Clique Sauvegarder pour pousser SQL.", "ok");
     }
 
     cacheSave();
     render();
-    note("✅ Ajouté (local). Clique Sauvegarder pour pousser SQL.", "ok");
   };
 
-  // ✅ SAVE via RPC owner_phone (OPTION A)
+  // ============================
+  // CLEAR
+  // ============================
+  btnClear.onclick = ()=>{
+    if(!confirm("Vider la cover + galerie (local) ?")) return;
+    cover = null;
+    photos = [];
+    cacheSave();
+    render();
+    note("✅ Galerie vidée (local). Clique Sauvegarder pour pousser SQL.", "ok");
+  };
+
+  // ============================
+  // SAVE (RPC OWNER)
+  // Requires SQL function: digiy_loc_set_photos_owner(p_slug,p_owner_phone,p_cover_url,p_gallery_urls,p_provider) -> json
+  // ============================
   btnSave.onclick = async ()=>{
     try{
       note("⏳ Sauvegarde…","warn");
@@ -353,7 +428,9 @@ async function loadPhotos(){
       });
 
       if(error) throw error;
-      if(!data?.ok) throw new Error(data?.reason || "save_failed");
+
+      const res = (typeof data === "string") ? (function(){ try{return JSON.parse(data);}catch{ return null; } })() : data;
+      if(!res?.ok) throw new Error(res?.reason || "save_failed");
 
       cover = cleanCover;
       photos = cleanGallery;
@@ -362,19 +439,23 @@ async function loadPhotos(){
       note("✅ Photos sauvegardées avec succès.", "ok");
     }catch(e){
       console.error(e);
-      note("❌ Erreur save: " + (e?.message || e), "bad");
+      const msg = String(e?.message || e);
+      note("❌ Erreur RPC SAVE: " + msg, "bad");
 
-      // fallback cache (offline)
+      // fallback cache
       const cached = cacheLoad();
       if(cached){
         cover = cached.cover || cover;
         photos = Array.isArray(cached.photos) ? cached.photos : photos;
         render();
+        note("⚠️ Réseau/Supabase KO. Cache local chargé (URLs). Clique Sauvegarder plus tard.", "warn");
       }
     }
   };
 
+  // ============================
   // GO (SQL first, fallback cache)
+  // ============================
   try{
     await loadPhotos();
   }catch(e){
@@ -386,6 +467,7 @@ async function loadPhotos(){
       render();
       note("⚠️ Réseau/Supabase KO. Cache local chargé (URLs). Clique Sauvegarder plus tard.", "warn");
     }else{
+      render();
       note("❌ Erreur load: " + (e?.message || e), "bad");
     }
   }
