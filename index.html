@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="utf-8" />
-<meta name=<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
@@ -135,16 +131,16 @@
         <h2>Navigation</h2>
 
         <div class="nav">
-          <a class="btn" id="btnBack" href="#">⬅️ Retour</a>
-          <a class="btn" id="goToday" href="#">📅 Vue du jour</a>
+          <a class="btn" data-go="__back__" href="#">⬅️ Retour</a>
+          <a class="btn" data-go="today.html" href="#">📅 Vue du jour</a>
 
-          <a class="btn primary" id="goApp" href="#">🏠 APP</a>
-          <a class="btn" id="goPulse" href="#">📲 Pulse</a>
+          <a class="btn primary" data-go="app.html" href="#">🏠 APP</a>
+          <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
 
-          <a class="btn" id="goPlanning" href="#">🗓️ Planning</a>
-          <a class="btn gold" id="goLinks" href="#">🔗 Liens / QR</a>
+          <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
+          <a class="btn gold" data-go="manage-links.html" href="#">🔗 Liens / QR</a>
 
-          <a class="btn" id="goHealth" href="#">🧪 Vérifier mon accès</a>
+          <a class="btn" data-go="health-loc.html" href="#">🧪 Vérifier mon accès</a>
           <button class="btn" id="btnReload" type="button">↻ Recharger</button>
         </div>
 
@@ -170,9 +166,9 @@
         </div>
 
         <div class="miniActions">
-          <a class="btn" id="goPublic">👁️ GO PIN public</a>
-          <a class="btn" id="goPin">🔑 Ouvrir l’accès (PIN)</a>
-          <a class="btn gold" id="goWave">💳 Cockpit Wave</a>
+          <a class="btn" data-go="go-pin-public.html" href="#">👁️ GO PIN public</a>
+          <a class="btn" data-go="pin.html" href="#">🔑 Ouvrir l’accès (PIN)</a>
+          <a class="btn gold" data-go="wave.html" href="#">💳 Cockpit Wave</a>
         </div>
 
         <div class="sep"></div>
@@ -186,6 +182,44 @@
   </div>
 
 <script>
+/* =========================
+   DIGIY NAV AUTO — QR SAFE ✅
+   - Tous les éléments avec data-go gardent le slug via DIGIY_GUARD.go()
+   - data-mode="replace" optionnel
+========================= */
+(function(){
+  "use strict";
+  function bindNav(){
+    if(!window.DIGIY_GUARD?.go) return;
+
+    document.querySelectorAll("[data-go]").forEach((el)=>{
+      if(el.__digiy_bound) return;
+      el.__digiy_bound = true;
+
+      const target = (el.getAttribute("data-go") || "").trim();
+      const mode = (el.getAttribute("data-mode") || "assign").trim();
+
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        if(!target) return;
+
+        if(target === "__back__"){
+          if(history.length > 1) return history.back();
+          return window.DIGIY_GUARD.go("listing.html", "replace");
+        }
+
+        window.DIGIY_GUARD.go(target, mode);
+      });
+    });
+  }
+
+  bindNav();
+  const mo = new MutationObserver(()=>bindNav());
+  mo.observe(document.documentElement, { childList:true, subtree:true });
+})();
+</script>
+
+<script>
 (function(){
   "use strict";
   const $ = (id)=>document.getElementById(id);
@@ -195,15 +229,6 @@
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
-  }
-
-  function withSlug(url){
-    try{
-      if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.withSlug === "function"){
-        return window.DIGIY_GUARD.withSlug(url);
-      }
-    }catch(_){}
-    return url;
   }
 
   function getSlug(){
@@ -221,61 +246,16 @@
   }
 
   function getSb(){
-    return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.getSupabase?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || null;
-  }
-
-  function setHref(id, url){ const el = $(id); if(el) el.href = withSlug(url); }
-
-  async function bootGuard(){
-    const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
-    const MODULE = "loc"; // garde cohérent avec app.html
-
-    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
-      show("❌ Guard absent. Vérifie que guard.js est bien chargé.", "bad");
-      $("pillConn").className = "pill bad";
-      $("pillConn").textContent = "Guard ❌";
-      return { ok:false };
-    }
-
-    // Boot (protège la page)
-    const r = await window.DIGIY_GUARD.boot({
-      module: MODULE,
-      dashboard: "./index.html",
-      login: "./pin.html",
-      pay: PAY_URL,
-      requireSlug: true,
-      checkSubscription: true
-    });
-
-    return r || { ok:false };
+    return window.DIGIY_GUARD?.getSb?.() || null;
   }
 
   async function init(){
-    // Liens nav (toujours slug)
-    setHref("goToday", "./today.html");
-    setHref("goApp", "./app.html");
-    setHref("goPulse", "./reservations-pulse.html");
-    setHref("goPlanning", "./planning.html");
-    setHref("goLinks", "./manage-links.html");
-    setHref("goHealth", "./health-loc.html");
-    setHref("goPublic", "./go-pin-public.html");
-    setHref("goPin", "./pin.html");
-    setHref("goWave", "./wave.html");
-
-    // Back = listing public si tu veux, sinon GO PIN public
-    setHref("btnBack", "./listing.html");
-
     $("btnReload").addEventListener("click", ()=> location.reload());
 
     $("btnLogout").addEventListener("click", ()=>{
       if(!confirm("Se déconnecter ?")) return;
-      const go = withSlug("./pin.html");
-      try{ window.DIGIY_GUARD?.logout?.(go); }
-      catch(_){ location.href = go; }
+      try{ window.DIGIY_GUARD?.logout?.("pin.html"); }
+      catch(_){ window.DIGIY_GUARD.go("pin.html","replace"); }
     });
 
     const slug = getSlug();
@@ -286,9 +266,10 @@
       show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien GO PIN.\nExemple : index.html?slug=chez-astou-saly", "bad");
     }
 
-    // Boot guard
+    // Boot guard (protège la page)
     $("pillConn").textContent = "⏳ Vérif…";
-    const g = await bootGuard();
+    const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
+
     if(!g?.ok){
       $("pillConn").className = "pill bad";
       $("pillConn").textContent = "Bloqué ❌";
@@ -298,9 +279,7 @@
     }
 
     // Wait guard ready (évite sb null)
-    try{
-      await window.DIGIY_GUARD.ready(8000).catch(()=>true);
-    }catch(_){}
+    try{ await window.DIGIY_GUARD.ready(8000).catch(()=>true); }catch(_){}
 
     const sess = getSession();
     const phone = sess?.phone || "—";
@@ -313,7 +292,6 @@
 
     $("vSess").textContent = (sess?.ok ? "OK" : "—");
 
-    // Supabase status
     const sb = getSb();
     const sbOk = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
     $("vSb").textContent = sbOk ? "OK" : "Pas prêt";
