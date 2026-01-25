@@ -246,27 +246,36 @@
     }catch(_){ return null; }
   }
 
-  // ✅ Load existing photos from SQL
-  async function loadPhotos(){
-    note("⏳ Chargement photos…","warn");
+  // ✅ Load existing photos from SQL (SAFE: 0 ou 1 ligne)
+async function loadPhotos(){
+  note("⏳ Chargement photos…","warn");
 
-    const { data, error } = await sb
-      .from("digiy_loc_businesses")
-      .select("cover_url,gallery_urls,media_provider,photos_updated_at")
-      .eq("slug", slug)
-      .limit(1)
-      .single();
+  const { data, error } = await sb
+    .from("digiy_loc_businesses")
+    .select("cover_url,gallery_urls,media_provider,photos_updated_at")
+    .eq("slug", slug)
+    .limit(1)
+    .maybeSingle(); // ✅ au lieu de .single()
 
-    if(error) throw error;
+  if(error) throw error;
 
-    cover = data?.cover_url || null;
-    photos = Array.isArray(data?.gallery_urls) ? data.gallery_urls : [];
-
+  // si pas de ligne => business introuvable (ou RLS bloque la lecture)
+  if(!data){
+    cover = null;
+    photos = [];
     cacheSave();
     render();
-    note("","");
-
+    note("⚠️ Lieu introuvable (0 ligne) ou accès lecture bloqué. Tu peux quand même coller des URLs et sauvegarder.", "warn");
+    return;
   }
+
+  cover = data.cover_url || null;
+  photos = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
+
+  cacheSave();
+  render();
+  note("", "");
+}
 
   function render(){
     galleryEl.innerHTML = "";
