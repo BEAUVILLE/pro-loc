@@ -285,36 +285,27 @@
   }
 
   // ===== LOAD (TABLE DIRECT) =====
-  async function loadPhotos(){
-    note("⏳ Chargement photos…","warn");
+ async function loadPhotos(){
+  note("⏳ Chargement photos…","warn");
 
-    // ⚠️ IMPORTANT: .maybeSingle() évite l’erreur "Cannot coerce..."
-    const { data, error } = await sb
-      .from("digiy_loc_businesses")
-      .select("cover_url,gallery_urls")
-      .eq("slug", slug)
-      .limit(1)
-      .maybeSingle();
+  const { data, error } = await sb.rpc("digiy_loc_get_photos_owner", {
+    p_slug: slug,
+    p_owner_phone: ownerPhone
+  });
 
-    if(error) throw error;
+  if(error) throw error;
 
-    if(!data){
-      // 0 ligne (ou RLS bloque lecture)
-      cover = null;
-      photos = [];
-      cacheSave();
-      render();
-      note("⚠️ Lieu introuvable (0 ligne) ou accès lecture bloqué. Tu peux quand même coller des URLs et sauvegarder.", "warn");
-      return;
-    }
+  const res = (typeof data === "string") ? JSON.parse(data) : data;
+  if(!res?.ok) throw new Error(res?.reason || "load_failed");
 
-    cover = data.cover_url || null;
-    photos = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
+  cover = res.cover_url || null;
+  photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
 
-    cacheSave();
-    render();
-    note("✅ Photos chargées depuis Supabase.", "ok");
-  }
+  cacheSave();
+  render();
+  note("✅ Photos chargées depuis Supabase.", "ok");
+}
+
 
   // ===== ADD URL =====
   btnAdd.onclick = ()=>{
