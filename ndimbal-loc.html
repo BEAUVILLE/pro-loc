@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NDIMBAL LOC — Activation logement</title>
+<meta name="theme-color" content="#022c22"/>
+
+<!-- Supabase + Guard -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./guard.js?v=locpro-guard-final"></script>
 
 <style>
 body{
@@ -33,10 +38,10 @@ h1{margin:0 0 10px 0;font-size:20px}
   margin-top:14px;padding:12px 14px;border-radius:12px;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
 }
-.state{font-weight:800;font-size:15px}
+.state{font-weight:900;font-size:15px}
 button{
   margin-top:18px;width:100%;border:0;border-radius:12px;padding:12px;
-  font-weight:900;font-size:14px;background:#facc15;cursor:pointer;
+  font-weight:1000;font-size:14px;background:#facc15;cursor:pointer;
 }
 button.secondary{
   background:rgba(255,255,255,.08);
@@ -53,6 +58,7 @@ button.secondary{
   color:#fecaca;
   font-weight:900;
   display:none;
+  white-space:pre-wrap;
 }
 .ok{
   border-color:rgba(34,197,94,.35);
@@ -60,6 +66,7 @@ button.secondary{
   color:#bbf7d0;
 }
 .small{opacity:.85;font-size:12px;margin-top:6px}
+code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2px 6px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -69,8 +76,8 @@ button.secondary{
 
   <div class="desc">
     Active l’hospitalité NDIMBAL sur ton logement.<br>
-    1 nuit réservée = 2 nuits sur place<br>
-    2 nuits réservées = 3 nuits sur place.<br><br>
+    <b>1 nuit réservée → 2 nuits sur place</b><br>
+    <b>2 nuits réservées → 3 nuits sur place</b><br><br>
     Tu restes totalement libre. DIGIY ne finance rien.
   </div>
 
@@ -78,6 +85,8 @@ button.secondary{
     <div>Statut actuel</div>
     <div class="state" id="state">—</div>
   </div>
+
+  <div class="small" id="meta">slug: —</div>
 
   <div class="alert" id="alert"></div>
 
@@ -91,118 +100,189 @@ button.secondary{
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+(() => {
+  "use strict";
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const stateEl = document.getElementById("state");
+  const btn = document.getElementById("toggleBtn");
+  const alertEl = document.getElementById("alert");
+  const backBtn = document.getElementById("backBtn");
+  const metaEl = document.getElementById("meta");
 
-const slug = (new URLSearchParams(location.search).get("slug") || "").trim();
-const stateEl = document.getElementById("state");
-const btn = document.getElementById("toggleBtn");
-const alertEl = document.getElementById("alert");
-const backBtn = document.getElementById("backBtn");
+  const slug = (new URLSearchParams(location.search).get("slug") || "").trim();
 
-let pinId = null;
-let ndimbal = false;
+  // état local
+  let ndimbal = false;
+  let sb = null;
 
-function showAlert(msg, ok=false){
-  alertEl.textContent = msg;
-  alertEl.className = "alert" + (ok ? " ok" : "");
-  alertEl.style.display = msg ? "block" : "none";
-}
-
-function paint(){
-  stateEl.textContent = ndimbal ? "NDIMBAL ON" : "NDIMBAL OFF";
-  stateEl.style.color = ndimbal ? "#22c55e" : "#9ca3af";
-  btn.disabled = false;
-}
-
-function goBack(){
-  // adapte si ton cockpit c'est une autre page
-  const u = new URL("./pin.html", location.href);
-  if (slug) u.searchParams.set("slug", slug);
-  location.href = u.toString();
-}
-backBtn.addEventListener("click", goBack);
-
-async function requireSession(){
-  const { data, error } = await sb.auth.getUser();
-  if (error) return null;
-  return data?.user || null;
-}
-
-async function load(){
-  if(!slug){
-    stateEl.textContent = "Slug manquant";
-    showAlert("Ajoute ?slug=chez-astou-saly dans l’URL.", false);
-    btn.disabled = true;
-    return;
+  function showAlert(msg, ok=false){
+    alertEl.textContent = msg || "";
+    alertEl.className = "alert" + (ok ? " ok" : "");
+    alertEl.style.display = msg ? "block" : "none";
   }
 
-  // 1) session obligatoire
-  const user = await requireSession();
-  if(!user){
-    stateEl.textContent = "Accès privé";
-    btn.disabled = true;
-    showAlert("Tu dois être connecté (cockpit) pour gérer NDIMBAL.", false);
-
-    // on renvoie vers pin.html
-    btn.textContent = "Ouvrir le cockpit (PIN)";
+  function paint(){
+    stateEl.textContent = ndimbal ? "NDIMBAL ON" : "NDIMBAL OFF";
+    stateEl.style.color = ndimbal ? "#22c55e" : "#9ca3af";
     btn.disabled = false;
-    btn.onclick = goBack;
-    return;
   }
 
-  // 2) lecture réservée au proprio (RLS + filtre owner_user_id)
-  const { data, error } = await sb
-    .from("go_pins")
-    .select("id, ndimbal_enabled")
-    .eq("category","loc")
-    .eq("slug", slug)
-    .eq("owner_user_id", user.id)
-    .single();
+  function goBack(){
+    // cockpit = pin.html (guard conserve slug)
+    if (window.DIGIY_GUARD?.withSlug){
+      location.href = window.DIGIY_GUARD.withSlug("./pin.html");
+      return;
+    }
+    const u = new URL("./pin.html", location.href);
+    if (slug) u.searchParams.set("slug", slug);
+    location.href = u.toString();
+  }
+  backBtn.addEventListener("click", goBack);
 
-  if(error || !data){
-    stateEl.textContent = "Erreur accès";
+  async function bootGuard(){
+    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
+      return { ok:false, reason:"guard_missing" };
+    }
+    const r = await window.DIGIY_GUARD.boot({ login: "./pin.html" });
+    if(!r?.ok) return { ok:false, reason:"session_missing" };
+    return r;
+  }
+
+  async function getSb(){
+    if (window.DIGIY_GUARD?.getSbAsync) return await window.DIGIY_GUARD.getSbAsync();
+    if (window.DIGIY_GUARD?.getSb) return window.DIGIY_GUARD.getSb();
+    return null;
+  }
+
+  async function loadCurrent(){
+    // RPC recommandé: digiy_loc_get_ndimbal(p_slug) -> boolean OR {ok, enabled}
+    // Fallback: lecture directe go_pins (si RLS le permet)
+    try{
+      // 1) RPC read
+      const { data, error } = await sb.rpc("digiy_loc_get_ndimbal", { p_slug: slug });
+      if(error) throw error;
+
+      if (typeof data === "boolean") return { ok:true, enabled:data };
+      if (data && typeof data === "object" && "enabled" in data) return { ok: !!data.ok, enabled: !!data.enabled, reason: data.reason || null };
+
+      return { ok:false, reason:"bad_rpc_payload" };
+    }catch(e){
+      // 2) fallback direct table (si owner policy autorise)
+      try{
+        const { data, error } = await sb
+          .from("go_pins")
+          .select("ndimbal_enabled")
+          .eq("category","loc")
+          .eq("slug", slug)
+          .single();
+        if(error) throw error;
+        return { ok:true, enabled: !!data?.ndimbal_enabled };
+      }catch(err2){
+        return { ok:false, reason: (e?.message || err2?.message || "load_failed") };
+      }
+    }
+  }
+
+  async function setNdimbal(newState){
+    // RPC recommandé: digiy_loc_set_ndimbal(p_slug, p_enabled) -> {ok, enabled, reason?}
+    // Fallback direct update go_pins si RLS le permet
+    try{
+      const { data, error } = await sb.rpc("digiy_loc_set_ndimbal", { p_slug: slug, p_enabled: newState });
+      if(error) throw error;
+
+      if (data && typeof data === "object"){
+        if (data.ok === true) return { ok:true, enabled: !!data.enabled };
+        return { ok:false, reason: data.reason || "rpc_not_ok" };
+      }
+      // si rpc renvoie boolean
+      if (typeof data === "boolean") return { ok:true, enabled:data };
+
+      return { ok:false, reason:"bad_rpc_payload" };
+    }catch(e){
+      // fallback update direct
+      try{
+        const { error } = await sb
+          .from("go_pins")
+          .update({ ndimbal_enabled: newState })
+          .eq("category","loc")
+          .eq("slug", slug);
+        if(error) throw error;
+        return { ok:true, enabled:newState };
+      }catch(err2){
+        return { ok:false, reason: (e?.message || err2?.message || "update_failed") };
+      }
+    }
+  }
+
+  async function toggle(){
     btn.disabled = true;
-    showAlert("Impossible de charger ce logement.\nSoit tu n’es pas le propriétaire, soit la session a expiré.", false);
-    return;
+    showAlert("⏳ Mise à jour NDIMBAL…", false);
+
+    const target = !ndimbal;
+    const r = await setNdimbal(target);
+
+    btn.disabled = false;
+
+    if(!r.ok){
+      showAlert("❌ Impossible de modifier NDIMBAL.\nDétail: " + (r.reason || "droits/session"), false);
+      return;
+    }
+
+    ndimbal = !!r.enabled;
+    paint();
+    showAlert(ndimbal ? "✅ NDIMBAL activé." : "✅ NDIMBAL désactivé.", true);
   }
 
-  pinId = data.id;
-  ndimbal = !!data.ndimbal_enabled;
-  paint();
-  showAlert("", false);
-}
+  btn.addEventListener("click", toggle);
 
-async function toggle(){
-  if(!pinId) return;
+  async function init(){
+    metaEl.textContent = "slug: " + (slug || "—");
 
-  const newState = !ndimbal;
-  btn.disabled = true;
+    if(!slug){
+      stateEl.textContent = "Slug manquant";
+      showAlert("Ajoute ?slug=chez-astou-saly dans l’URL.", false);
+      btn.disabled = true;
+      return;
+    }
 
-  const { error } = await sb
-    .from("go_pins")
-    .update({ ndimbal_enabled: newState })
-    .eq("id", pinId);
+    // ✅ Guard obligatoire (ton monde à toi)
+    const boot = await bootGuard();
+    if(!boot.ok){
+      stateEl.textContent = "Accès privé";
+      btn.disabled = false;
+      btn.textContent = "Ouvrir le cockpit (PIN)";
+      btn.onclick = goBack;
+      showAlert("Tu dois être connecté (PIN) pour gérer NDIMBAL.", false);
+      return;
+    }
 
-  btn.disabled = false;
+    sb = await getSb();
+    if(!sb){
+      stateEl.textContent = "Supabase KO";
+      showAlert("Supabase pas prêt (guard). Recharge ou reconnecte-toi.", false);
+      btn.disabled = true;
+      return;
+    }
 
-  if(error){
-    showAlert("Impossible de modifier NDIMBAL (droits / session).", false);
-    return;
+    // Charge état actuel
+    showAlert("⏳ Lecture NDIMBAL…", false);
+    const cur = await loadCurrent();
+
+    if(!cur.ok){
+      stateEl.textContent = "Erreur accès";
+      btn.disabled = true;
+      showAlert("Impossible de charger ce logement.\nDétail: " + (cur.reason || "RLS/RPC manquant"), false);
+      return;
+    }
+
+    ndimbal = !!cur.enabled;
+    paint();
+    showAlert("", false);
   }
 
-  ndimbal = newState;
-  paint();
-  showAlert(ndimbal ? "✅ NDIMBAL activé." : "✅ NDIMBAL désactivé.", true);
-}
-
-btn.addEventListener("click", toggle);
-load();
+  init();
+})();
 </script>
 
 </body>
