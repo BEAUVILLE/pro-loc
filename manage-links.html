@@ -111,7 +111,7 @@
 
       <div class="row" style="margin-top:12px">
         <a class="btn" id="btnOpenApp" href="#">🏠 Ouvrir APP</a>
-        <a class="btn" id="btnOpenPublic" href="#">👁️ GO PIN public</a>
+        <a class="btn" id="btnOpenPublic" href="#">👁️ Fiche publique</a>
         <a class="btn" id="btnOpenPin" href="#">🔑 Accès (PIN)</a>
       </div>
 
@@ -186,12 +186,10 @@
     return p ? p.slice(-4) : "";
   }
 
-  function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
-        || window.DIGIY_GUARD?.getSupabase?.()
-        || window.DIGIY_GUARD?.sb
-        || window.sb
-        || null;
+  async function getSB(){
+    // ✅ préfère async (évite sb null)
+    if(window.DIGIY_GUARD?.getSbAsync) return await window.DIGIY_GUARD.getSbAsync();
+    return window.DIGIY_GUARD?.getSb?.() || window.sb || null;
   }
 
   // ---------------------------
@@ -200,20 +198,24 @@
   const slug = getSlug();
   $("pillSlug").textContent = "slug : " + (slug || "—");
 
-  const backUrl = withSlug("./app.html");
-  $("btnBack").href = backUrl;
+  // ✅ Pages (mets ici tes vrais noms de fichiers)
+  const PAGE_APP    = "./index.html";   // cockpit pro
+  const PAGE_PUBLIC = "./listing.html"; // fiche client "Voir la fiche"
+  const PAGE_PIN    = "./pin.html";     // accès PIN
 
-  // Raccord app/public/pin (slug conservé)
-  const appUrl = new URL("./app.html", location.href);
-  const pubUrl = new URL("./go-pin-public.html", location.href);
-  const pinUrl = new URL("./pin.html", location.href);
+  // ✅ URLs finales avec slug
+  const appUrl = new URL(PAGE_APP, location.href);
+  const publicUrl = new URL(PAGE_PUBLIC, location.href);
+  const pinUrl = new URL(PAGE_PIN, location.href);
   if(slug){
     appUrl.searchParams.set("slug", slug);
-    pubUrl.searchParams.set("slug", slug);
+    publicUrl.searchParams.set("slug", slug);
     pinUrl.searchParams.set("slug", slug);
   }
+
+  $("btnBack").href = appUrl.toString();
   $("btnOpenApp").href = appUrl.toString();
-  $("btnOpenPublic").href = pubUrl.toString();
+  $("btnOpenPublic").href = publicUrl.toString();
   $("btnOpenPin").href = pinUrl.toString();
   $("qrAppUrl").textContent = appUrl.toString();
 
@@ -303,12 +305,12 @@
   }
 
   async function loadLinks(){
-    const sb = getSB();
+    const sb = await getSB();
     if(!sb) return show("❌ Supabase pas prêt (sb null). Recharge.", "bad");
-    if(!slug) return show("❌ slug manquant. Ouvre depuis le cockpit (bouton Liens/QR).", "bad");
+    if(!slug) return show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
 
     const { sess, phone, pin4 } = getCreds();
-    if(!sess?.ok || !phone) return show("⚠️ Session manquante. Retourne sur PIN et reconnecte-toi.", "bad");
+    if(!sess?.ok || !phone) return show("⚠️ Session manquante. Retourne sur PIN.", "bad");
 
     show("⏳ Chargement…", "warn");
 
@@ -327,7 +329,7 @@
   }
 
   async function saveLinks(){
-    const sb = getSB();
+    const sb = await getSB();
     if(!sb) return show("❌ Supabase pas prêt (sb null).", "bad");
     if(!slug) return show("❌ slug manquant.", "bad");
 
@@ -351,9 +353,10 @@
   }
 
   // ---------------------------
-  // QR download (simple)
+  // QR download (png)
   // ---------------------------
   function downloadQr(label, url){
+    // ✅ Simple et universel (Google Chart)
     const api = "https://chart.googleapis.com/chart?cht=qr&chs=600x600&chld=M|0&chl=" + encodeURIComponent(url);
     const a = document.createElement("a");
     a.href = api;
@@ -368,7 +371,7 @@
   // UI bind
   // ---------------------------
   $("btnAdd").addEventListener("click", ()=>{
-    LINKS.push({ order: 100, label:"Commander / Réserver", url:"https://", active:true });
+    LINKS.push({ order: 100, label:"WhatsApp", url:"https://wa.me/221XXXXXXXXX", active:true });
     render();
   });
 
@@ -383,11 +386,11 @@
   $("btnSave").addEventListener("click", saveLinks);
 
   $("btnQrApp").addEventListener("click", ()=> downloadQr("app", appUrl.toString()));
-  $("btnQrPublic").addEventListener("click", ()=> downloadQr("public", pubUrl.toString()));
+  $("btnQrPublic").addEventListener("click", ()=> downloadQr("public", publicUrl.toString()));
   $("btnQrPin").addEventListener("click", ()=> downloadQr("acces", pinUrl.toString()));
 
   // ---------------------------
-  // INIT UX (auto)
+  // INIT
   // ---------------------------
   const sess = window.DIGIY_GUARD?.getSession?.() || null;
   const phone = normPhone(sess?.phone || "");
@@ -399,11 +402,10 @@
 
   render();
 
-  if(!slug) show("❌ slug manquant. Ouvre depuis le cockpit (bouton Liens/QR).", "bad");
+  if(!slug) show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
   else if(!sess?.ok) show("❌ Session manquante. Reconnecte-toi via PIN.", "bad");
   else {
-    show("✅ Prêt. J’ai tout récupéré via le Guard. (Chargement auto…)", "ok");
-    // auto load
+    show("✅ Prêt. Chargement auto…", "ok");
     loadLinks();
   }
 })();
