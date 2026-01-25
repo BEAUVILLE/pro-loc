@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>DIGIY LOC PRO — Photos</title>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Guard (cache-bust) -->
-  <script src="./guard.js?v=locpro-photos-FINAL-001"></script>
+  <script src="./guard.js?v=locpro-photos-FINAL-002"></script>
 
   <style>
     :root{
@@ -29,7 +26,7 @@
       color:var(--text);
       min-height:100vh;
     }
-    .wrap{max-width:720px;margin:auto;padding:18px}
+    .wrap{max-width:760px;margin:auto;padding:18px}
     h1{font-size:1.4rem;margin-bottom:6px}
     p{color:var(--muted);margin-bottom:14px;line-height:1.35}
 
@@ -56,6 +53,7 @@
       border:1px solid rgba(250,204,21,0.35);
       color:#fff;
     }
+    .btn:disabled{opacity:.6;cursor:not-allowed}
 
     .gallery{
       display:grid;
@@ -70,6 +68,7 @@
       aspect-ratio:1/1;
       border:1px solid rgba(250,204,21,0.14);
       background:#022c22;
+      user-select:none;
     }
     .tile img{
       width:100%;height:100%;
@@ -95,6 +94,7 @@
       border-radius:999px;
       border:1px solid rgba(250,204,21,0.35);
       font-weight:800;
+      z-index:3;
     }
 
     .iconbtn{
@@ -105,9 +105,35 @@
       border:none;
       font-weight:900;
       cursor:pointer;
-      background:rgba(239,68,68,.75);
+      background:rgba(239,68,68,.80);
       color:#fff;
+      z-index:4;
     }
+
+    .menu{
+      position:absolute;
+      left:8px; right:8px; bottom:8px;
+      display:flex; gap:6px; flex-wrap:wrap;
+      z-index:4;
+    }
+    .chip{
+      flex:1;
+      border-radius:12px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.55);
+      color:#fff;
+      padding:8px 10px;
+      font-weight:950;
+      cursor:pointer;
+      min-height:38px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .chip.gold{border-color:rgba(250,204,21,.35)}
+    .chip.ok{border-color:rgba(34,197,94,.35)}
+    .chip:disabled{opacity:.55;cursor:not-allowed}
 
     .note{
       margin-top:10px;
@@ -121,6 +147,7 @@
     .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0}
     .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca}
     .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+
     .mini{margin-top:10px;color:var(--muted);font-size:.9rem}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
     .help{
@@ -131,6 +158,10 @@
     }
     .help b{color:#fff}
     .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:12px}
+
+    @media(max-width:520px){
+      .gallery{grid-template-columns:repeat(2,1fr)}
+    }
   </style>
 </head>
 
@@ -157,6 +188,7 @@
       ✅ Cache offline : on garde une copie légère (URLs) en LocalStorage si le réseau saute.<br/>
       ⛔️ On ne stocke jamais les images (pas de base64).<br/><br/>
       📲 Fallback terrain : si le pro galère, il envoie sur WhatsApp DIGIY → upload WordPress Media → tu colles l’URL ici.
+      <br/>💡 Astuce : images en <b>https</b> et idéalement “.jpg/.png/.webp”.
     </div>
   </div>
 
@@ -166,6 +198,9 @@
 (async function(){
   "use strict";
 
+  // -----------------------------
+  // Guard
+  // -----------------------------
   const boot = await window.DIGIY_GUARD.boot({
     module:"loc",
     dashboard:"./photos.html",
@@ -192,7 +227,11 @@
   if(!slug) return alert("❌ slug manquant. Ouvre la page avec ?slug=...");
   if(!ownerPhone) return alert("❌ Téléphone manquant en session. Reconnecte-toi via PIN.");
 
-  const LS_KEY = "DIGIY_LOC_PHOTOS_CACHE_V1";
+  // -----------------------------
+  // State + cache
+  // -----------------------------
+  const LS_BASE = "DIGIY_LOC_PHOTOS_CACHE_V2";
+  const LS_KEY = LS_BASE + ":" + slug;
 
   let photos = [];
   let cover = null;
@@ -203,18 +242,43 @@
     noteEl.textContent = msg || "";
   }
 
-  function isHttpsUrl(u){
+  function cacheSave(){
     try{
-      const x = new URL(String(u||"").trim());
-      return x.protocol === "https:" && !!x.hostname;
-    }catch{ return false; }
+      const payload = { v:2, slug, cover, photos, ts: Date.now() };
+      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    }catch(_){}
+  }
+  function cacheLoad(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return null;
+      const j = JSON.parse(raw);
+      if(!j || j.slug !== slug) return null;
+      return j;
+    }catch(_){ return null; }
+  }
+
+  // -----------------------------
+  // URL validation (safe terrain)
+  // -----------------------------
+  function safeUrl(u){
+    const t = String(u||"").trim();
+    if(!t) return "";
+    const low = t.toLowerCase();
+    if(low.startsWith("javascript:") || low.startsWith("data:")) return "";
+    try{
+      const x = new URL(t);
+      if(x.protocol !== "https:") return "";
+      if(!x.hostname) return "";
+      return x.toString();
+    }catch{ return ""; }
   }
 
   function uniq(arr){
     const s = new Set();
     const out = [];
-    for(const x of arr){
-      const v = String(x||"").trim();
+    for(const x of (arr||[])){
+      const v = safeUrl(x);
       if(!v) continue;
       if(s.has(v)) continue;
       s.add(v);
@@ -223,64 +287,156 @@
     return out;
   }
 
-  function cacheSave(){
-    try{
-      const payload = { slug, cover, photos, ts: Date.now() };
-      localStorage.setItem(LS_KEY + ":" + slug, JSON.stringify(payload));
-    }catch(_){}
+  async function probeImage(url){
+    // vérifie que l’image charge avant de l’ajouter
+    return new Promise((resolve)=>{
+      const img = new Image();
+      const timer = setTimeout(()=>{ try{ img.src=""; }catch(_){} resolve(false); }, 4500);
+      img.onload = ()=>{ clearTimeout(timer); resolve(true); };
+      img.onerror = ()=>{ clearTimeout(timer); resolve(false); };
+      img.referrerPolicy = "no-referrer";
+      img.src = url;
+    });
   }
-  function cacheLoad(){
-    try{
-      const raw = localStorage.getItem(LS_KEY + ":" + slug);
-      if(!raw) return null;
-      return JSON.parse(raw);
-    }catch(_){ return null; }
+
+  function setBusy(on){
+    btnAdd.disabled = !!on;
+    btnSave.disabled = !!on;
+    btnSave.textContent = on ? "⏳ Sauvegarde..." : "💾 Sauvegarder";
+  }
+
+  // -----------------------------
+  // Render DOM SAFE (pas de template html avec URL)
+  // -----------------------------
+  function clearEl(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+  function make(tag, attrs){
+    const el = document.createElement(tag);
+    if(attrs){
+      for(const [k,v] of Object.entries(attrs)){
+        if(k==="class") el.className = v;
+        else if(k==="text") el.textContent = v;
+        else el.setAttribute(k, String(v));
+      }
+    }
+    return el;
+  }
+
+  function swap(arr, i, j){
+    if(i<0 || j<0 || i>=arr.length || j>=arr.length) return;
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
   }
 
   function render(){
-    galleryEl.innerHTML = "";
+    clearEl(galleryEl);
 
     const all = [];
-    if(cover) all.push({url:cover,cover:true});
-    photos.forEach(u => all.push({url:u,cover:false}));
+    if(cover) all.push({url:cover, cover:true});
+    for(const u of photos) all.push({url:u, cover:false});
 
     if(!all.length){
-      galleryEl.innerHTML = `
-        <div class="tile"><div class="empty">+</div></div>
-        <div class="tile"><div class="empty">+</div></div>
-        <div class="tile"><div class="empty">+</div></div>
-      `;
-      galleryEl.querySelectorAll(".tile").forEach(t=>{
-        t.onclick = ()=> btnAdd.click();
-      });
+      for(let k=0;k<3;k++){
+        const tile = make("div",{class:"tile"});
+        const empty = make("div",{class:"empty", text:"+"});
+        tile.appendChild(empty);
+        tile.addEventListener("click", ()=> btnAdd.click());
+        galleryEl.appendChild(tile);
+      }
       return;
     }
 
-    all.forEach((p,idx)=>{
-      const tile = document.createElement("div");
-      tile.className="tile";
-      tile.innerHTML = `
-        ${p.cover ? `<div class="badge">Cover</div>` : ``}
-        <button class="iconbtn" title="Supprimer">✕</button>
-        <img src="${p.url}" alt="Photo">
-      `;
+    all.forEach((p, idx)=>{
+      const tile = make("div",{class:"tile"});
 
-      tile.querySelector(".iconbtn").onclick = ()=>{
+      if(p.cover){
+        tile.appendChild(make("div",{class:"badge", text:"Cover"}));
+      }
+
+      // delete
+      const del = make("button",{class:"iconbtn", title:"Supprimer", type:"button"});
+      del.textContent = "✕";
+      del.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
         if(p.cover){
-          cover=null;
+          cover = null;
         }else{
           const i = cover ? (idx - 1) : idx;
-          if(i >= 0) photos.splice(i, 1);
+          if(i>=0) photos.splice(i,1);
         }
+        photos = uniq(photos).slice(0, 12);
         cacheSave();
         render();
-      };
+        note("🧹 Supprimé (local). Pense à Sauvegarder.", "warn");
+      });
+      tile.appendChild(del);
 
+      // img (safe)
+      const img = new Image();
+      img.alt = "Photo";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.referrerPolicy = "no-referrer";
+      img.src = p.url;
+      tile.appendChild(img);
+
+      // menu actions
+      const menu = make("div",{class:"menu"});
+
+      // Set cover
+      const setCoverBtn = make("button",{class:"chip gold", type:"button"});
+      setCoverBtn.textContent = p.cover ? "⭐ Cover" : "⭐ Mettre cover";
+      setCoverBtn.disabled = !!p.cover;
+      setCoverBtn.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        if(p.cover) return;
+        const u = p.url;
+        photos = photos.filter(x=>x!==u);
+        if(cover) photos.unshift(cover);
+        cover = u;
+        photos = uniq(photos).slice(0, 12);
+        cacheSave();
+        render();
+        note("✅ Cover mise à jour (local). Pense à Sauvegarder.", "ok");
+      });
+      menu.appendChild(setCoverBtn);
+
+      // Move up/down (sur galerie)
+      const up = make("button",{class:"chip", type:"button"});
+      up.textContent = "⬆️";
+      const down = make("button",{class:"chip", type:"button"});
+      down.textContent = "⬇️";
+
+      // Position dans photos[] (cover exclue)
+      const pIndex = p.cover ? -1 : (cover ? (idx-1) : idx);
+
+      // Désactive si cover ou hors range
+      up.disabled = p.cover || pIndex <= 0;
+      down.disabled = p.cover || pIndex < 0 || pIndex >= photos.length-1;
+
+      up.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        swap(photos, pIndex, pIndex-1);
+        cacheSave();
+        render();
+      });
+      down.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        swap(photos, pIndex, pIndex+1);
+        cacheSave();
+        render();
+      });
+
+      menu.appendChild(up);
+      menu.appendChild(down);
+
+      tile.appendChild(menu);
       galleryEl.appendChild(tile);
     });
   }
 
-  // ✅ LOAD via RPC EXISTANTE
+  // -----------------------------
+  // RPC load/save
+  // -----------------------------
   async function loadPhotos(){
     note("⏳ Chargement photos…","warn");
 
@@ -288,49 +444,60 @@
       p_slug: slug,
       p_owner_phone: ownerPhone
     });
-
     if(error) throw error;
 
     const res = (typeof data === "string") ? JSON.parse(data) : data;
     if(!res?.ok) throw new Error(res?.reason || "load_failed");
 
-    cover = res.cover_url || null;
-    photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
+    cover = safeUrl(res.cover_url) || null;
+    photos = uniq(Array.isArray(res.gallery_urls) ? res.gallery_urls : []).slice(0, 12);
 
     cacheSave();
     render();
     note("✅ Photos chargées depuis Supabase.", "ok");
   }
 
-  // ✅ ADD url
-  btnAdd.onclick = ()=>{
-    const url = prompt("Colle une URL image (https://...)");
-    if(!url) return;
-    const u = url.trim();
+  // Add URL (avec probe)
+  btnAdd.addEventListener("click", async ()=>{
+    const raw = prompt("Colle une URL image (https://...)");
+    if(!raw) return;
 
-    if(!isHttpsUrl(u)){
-      note("⚠️ URL invalide. Il faut https://...", "warn");
+    const u = safeUrl(raw);
+    if(!u){
+      note("⚠️ URL invalide. Il faut https://... (pas de data:, pas de http).", "warn");
+      return;
+    }
+
+    note("⏳ Vérification de l’image…", "warn");
+    const ok = await probeImage(u);
+    if(!ok){
+      note("❌ Image non chargeable. Vérifie l’URL (ou accès privé).", "bad");
       return;
     }
 
     if(!cover){
       cover = u;
+      note("✅ Cover définie.", "ok");
     }else{
       photos.push(u);
       photos = uniq(photos).slice(0, 12);
+      note("✅ Ajouté à la galerie (local). Clique Sauvegarder.", "ok");
     }
+
     cacheSave();
     render();
-    note("✅ Ajouté (local). Clique Sauvegarder pour pousser SQL.", "ok");
-  };
+  });
 
-  // ✅ SAVE via RPC EXISTANTE
-  btnSave.onclick = async ()=>{
+  // Save (RPC)
+  btnSave.addEventListener("click", async ()=>{
+    setBusy(true);
     try{
       note("⏳ Sauvegarde…","warn");
 
-      const cleanCover = isHttpsUrl(cover) ? cover.trim() : null;
-      const cleanGallery = uniq((photos||[]).filter(isHttpsUrl)).slice(0, 12);
+      const cleanCover = safeUrl(cover) || null;
+      const cleanGallery = uniq(photos).slice(0, 12);
+
+      const before = { cover, photos: [...photos] };
 
       const { data, error } = await sb.rpc("digiy_loc_set_photos_owner", {
         p_slug: slug,
@@ -345,24 +512,29 @@
 
       cover = cleanCover;
       photos = cleanGallery;
-      cacheSave();
 
+      cacheSave();
+      render();
       note("✅ Photos sauvegardées avec succès.", "ok");
     }catch(e){
       console.error(e);
       note("❌ Erreur save: " + (e?.message || e), "bad");
+    }finally{
+      setBusy(false);
     }
-  };
+  });
 
-  // GO (SQL first, fallback cache)
+  // -----------------------------
+  // GO: load SQL, fallback cache
+  // -----------------------------
   try{
     await loadPhotos();
   }catch(e){
     console.error(e);
     const cached = cacheLoad();
     if(cached){
-      cover = cached.cover || null;
-      photos = Array.isArray(cached.photos) ? cached.photos : [];
+      cover = safeUrl(cached.cover) || null;
+      photos = uniq(Array.isArray(cached.photos) ? cached.photos : []).slice(0, 12);
       render();
       note("⚠️ Supabase KO / lecture bloquée. Cache local chargé. Clique Sauvegarder plus tard.", "warn");
     }else{
