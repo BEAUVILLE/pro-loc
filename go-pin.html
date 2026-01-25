@@ -160,22 +160,27 @@
   <footer>GO PIN · DIGIY LOC ♾️</footer>
 </div>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (() => {
   "use strict";
-  console.log("GO-PIN VERSION:", "2026-01-21-proid-bridge-FINAL");
+  console.log("GO-PIN VERSION:", "2026-01-25-go-pin-FIXED-redirect-slug");
 
   /* =========================
-     CONFIG
+     CONFIG (URLs)
+     - GALLERY_URL: page publique digiy-loc
+     - LOC_PRO_BASE: base digiy-loc-pro
+     - PIN_PAGE: page PIN pro (dans digiy-loc-pro)
   ========================= */
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-  const GALLERY_URL = "https://beauville.github.io/digiy-loc/";
-  const LOC_PRO_URL = "https://beauville.github.io/digiy-loc-pro/";
-  const PIN_PAGE    = "https://beauville.github.io/digiy-loc-pro/pin.html";
-  const TEAM_WA     = "+221771342889";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+
+  const GALLERY_URL  = "https://beauville.github.io/digiy-loc/";
+  const LOC_PRO_BASE = "https://beauville.github.io/digiy-loc-pro/";
+  const PIN_PAGE     = "https://beauville.github.io/digiy-loc-pro/pin.html"; // ✅ toujours cette page
+  const TEAM_WA      = "+221771342889";
 
   /* =========================
      UI refs
@@ -187,12 +192,14 @@
   const stSmall = document.getElementById("stSmall");
   const btnBack = document.getElementById("btnBack");
   const btnWa = document.getElementById("btnWa");
-  btnBack.href = GALLERY_URL || LOC_PRO_URL;
+
+  btnBack.href = GALLERY_URL || LOC_PRO_BASE;
 
   /* =========================
      Helpers
   ========================= */
   function digits(v){ return String(v || "").replace(/\D/g,""); }
+
   function openWa(phone, msg){
     const d = digits(phone);
     if (!d) return;
@@ -215,19 +222,37 @@
     }
   }
 
+  // ✅ slug clean robuste (même logique terrain que guard)
   function cleanSlug(s){
     const x = String(s || "").trim();
-    if (!x) return "";
-    return x.toLowerCase().replace(/[^a-z0-9\-_]/g,"");
-  }
-
-  function redirectToPin(slug){
-    const url = PIN_PAGE + "?slug=" + encodeURIComponent(slug);
-    location.replace(url);
+    if(!x) return "";
+    return x
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"")
+      .replace(/-+/g,"-")
+      .replace(/^_+|_+$/g,"");
   }
 
   function safeSet(k,v){
-    try{ localStorage.setItem(k, String(v ?? "")); }catch(e){ console.warn("localStorage blocked", e); }
+    try{ localStorage.setItem(k, String(v ?? "")); }
+    catch(e){ console.warn("localStorage blocked", e); }
+  }
+
+  function toUrl(base){
+    try{ return new URL(base, location.href); }catch(_){ return null; }
+  }
+
+  function redirectToPin(slug){
+    const u = toUrl(PIN_PAGE);
+    if(!u) return;
+    u.searchParams.set("slug", slug);
+    location.replace(u.toString());
+  }
+
+  function redirectToLocPro(slug){
+    // ✅ IMPORTANT: ne jamais envoyer sur la racine (perte slug)
+    redirectToPin(slug);
   }
 
   async function resolveProIdFromSlug(sb, slug){
@@ -306,17 +331,17 @@
       return;
     }
 
-    const pin = r.data;
-    const title = pin.title || pin.slug;
+    const pinRow = r.data;
+    const title = pinRow.title || pinRow.slug;
 
-    if (pin.category && String(pin.category).toLowerCase() !== "loc"){
+    if (pinRow.category && String(pinRow.category).toLowerCase() !== "loc"){
       ttl.textContent = "PIN non compatible";
       sub.textContent = "Ce PIN n’est pas un logement (catégorie différente).";
       setStatus("err","Catégorie différente","Retour galerie.");
       return;
     }
 
-    if (!pin.is_active){
+    if (!pinRow.is_active){
       ttl.textContent = title;
       sub.textContent = "Ce logement est en pause pour le moment.";
       setStatus("err","Logement inactif","Retour galerie ou contacte DIGIY.");
@@ -334,6 +359,7 @@
       return;
     }
 
+    // ✅ STOCKAGE (références globales)
     safeSet("DIGIY_PRO_ID", brid.row.pro_id);
     safeSet("DIGIY_SLUG", slug);
     safeSet("DIGIY_TITLE", title);
@@ -342,20 +368,21 @@
 
     console.log("✅ STORED DIGIY_PRO_ID =", localStorage.getItem("DIGIY_PRO_ID"));
 
-    // Private -> pro
-    if (!pin.is_public){
-      ttl.textContent = title;
+    // ✅ IMPORTANT: que ce soit public OU propriétaire -> on va toujours vers pin.html?slug=...
+    // - Si public: pin.html sera l'accès "4 derniers chiffres"
+    // - Si privé: pin.html gère le PIN propriétaire (via verify_access_pin)
+    ttl.textContent = title;
+
+    if (!pinRow.is_public){
       sub.textContent = "Ce PIN est réservé (accès propriétaire).";
       setStatus("warn","Accès propriétaire","Redirection vers l’espace PRO…");
-      setTimeout(()=> location.replace(LOC_PRO_URL), 900);
+      setTimeout(()=> redirectToLocPro(slug), 900);  // ✅ plus de perte de slug
       return;
     }
 
-    // Public -> pin
-    ttl.textContent = title;
     sub.textContent = "Accès public OK + pro_id OK. Redirection…";
     setStatus("ok","Accès validé","On t’ouvre la fiche PIN maintenant.");
-    setTimeout(()=> redirectToPin(slug), 2500);
+    setTimeout(()=> redirectToPin(slug), 1200);
   });
 })();
 </script>
