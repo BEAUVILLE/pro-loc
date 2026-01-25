@@ -361,17 +361,17 @@
     const url = new URL(window.location.href);
     const Q = (k)=> (url.searchParams.get(k) || "").trim();
 
-    const SLUG = Q("slug") || ""; // ✅ slug-first
+    const SLUG = Q("slug") || "";
     const todayISO = new Date().toISOString().slice(0,10);
     const DATE = (Q("date") || todayISO);
 
-    // fallback debug
+    // fallback debug (si qqn force ?business=CODE)
     let BUSINESS = (Q("business") || "").toUpperCase();
 
     // =============================
     // GUARD HELPERS
     // =============================
-    const MODULE = "loc"; // 🔥 cohérent avec le reste de LOC PRO
+    const MODULE = "loc"; // ✅ cohérent LOC PRO
     const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
 
     const $ = (id)=>document.getElementById(id);
@@ -382,7 +382,7 @@
           await window.DIGIY_GUARD.boot({
             module: MODULE,
             dashboard: "./index.html",
-            login: "./pin.html",        // ✅ FIX: chez toi c’est pin.html
+            login: "./pin.html",
             pay: PAY_URL,
             requireSlug: true,
             checkSubscription: true
@@ -526,7 +526,7 @@
       const u = new URL(window.location.href);
       if(SLUG) u.searchParams.set("slug", SLUG);
       if(DATE) u.searchParams.set("date", DATE);
-      if(BUSINESS) u.searchParams.set("business", BUSINESS);
+      if(BUSINESS) u.searchParams.set("business", BUSINESS); // debug/optionnel
       return u.toString();
     }
 
@@ -576,52 +576,65 @@ Ouvrir: ${link}`;
     let LAST_DATA = null;
 
     // =============================
+    // SQL BRIDGE: slug -> business_code
+    // (nécessite la fonction SQL digiy_loc_get_business_code_by_slug(p_slug text) returns text)
+    // =============================
+    async function resolveBusinessFromSlug(sb, slug){
+      if(!slug) return "";
+      const { data, error } = await sb.rpc("digiy_loc_get_business_code_by_slug", { p_slug: slug });
+      if(error) throw error;
+      return (data || "").toString().trim().toUpperCase();
+    }
+
+    // =============================
     // DATA LOAD
     // =============================
     async function loadData(){
       refreshNetwork();
       $("todayLabel").textContent = fmtDateFRFromISO(DATE);
 
+      // 1) boot guard (si présent)
       await guardBoot();
 
-      // BUSINESS auto depuis session (si dispo)
+      // 2) BUSINESS auto depuis session guard (si dispo)
       try{
         const sess = window.DIGIY_GUARD?.getSession?.() || null;
         const bc = (sess?.business_code || sess?.businessCode || "").toString().trim().toUpperCase();
         if(bc) BUSINESS = bc;
       }catch(_){}
 
+      // 3) supabase client
+      const sb = getSB() || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // 4) business code label (pré-affichage)
       $("businessCode").textContent = "CODE • " + (BUSINESS || "—");
 
+      // 5) on a besoin de slug OU business
       if(!SLUG && !BUSINESS){
         renderEmpty("Paramètre manquant. Mets ?slug=chez-astou-saly (recommandé) ou ?business=CODE.");
         return;
       }
 
-      const sb = getSB() || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
       try{
-        // ✅ RPC ultra-robuste: tente p_slug puis fallback business_code
-        let data = null;
-
-        // 1) slug-first
-        if(SLUG){
-          const r1 = await sb.rpc("digiy_loc_get_listing_day", { p_slug: SLUG, p_date: DATE });
-          if(!r1.error){
-            data = r1.data;
-          }
+        // ✅ slug-first MAIS la function listing est business_code-only
+        if(!BUSINESS && SLUG){
+          BUSINESS = await resolveBusinessFromSlug(sb, SLUG);
         }
 
-        // 2) fallback business_code
-        if(!data){
-          if(!BUSINESS){
-            renderEmpty("business_code introuvable. Reconnecte-toi via PIN.");
-            return;
-          }
-          const r2 = await sb.rpc("digiy_loc_get_listing_day", { p_business_code: BUSINESS, p_date: DATE });
-          if(r2.error) throw r2.error;
-          data = r2.data;
+        if(!BUSINESS){
+          renderEmpty("business_code introuvable. Vérifie le slug (ou reconnecte-toi via PIN).");
+          return;
         }
+
+        $("businessCode").textContent = "CODE • " + BUSINESS;
+
+        // ✅ Appel officiel (celle qui existe)
+        const { data, error } = await sb.rpc("digiy_loc_get_listing_day", {
+          p_business_code: BUSINESS,
+          p_date: DATE
+        });
+
+        if(error) throw error;
 
         LAST_DATA = data;
         renderAll(data);
