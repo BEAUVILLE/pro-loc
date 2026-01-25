@@ -2,89 +2,238 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>DIGIY LOC • Tarifs</title>
+  <meta name="theme-color" content="#16a34a"/>
+
+  <!-- ✅ UI -->
   <link rel="stylesheet" href="./ui.css">
+
+  <!-- ✅ Supabase + Guard -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-tarifs-FINAL-001"></script>
 </head>
 
 <body>
 <div class="wrap">
+
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="brand">
-      <div class="ico">🏠</div>
+      <div class="ico">🏷️</div>
       <div>
         <div class="title">DIGIY LOC • PRO</div>
-        <div class="sub">Tarifs — finition intérieure</div>
+        <div class="sub">Tarifs — prix direct propriétaire</div>
       </div>
     </div>
+
     <div class="actions">
-      <div class="pill" onclick="location.href='index.html'">← Dashboard</div>
+      <div class="pill" id="pillSlug">slug: —</div>
+      <div class="pill" onclick="go('./index.html')">← Cockpit</div>
       <div class="pill" onclick="location.href='https://beauville.github.io/mon-espace-digiy/?choose=1'">🦅 Menu</div>
     </div>
   </div>
 
+  <!-- NAV -->
   <div class="nav">
-    <a href="planning.html">📅 Planning</a>
-    <a href="reservations.html">🧾 Réservations</a>
-    <a href="encaissements.html">💸 Encaissements</a>
-    <a href="tarifs.html">🏷️ Tarifs</a>
-    <a href="medias.html">📸 Photos</a>
-    <a href="fiche.html">👤 Fiche</a>
+    <a href="./planning.html">📅 Planning</a>
+    <a href="./reservations.html">🧾 Réservations</a>
+    <a href="./encaissements.html">💸 Encaissements</a>
+    <a class="on" href="./tarifs.html">🏷️ Tarifs</a>
+    <a href="./photos.html">📸 Photos</a>
+    <a href="./fiche.html">👤 Fiche</a>
   </div>
 
+  <!-- GRID -->
   <div class="grid">
+
+    <!-- LEFT -->
     <div class="card">
       <h2>Tarifs de base</h2>
-      <div class="muted">Ajuste tes prix. Plus tard on branche Supabase + historique.</div>
+      <div class="muted">
+        Ajuste tes prix.  
+        ✅ Stockage offline + futur branchement Supabase.
+      </div>
 
       <div class="field">
         <label>Prix / nuit (FCFA)</label>
-        <input type="number" placeholder="ex: 25000">
+        <input id="pNight" type="number" placeholder="ex: 25000">
       </div>
 
       <div class="field">
         <label>Prix / semaine (FCFA)</label>
-        <input type="number" placeholder="ex: 150000">
+        <input id="pWeek" type="number" placeholder="ex: 150000">
       </div>
 
       <div class="field">
         <label>Prix / mois (FCFA)</label>
-        <input type="number" placeholder="ex: 450000">
+        <input id="pMonth" type="number" placeholder="ex: 450000">
       </div>
 
       <hr class="sep">
 
       <h2>Options</h2>
+
       <div class="field">
         <label>Frais ménage (FCFA)</label>
-        <input type="number" placeholder="ex: 10000">
+        <input id="pClean" type="number" placeholder="ex: 10000">
       </div>
 
       <div class="field">
         <label>Caution (FCFA)</label>
-        <input type="number" placeholder="ex: 50000">
+        <input id="pDeposit" type="number" placeholder="ex: 50000">
       </div>
 
-      <button class="btn" onclick="alert('✅ Interface OK. Prochaine étape: sauvegarde Supabase.')">
-        💾 Enregistrer (à brancher)
+      <button class="btn" id="btnSave">
+        💾 Enregistrer (offline)
       </button>
+
+      <button class="btn ghost" id="btnSupabase">
+        ☁️ Sauvegarder Supabase (phase 2)
+      </button>
+
+      <div class="note" id="note"></div>
     </div>
 
+    <!-- RIGHT -->
     <div class="card">
       <h2>Conseil DIGIY</h2>
       <div class="muted">
-        Fais simple pour commencer :
-        <div class="row">
+        Fais simple au départ :
+
+        <div class="row" style="margin-top:10px">
           <div class="chip">Nuit = base</div>
           <div class="chip">Semaine = -10%</div>
           <div class="chip">Mois = -20%</div>
         </div>
+
         <hr class="sep">
-        Prochaine phase : promo week-end, haute saison, prix par chambre.
+
+        <b>Bonus :</b> bouton auto-calcul en bas 👇
+      </div>
+
+      <button class="btn" id="btnAuto">
+        ⚡ Calcul automatique (-10% / -20%)
+      </button>
+
+      <div class="muted" style="margin-top:10px;font-size:13px">
+        Phase suivante :
+        promo week-end, haute saison, prix par chambre.
       </div>
     </div>
+
   </div>
 </div>
+
+<script>
+/* ============================
+   DIGIY LOC PRO — TARIFS
+   Offline first (Afrique) + Guard
+============================ */
+
+(function(){
+  "use strict";
+
+  const $ = (id)=>document.getElementById(id);
+  const note = $("note");
+
+  function show(msg,type){
+    note.style.display = msg ? "block" : "none";
+    note.className = "note " + (type||"");
+    note.textContent = msg || "";
+  }
+
+  // ✅ Helper slug safe
+  function go(url){
+    if(window.DIGIY_GUARD?.withSlug){
+      location.href = window.DIGIY_GUARD.withSlug(url);
+    }else{
+      location.href = url;
+    }
+  }
+
+  // ✅ Boot Guard obligatoire
+  const boot = window.DIGIY_GUARD?.boot({
+    module:"LOC",
+    dashboard:"./tarifs.html",
+    login:"./login.html",
+    requireSlug:true,
+    checkSubscription:true
+  });
+
+  // slug UI
+  const slug = window.DIGIY_GUARD?.getSlug?.() || "";
+  $("pillSlug").textContent = "slug: " + (slug || "—");
+
+  if(!slug){
+    show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
+    return;
+  }
+
+  // ✅ LocalStorage key
+  const LS_KEY = "DIGIY_LOC_TARIFS_V1:" + slug;
+
+  // ✅ Load offline data
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return;
+      const t = JSON.parse(raw);
+
+      $("pNight").value = t.night || "";
+      $("pWeek").value = t.week || "";
+      $("pMonth").value = t.month || "";
+      $("pClean").value = t.clean || "";
+      $("pDeposit").value = t.deposit || "";
+
+      show("✅ Tarifs chargés (offline).", "ok");
+    }catch(_){}
+  }
+
+  // ✅ Save offline
+  function save(){
+    const payload = {
+      night: $("pNight").value,
+      week: $("pWeek").value,
+      month: $("pMonth").value,
+      clean: $("pClean").value,
+      deposit: $("pDeposit").value,
+      ts: Date.now()
+    };
+
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    show("✅ Enregistré (offline).", "ok");
+  }
+
+  // ✅ Auto calc
+  function autoCalc(){
+    const night = parseInt($("pNight").value || "0",10);
+    if(!night || night<1000){
+      show("⚠️ Mets un prix nuit valide d’abord.", "warn");
+      return;
+    }
+    $("pWeek").value = Math.round(night * 7 * 0.90);
+    $("pMonth").value = Math.round(night * 30 * 0.80);
+
+    show("⚡ Calcul automatique appliqué (-10% / -20%).", "ok");
+  }
+
+  // ✅ Future Supabase hook
+  async function saveSupabase(){
+    show("☁️ Phase 2… RPC Supabase bientôt branché.", "warn");
+    alert("Supabase tarifs → prochain module RPC digiy_loc_set_tarifs_owner()");
+  }
+
+  // Bind
+  $("btnSave").onclick = save;
+  $("btnAuto").onclick = autoCalc;
+  $("btnSupabase").onclick = saveSupabase;
+
+  // Init
+  load();
+
+})();
+</script>
 
 <script src="./ui.js"></script>
 </body>
