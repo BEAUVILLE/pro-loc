@@ -250,32 +250,24 @@
 async function loadPhotos(){
   note("⏳ Chargement photos…","warn");
 
-  const { data, error } = await sb
-    .from("digiy_loc_businesses")
-    .select("cover_url,gallery_urls,media_provider,photos_updated_at")
-    .eq("slug", slug)
-    .limit(1)
-    .maybeSingle(); // ✅ au lieu de .single()
+  const { data, error } = await sb.rpc("digiy_loc_get_photos_by_token", {
+    p_slug: slug,
+    p_pro_token: token
+  });
 
   if(error) throw error;
 
-  // si pas de ligne => business introuvable (ou RLS bloque la lecture)
-  if(!data){
-    cover = null;
-    photos = [];
-    cacheSave();
-    render();
-    note("⚠️ Lieu introuvable (0 ligne) ou accès lecture bloqué. Tu peux quand même coller des URLs et sauvegarder.", "warn");
-    return;
-  }
+  const res = (typeof data === "string") ? JSON.parse(data) : data;
+  if(!res?.ok) throw new Error(res?.reason || "load_failed");
 
-  cover = data.cover_url || null;
-  photos = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
+  cover = res.cover_url || null;
+  photos = Array.isArray(res.gallery_urls) ? res.gallery_urls : [];
 
   cacheSave();
   render();
-  note("", "");
+  note("✅ Photos chargées depuis Supabase.", "ok");
 }
+
 
   function render(){
     galleryEl.innerHTML = "";
