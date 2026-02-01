@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#061b14"/>
-  <title>DIGIY — Porte PIN</title>
+  <title>DIGIY QR PRO — Porte PIN</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -102,10 +102,10 @@
 <script>
 (async () => {
   // =========================
-  // ✅ À RÉGLER PAR MODULE
+  // ✅ MODULE QR PRO
   // =========================
-  const MODULE_CODE="loc_pro";
-const NEXT_URL="planning.html";
+  const MODULE_CODE = "qr_pro";
+  const NEXT_URL    = "index.html";
 
   // =========================
   // SUPABASE (TES CLÉS)
@@ -114,14 +114,11 @@ const NEXT_URL="planning.html";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // =========================
-  // UI
-  // =========================
   const $ = (id)=>document.getElementById(id);
   $("modPill").textContent = MODULE_CODE;
   $("title").textContent = "PORTE PIN — " + MODULE_CODE.toUpperCase();
 
-  // slug depuis URL
+  // slug depuis URL ?slug=
   const url = new URL(location.href);
   const slug = (url.searchParams.get("slug") || "").trim().toLowerCase();
 
@@ -131,18 +128,17 @@ const NEXT_URL="planning.html";
   const msg = (html)=>{ $("msg").innerHTML = html; };
 
   if(!slug){
-    msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton Espace PRO (bouton “Entrer”).`);
+    msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton Espace PRO / QR Factory (lien avec ?slug=...).`);
     $("go").disabled = true;
     return;
   }
 
-  // auto-focus
   setTimeout(()=>$("pin").focus(), 150);
 
   function saveSessions(payload){
     const session = {
-      slug: payload.slug,
-      phone: payload.phone,
+      slug: payload.slug || slug,
+      phone: payload.phone || null,
       owner_id: payload.owner_id,
       module: payload.module || MODULE_CODE,
       ts: Date.now()
@@ -156,7 +152,7 @@ const NEXT_URL="planning.html";
       ts: session.ts
     }));
 
-    // ✅ session spécifique module
+    // ✅ session module
     localStorage.setItem("DIGIY_SESSION_" + MODULE_CODE.toUpperCase(), JSON.stringify(session));
   }
 
@@ -198,11 +194,9 @@ const NEXT_URL="planning.html";
 
     // ✅ OK
     saveSessions(data);
-    msg(`<span class="ok">✅ Accès validé.</span> Ouverture du cockpit…`);
+    msg(`<span class="ok">✅ Accès validé.</span> Ouverture…`);
 
-    // petit délai pour rendre l'UX "velours"
     setTimeout(()=>{
-      // On conserve le slug dans l'URL si tu veux (pratique debug)
       const next = new URL(NEXT_URL, location.href);
       next.searchParams.set("slug", slug);
       location.href = next.toString();
