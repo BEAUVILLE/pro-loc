@@ -165,35 +165,6 @@
     td{font-size:0.95rem;}
     tr:hover{background:rgba(255,255,255,0.05);}
 
-    /* FORM */
-    .form-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-      gap:1rem;
-    }
-    .form-group{display:flex;flex-direction:column;gap:0.5rem;}
-    label{
-      font-size:0.85rem;
-      color:var(--muted);
-      font-weight:600;
-      text-transform:uppercase;
-    }
-    input,textarea,select{
-      padding:0.75rem;
-      border-radius:8px;
-      border:1px solid var(--border);
-      background:rgba(15,23,42,0.8);
-      color:var(--text);
-      font-size:0.95rem;
-      outline:none;
-      transition:all 0.2s;
-    }
-    input:focus,textarea:focus,select:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 2px rgba(250,204,21,0.2);
-    }
-    textarea{resize:vertical;min-height:100px;}
-
     /* BADGE */
     .badge{
       display:inline-block;
@@ -205,44 +176,6 @@
     .badge-success{background:rgba(34,197,94,0.2);color:var(--success);}
     .badge-warning{background:rgba(250,204,21,0.2);color:var(--accent);}
     .badge-danger{background:rgba(239,68,68,0.2);color:var(--danger);}
-
-    /* MODAL */
-    .modal{
-      display:none;
-      position:fixed;
-      top:0;left:0;width:100%;height:100%;
-      background:rgba(0,0,0,0.8);
-      z-index:1000;
-      padding:2rem;
-      overflow-y:auto;
-    }
-    .modal.active{display:flex;align-items:center;justify-content:center;}
-    .modal-content{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:2rem;
-      max-width:800px;
-      width:100%;
-      max-height:90vh;
-      overflow-y:auto;
-    }
-    .modal-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:1.5rem;
-    }
-    .modal-header h3{font-size:1.5rem;color:var(--accent);margin:0;}
-    .modal-close{
-      font-size:1.5rem;
-      cursor:pointer;
-      color:var(--muted);
-      background:none;
-      border:none;
-      padding:0.5rem;
-    }
-    .modal-close:hover{color:var(--text);}
 
     /* LOGEMENT CARD */
     .logement-card{
@@ -305,7 +238,6 @@
       .stats-grid{grid-template-columns:1fr}
       .logement-card{grid-template-columns:1fr;gap:1rem;}
       .logement-img{width:100%;height:200px}
-      .form-grid{grid-template-columns:1fr}
       table{font-size:0.85rem}
       th,td{padding:0.5rem}
     }
@@ -334,8 +266,9 @@
     </div>
 
     <div class="header-actions">
-      <button class="btn btn-primary" data-action="openAddLogement" type="button">
-        ➕ Ajouter un logement
+      <!-- ✅ BOUTON PRINCIPAL GÉNÉRATEUR (remplace modal) -->
+      <button class="btn btn-primary" data-go="./generator.html" type="button">
+        🏗️ CRÉER UNE FICHE LOGEMENT
       </button>
 
       <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
@@ -404,7 +337,7 @@
     <div class="card">
       <h2>📲 Pulse (Test rapide)</h2>
       <p style="color:var(--muted);margin-bottom:1rem">
-        Test d’envoi via l’API. (Désactive PULSE.enabled si tu veux.)
+        Test d'envoi via l'API. (Désactive PULSE.enabled si tu veux.)
       </p>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
         <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
@@ -470,68 +403,7 @@
   </div>
 </div>
 
-<!-- MODAL: AJOUTER LOGEMENT -->
-<div id="modalAddLogement" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>➕ Ajouter un logement</h3>
-      <button class="modal-close" data-action="closeAddModal" type="button">✕</button>
-    </div>
-
-    <form id="formAddLogement">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Nom du logement *</label>
-          <input type="text" name="nom" required placeholder="Ex: CHEZ BAPTISTE">
-        </div>
-
-        <div class="form-group">
-          <label>Adresse *</label>
-          <input type="text" name="adresse" required placeholder="Saly, Sénégal">
-        </div>
-
-        <div class="form-group">
-          <label>Personnes max *</label>
-          <input type="number" name="personnes_max" required min="1" value="4">
-        </div>
-
-        <div class="form-group">
-          <label>Prix nuit (FCFA) *</label>
-          <input type="number" name="prix_nuit" required placeholder="30000">
-        </div>
-
-        <div class="form-group">
-          <label>Prix semaine (FCFA)</label>
-          <input type="number" name="prix_semaine" placeholder="175000">
-        </div>
-
-        <div class="form-group">
-          <label>Prix mois (FCFA)</label>
-          <input type="number" name="prix_mois" placeholder="550000">
-        </div>
-      </div>
-
-      <div class="form-group" style="margin-top:1rem">
-        <label>Description</label>
-        <textarea name="description" placeholder="Quartier calme, Sénélec en sus, etc."></textarea>
-      </div>
-
-      <div class="form-group" style="margin-top:1rem">
-        <label>URL Photo</label>
-        <input type="url" name="photo_url" placeholder="https://...">
-      </div>
-
-      <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:flex-end">
-        <button type="button" class="btn btn-secondary" data-action="closeAddModal">
-          Annuler
-        </button>
-        <button type="submit" class="btn btn-primary">
-          💾 Enregistrer
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+<!-- ✅ PLUS DE MODAL - Générateur externe -->
 
 <script>
 /* =========================================================
@@ -553,11 +425,9 @@
   }
 
   function go(target, mode){
-    // Si guard.go existe, on l’utilise pour centraliser slug + navigation
     try{
       if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(target, mode || "assign");
     }catch(_){}
-    // fallback
     const u = withSlug(target);
     if((mode||"assign")==="replace") location.replace(u);
     else location.href = u;
@@ -594,7 +464,6 @@
     });
   }
 
-  // Expose minimal helpers if needed
   window.DIGIY_NAV = { go, withSlug, Actions };
 
   function boot(){
@@ -606,9 +475,7 @@
   const mo = new MutationObserver(()=>boot());
   mo.observe(document.documentElement, { childList:true, subtree:true });
 
-  // Register actions (les fonctions app utiliseront ça)
-  Actions.openAddLogement = ()=> openAddLogement();
-  Actions.closeAddModal = ()=> closeModal("modalAddLogement");
+  // Register actions
   Actions.logout = ()=> logout();
   Actions.pulseTest = ()=> pulseTest();
 })();
@@ -633,7 +500,6 @@ const DB = {
   rooms: "digiy_loc_rooms",
   reservations: "digiy_loc_reservations",
 
-  // rooms
   roomOwnerId: "owner_id",
   roomTitle: "nom",
   roomAddress: "adresse",
@@ -645,7 +511,6 @@ const DB = {
   roomPhoto: "photo_url",
   roomStatus: "status",
 
-  // reservations
   resOwnerId: "owner_id",
   resRoomId: "room_id",
   resClientName: "client_name",
@@ -663,7 +528,7 @@ const DB = {
 const PULSE = {
   enabled: true,
   base: "https://api.digiylyfe.com",
-  apiKey: "",               // mets ta clé si tu veux tester
+  apiKey: "",
   endpoint: "/loc/pulse/send"
 };
 
@@ -743,12 +608,6 @@ function switchTab(tabName) {
   });
 })();
 
-function openAddLogement() {
-  document.getElementById('modalAddLogement').classList.add('active');
-}
-function closeModal(modalId) {
-  document.getElementById(modalId).classList.remove('active');
-}
 function logout() {
   if (!confirm("Se déconnecter ?")) return;
   const go = window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") :
@@ -814,7 +673,7 @@ function renderRooms(list) {
   if(!container) return;
 
   if(!list.length){
-    container.innerHTML = `<p style="color:var(--muted)">Aucun logement. Clique “Ajouter un logement”.</p>`;
+    container.innerHTML = `<p style="color:var(--muted)">Aucun logement. Clique "CRÉER UNE FICHE LOGEMENT".</p>`;
     return;
   }
 
@@ -874,50 +733,6 @@ async function loadLogements() {
 /* =============================
    CRUD: LOGEMENT
 ============================= */
-async function saveLogementFromForm(formEl) {
-  try{
-    const sb = getSB();
-    if(!sb) throw new Error("supabase_not_ready");
-
-    if(!State.ownerId){
-      alert("Session expirée. Reconnecte-toi.");
-      return;
-    }
-
-    const formData = new FormData(formEl);
-    const data = Object.fromEntries(formData);
-
-    const payload = {
-      [DB.roomOwnerId]: State.ownerId,
-      [DB.roomTitle]: (data.nom || "").trim(),
-      [DB.roomAddress]: (data.adresse || "").trim(),
-      [DB.roomMaxPeople]: Number(data.personnes_max || 1),
-      [DB.roomPriceNight]: Number(data.prix_nuit || 0),
-      [DB.roomPriceWeek]: data.prix_semaine ? Number(data.prix_semaine) : null,
-      [DB.roomPriceMonth]: data.prix_mois ? Number(data.prix_mois) : null,
-      [DB.roomDesc]: (data.description || "").trim() || null,
-      [DB.roomPhoto]: (data.photo_url || "").trim() || null,
-      [DB.roomStatus]: "actif",
-      phone: State.phone || null,
-      business_code: State.business_code || null,
-    };
-
-    const { error } = await sb.from(DB.rooms).insert(payload);
-    if(error) throw error;
-
-    alert("✅ Logement enregistré !");
-    closeModal('modalAddLogement');
-    formEl.reset();
-
-    await loadLogements();
-    await loadDashboard();
-    switchTab("logements");
-  }catch(err){
-    console.error(err);
-    alert("❌ Erreur: " + (err?.message || err));
-  }
-}
-
 function openEditLogement(roomId){
   const room = State.rooms.find(r => String(r.id) === String(roomId));
   if(!room) return alert("Logement introuvable");
@@ -1329,16 +1144,6 @@ async function pulseTest(){
   }
 
   hydrateHeader();
-
-  // Bind submit formulaire modal
-  const form = document.getElementById("formAddLogement");
-  if(form && !form.__digiy_bound_submit){
-    form.__digiy_bound_submit = true;
-    form.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      await saveLogementFromForm(form);
-    });
-  }
 
   try{
     State.rooms = await fetchRooms();
