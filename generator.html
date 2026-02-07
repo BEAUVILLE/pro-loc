@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <title>🔥 GÉNÉRATEUR DIGIY LOC - Créer une fiche logement en 2 min ! 🔥</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Supabase + Guard -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./guard.js?v=generator"></script>
+
 <style>
 :root{
   --bg:#0b1020;
@@ -167,17 +172,12 @@ textarea{
   box-shadow:0 15px 40px rgba(0,133,63,0.6);
 }
 
-.btn-download{
-  background:linear-gradient(135deg,#facc15,#f97316);
-  color:#111;
+.btn-back{
+  background:rgba(255,255,255,0.1);
+  color:var(--ink);
+  border:1px solid var(--line);
   width:100%;
-  margin-top:20px;
-  display:none;
-}
-
-.btn-download:hover{
-  transform:translateY(-2px);
-  box-shadow:0 15px 40px rgba(250,204,21,0.6);
+  margin-top:10px;
 }
 
 .success-msg{
@@ -200,1024 +200,263 @@ textarea{
   font-size:24px;
 }
 
-.preview{
-  background:#0f172a;
-  border-radius:12px;
-  padding:15px;
-  margin-top:10px;
-  font-family:monospace;
-  font-size:12px;
-  color:#22c55e;
-  overflow-x:auto;
-  display:none;
-}
-
-.preview.show{
-  display:block;
-}
-
 .eagle{
   font-size:48px;
   display:block;
   margin:10px 0;
 }
+
+.loading{
+  text-align:center;
+  padding:50px;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-  <!-- HEADER -->
-  <div class="header">
-    <h1>🦅 GÉNÉRATEUR DIGIY LOC</h1>
-    <p>Créez une fiche logement professionnelle en 2 minutes !</p>
-    <div class="badge">∞ Pierre par pierre - L'aigle royal construit ∞</div>
-  </div>
-
-  <!-- FORMULAIRE -->
-  <div class="form-card">
-    <h2 class="section-title">📋 Informations du logement</h2>
-    
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Nom du logement <span class="required">*</span></label>
-        <input type="text" id="logementNom" placeholder="Ex: CHEZ BAPTISTE" required>
-        <div class="hint">Sans guillemets, MAJUSCULES recommandées</div>
-      </div>
-
-      <div class="form-group">
-        <label>Ville <span class="required">*</span></label>
-        <input type="text" id="logementVille" placeholder="Ex: Saly" required>
-      </div>
-
-      <div class="form-group full">
-        <label>Description courte <span class="required">*</span></label>
-        <textarea id="descCourte" placeholder="Ex: Appartement confortable dans un quartier paisible de Saly, sans bruyance, idéal pour les séjours en famille ou entre amis." required></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Capacité max (personnes) <span class="required">*</span></label>
-        <input type="number" id="maxGuests" value="4" min="1" max="20" required>
-      </div>
-
-      <div class="form-group">
-        <label>Type de logement</label>
-        <select id="typeLogement">
-          <option>Appartement</option>
-          <option>Villa</option>
-          <option>Studio</option>
-          <option>Maison</option>
-          <option>Chambre</option>
-        </select>
-      </div>
-    </div>
-
-    <h2 class="section-title">💰 Tarifs</h2>
-    
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Prix / Nuit (FCFA) <span class="required">*</span></label>
-        <input type="number" id="tarifNuit" placeholder="30000" required>
-      </div>
-
-      <div class="form-group">
-        <label>Prix / Semaine (FCFA) <span class="required">*</span></label>
-        <input type="number" id="tarifSemaine" placeholder="175000" required>
-      </div>
-
-      <div class="form-group">
-        <label>Prix / Mois (FCFA) <span class="required">*</span></label>
-        <input type="number" id="tarifMois" placeholder="550000" required>
-      </div>
-    </div>
-
-    <h2 class="section-title">👤 Propriétaire</h2>
-    
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Nom complet <span class="required">*</span></label>
-        <input type="text" id="ownerName" placeholder="Ex: Jean Baptiste Beauville" required>
-      </div>
-
-      <div class="form-group">
-        <label>WhatsApp principal <span class="required">*</span></label>
-        <input type="tel" id="ownerWa" placeholder="+221771342889" required>
-        <div class="hint">Format: +221XXXXXXXXX</div>
-      </div>
-
-      <div class="form-group">
-        <label>WhatsApp secondaire</label>
-        <input type="tel" id="ownerWa2" placeholder="+221778765785">
-        <div class="hint">Optionnel</div>
-      </div>
-
-      <div class="form-group">
-        <label>Numéro Wave <span class="required">*</span></label>
-        <input type="tel" id="wavePhone" placeholder="+221771342889" required>
-        <div class="hint">Pour les paiements</div>
-      </div>
-    </div>
-
-    <h2 class="section-title">📸 Médias</h2>
-    
-    <div class="form-grid">
-      <div class="form-group full">
-        <label>URL de la photo principale <span class="required">*</span></label>
-        <input type="url" id="photoUrl" placeholder="https://orange-pig-270004.hostingersite.com/wp-content/uploads/2025/06/042-BAPTISTE.png" required>
-        <div class="hint">Upload d'abord sur orange-pig-270004.hostingersite.com, puis colle l'URL</div>
-      </div>
-
-      <div class="form-group full">
-        <label>URL vidéo présentation (Google Drive)</label>
-        <input type="url" id="videoUrl" placeholder="https://drive.google.com/file/d/...">
-        <div class="hint">Optionnel - Partage public sur Google Drive</div>
-      </div>
-    </div>
-
-    <h2 class="section-title">🏷️ Caractéristiques (Chips)</h2>
-    
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Chip 1</label>
-        <input type="text" id="chip1" placeholder="Ex: Quartier calme">
-      </div>
-      <div class="form-group">
-        <label>Chip 2</label>
-        <input type="text" id="chip2" placeholder="Ex: Sénélec en sus">
-      </div>
-      <div class="form-group">
-        <label>Chip 3</label>
-        <input type="text" id="chip3" placeholder="Ex: Parking disponible">
-      </div>
-      <div class="form-group">
-        <label>Chip 4</label>
-        <input type="text" id="chip4" placeholder="Ex: WiFi inclus">
-      </div>
-    </div>
-
-    <!-- BOUTON GÉNÉRATION -->
-    <button class="btn btn-generate" id="btnGenerate">
-      🚀 GÉNÉRER LA FICHE LOGEMENT
-    </button>
-
-    <!-- MESSAGE SUCCÈS -->
-    <div class="success-msg" id="successMsg">
-      <span class="eagle">🦅</span>
-      <h3>FICHE GÉNÉRÉE AVEC SUCCÈS !</h3>
-      <p>Ton fichier HTML est prêt frérot ! Télécharge-le et déploie ! 🔥</p>
-      <button class="btn btn-download" id="btnDownload">
-        💾 TÉLÉCHARGER LE FICHIER HTML
-      </button>
-    </div>
-
-    <!-- PREVIEW -->
-    <div class="preview" id="preview"></div>
-  </div>
+<!-- ✅ PROTECTION LOADING -->
+<div id="loading" class="loading">
+  🔒 Vérification accès...
 </div>
 
-<script>
-let generatedHTML = '';
+<!-- ✅ APP (caché tant que pas auth) -->
+<div id="app" style="display:none;">
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <h1>🦅 GÉNÉRATEUR DIGIY LOC</h1>
+      <p>Créez votre fiche logement en 2 minutes !</p>
+      <div class="badge">∞ Pierre par pierre - L'aigle royal construit ∞</div>
+    </div>
 
-document.getElementById('btnGenerate').addEventListener('click', generateFiche);
-document.getElementById('btnDownload').addEventListener('click', downloadFile);
-
-function generateFiche() {
-  // RÉCUPÉRATION DES DONNÉES
-  const logementNom = document.getElementById('logementNom').value.trim();
-  const logementVille = document.getElementById('logementVille').value.trim();
-  const descCourte = document.getElementById('descCourte').value.trim();
-  const maxGuests = document.getElementById('maxGuests').value;
-  const typeLogement = document.getElementById('typeLogement').value;
-  
-  const tarifNuit = document.getElementById('tarifNuit').value;
-  const tarifSemaine = document.getElementById('tarifSemaine').value;
-  const tarifMois = document.getElementById('tarifMois').value;
-  
-  const ownerName = document.getElementById('ownerName').value.trim();
-  const ownerWa = document.getElementById('ownerWa').value.trim();
-  const ownerWa2 = document.getElementById('ownerWa2').value.trim() || ownerWa;
-  const wavePhone = document.getElementById('wavePhone').value.trim();
-  
-  const photoUrl = document.getElementById('photoUrl').value.trim();
-  const videoUrl = document.getElementById('videoUrl').value.trim();
-  
-  const chip1 = document.getElementById('chip1').value.trim() || (maxGuests + " personnes max");
-  const chip2 = document.getElementById('chip2').value.trim() || "Sénélec en sus";
-  const chip3 = document.getElementById('chip3').value.trim() || "Quartier calme";
-  const chip4 = document.getElementById('chip4').value.trim() || "Réservation directe propriétaire";
-
-  // VALIDATION
-  if (!logementNom || !logementVille || !descCourte || !ownerName || !ownerWa || !wavePhone || !photoUrl) {
-    alert('❌ Merci de remplir tous les champs obligatoires (*)');
-    return;
-  }
-
-  // GÉNÉRATION DE L'ID UNIQUE
-  const logementId = logementNom.toUpperCase().replace(/\s+/g, '-') + '-' + logementVille.toUpperCase() + '-LOC';
-  
-  // EXTRACTION ID WhatsApp (sans +)
-  const ownerWaId = ownerWa.replace(/\+/g, '');
-  
-  // GÉNÉRATION DU HTML
-  generatedHTML = generateHTMLTemplate({
-    logementNom,
-    logementVille,
-    logementId,
-    descCourte,
-    maxGuests,
-    typeLogement,
-    tarifNuit,
-    tarifSemaine,
-    tarifMois,
-    ownerName,
-    ownerWa,
-    ownerWaId,
-    ownerWa2,
-    wavePhone,
-    photoUrl,
-    videoUrl,
-    chip1, chip2, chip3, chip4
-  });
-
-  // AFFICHAGE SUCCÈS
-  document.getElementById('successMsg').classList.add('show');
-  document.getElementById('btnDownload').style.display = 'flex';
-  
-  // PREVIEW
-  const preview = document.getElementById('preview');
-  preview.textContent = '✅ Fichier HTML généré : ' + logementNom.toLowerCase().replace(/\s+/g, '-') + '.html';
-  preview.classList.add('show');
-  
-  // SCROLL
-  document.getElementById('successMsg').scrollIntoView({ behavior: 'smooth' });
-}
-
-function downloadFile() {
-  const logementNom = document.getElementById('logementNom').value.trim();
-  const filename = 'chez-' + logementNom.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.html';
-  
-  const blob = new Blob([generatedHTML], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  alert('🔥 Fichier téléchargé : ' + filename + '\n\nMaintenant, upload sur ton serveur et GO ! 🚀');
-}
-
-function generateHTMLTemplate(data) {
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<title>${data.logementNom} — ${data.typeLogement} à ${data.logementVille}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  :root{
-    --bg:#0b1020;
-    --card:#020617;
-    --card-soft:#020617;
-    --accent:#facc15;
-    --accent-soft:#f97316;
-    --ink:#f9fafb;
-    --muted:#9ca3af;
-    --line:#1f2937;
-    --sn-green:#00853F;
-    --sn-green-soft:#E8F5EC;
-    --sn-green-deep:#064E3B;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; padding:0;
-    background:radial-gradient(circle at top,#111827 0,#020617 55%);
-    color:var(--ink);
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  }
-  .app{
-    max-width:980px;
-    margin:0 auto;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-  }
-  header{
-    padding:14px 16px;
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-    align-items:center;
-  }
-  .brand{
-    font-weight:700;
-    font-size:18px;
-  }
-  .brand span{
-    color:var(--accent);
-  }
-  .tag{
-    font-size:11px;
-    border-radius:999px;
-    border:1px solid rgba(148,163,184,.6);
-    padding:4px 10px;
-    white-space:nowrap;
-    color:var(--muted);
-  }
-  main{flex:1;padding:0 12px 16px;}
-
-  .hero{
-    background:linear-gradient(135deg,#111827,#020617);
-    border-radius:18px;
-    padding:16px;
-    border:1px solid rgba(250,204,21,.4);
-    display:grid;
-    grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
-    gap:16px;
-    align-items:flex-start;
-    box-shadow:0 20px 40px rgba(0,0,0,.7);
-    margin-bottom:16px;
-  }
-  @media(max-width:900px){
-    .hero{grid-template-columns:1fr;}
-  }
-  .hero h1{
-    margin:0 0 6px;
-    font-size:22px;
-  }
-  .hero p{
-    margin:0 0 8px;
-    font-size:13px;
-    color:var(--muted);
-  }
-  .chips{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    margin-top:6px;
-  }
-  .chip{
-    font-size:11px;
-    border-radius:999px;
-    border:1px solid rgba(148,163,184,.6);
-    padding:4px 8px;
-    color:var(--muted);
-  }
-
-  .hero-media{
-    margin-top:10px;
-  }
-  .hero-photo{
-    width:100%;
-    max-height:220px;
-    border-radius:14px;
-    object-fit:cover;
-    display:block;
-    border:1px solid #1f2937;
-  }
-  .hero-caption{
-    margin-top:4px;
-    font-size:11px;
-    color:#e5e7eb;
-    font-weight:500;
-  }
-
-  .price-block{
-    background:#020617;
-    border-radius:14px;
-    border:1px solid #1f2937;
-    padding:10px 12px;
-    font-size:13px;
-    color:#ffffff;
-  }
-  .price-block h2{
-    margin:0 0 4px;
-    font-size:16px;
-    font-weight:900;
-    color:var(--accent);
-  }
-  .tarifs{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    margin:8px 0;
-    font-size:15px;
-    font-weight:700;
-  }
-  .tarifs span{
-    display:flex;
-    justify-content:space-between;
-  }
-  .tarifs strong{
-    color:#22c55e;
-    font-size:16px;
-    font-weight:900;
-  }
-
-  .cta-col{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    margin-top:14px;
-  }
-  .btn{
-    border:none;
-    border-radius:999px;
-    padding:9px 12px;
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:6px;
-    text-decoration:none;
-  }
-  .btn-wa{
-    background:#16a34a;
-    color:#ecfdf3;
-  }
-  .btn-call{
-    background:#0f172a;
-    color:#e5e7eb;
-    border:1px solid #1f2937;
-  }
-  .btn-video{
-    background:#111827;
-    color:#e5e7eb;
-    border:1px solid #334155;
-    font-size:13px;
-  }
-
-  .layout{
-    display:grid;
-    grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
-    gap:12px;
-  }
-  @media(max-width:900px){
-    .layout{grid-template-columns:1fr;}
-  }
-
-  .card{
-    background:var(--card);
-    border-radius:16px;
-    border:1px solid var(--line);
-    box-shadow:0 16px 32px rgba(0,0,0,.6);
-    padding:12px;
-  }
-  .card h2{
-    margin:0 0 4px;
-    font-size:16px;
-  }
-  .card small{
-    font-size:12px;
-    color:var(--muted);
-  }
-
-  .form-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin-top:8px;
-  }
-  @media(max-width:640px){
-    .form-grid{
-      grid-template-columns:1fr;
-    }
-  }
-
-  .field label{
-    display:block;
-    font-size:11px;
-    color:var(--muted);
-    margin-bottom:2px;
-  }
-  .field input,
-  .field select{
-    width:100%;
-    padding:7px 9px;
-    border-radius:10px;
-    border:1px solid var(--line);
-    background:#020617;
-    color:#f9fafb;
-    font-size:13px;
-  }
-  .field input[type="date"]{
-    color-scheme:dark;
-  }
-
-  .summary{
-    margin-top:8px;
-    font-size:14px;
-    color:var(--muted);
-  }
-  .summary strong{
-    color:var(--accent-soft);
-  }
-
-  footer{
-    padding:8px 14px 14px;
-    font-size:11px;
-    color:var(--muted);
-    text-align:center;
-  }
-
-  a.inline-link{
-    color:var(--accent-soft);
-    text-decoration:none;
-  }
-  a.inline-link:hover{
-    text-decoration:underline;
-  }
-
-  .digiy-title-strong {
-    font-size:18px;
-    font-weight:800;
-    color:#ffffff !important;
-  }
-  .digiy-label-strong {
-    font-size:14px;
-    font-weight:700;
-    color:#ffffff !important;
-  }
-  .digiy-black-strong {
-    font-size:16px;
-    font-weight:800;
-    color:#ffffff !important;
-  }
-
-  .card h2.digiy-title-strong + small{
-    color:#e5e7eb !important;
-    font-weight:600;
-  }
-  input::placeholder,
-  select{
-    color:#cbd5e1 !important;
-    font-weight:500;
-  }
-
-  .pay-number {
-    font-size:24px;
-    font-weight:900;
-    color:#22c55e;
-    letter-spacing:1px;
-  }
-  .pay-note {
-    font-size:14px;
-    font-weight:700;
-    color:#22c55e;
-  }
-
-  .wave-card{
-    margin-top:14px;
-    padding:16px;
-    border-radius:16px;
-    background:#0f172a;
-    border:2px solid #22c55e;
-    box-shadow:0 0 22px rgba(34,197,94,0.28);
-  }
-
-  .resa-card{
-    margin-top:4px;
-    border-radius:18px;
-    padding:24px;
-    background:linear-gradient(135deg,#00853F 0%,#006B32 100%);
-    border:3px solid #FCBF49;
-    box-shadow:0 20px 40px rgba(0,133,63,.5);
-    color:#ffffff;
-  }
-  
-  .resa-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:8px;
-    margin-bottom:12px;
-    flex-wrap:wrap;
-  }
-  
-  .resa-title-block h2{
-    margin:0;
-    font-size:42px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:1px;
-    text-shadow:2px 2px 4px rgba(0,0,0,.3);
-    color:#ffffff;
-  }
-  
-  .resa-title-block small{
-    display:block;
-    margin-top:10px;
-    font-size:20px;
-    font-weight:800;
-    color:#FEF3C7;
-    text-shadow:1px 1px 2px rgba(0,0,0,.2);
-  }
-  
-  .resa-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:8px 14px;
-    border-radius:999px;
-    background:rgba(252,191,73,0.2);
-    border:2px solid #FCBF49;
-    color:#FEF3C7;
-    font-size:13px;
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-    font-weight:800;
-    white-space:nowrap;
-  }
-  
-  .resa-badge-dot{
-    width:10px;
-    height:10px;
-    border-radius:999px;
-    background:#FCBF49;
-    box-shadow:0 0 12px rgba(252,191,73,0.8);
-  }
-
-  .resa-steps{
-    margin-top:10px;
-    margin-bottom:12px;
-    font-size:15px;
-    font-weight:700;
-    color:#FEF3C7;
-  }
-  .resa-steps strong{
-    font-size:16px;
-    font-weight:900;
-  }
-  .resa-steps ul{
-    margin:6px 0 0 18px;
-    padding:0;
-  }
-  .resa-steps li{
-    margin-bottom:4px;
-    font-weight:600;
-  }
-
-  .resa-card .field label{
-    font-weight:900;
-    font-size:14px;
-    color:#FEF3C7 !important;
-    margin-bottom:4px;
-  }
-
-  .resa-summary-box{
-    margin-top:14px;
-    padding:12px;
-    border-radius:12px;
-    background:rgba(255,255,255,.15);
-    border:2px solid #FCBF49;
-    color:#FEF3C7;
-    font-size:16px;
-    font-weight:800;
-  }
-  .resa-summary-box strong{
-    color:#ffffff;
-    font-weight:900;
-  }
-</style>
-</head>
-<body>
-<div class="app">
-  <header>
-    <div class="brand">${data.logementNom} — <span>DIGIY LOC</span></div>
-    <div class="tag">${data.typeLogement} à ${data.logementVille} · ${data.maxGuests} personnes max</div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div>
-        <h1>${data.typeLogement} ${data.logementNom} — ${data.logementVille}</h1>
-        <p>${data.descCourte}</p>
-        <div class="chips">
-          <span class="chip">${data.chip1}</span>
-          <span class="chip">${data.chip2}</span>
-          <span class="chip">${data.chip3}</span>
-          <span class="chip">${data.chip4}</span>
-        </div>
-
-        <div class="hero-media">
-          <img src="${data.photoUrl}"
-               alt="${data.typeLogement} ${data.logementNom} à ${data.logementVille}"
-               class="hero-photo">
-          <div class="hero-caption">
-            Vue du ${data.typeLogement.toLowerCase()} ${data.logementNom} — ${data.logementVille} (visuel DIGIY).
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="price-block">
-          <h2>Tarifs ${data.logementNom}</h2>
-          <div class="tarifs">
-            <span><span>Nuit :</span><strong>${parseInt(data.tarifNuit).toLocaleString('fr-FR')} F</strong></span>
-            <span><span>Semaine :</span><strong>${parseInt(data.tarifSemaine).toLocaleString('fr-FR')} F</strong></span>
-            <span><span>Mois :</span><strong>${parseInt(data.tarifMois).toLocaleString('fr-FR')} F</strong></span>
-          </div>
-          <div style="font-size:11px;margin-top:4px;color:var(--muted);">
-            ⚡ Sénélec en sus selon consommation électrique.
-          </div>
-        </div>
-
-        <div class="wave-card">
-          <div style="font-size:20px;font-weight:900;color:#ffffff;margin-bottom:8px;">
-            💳 Paiement direct propriétaire — Wave
-          </div>
-
-          <div class="pay-number">
-            ${data.wavePhone}
-          </div>
-
-          <div class="pay-note">
-            ✔ À utiliser dans votre application Wave
-          </div>
-
-          <div style="margin-top:10px;font-size:15px;font-weight:700;color:#ffffff;">
-            Propriétaire : ${data.ownerName}
-          </div>
-        </div>
-
-        <div class="cta-col">
-          <a class="btn btn-wa" id="btnWa">
-            💬 Réserver par WhatsApp
-          </a>
-
-          <a class="btn btn-call" id="btnCall">
-            📞 Appeler le propriétaire
-          </a>
-
-          <button class="btn"
-                  style="background:#facc15;color:#111827;"
-                  type="button"
-                  id="btnSavePayMethod">
-            📝 Enregistrer mes infos (Wave)
-          </button>
-
-          ${data.videoUrl ? `<a class="btn btn-video"
-             href="${data.videoUrl}"
-             target="_blank" rel="noopener">
-            🎥 Voir la vidéo de présentation
-          </a>` : ''}
-        </div>
-      </div>
-    </section>
-
-    <section class="layout">
-      <article class="card resa-card">
-        <div class="resa-header">
-          <div class="resa-title-block">
-            <h2>Réserver ${data.logementNom}</h2>
-            <small>
-              Choisissez vos dates, vos infos, puis envoyez en 1 clic sur WhatsApp
-            </small>
-          </div>
-          <div class="resa-badge">
-            <span class="resa-badge-dot"></span>
-            <span>0% commission · Paiement direct</span>
-          </div>
-        </div>
-
-        <div class="resa-steps">
-          <strong>Comment ça marche ?</strong>
-          <ul>
-            <li>Je choisis mes dates d'arrivée et de départ.</li>
-            <li>Je renseigne mon nom, mon téléphone et le nombre de personnes.</li>
-            <li>Je clique sur <strong>"Réserver par WhatsApp"</strong> pour parler directement avec le propriétaire.</li>
-          </ul>
-        </div>
-
+    <!-- FORMULAIRE -->
+    <div class="form-card">
+      <h2 class="section-title">📋 Informations du logement</h2>
+      
+      <form id="formLogement">
         <div class="form-grid">
-          <div class="field">
-            <label>Date d'arrivée</label>
-            <input type="date" id="dateIn">
+          <div class="form-group">
+            <label>Nom du logement <span class="required">*</span></label>
+            <input type="text" name="nom" id="nom" placeholder="Ex: CHEZ BAPTISTE" required>
+            <div class="hint">Sans guillemets, MAJUSCULES recommandées</div>
           </div>
-          <div class="field">
-            <label>Date de départ</label>
-            <input type="date" id="dateOut">
+
+          <div class="form-group">
+            <label>Ville <span class="required">*</span></label>
+            <input type="text" name="adresse" id="adresse" placeholder="Ex: Saly" required>
           </div>
-          <div class="field">
-            <label>Nombre de personnes</label>
-            <select id="guests">
-              ${Array.from({length: parseInt(data.maxGuests)}, (_, i) => 
-                `<option value="${i+1}"${i+1 === parseInt(data.maxGuests) ? ' selected' : ''}>${i+1}</option>`
-              ).join('')}
+
+          <div class="form-group full">
+            <label>Description courte <span class="required">*</span></label>
+            <textarea name="description" id="description" placeholder="Ex: Appartement confortable dans un quartier paisible de Saly, idéal pour les séjours en famille." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Capacité max (personnes) <span class="required">*</span></label>
+            <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20" required>
+          </div>
+
+          <div class="form-group">
+            <label>Type de logement</label>
+            <select name="type_logement" id="type_logement">
+              <option>Appartement</option>
+              <option>Villa</option>
+              <option>Studio</option>
+              <option>Maison</option>
+              <option>Chambre</option>
             </select>
           </div>
-          <div class="field">
-            <label>Votre nom</label>
-            <input type="text" id="clientName" placeholder="Votre nom">
+        </div>
+
+        <h2 class="section-title">💰 Tarifs</h2>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Prix / Nuit (FCFA) <span class="required">*</span></label>
+            <input type="number" name="prix_nuit" id="prix_nuit" placeholder="30000" required>
           </div>
-          <div class="field">
-            <label>Votre téléphone</label>
-            <input type="tel" id="clientPhone" placeholder="+221 ...">
+
+          <div class="form-group">
+            <label>Prix / Semaine (FCFA)</label>
+            <input type="number" name="prix_semaine" id="prix_semaine" placeholder="175000">
           </div>
-          <div class="field">
-            <label>Mode de paiement</label>
-            <input type="text" value="Wave (paiement direct au propriétaire)" disabled>
+
+          <div class="form-group">
+            <label>Prix / Mois (FCFA)</label>
+            <input type="number" name="prix_mois" id="prix_mois" placeholder="550000">
           </div>
         </div>
 
-        <div class="summary resa-summary-box" id="summary">
-          Sélectionnez vos dates d'arrivée et de départ pour voir le nombre de nuits
-          et une estimation en tarif nuit. Le tarif final sera validé
-          avec le propriétaire sur WhatsApp.
+        <h2 class="section-title">👤 Contact (pré-rempli)</h2>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nom complet</label>
+            <input type="text" name="owner_name" id="owner_name" readonly>
+          </div>
+
+          <div class="form-group">
+            <label>WhatsApp / Téléphone</label>
+            <input type="tel" name="phone" id="phone" readonly>
+          </div>
         </div>
-      </article>
 
-      <article class="card">
-        <h2 class="digiy-title-strong">Infos pratiques & contacts</h2>
-        <small class="digiy-label-strong">Quelques points importants pour votre séjour.</small>
-
-        <ul style="margin:8px 0 0 16px; padding:0; font-size:13px;">
-          <li>${data.typeLogement} pour ${data.maxGuests} personnes maximum.</li>
-          <li>Tarifs : ${parseInt(data.tarifNuit).toLocaleString('fr-FR')} F / nuit · ${parseInt(data.tarifSemaine).toLocaleString('fr-FR')} F / semaine · ${parseInt(data.tarifMois).toLocaleString('fr-FR')} F / mois.</li>
-          <li>Sénélec en sus selon consommation.</li>
-          <li>Réservation et confirmation par WhatsApp ou appel direct.</li>
-          <li class="digiy-black-strong">Propriétaire : ${data.ownerName}</li>
-          <li>Paiement direct au propriétaire par Wave.</li>
-        </ul>
-
-        <div style="margin-top:10px;font-size:12px;line-height:1.6;">
-          WhatsApp principal : 
-          <a class="inline-link"
-             href="https://wa.me/${data.ownerWaId}"
-             target="_blank" rel="noopener">
-            ${data.ownerWa}
-          </a><br>
-
-          ${data.ownerWa2 !== data.ownerWa ? `WhatsApp / téléphone secondaire : 
-          <a class="inline-link"
-             href="https://wa.me/${data.ownerWa2.replace(/\+/g, '')}"
-             target="_blank" rel="noopener">
-            ${data.ownerWa2}
-          </a><br><br>` : ''}
-
-          <strong class="digiy-label-strong">Numéro Wave (paiement) :</strong><br>
-          <span class="pay-number">${data.wavePhone}</span><br>
-          <span class="pay-note">✔ À utiliser dans votre application Wave</span>
-          <br><br>
-
-          Appel direct : 
-          <a class="inline-link"
-             href="tel:${data.ownerWa}">
-            📞 ${data.ownerWa}
-          </a><br><br>
-
-          ${data.videoUrl ? `Vidéo de présentation : 
-          <a class="inline-link"
-             href="${data.videoUrl}"
-             target="_blank" rel="noopener">
-            🎥 Voir la vidéo
-          </a><br>` : ''}
-
-          Visuel DIGIY : 
-          <a class="inline-link"
-             href="${data.photoUrl}"
-             target="_blank" rel="noopener">
-            📸 Voir la photo
-          </a>
+        <h2 class="section-title">📸 Photo</h2>
+        
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>URL de la photo principale <span class="required">*</span></label>
+            <input type="url" name="photo_url" id="photo_url" placeholder="https://..." required>
+            <div class="hint">Upload d'abord sur orange-pig-270004.hostingersite.com, puis colle l'URL</div>
+          </div>
         </div>
-      </article>
-    </section>
-  </main>
 
-  <footer>
-    ${data.logementNom} — ${data.logementVille} · Module DIGIY LOC personnalisé · Contact WhatsApp : ${data.ownerWa}
-  </footer>
+        <!-- BOUTON GÉNÉRATION -->
+        <button class="btn btn-generate" type="submit">
+          🚀 CRÉER LA FICHE LOGEMENT
+        </button>
+
+        <button class="btn btn-back" type="button" id="btnBack">
+          ⬅️ Retour au cockpit
+        </button>
+      </form>
+
+      <!-- MESSAGE SUCCÈS -->
+      <div class="success-msg" id="successMsg">
+        <span class="eagle">🦅</span>
+        <h3>FICHE CRÉÉE AVEC SUCCÈS !</h3>
+        <p>Ta fiche est maintenant visible sur la vitrine publique digiyloc.com ! 🔥</p>
+        <button class="btn btn-back" type="button" id="btnRetour">
+          ✅ Retour au cockpit
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-const OWNER_NAME       = "${data.ownerName}";
-const OWNER_WA_ID      = "${data.ownerWaId}";
-const OWNER_PHONE_MAIN = "${data.ownerWa}";
-const OWNER_PHONE_SEC  = "${data.ownerWa2}";
-const WAVE_PHONE       = "${data.wavePhone}";
-
-const LOGEMENT_NOM     = "${data.logementNom}";
-const LOGEMENT_ID      = "${data.logementId}";
-const LOGEMENT_VILLE   = "${data.logementVille}";
-
-const TARIF_NUIT       = ${data.tarifNuit};
-const TARIF_SEMAINE    = ${data.tarifSemaine};
-const TARIF_MOIS       = ${data.tarifMois};
-
-const MAX_GUESTS       = ${data.maxGuests};
-
-function formatMoney(x){
-  return (x||0).toLocaleString("fr-FR") + " F";
-}
-
-const dateIn      = document.getElementById("dateIn");
-const dateOut     = document.getElementById("dateOut");
-const guests      = document.getElementById("guests");
-const clientName  = document.getElementById("clientName");
-const clientPhone = document.getElementById("clientPhone");
-const summary     = document.getElementById("summary");
-const btnWa       = document.getElementById("btnWa");
-const btnCall     = document.getElementById("btnCall");
-const btnSavePayMethod = document.getElementById("btnSavePayMethod");
-
-function getNights(){
-  if(!dateIn.value || !dateOut.value) return 0;
-  const d1 = new Date(dateIn.value);
-  const d2 = new Date(dateOut.value);
-  const diff = d2 - d1;
-  if(isNaN(diff) || diff <= 0) return 0;
-  return Math.round(diff / (1000*60*60*24));
-}
-
-function updateSummary(){
-  const nights = getNights();
-  const g = Number(guests.value||"1");
-  if(!nights){
-    summary.innerHTML = "Sélectionnez vos dates d'arrivée et de départ pour voir le nombre de nuits et une estimation en tarif nuit (" + formatMoney(TARIF_NUIT) + " / nuit). Le tarif final sera validé avec le propriétaire sur WhatsApp.";
+/* =========================================
+   ✅ PROTECTION + AUTO-FILL + DB SAVE
+========================================= */
+(async function(){
+  const loading = document.getElementById('loading');
+  const app = document.getElementById('app');
+  const form = document.getElementById('formLogement');
+  const successMsg = document.getElementById('successMsg');
+  const btnBack = document.getElementById('btnBack');
+  const btnRetour = document.getElementById('btnRetour');
+  
+  // ✅ 1. BOOT GUARD (protège la page)
+  if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
+    loading.innerHTML = '❌ Guard non chargé. <a href="pin.html" style="color:#facc15">Se connecter</a>';
     return;
   }
-  const totalNight = nights * TARIF_NUIT;
-  summary.innerHTML = "<div>Séjour de <strong>" + nights + "</strong> nuit(s) pour <strong>" + g + "</strong> personne(s) (max " + MAX_GUESTS + ").</div>" +
-    "<div>Estimation en tarif nuit (" + formatMoney(TARIF_NUIT) + " / nuit) : <strong>" + formatMoney(totalNight) + "</strong>.</div>" +
-    "<div style='margin-top:4px;font-size:12px;'>" +
-    "Tarifs indicatifs : <strong>" + formatMoney(TARIF_SEMAINE) + "</strong> la semaine · <strong>" + formatMoney(TARIF_MOIS) + "</strong> le mois (Sénélec en sus).<br>" +
-    "Le tarif final sera confirmé avec le propriétaire lors de l'échange WhatsApp." +
-    "</div>";
-}
 
-[dateIn, dateOut, guests].forEach(el=>{
-  el.addEventListener("change", updateSummary);
-});
-
-function getPayMethodLabel(){
-  return "Wave (" + WAVE_PHONE + ")";
-}
-
-btnWa.addEventListener("click", ()=>{
-  const nights = getNights();
-  const g = Number(guests.value||"1");
-  const name = clientName.value.trim() || "Client";
-  const phoneClient = clientPhone.value.trim() || "Non communiqué";
-
-  let txt = "Bonjour, je souhaite une r\\u00e9servation pour " + LOGEMENT_NOM + " \\u00e0 " + LOGEMENT_VILLE + ".%0A";
-  txt += "- Nom : " + name + "%0A";
-  txt += "- T\\u00e9l\\u00e9phone : " + phoneClient + "%0A";
-  if(dateIn.value && dateOut.value){
-    txt += "- Dates : du " + dateIn.value + " au " + dateOut.value + " (" + nights + " nuit(s))%0A";
+  const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
+  
+  if(!g?.ok){
+    loading.innerHTML = '❌ Accès refusé. <a href="pin.html" style="color:#facc15">Se connecter</a>';
+    return;
   }
-  txt += "- Nombre de personnes : " + g + "%0A";
-  txt += "- Mode de paiement pr\\u00e9vu : " + getPayMethodLabel() + "%0A";
-  txt += "- Tarifs DIGIY LOC : Nuit " + formatMoney(TARIF_NUIT) + " / Semaine " + formatMoney(TARIF_SEMAINE) + " / Mois " + formatMoney(TARIF_MOIS) + " (S\\u00e9n\\u00e9lec en sus).%0A";
-  txt += "%0AMerci de me confirmer la disponibilit\\u00e9.";
-  const url = "https://wa.me/" + OWNER_WA_ID + "?text=" + txt;
-  window.open(url, "_blank");
-});
 
-btnCall.addEventListener("click", ()=>{
-  window.location.href = "tel:" + OWNER_PHONE_MAIN;
-});
+  // ✅ 2. RÉCUPÈRE SESSION
+  const sess = window.DIGIY_GUARD.getSession?.() || null;
+  const ownerId = sess?.owner_id || null;
+  const phone = sess?.phone || localStorage.getItem('DIGIY_PHONE') || '';
+  const businessName = localStorage.getItem('DIGIY_BUSINESS_NAME') || '';
+  const slug = window.DIGIY_GUARD.getSlug() || '';
 
-btnSavePayMethod.addEventListener("click", ()=>{
-  const nights = getNights();
-  const g = Number(guests.value||"1");
-  const name = clientName.value.trim() || "Client";
-  const phoneClient = clientPhone.value.trim() || "Non communiqué";
-  const methodLabel = getPayMethodLabel();
-
-  const bookingData = {
-    logementId: LOGEMENT_ID,
-    ownerName: OWNER_NAME,
-    ownerPhone: OWNER_PHONE_MAIN,
-    clientName: name,
-    clientPhone: phoneClient,
-    dateIn: dateIn.value || null,
-    dateOut: dateOut.value || null,
-    nights,
-    guests: g,
-    payMethod: "wave",
-    payMethodLabel: methodLabel,
-    createdAt: new Date().toISOString()
-  };
-
-  console.log("DIGIY LOC — booking enregistré (local, à connecter à la base) :", bookingData);
-
-  let txt = "Bonjour, je viens d'enregistrer mes infos pour " + LOGEMENT_NOM + " \\u00e0 " + LOGEMENT_VILLE + ".%0A";
-  txt += "- Nom : " + name + "%0A";
-  txt += "- T\\u00e9l\\u00e9phone : " + phoneClient + "%0A";
-  if(dateIn.value && dateOut.value){
-    txt += "- S\\u00e9jour : du " + dateIn.value + " au " + dateOut.value + " (" + nights + " nuit(s))%0A";
+  if(!ownerId){
+    loading.innerHTML = '❌ Session invalide. <a href="pin.html" style="color:#facc15">Se reconnecter</a>';
+    return;
   }
-  txt += "- Nombre de personnes : " + g + "%0A";
-  txt += "- Mode de paiement pr\\u00e9vu : " + methodLabel + "%0A";
-  txt += "%0AJe ferai le r\\u00e8glement directement via mon application Wave.";
-  const url = "https://wa.me/" + OWNER_WA_ID + "?text=" + txt;
-  window.open(url, "_blank");
-});
-</scr` + `ipt>
-</body>
-</html>`;
-}
+
+  // ✅ 3. AUTO-FILL
+  document.getElementById('owner_name').value = businessName || 'Propriétaire';
+  document.getElementById('phone').value = phone || '';
+
+  // ✅ 4. AFFICHE APP
+  loading.style.display = 'none';
+  app.style.display = 'block';
+
+  // ✅ 5. NAVIGATION
+  function goBack(){
+    const url = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug('./app.html') : './app.html';
+    location.href = url;
+  }
+
+  btnBack.addEventListener('click', goBack);
+  btnRetour.addEventListener('click', goBack);
+
+  // ✅ 6. SUBMIT FORM → SAVE DB
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const btn = form.querySelector('.btn-generate');
+    btn.disabled = true;
+    btn.textContent = '⏳ Création en cours...';
+
+    try {
+      const sb = window.DIGIY_GUARD?.getSb?.();
+      if(!sb) throw new Error("Supabase non initialisé");
+
+      const formData = new FormData(form);
+      
+      // Génération slug automatique
+      const nom = formData.get('nom').trim();
+      const ville = formData.get('adresse').trim();
+      const autoSlug = (nom + '-' + ville)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      const payload = {
+        owner_id: ownerId,
+        nom: nom,
+        adresse: ville,
+        personnes_max: parseInt(formData.get('personnes_max') || 4),
+        prix_nuit: parseInt(formData.get('prix_nuit') || 0),
+        prix_semaine: formData.get('prix_semaine') ? parseInt(formData.get('prix_semaine')) : null,
+        prix_mois: formData.get('prix_mois') ? parseInt(formData.get('prix_mois')) : null,
+        description: formData.get('description').trim() || null,
+        photo_url: formData.get('photo_url').trim() || null,
+        phone: phone || null,
+        slug: autoSlug,
+        status: 'actif',
+        is_public: true, // ✅ Visible sur vitrine
+        created_at: new Date().toISOString()
+      };
+
+      console.log('📤 Payload:', payload);
+
+      const { data, error } = await sb
+        .from('digiy_loc_rooms')
+        .insert(payload)
+        .select()
+        .single();
+
+      if(error) throw error;
+
+      console.log('✅ Fiche créée:', data);
+
+      // ✅ SUCCÈS
+      form.style.display = 'none';
+      successMsg.classList.add('show');
+
+    } catch(err) {
+      console.error('❌ Erreur:', err);
+      alert('❌ Erreur: ' + (err?.message || err));
+      btn.disabled = false;
+      btn.textContent = '🚀 CRÉER LA FICHE LOGEMENT';
+    }
+  });
+
+})();
 </script>
 
 </body>
