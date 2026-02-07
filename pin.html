@@ -102,21 +102,18 @@
 <script>
 (async () => {
   // =========================
-  // ✅ MODULE LOC PRO
-  // =========================
-  const MODULE_CODE = "loc_pro";
-  const NEXT_URL    = "app.html";
-
-  // =========================
-  // SUPABASE (TES CLÉS)
+  // ✅ GUARD COMPAT (même clés que guard.js)
   // =========================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  
+  const SESSION_KEY = "DIGIY_LOC_PRO_SESSION"; // ✅ MÊME CLÉ que guard.js
+  const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8h
+  const NEXT_URL = "app.html";
+
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const $ = (id)=>document.getElementById(id);
-  $("modPill").textContent = MODULE_CODE;
-  $("title").textContent = "LOC PRO — PIN";
 
   // slug depuis URL ?slug=
   const url = new URL(location.href);
@@ -135,25 +132,32 @@
 
   setTimeout(()=>$("pin").focus(), 150);
 
-  function saveSessions(payload){
+  function now(){ return Date.now(); }
+
+  function lsSet(k,v){
+    try{ localStorage.setItem(k, String(v ?? "")); }catch(_){}
+  }
+
+  function saveSession(data){
+    // ✅ MÊME FORMAT que guard.js
     const session = {
-      slug: payload.slug || slug,
-      phone: payload.phone || null,
-      owner_id: payload.owner_id,
-      module: payload.module || MODULE_CODE,
-      ts: Date.now()
+      ok: true,
+      owner_id: data.owner_id,
+      slug: slug,
+      title: data.title || "",
+      phone: data.phone || "",
+      created_at: now(),
+      expires_at: now() + SESSION_TTL_MS
     };
 
-    // ✅ session universelle (HUB)
-    localStorage.setItem("DIGIY_ACCESS", JSON.stringify({
-      slug: session.slug,
-      phone: session.phone,
-      owner_id: session.owner_id,
-      ts: session.ts
-    }));
+    // ✅ CLÉ PRINCIPALE (guard.js)
+    lsSet(SESSION_KEY, JSON.stringify(session));
 
-    // ✅ session module
-    localStorage.setItem("DIGIY_SESSION_" + MODULE_CODE.toUpperCase(), JSON.stringify(session));
+    // ✅ Sync LS utiles
+    lsSet("DIGIY_PRO_ID", session.owner_id);
+    lsSet("DIGIY_SLUG", session.slug);
+    if(session.title) lsSet("DIGIY_TITLE", session.title);
+    if(session.phone) lsSet("DIGIY_PHONE", session.phone);
   }
 
   async function enter(){
@@ -166,10 +170,10 @@
     $("go").disabled = true;
     msg(`Vérification en cours…`);
 
-    const { data, error } = await sb.rpc("digiy_verify_access", {
+    // ✅ MÊME RPC que guard.js (verify_access_pin)
+    const { data, error } = await sb.rpc("verify_access_pin", {
       p_slug: slug,
-      p_pin: pin,
-      p_module: MODULE_CODE
+      p_pin: pin
     });
 
     if(error){
@@ -178,22 +182,17 @@
       return;
     }
 
-    if(!data?.ok){
+    // Parse si string
+    const result = typeof data === "string" ? JSON.parse(data) : data;
+
+    if(!result?.ok || !result?.owner_id){
       $("go").disabled = false;
-
-      if(data?.reason === "module_inactive"){
-        msg(`<span class="bad">🔒 Module non actif.</span><br>
-             LOC PRO n'est pas encore activé pour ce logement.<br>
-             <span style="opacity:.85">Modules actifs: ${(data.modules_active||[]).join(", ")}</span>`);
-        return;
-      }
-
-      msg(`<span class="bad">❌ Accès refusé.</span><br>PIN incorrect pour LOC PRO.`);
+      msg(`<span class="bad">❌ Accès refusé.</span><br>${result?.error || "PIN incorrect"}`);
       return;
     }
 
-    // ✅ OK
-    saveSessions(data);
+    // ✅ Sauvegarde session (compat guard)
+    saveSession(result);
     msg(`<span class="ok">✅ Accès validé.</span> Ouverture de ton espace…`);
 
     setTimeout(()=>{
