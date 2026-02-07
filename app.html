@@ -32,6 +32,31 @@
       color:var(--text);
       min-height:100vh;
     }
+
+    /* ✅ LOADING / PROTECTION */
+    #loading{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:2rem;
+      text-align:center;
+      color:var(--text);
+    }
+    #loading .box{
+      width:min(560px, 92vw);
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:1.25rem;
+      backdrop-filter:blur(20px);
+      box-shadow:0 18px 50px rgba(0,0,0,.35);
+    }
+    #loading .t{font-weight:900;font-size:1.1rem}
+    #loading .s{margin-top:.5rem;color:var(--muted);font-weight:700}
+    #loading a{color:var(--accent);font-weight:900;text-decoration:none}
+
+    /* ✅ APP */
+    #app{display:none}
     .container{max-width:1400px;margin:0 auto;padding:1rem}
 
     /* HEADER */
@@ -57,7 +82,7 @@
     }
     .header-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
 
-    /* MINI NAV TOP (facultatif mais pratique) */
+    /* MINI NAV TOP */
     .miniNav{
       display:flex;
       gap:.5rem;
@@ -246,171 +271,178 @@
 
 <body>
 
-<div class="container">
-  <!-- HEADER -->
-  <div class="header">
-    <div>
-      <h1>🏠 DIGIY LOC PRO</h1>
-      <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
-        <span id="userName">Gestionnaire</span> ·
-        <span id="userPhone">—</span>
-      </p>
-
-      <!-- ✅ MINI NAV TOP (slug conservé automatiquement) -->
-      <div class="miniNav">
-        <a class="btn btn-secondary" data-go="./index.html" data-mode="replace" href="#">🏠 Cockpit</a>
-        <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
-        <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
-        <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
-      </div>
-    </div>
-
-    <div class="header-actions">
-      <!-- ✅ BOUTON PRINCIPAL GÉNÉRATEUR (remplace modal) -->
-      <button class="btn btn-primary" data-go="./generator.html" type="button">
-        🏗️ CRÉER UNE FICHE LOGEMENT
-      </button>
-
-      <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
-        🔗 Liens / QR
-      </button>
-
-      <button class="btn btn-secondary" data-go="./photos.html" type="button">
-        🖼️ Photos
-      </button>
-
-      <button class="btn btn-secondary" data-go="./ndimbal.html" id="quickNdimbal" type="button">
-        ♾️ NDIMBAL
-      </button>
-
-      <button class="btn btn-danger" data-action="logout" type="button">
-        🚪 Déconnexion
-      </button>
-    </div>
-  </div>
-
-  <!-- TABS -->
-  <div class="tabs" id="tabs">
-    <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
-    <div class="tab" data-tab="logements">🏠 Mes logements</div>
-    <div class="tab" data-tab="reservations">📅 Réservations</div>
-    <div class="tab" data-tab="calendrier">📆 Calendrier</div>
-    <div class="tab" data-tab="stats">📈 Statistiques</div>
-  </div>
-
-  <!-- CONTENT: DASHBOARD -->
-  <div id="dashboard" class="content active">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Revenus ce mois</div>
-        <div class="stat-value" id="revenusMois">0 F</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Taux d'occupation</div>
-        <div class="stat-value" id="tauxOccupation">0%</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Réservations actives</div>
-        <div class="stat-value" id="resasActives">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Logements actifs</div>
-        <div class="stat-value" id="logementsActifs">0</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>📅 Prochaines arrivées</h2>
-      <div id="prochainesArrivees">
-        <p style="color:var(--muted)">Chargement...</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>⏳ Demandes en attente</h2>
-      <div id="demandesAttente">
-        <p style="color:var(--muted)">Chargement...</p>
-      </div>
-    </div>
-
-    <!-- (OPTIONNEL) PULSE TEST -->
-    <div class="card">
-      <h2>📲 Pulse (Test rapide)</h2>
-      <p style="color:var(--muted);margin-bottom:1rem">
-        Test d'envoi via l'API. (Désactive PULSE.enabled si tu veux.)
-      </p>
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
-        <span id="pulseMsg" style="color:var(--muted)"></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTENT: LOGEMENTS -->
-  <div id="logements" class="content">
-    <div class="card">
-      <h2>🏠 Mes logements</h2>
-      <div id="listeLogements"></div>
-    </div>
-  </div>
-
-  <!-- CONTENT: RÉSERVATIONS -->
-  <div id="reservations" class="content">
-    <div class="card">
-      <h2>📅 Toutes les réservations</h2>
-      <div style="overflow-x:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>Client</th>
-              <th>Logement</th>
-              <th>Dates</th>
-              <th>Montant</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tableReservations">
-            <tr>
-              <td colspan="6" style="text-align:center;color:var(--muted)">
-                Chargement...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTENT: CALENDRIER -->
-  <div id="calendrier" class="content">
-    <div class="card">
-      <h2>📆 Calendrier de disponibilité</h2>
-      <div id="calendarView">
-        <p style="color:var(--muted)">Chargement...</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTENT: STATS -->
-  <div id="stats" class="content">
-    <div class="card">
-      <h2>📈 Statistiques détaillées</h2>
-      <div id="statsDetails">
-        <p>Statistiques à venir...</p>
-      </div>
-    </div>
+<!-- ✅ LOADING -->
+<div id="loading">
+  <div class="box">
+    <div class="t">🔒 Vérification accès…</div>
+    <div class="s">DIGIY LOC PRO protège ton cockpit (PIN / abonnement / slug).</div>
   </div>
 </div>
 
-<!-- ✅ PLUS DE MODAL - Générateur externe -->
+<!-- ✅ APP (affiché après guard ok) -->
+<div id="app">
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <h1>🏠 DIGIY LOC PRO</h1>
+        <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
+          <span id="userName">Gestionnaire</span> ·
+          <span id="userPhone">—</span>
+        </p>
+
+        <!-- ✅ MINI NAV TOP -->
+        <div class="miniNav">
+          <a class="btn btn-secondary" data-go="./index.html" data-mode="replace" href="#">🏠 Cockpit</a>
+          <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
+          <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
+          <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-primary" data-go="./generator.html" type="button">
+          🏗️ CRÉER UNE FICHE LOGEMENT
+        </button>
+
+        <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
+          🔗 Liens / QR
+        </button>
+
+        <button class="btn btn-secondary" data-go="./photos.html" type="button">
+          🖼️ Photos
+        </button>
+
+        <button class="btn btn-secondary" data-go="./ndimbal.html" id="quickNdimbal" type="button">
+          ♾️ NDIMBAL
+        </button>
+
+        <button class="btn btn-danger" data-action="logout" type="button">
+          🚪 Déconnexion
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
+      <div class="tab" data-tab="logements">🏠 Mes logements</div>
+      <div class="tab" data-tab="reservations">📅 Réservations</div>
+      <div class="tab" data-tab="calendrier">📆 Calendrier</div>
+      <div class="tab" data-tab="stats">📈 Statistiques</div>
+    </div>
+
+    <!-- CONTENT: DASHBOARD -->
+    <div id="dashboard" class="content active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Revenus ce mois</div>
+          <div class="stat-value" id="revenusMois">0 F</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Taux d'occupation</div>
+          <div class="stat-value" id="tauxOccupation">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Réservations actives</div>
+          <div class="stat-value" id="resasActives">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Logements actifs</div>
+          <div class="stat-value" id="logementsActifs">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Prochaines arrivées</h2>
+        <div id="prochainesArrivees">
+          <p style="color:var(--muted)">Chargement...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>⏳ Demandes en attente</h2>
+        <div id="demandesAttente">
+          <p style="color:var(--muted)">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- PULSE TEST -->
+      <div class="card">
+        <h2>📲 Pulse (Test rapide)</h2>
+        <p style="color:var(--muted);margin-bottom:1rem">
+          Test d'envoi via l'API. (Désactive PULSE.enabled si tu veux.)
+        </p>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
+          <span id="pulseMsg" style="color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT: LOGEMENTS -->
+    <div id="logements" class="content">
+      <div class="card">
+        <h2>🏠 Mes logements</h2>
+        <div id="listeLogements"></div>
+      </div>
+    </div>
+
+    <!-- CONTENT: RÉSERVATIONS -->
+    <div id="reservations" class="content">
+      <div class="card">
+        <h2>📅 Toutes les réservations</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Logement</th>
+                <th>Dates</th>
+                <th>Montant</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableReservations">
+              <tr>
+                <td colspan="6" style="text-align:center;color:var(--muted)">
+                  Chargement...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT: CALENDRIER -->
+    <div id="calendrier" class="content">
+      <div class="card">
+        <h2>📆 Calendrier de disponibilité</h2>
+        <div id="calendarView">
+          <p style="color:var(--muted)">Chargement...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT: STATS -->
+    <div id="stats" class="content">
+      <div class="card">
+        <h2>📈 Statistiques détaillées</h2>
+        <div id="statsDetails">
+          <p>Statistiques à venir...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script>
 /* =========================================================
    ✅ DIGIY NAV AUTO — QR SAFE (data-go) + Actions (data-action)
-   - data-go="./page.html" => window.DIGIY_GUARD.go(page, mode)
-   - data-mode="replace" optionnel (assign par défaut)
-   - data-action="..." => dispatch vers handlers
 ========================================================= */
 (function(){
   "use strict";
@@ -475,7 +507,7 @@
   const mo = new MutationObserver(()=>boot());
   mo.observe(document.documentElement, { childList:true, subtree:true });
 
-  // Register actions
+  // Register actions (résolus au moment du clic)
   Actions.logout = ()=> logout();
   Actions.pulseTest = ()=> pulseTest();
 })();
@@ -618,12 +650,15 @@ function logout() {
     location.href = go;
   }
 }
+
 function hydrateHeader() {
   const phoneEl = document.getElementById("userPhone");
   if(phoneEl) phoneEl.textContent = State.phone || "—";
 
   const nameEl = document.getElementById("userName");
-  if(nameEl) nameEl.textContent = "Gestionnaire";
+  // si tu stockes DIGIY_BUSINESS_NAME côté localStorage, on l’affiche
+  const bn = (localStorage.getItem("DIGIY_BUSINESS_NAME") || "").trim();
+  if(nameEl) nameEl.textContent = bn || "Gestionnaire";
 }
 
 /* =============================
@@ -863,7 +898,7 @@ async function loadReservations(){
 }
 
 /* =============================
-   DASHBOARD (KPIs + listes)
+   DASHBOARD
 ============================= */
 function reservationIsActive(r){
   const st = String(r?.[DB.resStatus] || "").toLowerCase();
@@ -1073,7 +1108,7 @@ async function loadCalendar(roomId=null){
 }
 
 /* =============================
-   PULSE TEST (OPTIONNEL)
+   PULSE TEST
 ============================= */
 async function pulseTest(){
   const msgEl = document.getElementById("pulseMsg");
@@ -1109,14 +1144,29 @@ async function pulseTest(){
 }
 
 /* =============================
-   ✅ INIT (GUARD FIRST)
+   ✅ INIT (GUARD FIRST) + SHOW APP
 ============================= */
 (async function init(){
   const MODULE = "loc";
   const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
 
+  const loading = document.getElementById("loading");
+  const app = document.getElementById("app");
+
+  function fail(msg){
+    if(!loading) return;
+    loading.innerHTML = `
+      <div class="box">
+        <div class="t">❌ Accès impossible</div>
+        <div class="s">${msg || "Erreur inconnue"}</div>
+        <div class="s" style="margin-top:.6rem">
+          <a href="./pin.html">Se connecter</a>
+        </div>
+      </div>`;
+  }
+
   if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
-    console.warn("Guard absent (guard.js non chargé).");
+    fail("Guard absent (guard.js non chargé).");
     return;
   }
 
@@ -1129,7 +1179,10 @@ async function pulseTest(){
     checkSubscription: true
   });
 
-  if(!guardRes?.ok) return;
+  if(!guardRes?.ok){
+    fail("Accès refusé (PIN / abonnement / slug).");
+    return;
+  }
 
   const sess = window.DIGIY_GUARD.getSession?.() || null;
   State.ownerId = sess?.owner_id || null;
@@ -1137,13 +1190,16 @@ async function pulseTest(){
   State.business_code = sess?.business_code || sess?.businessCode || "TEST";
 
   if(!State.ownerId){
-    console.warn("owner_id introuvable, retour PIN.");
     const go = (window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") : window.DIGIY_GUARD.withSlug("./pin.html"));
     window.location.replace(go);
     return;
   }
 
   hydrateHeader();
+
+  // ✅ show app
+  if(loading) loading.style.display = "none";
+  if(app) app.style.display = "block";
 
   try{
     State.rooms = await fetchRooms();
