@@ -90,9 +90,7 @@ body{
 }
 
 @media(max-width:768px){
-  .form-grid{
-    grid-template-columns:1fr;
-  }
+  .form-grid{ grid-template-columns:1fr; }
 }
 
 .form-group{
@@ -100,9 +98,7 @@ body{
   flex-direction:column;
 }
 
-.form-group.full{
-  grid-column:1/-1;
-}
+.form-group.full{ grid-column:1/-1; }
 
 label{
   font-weight:700;
@@ -190,9 +186,7 @@ textarea{
   text-align:center;
 }
 
-.success-msg.show{
-  display:block;
-}
+.success-msg.show{ display:block; }
 
 .success-msg h3{
   margin:0 0 10px;
@@ -213,18 +207,62 @@ textarea{
   font-size:18px;
   font-weight:700;
 }
+
+.public-link{
+  margin-top:12px;
+  padding:14px;
+  border:1px solid rgba(34,197,94,.35);
+  border-radius:12px;
+  background:rgba(0,0,0,.22);
+  text-align:left;
+  word-break:break-all;
+}
+.public-link .row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.public-link a{
+  color:#a7f3d0;
+  text-decoration:none;
+  font-weight:800;
+}
+.small-btn{
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  color:var(--ink);
+  border-radius:999px;
+  padding:10px 14px;
+  font-weight:800;
+  cursor:pointer;
+}
+.small-btn:hover{ transform:translateY(-1px); }
+
+.error-box{
+  display:none;
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(239,68,68,.5);
+  background:rgba(239,68,68,.08);
+  color:#fecaca;
+  font-weight:700;
+}
+.error-box.show{ display:block; }
 </style>
 </head>
+
 <body>
 
 <!-- ✅ PROTECTION LOADING -->
-<div id="loading" class="loading">
-  🔒 Vérification accès...
-</div>
+<div id="loading" class="loading">🔒 Vérification accès...</div>
 
 <!-- ✅ APP (caché tant que pas auth) -->
 <div id="app" style="display:none;">
   <div class="container">
+
     <!-- HEADER -->
     <div class="header">
       <h1>🦅 GÉNÉRATEUR DIGIY LOC</h1>
@@ -235,7 +273,7 @@ textarea{
     <!-- FORMULAIRE -->
     <div class="form-card">
       <h2 class="section-title">📋 Informations du logement</h2>
-      
+
       <form id="formLogement">
         <div class="form-grid">
           <div class="form-group">
@@ -272,7 +310,7 @@ textarea{
         </div>
 
         <h2 class="section-title">💰 Tarifs</h2>
-        
+
         <div class="form-grid">
           <div class="form-group">
             <label>Prix / Nuit (FCFA) <span class="required">*</span></label>
@@ -291,7 +329,7 @@ textarea{
         </div>
 
         <h2 class="section-title">👤 Contact (pré-rempli)</h2>
-        
+
         <div class="form-grid">
           <div class="form-group">
             <label>Nom complet</label>
@@ -305,7 +343,7 @@ textarea{
         </div>
 
         <h2 class="section-title">📸 Photo</h2>
-        
+
         <div class="form-grid">
           <div class="form-group full">
             <label>URL de la photo principale <span class="required">*</span></label>
@@ -313,6 +351,8 @@ textarea{
             <div class="hint">Upload d'abord sur orange-pig-270004.hostingersite.com, puis colle l'URL</div>
           </div>
         </div>
+
+        <div class="error-box" id="errorBox"></div>
 
         <!-- BOUTON GÉNÉRATION -->
         <button class="btn btn-generate" type="submit">
@@ -328,7 +368,17 @@ textarea{
       <div class="success-msg" id="successMsg">
         <span class="eagle">🦅</span>
         <h3>FICHE CRÉÉE AVEC SUCCÈS !</h3>
-        <p>Ta fiche est maintenant visible sur la vitrine publique digiyloc.com ! 🔥</p>
+        <p>Ta fiche est maintenant visible sur la vitrine publique 🔥</p>
+
+        <div class="public-link" id="publicLinkBox" style="display:none;">
+          <div style="font-weight:900; color:#bbf7d0; margin-bottom:8px;">🔗 Lien public :</div>
+          <div class="row">
+            <a id="publicLink" href="#" target="_blank" rel="noopener">—</a>
+            <button class="small-btn" type="button" id="btnCopy">📋 Copier</button>
+          </div>
+          <div class="hint" style="margin-top:8px;">Si tu changes l’URL de vitrine plus tard, tu touches juste la variable <b>PUBLIC_BASE</b> dans le JS.</div>
+        </div>
+
         <button class="btn btn-back" type="button" id="btnRetour">
           ✅ Retour au cockpit
         </button>
@@ -348,7 +398,38 @@ textarea{
   const successMsg = document.getElementById('successMsg');
   const btnBack = document.getElementById('btnBack');
   const btnRetour = document.getElementById('btnRetour');
-  
+  const errorBox = document.getElementById('errorBox');
+
+  const publicLinkBox = document.getElementById('publicLinkBox');
+  const publicLink = document.getElementById('publicLink');
+  const btnCopy = document.getElementById('btnCopy');
+
+  // ✅ À ADAPTER si tu veux une autre vitrine
+  const PUBLIC_BASE = "https://digiyloc.com"; // ou "https://digiyloc.com/rooms" selon ta route
+
+  function showError(msg){
+    errorBox.textContent = msg || "Erreur inconnue";
+    errorBox.classList.add('show');
+  }
+  function clearError(){
+    errorBox.textContent = "";
+    errorBox.classList.remove('show');
+  }
+
+  function makeSlug(str){
+    return String(str || "")
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 90);
+  }
+
+  function uniqSuffix(){
+    return Math.random().toString(36).slice(2, 6);
+  }
+
   // ✅ 1. BOOT GUARD (protège la page)
   if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
     loading.innerHTML = '❌ Guard non chargé. <a href="pin.html" style="color:#facc15">Se connecter</a>';
@@ -356,7 +437,7 @@ textarea{
   }
 
   const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
-  
+
   if(!g?.ok){
     loading.innerHTML = '❌ Accès refusé. <a href="pin.html" style="color:#facc15">Se connecter</a>';
     return;
@@ -367,7 +448,7 @@ textarea{
   const ownerId = sess?.owner_id || null;
   const phone = sess?.phone || localStorage.getItem('DIGIY_PHONE') || '';
   const businessName = localStorage.getItem('DIGIY_BUSINESS_NAME') || '';
-  const slug = window.DIGIY_GUARD.getSlug() || '';
+  const slugOwner = window.DIGIY_GUARD.getSlug?.() || '';
 
   if(!ownerId){
     loading.innerHTML = '❌ Session invalide. <a href="pin.html" style="color:#facc15">Se reconnecter</a>';
@@ -387,14 +468,14 @@ textarea{
     const url = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug('./app.html') : './app.html';
     location.href = url;
   }
-
   btnBack.addEventListener('click', goBack);
   btnRetour.addEventListener('click', goBack);
 
   // ✅ 6. SUBMIT FORM → SAVE DB
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+    clearError();
+
     const btn = form.querySelector('.btn-generate');
     btn.disabled = true;
     btn.textContent = '⏳ Création en cours...';
@@ -403,56 +484,114 @@ textarea{
       const sb = window.DIGIY_GUARD?.getSb?.();
       if(!sb) throw new Error("Supabase non initialisé");
 
-      const formData = new FormData(form);
-      
-      // Génération slug automatique
-      const nom = formData.get('nom').trim();
-      const ville = formData.get('adresse').trim();
-      const autoSlug = (nom + '-' + ville)
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      const fd = new FormData(form);
 
-      const payload = {
+      const nom = String(fd.get('nom') || '').trim();
+      const ville = String(fd.get('adresse') || '').trim();
+      const description = String(fd.get('description') || '').trim();
+      const photo_url = String(fd.get('photo_url') || '').trim();
+      const type_logement = String(fd.get('type_logement') || 'Appartement').trim();
+
+      if(!nom) throw new Error("Nom du logement requis");
+      if(!ville) throw new Error("Ville requise");
+      if(!description) throw new Error("Description requise");
+      if(!photo_url) throw new Error("URL photo requise");
+
+      const personnes_max = parseInt(fd.get('personnes_max') || '4', 10);
+      const prix_nuit = parseInt(fd.get('prix_nuit') || '0', 10);
+
+      if(!Number.isFinite(personnes_max) || personnes_max < 1) throw new Error("Capacité invalide");
+      if(!Number.isFinite(prix_nuit) || prix_nuit <= 0) throw new Error("Prix/nuit invalide");
+
+      const prix_semaine = String(fd.get('prix_semaine') || '').trim();
+      const prix_mois = String(fd.get('prix_mois') || '').trim();
+
+      // ✅ slug auto
+      const baseSlug = makeSlug(nom + '-' + ville);
+      let finalSlug = baseSlug || ('logement-' + uniqSuffix());
+
+      // ✅ payload (ne force pas created_at: laisse la DB gérer si elle a default now())
+      const payloadBase = {
         owner_id: ownerId,
-        nom: nom,
+        owner_slug: slugOwner || null,          // optionnel (si tu as une colonne)
+        nom,
         adresse: ville,
-        personnes_max: parseInt(formData.get('personnes_max') || 4),
-        prix_nuit: parseInt(formData.get('prix_nuit') || 0),
-        prix_semaine: formData.get('prix_semaine') ? parseInt(formData.get('prix_semaine')) : null,
-        prix_mois: formData.get('prix_mois') ? parseInt(formData.get('prix_mois')) : null,
-        description: formData.get('description').trim() || null,
-        photo_url: formData.get('photo_url').trim() || null,
+        type_logement,
+        personnes_max,
+        prix_nuit,
+        prix_semaine: prix_semaine ? parseInt(prix_semaine, 10) : null,
+        prix_mois: prix_mois ? parseInt(prix_mois, 10) : null,
+        description,
+        photo_url,
         phone: phone || null,
-        slug: autoSlug,
         status: 'actif',
-        is_public: true, // ✅ Visible sur vitrine
-        created_at: new Date().toISOString()
+        is_public: true,
       };
 
-      console.log('📤 Payload:', payload);
+      // ✅ tentative insert, si slug conflict → retente avec suffix
+      async function tryInsert(slugTry, attempt){
+        const payload = { ...payloadBase, slug: slugTry };
+        const { data, error } = await sb
+          .from('digiy_loc_rooms')
+          .insert(payload)
+          .select()
+          .single();
 
-      const { data, error } = await sb
-        .from('digiy_loc_rooms')
-        .insert(payload)
-        .select()
-        .single();
+        if(!error) return data;
 
-      if(error) throw error;
+        // Conflit slug (selon tes contraintes DB)
+        const msg = (error.message || "").toLowerCase();
+        const isConflict =
+          msg.includes('duplicate') ||
+          msg.includes('unique') ||
+          msg.includes('already exists') ||
+          msg.includes('violates unique constraint');
 
-      console.log('✅ Fiche créée:', data);
+        if(isConflict && attempt < 2){
+          return await tryInsert(baseSlug + '-' + uniqSuffix(), attempt + 1);
+        }
+        throw error;
+      }
+
+      const created = await tryInsert(finalSlug, 0);
 
       // ✅ SUCCÈS
       form.style.display = 'none';
       successMsg.classList.add('show');
 
+      // ✅ lien public
+      const slugCreated = created?.slug || finalSlug;
+      // Adapte ton routing ici si besoin : /room/slug, /logements/slug, etc.
+      const urlPublic = PUBLIC_BASE.replace(/\/+$/,'') + '/room/' + encodeURIComponent(slugCreated);
+
+      publicLink.textContent = urlPublic;
+      publicLink.href = urlPublic;
+      publicLinkBox.style.display = 'block';
+
     } catch(err) {
       console.error('❌ Erreur:', err);
-      alert('❌ Erreur: ' + (err?.message || err));
+      const msg = err?.message || String(err);
+
+      // Petit bonus pour les erreurs RLS fréquentes
+      if(msg.toLowerCase().includes('row level security') || msg.toLowerCase().includes('rls')){
+        showError("🚫 RLS bloque l’insert. Vérifie la policy sur digiy_loc_rooms (insert autorisé pour owner_id = auth.uid() ou via guard).");
+      } else {
+        showError('❌ ' + msg);
+      }
+
       btn.disabled = false;
       btn.textContent = '🚀 CRÉER LA FICHE LOGEMENT';
+    }
+  });
+
+  // ✅ copier lien
+  btnCopy?.addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(publicLink?.href || '');
+      btnCopy.textContent = "✅ Copié";
+      setTimeout(()=> btnCopy.textContent = "📋 Copier", 1200);
+    }catch(e){
+      alert("Impossible de copier automatiquement. Sélectionne le lien et copie manuellement.");
     }
   });
 
