@@ -184,11 +184,59 @@
 <script>
 /* =========================
    DIGIY NAV AUTO — QR SAFE ✅
+   + HUB PHONE PASS ✅
    - Tous les éléments avec data-go gardent le slug via DIGIY_GUARD.go()
-   - data-mode="replace" optionnel
+   - On ajoute aussi ?phone=... si présent (venant du HUB ROYAL)
 ========================= */
 (function(){
   "use strict";
+
+  function normPhone(p){
+    if(!p) return "";
+    let s = String(p).trim();
+    s = s.replace(/[^\d+]/g, "");
+    if (s && !s.startsWith("+")) {
+      if (s.startsWith("221")) s = "+" + s;
+    }
+    return s;
+  }
+
+  function getHubPhone(){
+    try{
+      const u = new URL(location.href);
+      const p = u.searchParams.get("phone") || "";
+      return normPhone(p);
+    }catch(_){}
+    return "";
+  }
+
+  // phone "global" page (si présent)
+  const HUB_PHONE = getHubPhone();
+  if (HUB_PHONE) {
+    // utile si tu veux le réutiliser ailleurs plus tard
+    try { sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", HUB_PHONE); } catch(_){}
+    window.DIGIY_LOC_HUB_PHONE = HUB_PHONE;
+  }
+
+  function withPhoneParam(target){
+    const phone = window.DIGIY_LOC_HUB_PHONE || "";
+    if(!phone) return target;
+
+    // évite d’ajouter phone sur __back__
+    if(target === "__back__") return target;
+
+    try{
+      const u = new URL(target, location.href);
+      if(!u.searchParams.get("phone")) u.searchParams.set("phone", phone);
+      // On renvoie en relatif si possible
+      if (u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch(_){
+      const sep = target.includes("?") ? "&" : "?";
+      return target + sep + "phone=" + encodeURIComponent(phone);
+    }
+  }
+
   function bindNav(){
     if(!window.DIGIY_GUARD?.go) return;
 
@@ -196,18 +244,21 @@
       if(el.__digiy_bound) return;
       el.__digiy_bound = true;
 
-      const target = (el.getAttribute("data-go") || "").trim();
+      const targetRaw = (el.getAttribute("data-go") || "").trim();
       const mode = (el.getAttribute("data-mode") || "assign").trim();
 
       el.addEventListener("click", (e)=>{
         e.preventDefault();
-        if(!target) return;
+        if(!targetRaw) return;
 
-        if(target === "__back__"){
+        if(targetRaw === "__back__"){
           if(history.length > 1) return history.back();
-          return window.DIGIY_GUARD.go("listing.html", "replace");
+          // fallback sûr
+          const t = withPhoneParam("listing.html");
+          return window.DIGIY_GUARD.go(t, "replace");
         }
 
+        const target = withPhoneParam(targetRaw);
         window.DIGIY_GUARD.go(target, mode);
       });
     });
@@ -229,6 +280,24 @@
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
+  }
+
+  function normPhone(p){
+    if(!p) return "";
+    let s = String(p).trim();
+    s = s.replace(/[^\d+]/g, "");
+    if (s && !s.startsWith("+")) {
+      if (s.startsWith("221")) s = "+" + s;
+    }
+    return s;
+  }
+
+  function getUrlPhone(){
+    try{
+      const u = new URL(location.href);
+      return normPhone(u.searchParams.get("phone") || "");
+    }catch(_){}
+    return "";
   }
 
   function getSlug(){
@@ -266,6 +335,14 @@
       show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien GO PIN.\nExemple : index.html?slug=chez-astou-saly", "bad");
     }
 
+    // HUB phone (si ROYAL l’a passé)
+    const hubPhone = getUrlPhone() || (window.DIGIY_LOC_HUB_PHONE || "");
+    if (hubPhone) {
+      // Affiche déjà avant session
+      $("pillPhone").textContent = "👤 " + hubPhone;
+      $("vPhone").textContent = hubPhone;
+    }
+
     // Boot guard (protège la page)
     $("pillConn").textContent = "⏳ Vérif…";
     const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
@@ -275,6 +352,7 @@
       $("pillConn").textContent = "Bloqué ❌";
       $("vSess").textContent = "KO";
       $("vSb").textContent = "—";
+      // si on a un phone HUB mais pas de session, on le garde affiché
       return;
     }
 
@@ -282,7 +360,7 @@
     try{ await window.DIGIY_GUARD.ready(8000).catch(()=>true); }catch(_){}
 
     const sess = getSession();
-    const phone = sess?.phone || "—";
+    const phone = sess?.phone || hubPhone || "—";
 
     $("pillPhone").textContent = "👤 " + phone;
     $("vPhone").textContent = phone;
