@@ -6,9 +6,7 @@
   <title>DIGIY LOC PRO ♾️</title>
   <meta name="theme-color" content="#0b1020"/>
 
-  <!-- Supabase CDN (guard.js s’appuie dessus) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Guard repo-safe + slug keep -->
   <script src="./guard.js?v=locpro-final"></script>
 
   <style>
@@ -107,7 +105,6 @@
 
 <body>
   <div class="wrap">
-    <!-- TOP BAR -->
     <div class="top">
       <div class="brand">
         <div class="logo">∞</div>
@@ -116,7 +113,6 @@
           <div class="sub">Cockpit propriétaire • sécurisé • 0% commission • paiement direct</div>
         </div>
       </div>
-
       <div class="right">
         <div class="pill" id="pillPhone">👤 —</div>
         <div class="pill" id="pillConn">⏳ …</div>
@@ -126,55 +122,41 @@
     </div>
 
     <div class="grid">
-      <!-- NAV -->
       <div class="card">
         <h2>Navigation</h2>
-
         <div class="nav">
           <a class="btn" data-go="__back__" href="#">⬅️ Retour</a>
           <a class="btn" data-go="today.html" href="#">📅 Vue du jour</a>
-
           <a class="btn primary" data-go="app.html" href="#">🏠 APP</a>
           <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
-
           <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
           <a class="btn gold" data-go="manage-links.html" href="#">🔗 Liens / QR</a>
-
           <a class="btn" data-go="health-loc.html" href="#">🧪 Vérifier mon accès</a>
           <button class="btn" id="btnReload" type="button">↻ Recharger</button>
         </div>
-
         <div class="note warn" id="note"></div>
       </div>
 
-      <!-- QUICK STATUS -->
       <div class="card">
         <h2>⚡ Vue rapide</h2>
-
         <div class="kv">
           <div class="k">Lieu</div>
           <div class="v" id="vLieu">—</div>
-
           <div class="k">Téléphone</div>
           <div class="v" id="vPhone">—</div>
-
           <div class="k">Session</div>
           <div class="v" id="vSess">—</div>
-
           <div class="k">Supabase</div>
           <div class="v" id="vSb">—</div>
         </div>
-
         <div class="miniActions">
           <a class="btn" data-go="go-pin-public.html" href="#">👁️ GO PIN public</a>
-          <a class="btn" data-go="pin.html" href="#">🔑 Ouvrir l’accès (PIN)</a>
+          <a class="btn" data-go="pin.html" href="#">🔑 Ouvrir l'accès (PIN)</a>
           <a class="btn gold" data-go="wave.html" href="#">💳 Cockpit Wave</a>
         </div>
-
         <div class="sep"></div>
-
         <div class="sub" style="margin:0">
-          Si tu vois “Supabase pas prêt”, c’est juste le guard qui n’a pas fini de booter.
+          Si tu vois "Supabase pas prêt", c'est juste le guard qui n'a pas fini de booter.
           Clique ↻ Recharger ou repasse par PIN.
         </div>
       </div>
@@ -182,15 +164,8 @@
   </div>
 
 <script>
-/* =========================
-   DIGIY NAV AUTO — QR SAFE ✅
-   + HUB PHONE PASS ✅
-   - Tous les éléments avec data-go gardent le slug via DIGIY_GUARD.go()
-   - On ajoute aussi ?phone=... si présent (venant du HUB ROYAL)
-========================= */
 (function(){
   "use strict";
-
   function normPhone(p){
     if(!p) return "";
     let s = String(p).trim();
@@ -200,7 +175,6 @@
     }
     return s;
   }
-
   function getHubPhone(){
     try{
       const u = new URL(location.href);
@@ -209,26 +183,18 @@
     }catch(_){}
     return "";
   }
-
-  // phone "global" page (si présent)
   const HUB_PHONE = getHubPhone();
   if (HUB_PHONE) {
-    // utile si tu veux le réutiliser ailleurs plus tard
     try { sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", HUB_PHONE); } catch(_){}
     window.DIGIY_LOC_HUB_PHONE = HUB_PHONE;
   }
-
   function withPhoneParam(target){
     const phone = window.DIGIY_LOC_HUB_PHONE || "";
     if(!phone) return target;
-
-    // évite d’ajouter phone sur __back__
     if(target === "__back__") return target;
-
     try{
       const u = new URL(target, location.href);
       if(!u.searchParams.get("phone")) u.searchParams.set("phone", phone);
-      // On renvoie en relatif si possible
       if (u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch(_){
@@ -236,34 +202,26 @@
       return target + sep + "phone=" + encodeURIComponent(phone);
     }
   }
-
   function bindNav(){
     if(!window.DIGIY_GUARD?.go) return;
-
     document.querySelectorAll("[data-go]").forEach((el)=>{
       if(el.__digiy_bound) return;
       el.__digiy_bound = true;
-
       const targetRaw = (el.getAttribute("data-go") || "").trim();
       const mode = (el.getAttribute("data-mode") || "assign").trim();
-
       el.addEventListener("click", (e)=>{
         e.preventDefault();
         if(!targetRaw) return;
-
         if(targetRaw === "__back__"){
           if(history.length > 1) return history.back();
-          // fallback sûr
           const t = withPhoneParam("listing.html");
           return window.DIGIY_GUARD.go(t, "replace");
         }
-
         const target = withPhoneParam(targetRaw);
         window.DIGIY_GUARD.go(target, mode);
       });
     });
   }
-
   bindNav();
   const mo = new MutationObserver(()=>bindNav());
   mo.observe(document.documentElement, { childList:true, subtree:true });
@@ -274,14 +232,12 @@
 (function(){
   "use strict";
   const $ = (id)=>document.getElementById(id);
-
   function show(msg, cls){
     const el = $("note");
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
   }
-
   function normPhone(p){
     if(!p) return "";
     let s = String(p).trim();
@@ -291,7 +247,6 @@
     }
     return s;
   }
-
   function getUrlPhone(){
     try{
       const u = new URL(location.href);
@@ -299,7 +254,6 @@
     }catch(_){}
     return "";
   }
-
   function getSlug(){
     try{
       const s = window.DIGIY_GUARD?.getSlug?.();
@@ -308,81 +262,64 @@
     try{ return (new URL(location.href)).searchParams.get("slug") || ""; }catch(_){}
     return "";
   }
-
   function getSession(){
     try{ return window.DIGIY_GUARD?.getSession?.() || null; }catch(_){}
     return null;
   }
-
   function getSb(){
     return window.DIGIY_GUARD?.getSb?.() || null;
   }
-
   async function init(){
     $("btnReload").addEventListener("click", ()=> location.reload());
-
     $("btnLogout").addEventListener("click", ()=>{
       if(!confirm("Se déconnecter ?")) return;
       try{ window.DIGIY_GUARD?.logout?.("pin.html"); }
       catch(_){ window.DIGIY_GUARD.go("pin.html","replace"); }
     });
-
     const slug = getSlug();
     $("pillLieu").textContent = "Lieu : " + (slug || "—");
     $("vLieu").textContent = slug || "—";
-
     if(!slug){
       show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien GO PIN.\nExemple : index.html?slug=chez-astou-saly", "bad");
     }
-
-    // HUB phone (si ROYAL l’a passé)
     const hubPhone = getUrlPhone() || (window.DIGIY_LOC_HUB_PHONE || "");
     if (hubPhone) {
-      // Affiche déjà avant session
       $("pillPhone").textContent = "👤 " + hubPhone;
       $("vPhone").textContent = hubPhone;
     }
-
-    // Boot guard (protège la page)
     $("pillConn").textContent = "⏳ Vérif…";
     const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
-
     if(!g?.ok){
       $("pillConn").className = "pill bad";
       $("pillConn").textContent = "Bloqué ❌";
       $("vSess").textContent = "KO";
       $("vSb").textContent = "—";
-      // si on a un phone HUB mais pas de session, on le garde affiché
       return;
     }
-
-    // Wait guard ready (évite sb null)
     try{ await window.DIGIY_GUARD.ready(8000).catch(()=>true); }catch(_){}
-
     const sess = getSession();
     const phone = sess?.phone || hubPhone || "—";
-
     $("pillPhone").textContent = "👤 " + phone;
     $("vPhone").textContent = phone;
-
     $("pillConn").className = "pill ok";
     $("pillConn").textContent = "✅ Connecté";
-
     $("vSess").textContent = (sess?.ok ? "OK" : "—");
-
     const sb = getSb();
     const sbOk = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
     $("vSb").textContent = sbOk ? "OK" : "Pas prêt";
-
     if(!sbOk){
       show("⚠️ Supabase pas prêt (sb null).\n➡️ Clique ↻ Recharger ou repasse par PIN.", "warn");
     }else{
       show("", "warn");
     }
   }
-
   init();
 })();
 </script>
+
+  <!-- ✅ DIGIY KNOWLEDGE — Assistant LOC PRO -->
+  <div data-digiy-module="LOC"></div>
+  <script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
+
 </body>
 </html>
