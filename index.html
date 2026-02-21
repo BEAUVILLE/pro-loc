@@ -100,6 +100,33 @@
     .v{font-weight:1000;word-break:break-word}
     .miniActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .sep{height:1px;background:rgba(148,163,184,.18);margin:12px 0}
+
+    /* --- Widget placeholder (si JS externe ne charge pas) --- */
+    .assistantCard{
+      margin-top:14px;
+      border:1px solid rgba(96,165,250,.25);
+      background:rgba(96,165,250,.06);
+      border-radius:22px;
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+    .assistantHead{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .assistantTitle{
+      font-weight:1100;color:#dbeafe;
+      display:flex;align-items:center;gap:8px;
+    }
+    .assistantSmall{color:rgba(219,234,254,.75);font-weight:850;line-height:1.35}
+    .assistantFallback{
+      margin-top:10px;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+    }
   </style>
 </head>
 
@@ -160,6 +187,33 @@
           Clique ↻ Recharger ou repasse par PIN.
         </div>
       </div>
+    </div>
+
+    <!-- ✅ DIGIY KNOWLEDGE — Assistant LOC PRO (container + fallback) -->
+    <div class="assistantCard" id="assistantCard">
+      <div class="assistantHead">
+        <div class="assistantTitle">🧠 DIGIY KNOWLEDGE • Assistant LOC PRO</div>
+        <button class="btn" type="button" id="btnOpenAssistant">💬 Ouvrir</button>
+      </div>
+      <div class="assistantSmall">
+        Ici l’assistant t’aide sur : réservations, planning, paiement direct, bugs, procédures LOC.
+        (Langue par défaut : Wolof, mais tu peux basculer plus tard.)
+      </div>
+
+      <!-- Le widget JS viendra remplacer/compléter cette zone -->
+      <div class="assistantFallback" id="assistantFallback">
+        Chargement de l’assistant…
+        <br/>Si ça reste bloqué : vérifie ta connexion, puis ↻ Recharge.
+      </div>
+
+      <!-- Le widget lit ces attributs pour se configurer -->
+      <div
+        id="digiyWidgetMount"
+        data-digiy-module="LOC"
+        data-digiy-lang="wo"
+        data-digiy-endpoint="https://knowledge.digiylyfe.com/widget/ask"
+        style="margin-top:10px"
+      ></div>
     </div>
   </div>
 
@@ -232,6 +286,7 @@
 (function(){
   "use strict";
   const $ = (id)=>document.getElementById(id);
+
   function show(msg, cls){
     const el = $("note");
     el.className = "note " + (cls || "warn");
@@ -269,6 +324,36 @@
   function getSb(){
     return window.DIGIY_GUARD?.getSb?.() || null;
   }
+
+  // ✅ Context partagé pour le widget (SANS SECRET)
+  function buildWidgetContext(){
+    const slug = getSlug();
+    const sess = getSession() || {};
+    const hubPhone = getUrlPhone() || (window.DIGIY_LOC_HUB_PHONE || "");
+    const phone = (sess.phone || hubPhone || "").trim();
+
+    return {
+      module: "LOC",
+      lang: "wo",
+      slug,
+      phone,
+      page: location.pathname,
+      href: location.href,
+      title: document.title,
+      ts: Date.now()
+    };
+  }
+
+  function setWidgetDataAttrs(ctx){
+    const mount = document.getElementById("digiyWidgetMount");
+    if(!mount) return;
+    mount.setAttribute("data-digiy-module", ctx.module);
+    mount.setAttribute("data-digiy-lang", ctx.lang);
+    mount.setAttribute("data-digiy-slug", ctx.slug || "");
+    mount.setAttribute("data-digiy-phone", ctx.phone || "");
+    mount.setAttribute("data-digiy-page", ctx.page || "");
+  }
+
   async function init(){
     $("btnReload").addEventListener("click", ()=> location.reload());
     $("btnLogout").addEventListener("click", ()=>{
@@ -276,17 +361,30 @@
       try{ window.DIGIY_GUARD?.logout?.("pin.html"); }
       catch(_){ window.DIGIY_GUARD.go("pin.html","replace"); }
     });
+
+    // Bouton ouverture assistant (le widget peut le hook)
+    $("btnOpenAssistant").addEventListener("click", ()=>{
+      // Si le widget expose une méthode d’ouverture
+      try{
+        if (window.DIGIY_WIDGET_API?.open) return window.DIGIY_WIDGET_API.open();
+      }catch(_){}
+      // fallback : scroll vers la zone assistant
+      document.getElementById("assistantCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+
     const slug = getSlug();
     $("pillLieu").textContent = "Lieu : " + (slug || "—");
     $("vLieu").textContent = slug || "—";
     if(!slug){
       show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien GO PIN.\nExemple : index.html?slug=chez-astou-saly", "bad");
     }
+
     const hubPhone = getUrlPhone() || (window.DIGIY_LOC_HUB_PHONE || "");
     if (hubPhone) {
       $("pillPhone").textContent = "👤 " + hubPhone;
       $("vPhone").textContent = hubPhone;
     }
+
     $("pillConn").textContent = "⏳ Vérif…";
     const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
     if(!g?.ok){
@@ -294,16 +392,23 @@
       $("pillConn").textContent = "Bloqué ❌";
       $("vSess").textContent = "KO";
       $("vSb").textContent = "—";
+      // widget context quand même (au cas où)
+      const ctx0 = buildWidgetContext();
+      setWidgetDataAttrs(ctx0);
       return;
     }
+
     try{ await window.DIGIY_GUARD.ready(8000).catch(()=>true); }catch(_){}
+
     const sess = getSession();
     const phone = sess?.phone || hubPhone || "—";
     $("pillPhone").textContent = "👤 " + phone;
     $("vPhone").textContent = phone;
+
     $("pillConn").className = "pill ok";
     $("pillConn").textContent = "✅ Connecté";
     $("vSess").textContent = (sess?.ok ? "OK" : "—");
+
     const sb = getSb();
     const sbOk = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
     $("vSb").textContent = sbOk ? "OK" : "Pas prêt";
@@ -312,14 +417,34 @@
     }else{
       show("", "warn");
     }
+
+    // ✅ Inject context widget (après guard ready)
+    const ctx = buildWidgetContext();
+    setWidgetDataAttrs(ctx);
+
+    // ✅ Expose une config globale lisible par le widget
+    // endpoint = /widget/ask (public) qui DOIT être sécurisé côté serveur (pas de clé dans le front)
+    window.DIGIY_WIDGET_PRO = {
+      endpoint: document.getElementById("digiyWidgetMount")?.getAttribute("data-digiy-endpoint")
+        || "https://knowledge.digiylyfe.com/widget/ask",
+      lang: "wo",
+      module: "LOC",
+      getContext: () => buildWidgetContext(),
+      // IMPORTANT: le widget doit envoyer {query: "..."} (pas q)
+      payloadShape: "query"
+    };
+
+    // fallback UI
+    const fb = document.getElementById("assistantFallback");
+    if (fb) fb.textContent = "Assistant prêt. Clique “💬 Ouvrir” ou pose ta question.";
   }
+
   init();
 })();
 </script>
 
-  <!-- ✅ DIGIY KNOWLEDGE — Assistant LOC PRO -->
-  <div data-digiy-module="LOC"></div>
-  <script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
+<!-- ✅ Widget externe (Knowledge) -->
+<script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
 
 </body>
 </html>
