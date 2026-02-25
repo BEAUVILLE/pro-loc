@@ -1,13 +1,13 @@
-// guard.js — DIGIY Universal Access Gate
+// guard-pro.js — DIGIY PRO Gate (slug-first, via public view)
 (() => {
   const SUPABASE_URL  = "https://XXXX.supabase.co";
   const SUPABASE_ANON = "XXXX_ANON_KEY";
 
-  // ⚠️ À fixer par module
-  const MODULE_CODE = "LOC"; // ex: LOC / DRIVER / RESTO / POS
+  const MODULE_CODE = "LOC"; // change per module
 
   const qs = new URLSearchParams(location.search);
-  const phone = qs.get("phone") || "";
+  const slug = (qs.get("slug") || "").trim();
+  const phoneQ = (qs.get("phone") || "").trim();
 
   async function rpc(name, params) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
@@ -23,22 +23,46 @@
     return { ok: r.ok, status: r.status, data: j };
   }
 
-  async function go() {
+  async function getPhoneFromSlug(slugValue) {
+    const url =
+      `${SUPABASE_URL}/rest/v1/digiy_subscriptions_public` +
+      `?select=phone,module,slug` +
+      `&slug=eq.${encodeURIComponent(slugValue)}` +
+      `&module=eq.${encodeURIComponent(MODULE_CODE)}` +
+      `&limit=1`;
+
+    const r = await fetch(url, {
+      headers: { "apikey": SUPABASE_ANON, "Authorization": `Bearer ${SUPABASE_ANON}` }
+    });
+    const j = await r.json().catch(() => ([]));
+    if (!r.ok || !Array.isArray(j) || !j.length) return "";
+    return (j[0].phone || "").trim();
+  }
+
+  function goABOS(phone) {
+    const u = new URL("https://beauville.github.io/abos/");
+    u.searchParams.set("module", MODULE_CODE);
+    if (phone) u.searchParams.set("phone", phone);
+    window.location.href = u.toString();
+  }
+
+  async function main() {
+    let phone = phoneQ;
+
+    if (!phone && slug) {
+      phone = await getPhoneFromSlug(slug);
+    }
+
     if (!phone) {
-      // Pas de phone -> renvoie vers ABOS (l’utilisateur choisira)
-      window.location.href = "https://beauville.github.io/abos/?module=" + encodeURIComponent(MODULE_CODE);
+      goABOS("");
       return;
     }
 
     const res = await rpc("digiy_has_access", { p_phone: phone, p_module: MODULE_CODE });
+    if (res.ok && res.data === true) return;
 
-    if (res.ok && res.data === true) return; // ✅ accès OK
-
-    // ❌ pas d’accès -> ABOS
-    window.location.href =
-      "https://beauville.github.io/abos/?module=" + encodeURIComponent(MODULE_CODE) +
-      "&phone=" + encodeURIComponent(phone);
+    goABOS(phone);
   }
 
-  go();
+  main();
 })();
