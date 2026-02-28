@@ -35,7 +35,7 @@ const SUPABASE_ANON_KEY =
   }
 
   function goInscription(phoneMaybe, slugMaybe){
-    const u = new URL("https://inscription-pro.digiylyfe.com/");
+    const u = new URL("https://commencer-a-payer.digiylyfe.com/");
     u.searchParams.set("module", MODULE_CODE);
     if(phoneMaybe) u.searchParams.set("phone", phoneMaybe);
     if(slugMaybe)  u.searchParams.set("slug", slugMaybe);
