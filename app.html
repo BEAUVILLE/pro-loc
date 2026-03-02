@@ -214,7 +214,7 @@
       gap:1.5rem;
       align-items:start;
     }
-    .logement-img{width:200px;height:150px;object-fit:cover;border-radius:8px;}
+    .logement-img{width:200px;height:150px;object-fit:cover;border-radius:8px;background:rgba(0,0,0,.18)}
     .logement-info h3{margin:0 0 0.5rem;color:var(--accent);font-size:1.2rem;}
     .logement-info p{margin:0.25rem 0;color:var(--muted);font-size:0.9rem;}
     .logement-actions{display:flex;flex-direction:column;gap:0.5rem;}
@@ -276,6 +276,9 @@
   <div class="box">
     <div class="t">🔒 Vérification accès…</div>
     <div class="s">DIGIY LOC PRO protège ton cockpit (PIN / abonnement / slug).</div>
+    <div class="s" style="margin-top:.75rem;color:rgba(250,204,21,.9)">
+      Astuce terrain : si tu ne sais pas te placer, ouvre <b>NDIMBAL</b> et partage ton point GPS 📍
+    </div>
   </div>
 </div>
 
@@ -442,27 +445,54 @@
 
 <script>
 /* =========================================================
-   ✅ DIGIY NAV AUTO — QR SAFE (data-go) + Actions (data-action)
+   ✅ PATCH 1 — DIGIY NAV AUTO (data-go) + slug safe + Actions
+   - Enforce slug param on every navigation, even if guard.go missing
 ========================================================= */
 (function(){
   "use strict";
 
   const Actions = {};
 
+  function getSlug(){
+    try{
+      const s = window.DIGIY_GUARD?.getSlug?.();
+      if(s) return String(s).trim();
+    }catch(_){}
+    try{
+      return (new URL(location.href)).searchParams.get("slug") || "";
+    }catch(_){}
+    return "";
+  }
+
   function withSlug(url){
+    // Prefer guard helper
     try{
       if(window.DIGIY_GUARD?.withSlug) return window.DIGIY_GUARD.withSlug(url);
     }catch(_){}
-    return url;
+
+    // Fallback: append slug if missing
+    const slug = getSlug();
+    if(!slug) return url;
+
+    try{
+      const u = new URL(url, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      // Keep same-origin links short
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch(_){
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
+    }
   }
 
   function go(target, mode){
+    const t = withSlug(target);
     try{
-      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(target, mode || "assign");
+      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, mode || "assign");
     }catch(_){}
-    const u = withSlug(target);
-    if((mode||"assign")==="replace") location.replace(u);
-    else location.href = u;
+    if((mode||"assign")==="replace") location.replace(t);
+    else location.href = t;
   }
 
   function bindNav(){
@@ -507,7 +537,7 @@
   const mo = new MutationObserver(()=>boot());
   mo.observe(document.documentElement, { childList:true, subtree:true });
 
-  // Register actions (résolus au moment du clic)
+  // Register actions
   Actions.logout = ()=> logout();
   Actions.pulseTest = ()=> pulseTest();
 })();
@@ -515,7 +545,7 @@
 
 <script>
 /* =============================
-   ✅ SUPABASE via GUARD (source unique)
+   ✅ PATCH 3 — SUPABASE via GUARD (source unique) + Fallback ready
 ============================= */
 function getSB(){
   return window.DIGIY_GUARD?.getSb?.()
@@ -523,6 +553,11 @@ function getSB(){
       || window.DIGIY_GUARD?.sb
       || window.sb
       || null;
+}
+
+function sbReady(){
+  const sb = getSB();
+  return !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
 }
 
 /* =============================
@@ -577,6 +612,22 @@ const State = {
 };
 
 /* =============================
+   PATCH 4 — SAFE helpers
+============================= */
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, (c)=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function safeImg(url){
+  const u = String(url || "").trim();
+  if(!u) return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+  // basic allow list: http(s) only
+  if(/^https?:\/\//i.test(u)) return u;
+  return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+}
+
+/* =============================
    HELPERS
 ============================= */
 function moneyFCFA(x){
@@ -609,7 +660,7 @@ function badgeForStatus(res){
   if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
   if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
   if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
-  return `<span class="badge badge-warning">${res?.[DB.resStatus] || "—"}</span>`;
+  return `<span class="badge badge-warning">${esc(res?.[DB.resStatus] || "—")}</span>`;
 }
 
 /* =============================
@@ -640,6 +691,16 @@ function switchTab(tabName) {
   });
 })();
 
+/* ✅ PATCH 2 — NDIMBAL GPS Suggestion */
+(function(){
+  const btn = document.getElementById("quickNdimbal");
+  if(!btn) return;
+  btn.addEventListener("click", ()=>{
+    // petit rappel terrain avant d’ouvrir
+    alert("♾️ Astuce terrain :\nSi toi (ou ton client) n’êtes pas sûr du point, ouvre NDIMBAL et partage le point GPS 📍.\nEnsuite reviens ici.");
+  });
+})();
+
 function logout() {
   if (!confirm("Se déconnecter ?")) return;
   const go = window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") :
@@ -656,7 +717,6 @@ function hydrateHeader() {
   if(phoneEl) phoneEl.textContent = State.phone || "—";
 
   const nameEl = document.getElementById("userName");
-  // si tu stockes DIGIY_BUSINESS_NAME côté localStorage, on l’affiche
   const bn = (localStorage.getItem("DIGIY_BUSINESS_NAME") || "").trim();
   if(nameEl) nameEl.textContent = bn || "Gestionnaire";
 }
@@ -720,18 +780,18 @@ function renderRooms(list) {
     const pn = room?.[DB.roomPriceNight] ?? room?.price_per_night ?? 0;
     const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
     const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
-    const img = room?.[DB.roomPhoto] || room?.cover_url || "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+    const img = safeImg(room?.[DB.roomPhoto] || room?.cover_url);
     const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
-    const badge = status.includes("act") ? `<span class="badge badge-success">Actif</span>` : `<span class="badge badge-warning">${status}</span>`;
+    const badge = status.includes("act") ? `<span class="badge badge-success">Actif</span>` : `<span class="badge badge-warning">${esc(status)}</span>`;
 
     return `
       <div class="logement-card">
-        <img src="${img}" alt="${title}" class="logement-img">
+        <img src="${img}" alt="${esc(title)}" class="logement-img" onerror="this.src='https://via.placeholder.com/600x400?text=DIGIY+LOC'">
         <div class="logement-info">
-          <h3>${title}</h3>
-          <p>📍 ${addr}</p>
-          <p>👥 ${pmax} personnes max</p>
-          ${desc ? `<p>${desc}</p>` : `<p style="color:var(--muted)">—</p>`}
+          <h3>${esc(title)}</h3>
+          <p>📍 ${esc(addr)}</p>
+          <p>👥 ${esc(pmax)} personnes max</p>
+          ${desc ? `<p>${esc(desc)}</p>` : `<p style="color:var(--muted)">—</p>`}
           <p style="margin-top:0.5rem">
             <strong>Tarifs:</strong><br>
             Nuit: ${moneyFCFA(pn)}<br>
@@ -752,6 +812,7 @@ function renderRooms(list) {
 
 async function loadLogements() {
   try{
+    if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
     State.rooms = await fetchRooms();
     renderRooms(State.rooms);
 
@@ -761,7 +822,7 @@ async function loadLogements() {
   }catch(e){
     console.error(e);
     const box = document.getElementById('listeLogements');
-    if(box) box.innerHTML = `<p style="color:var(--danger)">Erreur chargement logements: ${e.message || e}</p>`;
+    if(box) box.innerHTML = `<p style="color:var(--danger)">Erreur chargement logements: ${esc(e.message || e)}</p>`;
   }
 }
 
@@ -854,10 +915,10 @@ function renderReservations(list){
 
     return `
       <tr>
-        <td>${client}<div style="color:var(--muted);font-size:0.85rem">${r?.[DB.resPhone] || ""}</div></td>
-        <td>${logement}</td>
-        <td>${dates}</td>
-        <td><strong>${amount}</strong></td>
+        <td>${esc(client)}<div style="color:var(--muted);font-size:0.85rem">${esc(r?.[DB.resPhone] || "")}</div></td>
+        <td>${esc(logement)}</td>
+        <td>${esc(dates)}</td>
+        <td><strong>${esc(amount)}</strong></td>
         <td>${status}</td>
         <td>
           <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
@@ -885,6 +946,7 @@ function viewReservation(resId){
 
 async function loadReservations(){
   try{
+    if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
     if(!State.rooms.length) State.rooms = await fetchRooms();
     State.reservations = await fetchReservations();
     renderReservations(State.reservations);
@@ -893,7 +955,7 @@ async function loadReservations(){
     console.error(e);
     const tb = document.getElementById("tableReservations");
     if(tb) tb.innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${e.message || e}</td></tr>`;
+      `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${esc(e.message || e)}</td></tr>`;
   }
 }
 
@@ -985,8 +1047,8 @@ async function loadDashboard(){
         ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
         : upcoming.map(r => `
           <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-            <div style="font-weight:800">${r?.[DB.resClientName] || "Client"} — ${roomNameById(r?.[DB.resRoomId])}</div>
-            <div style="color:var(--muted);margin-top:0.2rem">${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])} · <strong>${moneyFCFA(r?.[DB.resAmount])}</strong></div>
+            <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
+            <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · <strong>${esc(moneyFCFA(r?.[DB.resAmount]))}</strong></div>
           </div>
         `).join("");
     }
@@ -1002,8 +1064,8 @@ async function loadDashboard(){
         ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
         : pending.map(r => `
           <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-            <div style="font-weight:800">${r?.[DB.resClientName] || "Client"} — ${roomNameById(r?.[DB.resRoomId])}</div>
-            <div style="color:var(--muted);margin-top:0.2rem">${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])} · ${badgeForStatus(r)}</div>
+            <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
+            <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · ${badgeForStatus(r)}</div>
           </div>
         `).join("");
     }
@@ -1063,14 +1125,14 @@ function buildCalendar(monthDate, reservations, roomIdFilter=null){
 
   let filterLabel = "";
   if(roomIdFilter){
-    filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${roomNameById(roomIdFilter)}</strong></span>`;
+    filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${esc(roomNameById(roomIdFilter))}</strong></span>`;
   }
 
   view.innerHTML = `
     <div class="cal-wrap">
       <div class="cal-box">
         <div class="cal-head">
-          <div style="font-weight:900;text-transform:capitalize">${monthLabel}${filterLabel}</div>
+          <div style="font-weight:900;text-transform:capitalize">${esc(monthLabel)}${filterLabel}</div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
             <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
@@ -1096,6 +1158,7 @@ function calNext(){
 
 async function loadCalendar(roomId=null){
   try{
+    if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
     State._calRoom = roomId || null;
     if(!State.rooms.length) State.rooms = await fetchRooms();
     if(!State.reservations.length) State.reservations = await fetchReservations();
@@ -1103,7 +1166,7 @@ async function loadCalendar(roomId=null){
   }catch(e){
     console.error(e);
     const view = document.getElementById("calendarView");
-    if(view) view.innerHTML = `<p style="color:var(--danger)">Erreur calendrier: ${e.message || e}</p>`;
+    if(view) view.innerHTML = `<p style="color:var(--danger)">Erreur calendrier: ${esc(e.message || e)}</p>`;
   }
 }
 
@@ -1158,7 +1221,7 @@ async function pulseTest(){
     loading.innerHTML = `
       <div class="box">
         <div class="t">❌ Accès impossible</div>
-        <div class="s">${msg || "Erreur inconnue"}</div>
+        <div class="s">${esc(msg || "Erreur inconnue")}</div>
         <div class="s" style="margin-top:.6rem">
           <a href="./pin.html">Se connecter</a>
         </div>
@@ -1182,6 +1245,11 @@ async function pulseTest(){
   if(!guardRes?.ok){
     fail("Accès refusé (PIN / abonnement / slug).");
     return;
+  }
+
+  // after guard OK, ensure sb ready (soft)
+  if(!sbReady()){
+    console.warn("Supabase pas prêt (sb null).");
   }
 
   const sess = window.DIGIY_GUARD.getSession?.() || null;
