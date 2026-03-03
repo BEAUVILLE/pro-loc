@@ -217,6 +217,22 @@
   </div>
 
 <script>
+const qs = new URLSearchParams(location.search);
+let slug = (qs.get("slug") || "").trim();
+
+// ✅ fallback localStorage (comme DRIVER)
+const SAVED_KEY = "digiy_loc_slug";
+if (!slug) slug = (localStorage.getItem(SAVED_KEY) || "").trim();
+
+// ✅ si on a un slug, on l’impose dans l’URL et on le mémorise
+if (slug) {
+  localStorage.setItem(SAVED_KEY, slug);
+  try {
+    const u = new URL(location.href);
+    u.searchParams.set("slug", slug);
+    history.replaceState({}, "", u.toString());
+  } catch(e){}
+}  
 (function(){
   "use strict";
   function normPhone(p){
