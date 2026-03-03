@@ -353,8 +353,39 @@
 
     // 2) Attendre ACCESS (slug->phone + has_access). ZÉRO REDIRECT.
     show("⏳ Vérification accès…", "warn");
-    const access = await window.digiyRequireAccess(); // {ok:true, slug, phone, reason:"ok"}
+   async function requireAccessFallback(p_module){
+  const slug = (new URLSearchParams(location.search).get("slug") || "").trim();
+  if(!slug) throw new Error("slug_missing");
 
+  // sb doit exister (créé soit par guard-soft, soit par ta page ailleurs)
+  const sb = window.sb || window._sb || null;
+  if(!sb) throw new Error("sb_missing");
+
+  // slug -> phone
+  const { data: row, error: e1 } = await sb
+    .from("digiy_subscriptions_public")
+    .select("slug, phone, module")
+    .eq("slug", slug)
+    .maybeSingle();
+  if(e1) throw e1;
+  if(!row?.phone) throw new Error("slug_not_found");
+
+  // has_access
+  const { data: ok, error: e2 } = await sb
+    .rpc("digiy_has_access", { p_phone: row.phone, p_module });
+  if(e2) throw e2;
+  if(ok !== true) throw new Error("no_access");
+
+  return { ok:true, slug, phone: row.phone, reason:"ok" };
+}
+
+// ✅ usage
+let access;
+if(typeof window.digiyRequireAccess === "function"){
+  access = await window.digiyRequireAccess();         // nouveau guard (si présent)
+} else {
+  access = await requireAccessFallback("LOC");        // fallback universel
+}
     slug = access.slug || slug;
     try{ localStorage.setItem(SAVED_KEY, slug); }catch(_){}
 
