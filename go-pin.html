@@ -157,7 +157,7 @@
 <script>
 (() => {
   "use strict";
-  console.log("GO-PIN VERSION:", "2026-01-25-go-pin-FIX-V2");
+  console.log("GO-PIN VERSION:", "2026-03-03-go-pin-LOC-STABLE");
 
   /* =========================
      CONFIG
@@ -166,9 +166,17 @@
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
+  // ✅ où tu veux renvoyer l’utilisateur si besoin
   const GALLERY_URL  = "https://beauville.github.io/digiy-loc/";
-  const PIN_PAGE     = "https://beauville.github.io/digiy-loc-pro/pin.html"; // ✅ porte unique
+
+  // ✅ PORTE UNIQUE PRO (ton vrai domaine)
+  const PIN_PAGE     = "https://pro-loc.digiylyfe.com/pin.html";
+
   const TEAM_WA      = "+221771342889";
+
+  // ✅ Clés slug-first (IMPORTANT)
+  const LOC_SLUG_KEY = "digiy_loc_slug";
+  const LAST_SLUG_KEY = "digiy_last_slug";
 
   /* =========================
      UI refs
@@ -223,11 +231,11 @@
   }
 
   function safeSet(k,v){
-    try{ localStorage.setItem(k, String(v ?? "")); }
-    catch(e){ console.warn("localStorage blocked", e); }
+    try{ localStorage.setItem(k, String(v ?? "")); } catch(_){}
   }
 
   function redirectToPin(slug){
+    // ✅ slug obligatoire dans l’URL
     const u = new URL(PIN_PAGE, location.href);
     u.searchParams.set("slug", slug);
     location.replace(u.toString());
@@ -240,28 +248,28 @@
   }
 
   /* =========================
-     DB bridge
-     - Ici, le pro_id = digiy_loc_businesses.id
+     OPTIONNEL : Vérif go_pins
+     - si tu veux un “contrôle” avant d’ouvrir le PIN
+     - sinon tu peux supprimer ce bloc et rediriger direct
   ========================= */
-  async function bridgeSlugToBusiness(sb, slug){
-    const { data, error } = await sb
-      .from("digiy_loc_businesses")
-      .select("id,slug,business_name,phone")
-      .eq("slug", slug)
-      .maybeSingle();
+  async function checkGoPin(sb, slug){
+    try{
+      const { data, error } = await sb
+        .from("go_pins")
+        .select("slug,title,is_active,category")
+        .eq("slug", slug)
+        .maybeSingle();
 
-    if (error) return { ok:false, reason:error.message || String(error), row:null };
-    if (!data) return { ok:false, reason:"business_not_found", row:null };
-
-    return {
-      ok:true,
-      row:{
-        pro_id: data.id,
-        slug: data.slug,
-        business_name: data.business_name || "",
-        phone: data.phone || ""
+      if (error) return { ok:false, reason:error.message || "go_pins_error", row:null };
+      if (!data) return { ok:false, reason:"pin_not_found", row:null };
+      if (data.category && String(data.category).toLowerCase() !== "loc") {
+        return { ok:false, reason:"pin_not_loc", row:data };
       }
-    };
+      if (data.is_active === false) return { ok:false, reason:"pin_inactive", row:data };
+      return { ok:true, row:data };
+    }catch(e){
+      return { ok:false, reason:String(e?.message || e), row:null };
+    }
   }
 
   /* =========================
@@ -272,8 +280,8 @@
 
   btnWa.addEventListener("click", ()=>{
     const msg = slug
-      ? `Bonjour DIGIY 👋\nJ’ai un souci pour ouvrir le PIN (${slug}).`
-      : `Bonjour DIGIY 👋\nJe n’arrive pas à ouvrir un PIN (slug manquant).`;
+      ? `Bonjour DIGIY 👋\nJ’ai un souci pour ouvrir le PIN LOC (${slug}).`
+      : `Bonjour DIGIY 👋\nJe n’arrive pas à ouvrir un PIN LOC (slug manquant).`;
     openWa(TEAM_WA, msg);
   });
 
@@ -281,7 +289,7 @@
     console.log("SLUG", slug);
 
     if (!slug){
-      fatal("Slug manquant", "Lien incomplet. Exemple : go-pin.html?slug=chez-astou-saly");
+      fatal("Slug manquant", "Lien incomplet. Exemple : go-pin.html?slug=loc-221770000111");
       return;
     }
 
@@ -292,71 +300,41 @@
 
     let sb;
     try{
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+      });
     }catch(e){
       fatal("Supabase KO", "CDN/clé/JS non chargé.");
       return;
     }
 
-    setStatus("warn","Vérification logement","Lecture go_pins…");
+    setStatus("warn","Vérification","Contrôle du lien…");
 
-    const { data: pinRow, error: pinErr } = await sb
-      .from("go_pins")
-      .select("slug,title,is_public,is_active,category")
-      .eq("slug", slug)
-      .maybeSingle();
+    // ✅ OPTIONNEL : si go_pins est bien RLS-friendly
+    const chk = await checkGoPin(sb, slug);
+    if(!chk.ok){
+      // On peut quand même ouvrir le PIN, mais on affiche un msg clair
+      const reason = chk.reason || "unknown";
+      console.warn("go_pins check fail:", reason);
 
-    if (pinErr){
-      fatal("Lecture refusée", pinErr.message || "Erreur go_pins (RLS/clé).");
-      return;
-    }
-    if (!pinRow){
-      fatal("PIN introuvable", "Aucune ligne go_pins trouvée pour ce slug.");
-      return;
+      // Si tu veux BLOQUER, décommente cette ligne:
+      // return fatal("Lien invalide", "PIN introuvable/inactif (" + reason + ").");
+
+      // Sinon on continue en mode “soft”
     }
 
-    const title = pinRow.title || pinRow.slug;
-    ttl.textContent = title;
+    // ✅ STOCKAGE slug-first (c’est LA clé)
+    safeSet(LOC_SLUG_KEY, slug);
+    safeSet(LAST_SLUG_KEY, slug);
 
-    if (pinRow.category && String(pinRow.category).toLowerCase() !== "loc"){
-      fatal("PIN non compatible", "Ce PIN n’est pas un logement (catégorie différente).");
-      return;
-    }
-    if (!pinRow.is_active){
-      fatal(title, "Ce logement est en pause pour le moment.");
-      return;
-    }
+    // (optionnel) titre
+    if(chk?.row?.title) safeSet("digiy_loc_title", chk.row.title);
 
-    // Bridge slug → pro_id (obligatoire)
-    setStatus("warn","Préparation accès PRO","Bridge slug → pro_id…");
-    const brid = await bridgeSlugToBusiness(sb, slug);
+    ttl.textContent = (chk?.row?.title || slug);
+    sub.textContent = "Ouverture du PIN propriétaire…";
+    setStatus("ok","OK","Redirection en cours…");
 
-    if (!brid.ok || !brid.row?.pro_id){
-      fatal(title, "Accès public OK, mais pro_id introuvable. Vérifie digiy_loc_businesses.slug.");
-      return;
-    }
-
-    // Stockage global
-    safeSet("DIGIY_PRO_ID", brid.row.pro_id);
-    safeSet("DIGIY_SLUG", slug);
-    safeSet("DIGIY_TITLE", title);
-    safeSet("DIGIY_BUSINESS_NAME", brid.row.business_name || "");
-    safeSet("DIGIY_PHONE", brid.row.phone || "");
-
-    console.log("✅ DIGIY_PRO_ID =", localStorage.getItem("DIGIY_PRO_ID"));
-
-    // Redirection unique (public ou propriétaire)
-    if (!pinRow.is_public){
-      sub.textContent = "Accès propriétaire. Redirection vers l’espace PRO…";
-      setStatus("warn","Accès propriétaire","Ouverture du PIN PRO…");
-      await sleep(700);
-      redirectToPin(slug);
-      return;
-    }
-
-    sub.textContent = "Accès public OK + pro_id OK. Redirection…";
-    setStatus("ok","Accès validé","On t’ouvre la page PIN maintenant.");
-    await sleep(900);
+    await sleep(450);
     redirectToPin(slug);
   });
 })();
