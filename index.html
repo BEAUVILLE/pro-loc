@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- (optionnel) si tu veux forcer la config ici -->
-<script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-;
-</script>
-
-<script src="/guard.js?v=loc-safe-20260303"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=loc-stable-2"></script>
   <title>DIGIY LOC PRO ♾️</title>
   <meta name="theme-color" content="#0b1020"/>
+
+  <!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
+  <script>
+    // IMPORTANT: c’est bien une ANON key (publique). RLS/RPC font la sécurité.
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  </script>
+
+  <!-- Supabase + Guard -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-index-FINAL-004"></script>
 
   <style>
     :root{
@@ -166,7 +166,10 @@
           <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
           <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
           <a class="btn gold" data-go="manage-links.html" href="#">🔗 Liens / QR</a>
+
+          <!-- ✅ Check Access SAFE (sans redirection) -->
           <a class="btn" id="btnCheckAccess" href="#">🧪 Vérifier mon accès</a>
+
           <button class="btn" id="btnReload" type="button">↻ Recharger</button>
         </div>
         <div class="note warn" id="note"></div>
@@ -197,7 +200,7 @@
       </div>
     </div>
 
-    <!-- ✅ DIGIY KNOWLEDGE — Assistant LOC PRO (container + fallback) -->
+    <!-- ✅ DIGIY KNOWLEDGE — Assistant LOC PRO -->
     <div class="assistantCard" id="assistantCard">
       <div class="assistantHead">
         <div class="assistantTitle">🧠 DIGIY KNOWLEDGE • Assistant LOC PRO</div>
@@ -224,58 +227,91 @@
   </div>
 
   <script>
-  (async function bootLOC(){
+  (() => {
     "use strict";
 
-    const $ = (id)=>document.getElementById(id);
-    const show = (msg, cls="warn")=>{
-      const el = $("note");
-      if(!el) return;
-      el.className = "note " + cls;
-      el.textContent = msg || "";
-      el.style.display = msg ? "block" : "none";
-    };
+    // ========= DOM =========
+    const $ = (id) => document.getElementById(id);
 
+    // ========= SLUG MEMORY =========
     const SAVED_KEY = "digiy_loc_slug";
     const qs = new URLSearchParams(location.search);
     let slug = (qs.get("slug") || "").trim();
 
-    if(!slug) slug = (localStorage.getItem(SAVED_KEY) || "").trim();
-    if(slug){
+    if (!slug) slug = (localStorage.getItem(SAVED_KEY) || "").trim();
+
+    if (slug) {
       localStorage.setItem(SAVED_KEY, slug);
-      try{
+      try {
         const u = new URL(location.href);
         u.searchParams.set("slug", slug);
         history.replaceState({}, "", u.toString());
-      }catch(_){}
+      } catch (_) {}
     }
 
-    function setPills({phone, slug, ok, reason}){
+    // ========= PHONE PASS-THROUGH (optionnel) =========
+    function normPhone(p){
+      if(!p) return "";
+      let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+      if (s.startsWith("00221")) s = "+221" + s.slice(5);
+      if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+      if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
+      return s;
+    }
+    function getUrlPhone(){
+      try{
+        return normPhone((new URL(location.href)).searchParams.get("phone") || "");
+      }catch(_){}
+      return "";
+    }
+
+    const HUB_PHONE = getUrlPhone();
+    if (HUB_PHONE) {
+      try { sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", HUB_PHONE); } catch(_){}
+      window.DIGIY_LOC_HUB_PHONE = HUB_PHONE;
+    }
+
+    // ========= UI =========
+    function show(msg, cls){
+      const el = $("note");
+      if(!el) return;
+      el.className = "note " + (cls || "warn");
+      el.textContent = msg || "";
+      el.style.display = msg ? "block" : "none";
+    }
+
+    function setPills({ phone, slug, ok }){
       $("pillLieu").textContent = "Lieu : " + (slug || "—");
       $("vLieu").textContent = slug || "—";
 
       $("pillPhone").textContent = "👤 " + (phone || "—");
       $("vPhone").textContent = phone || "—";
 
-      $("pillConn").className = "pill " + (ok ? "ok" : "bad");
-      $("pillConn").textContent = ok ? "✅ Connecté" : "Bloqué ❌";
-
-      $("vSess").textContent = ok ? "OK" : ("KO (" + (reason || "unknown") + ")");
+      if(ok){
+        $("pillConn").className = "pill ok";
+        $("pillConn").textContent = "✅ Connecté";
+      } else {
+        $("pillConn").className = "pill bad";
+        $("pillConn").textContent = "Bloqué ❌";
+      }
     }
 
     function sbState(){
-      const sb = window.sb;
-      const sbOk = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-      $("vSb").textContent = sbOk ? "OK" : "Pas prêt";
-      return sbOk;
+      const sb = window.DIGIY_GUARD?.getSb?.() || window.sb || null;
+      const ok = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
+      $("vSb").textContent = ok ? "OK" : "Pas prêt";
+      return ok;
     }
 
-    function buildWidgetContext(phone, slug){
+    function buildWidgetContext(){
+      const sess = window.DIGIY_GUARD?.getSession?.() || {};
+      const phone = (sess.phone || HUB_PHONE || "").trim();
+      const s = (sess.slug || slug || "").trim();
       return {
         module: "LOC",
         lang: "wo",
-        slug: slug || "",
-        phone: phone || "",
+        slug: s,
+        phone,
         page: location.pathname,
         href: location.href,
         title: document.title,
@@ -283,7 +319,7 @@
       };
     }
 
-    function setWidgetAttrs(ctx){
+    function setWidgetDataAttrs(ctx){
       const mount = $("digiyWidgetMount");
       if(!mount) return;
       mount.setAttribute("data-digiy-module", ctx.module);
@@ -293,45 +329,54 @@
       mount.setAttribute("data-digiy-page", ctx.page || "");
     }
 
-    function go(target, mode="assign"){
-      if(target === "__back__"){
-        if(history.length > 1) return history.back();
-        target = "listing.html";
+    // ========= NAV via GUARD (anti-loop) =========
+    function withPhoneParam(target){
+      const phone = (window.DIGIY_LOC_HUB_PHONE || "").trim();
+      if(!phone) return target;
+      if(target === "__back__") return target;
+      try{
+        const u = new URL(target, location.href);
+        if(!u.searchParams.get("phone")) u.searchParams.set("phone", phone);
+        if (u.origin === location.origin) return u.pathname + u.search + u.hash;
+        return u.toString();
+      }catch(_){
+        const sep = target.includes("?") ? "&" : "?";
+        return target + sep + "phone=" + encodeURIComponent(phone);
       }
-      const u = new URL(target, location.href);
-      if(slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      const finalUrl = u.pathname + u.search + u.hash;
-      if(mode === "replace") location.replace(finalUrl);
-      else location.assign(finalUrl);
     }
 
     function bindNav(){
+      if(!window.DIGIY_GUARD?.go) return;
       document.querySelectorAll("[data-go]").forEach((el)=>{
         if(el.__digiy_bound) return;
         el.__digiy_bound = true;
-        const target = (el.getAttribute("data-go") || "").trim();
+
+        const targetRaw = (el.getAttribute("data-go") || "").trim();
+        const mode = (el.getAttribute("data-mode") || "assign").trim();
+
         el.addEventListener("click", (e)=>{
           e.preventDefault();
-          if(!target) return;
-          go(target, "assign");
+          if(!targetRaw) return;
+
+          if(targetRaw === "__back__"){
+            if(history.length > 1) return history.back();
+            const t = withPhoneParam("listing.html");
+            return window.DIGIY_GUARD.go(t, "replace");
+          }
+
+          const target = withPhoneParam(targetRaw);
+          window.DIGIY_GUARD.go(target, mode);
         });
       });
     }
 
-    bindNav();
-
+    // ========= BUTTONS =========
     $("btnReload")?.addEventListener("click", ()=> location.reload());
 
     $("btnLogout")?.addEventListener("click", ()=>{
       if(!confirm("Se déconnecter ?")) return;
-      try{ localStorage.removeItem(SAVED_KEY); }catch(_){}
-      try{
-        const u = new URL(location.origin + location.pathname);
-        u.searchParams.delete("slug");
-        location.replace(u.toString());
-      }catch(_){
-        location.reload();
-      }
+      try{ window.DIGIY_GUARD?.logout?.("pin.html"); }
+      catch(_){ window.DIGIY_GUARD?.go?.("pin.html","replace"); }
     });
 
     $("btnOpenAssistant")?.addEventListener("click", ()=>{
@@ -341,98 +386,101 @@
       $("assistantCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
     });
 
+    // ✅ Check Access SAFE (sans redirect)
     $("btnCheckAccess")?.addEventListener("click", async (e)=>{
       e.preventDefault();
       try{
-        const a = await window.digiyRequireAccess();
-        alert("✅ OK\nslug=" + a.slug + "\nphone=" + a.phone);
+        if (!window.DIGIY_GUARD) throw new Error("guard_absent");
+        const okReady = await window.DIGIY_GUARD.ready(8000);
+        if (!okReady) throw new Error("guard_not_ready");
+
+        const sess = window.DIGIY_GUARD.getSession?.() || {};
+        const sb = window.DIGIY_GUARD.getSb?.();
+
+        const s = (sess.slug || window.DIGIY_GUARD.getSlug?.() || "").trim();
+        const p = (sess.phone || "").trim();
+
+        if (!s) throw new Error("slug_missing");
+        if (!p) throw new Error("phone_missing");
+        if (!sb || typeof sb.rpc !== "function") throw new Error("sb_missing");
+
+        const { data, error } = await sb.rpc("digiy_has_access", { p_phone: p, p_module: "LOC" });
+        if (error) throw error;
+
+        alert("✅ SESSION\nslug = " + s + "\nphone = " + p + "\naccess = " + (data ? "true" : "false"));
       }catch(err){
-        alert("❌ KO\n" + (err?.message || err));
+        alert("❌ KO\n" + (err?.message || String(err)));
       }
     });
 
-    // 1) Si pas de slug, guard-soft affichera sa porte douce. Nous on met juste un hint.
-    if(!slug){
-      show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
-      setPills({ phone:"", slug:"", ok:false, reason:"slug_missing" });
-      sbState();
-      return;
-    }
+    // ========= BOOT =========
+    async function boot(){
+      bindNav();
+      const mo = new MutationObserver(()=>bindNav());
+      mo.observe(document.documentElement, { childList:true, subtree:true });
 
-    // 2) Attendre ACCESS (slug->phone + has_access). ZÉRO REDIRECT.
-    show("⏳ Vérification accès…", "warn");
-   async function requireAccessFallback(p_module){
-  const slug = (new URLSearchParams(location.search).get("slug") || "").trim();
-  if(!slug) throw new Error("slug_missing");
-
-  // sb doit exister (créé soit par guard-soft, soit par ta page ailleurs)
-  const sb = window.sb || window._sb || null;
-  if(!sb) throw new Error("sb_missing");
-
-  // slug -> phone
-  const { data: row, error: e1 } = await sb
-    .from("digiy_subscriptions_public")
-    .select("slug, phone, module")
-    .eq("slug", slug)
-    .maybeSingle();
-  if(e1) throw e1;
-  if(!row?.phone) throw new Error("slug_not_found");
-
-  // has_access
-  const { data: ok, error: e2 } = await sb
-    .rpc("digiy_has_access", { p_phone: row.phone, p_module });
-  if(e2) throw e2;
-  if(ok !== true) throw new Error("no_access");
-
-  return { ok:true, slug, phone: row.phone, reason:"ok" };
-}
-
-// ✅ usage
-let access;
-if(typeof window.digiyRequireAccess === "function"){
-  access = await window.digiyRequireAccess();         // nouveau guard (si présent)
-} else {
-  access = await requireAccessFallback("LOC");        // fallback universel
-}
-    slug = access.slug || slug;
-    try{ localStorage.setItem(SAVED_KEY, slug); }catch(_){}
-
-    setPills({ phone: access.phone, slug, ok: true, reason:"ok" });
-
-    // 3) Supabase state (sb créé par guard-soft)
-    const okSb = sbState();
-    if(!okSb){
-      show("⚠️ Supabase pas prêt (sb null).\n➡️ Clique ↻ Recharger.", "warn");
-    }else{
-      show("", "warn");
-    }
-
-    // 4) Widget context (après accès)
-    const ctx = buildWidgetContext(access.phone, slug);
-    setWidgetAttrs(ctx);
-
-    window.DIGIY_WIDGET_PRO = {
-      endpoint: $("digiyWidgetMount")?.getAttribute("data-digiy-endpoint") || "https://knowledge.digiylyfe.com/widget/ask",
-      lang: "wo",
-      module: "LOC",
-      getContext: () => buildWidgetContext(access.phone, slug),
-      payloadShape: "query"
-    };
-
-    const fb = $("assistantFallback");
-    if (fb) fb.textContent = "Assistant prêt. Clique “💬 Ouvrir” ou pose ta question.";
-
-  })().catch((e)=>{
-    console.error("[LOC] boot crash:", e);
-    try{
-      const el = document.getElementById("note");
-      if(el){
-        el.className = "note bad";
-        el.style.display = "block";
-        el.textContent = "🔴 Crash JS.\n" + (e?.message || e);
+      // 1) slug manquant => pas de loop, juste message
+      if(!slug){
+        show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
+        setPills({ phone:"", slug:"", ok:false });
+        sbState();
+        setWidgetDataAttrs(buildWidgetContext());
+        return;
       }
-    }catch(_){}
-  });
+
+      // 2) Guard boot + ready (anti-loop, pas de redir automatique ici)
+      show("⏳ Vérification accès…", "warn");
+
+      const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
+      if(!g?.ok){
+        show("🔴 Guard KO.\n➡️ Vérifie guard.js + clé + RLS.\nAstuce : ajoute ?debug=1 côté guard.", "bad");
+        setPills({ phone:"", slug, ok:false });
+        sbState();
+        setWidgetDataAttrs(buildWidgetContext());
+        return;
+      }
+
+      try{ await window.DIGIY_GUARD.ready(8000); }catch(_){}
+
+      const sess = window.DIGIY_GUARD.getSession?.() || {};
+      const phone = (sess.phone || HUB_PHONE || "").trim();
+      const s = (sess.slug || slug || "").trim();
+
+      setPills({ phone, slug: s, ok: !!sess.ok });
+      $("vSess").textContent = sess?.ok ? "OK" : "—";
+
+      const okSb = sbState();
+      if(!okSb){
+        show("⚠️ Supabase pas prêt.\n➡️ Clique ↻ Recharger ou repasse par PIN.", "warn");
+      }else{
+        show("", "warn");
+      }
+
+      // Widget context
+      const ctx = buildWidgetContext();
+      setWidgetDataAttrs(ctx);
+
+      window.DIGIY_WIDGET_PRO = {
+        endpoint: $("digiyWidgetMount")?.getAttribute("data-digiy-endpoint") || "https://knowledge.digiylyfe.com/widget/ask",
+        lang: "wo",
+        module: "LOC",
+        getContext: () => buildWidgetContext(),
+        payloadShape: "query"
+      };
+
+      const fb = $("assistantFallback");
+      if (fb) fb.textContent = "Assistant prêt. Clique “💬 Ouvrir” ou pose ta question.";
+    }
+
+    boot().catch((e)=>{
+      console.error(e);
+      show("🔴 Crash JS.\n" + (e?.message || e), "bad");
+      setPills({ phone:"", slug, ok:false });
+      sbState();
+      setWidgetDataAttrs(buildWidgetContext());
+    });
+
+  })();
   </script>
 
   <!-- ✅ Widget externe (Knowledge) -->
