@@ -1,10 +1,16 @@
-/* DIGIY GUARD-SOFT — LOC SAFE (anti-crash)
+/**
+ * DIGIY GUARD-SOFT — LOC SAFE (anti-crash)
  * - Ne dépend d'aucun élément HTML (page-safe)
- * - slug-first : ?slug=... ou localStorage digiy_loc_slug
+ * - slug-first : ?slug=... ou localStorage digiy_loc_slug ou pathname (/loc-...)
  * - résout slug->phone via digiy_subscriptions_public
  * - vérifie accès via RPC digiy_has_access(phone,module)
  * - expose digiyRequireAccess() + DIGIY_GUARD API
+ *
+ * Pré-requis :
+ *   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ *   (optionnel mais conseillé) définir window.DIGIY_SUPABASE_URL / window.DIGIY_SUPABASE_ANON_KEY avant d’inclure ce fichier
  */
+
 (() => {
   "use strict";
 
@@ -12,293 +18,445 @@
   const STORAGE_SLUG_KEY = "digiy_loc_slug";
   const STORAGE_LAST_SLUG = "digiy_last_slug";
 
-  // ✅ Si tu veux centraliser, tu peux aussi mettre :
-  // window.DIGIY_SUPABASE_URL / window.DIGIY_SUPABASE_ANON_KEY dans index.html
-  const SUPABASE_URL =
-    window.DIGIY_SUPABASE_URL ||
-    "https://wesqmwjjtsefyjnluosj.supabase.co";
+  // ✅ IMPORTANT : ton ABOS / pages peuvent poser ces globals
+  // window.DIGIY_SUPABASE_URL = "...";
+  // window.DIGIY_SUPABASE_ANON_KEY = "...";
 
-  const SUPABASE_ANON_KEY =
-    window.DIGIY_SUPABASE_ANON_KEY ||
+  const FALLBACK_SUPABASE_URL =
+    "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const FALLBACK_SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  // Pages
-  const DEFAULT_LOGIN_PAGE = "pin.html"; // porte locale du repo
-  const DEFAULT_PAY_URL = "https://commencer-a-payer.digiylyfe.com/?module=LOC";
+  const PAY_URL_DEFAULT = "https://commencer-a-payer.digiylyfe.com/?module=LOC";
+  const PIN_URL_DEFAULT = "pin.html";
 
-  // -------- utils safe DOM --------
-  const $id = (id) => (id ? document.getElementById(id) : null);
-  const qs = (sel) => (sel ? document.querySelector(sel) : null);
+  // ===== state interne =====
+  let _sb = null;
+  let _bootPromise = null;
+  let _readyPromise = null;
 
-  function setText(el, txt) {
-    if (!el) return;
-    el.textContent = String(txt ?? "");
-  }
-  function setHTML(el, html) {
-    if (!el) return;
-    el.innerHTML = String(html ?? "");
-  }
-  function show(el, on) {
-    if (!el) return;
-    el.style.display = on ? "block" : "none";
-  }
+  const _session = {
+    ok: false,
+    slug: "",
+    phone: "",
+    module: MODULE,
+    reason: "",
+    debug: false,
+    ts: 0,
+  };
 
-  // ---- option UI (si présent) ----
-  // Tu peux ajouter dans une page des éléments optionnels :
-  // <div data-guard="gate"></div>
-  // <div data-guard="msg"></div>
-  // <span data-guard="slug"></span>
-  // <span data-guard="phone"></span>
-  // etc.
-  function ui() {
-    return {
-      gate: qs('[data-guard="gate"]') || $id("gate") || null,
-      msg: qs('[data-guard="msg"]') || $id("gateMsg") || $id("note") || null,
-      slug: qs('[data-guard="slug"]') || $id("vLieu") || null,
-      phone: qs('[data-guard="phone"]') || $id("vPhone") || null,
-      sb: qs('[data-guard="sb"]') || $id("vSb") || null,
-      sess: qs('[data-guard="sess"]') || $id("vSess") || null,
-    };
+  // ===== helpers =====
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function qps() {
+    try { return new URLSearchParams(location.search); } catch { return new URLSearchParams(); }
   }
 
-  function debugOn() {
-    try {
-      return new URL(location.href).searchParams.get("debug") === "1";
-    } catch (_) {
-      return false;
-    }
-  }
-  const DEBUG = debugOn();
-
-  function log(...a) {
-    if (DEBUG) console.log("[GUARD-SOFT]", ...a);
-  }
-  function warn(...a) {
-    console.warn("[GUARD-SOFT]", ...a);
-  }
-
-  function cleanSlug(s) {
-    const x = String(s || "").trim();
-    if (!x) return "";
-    return x
+  function normSlug(s) {
+    return String(s || "")
+      .trim()
       .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\-_]/g, "")
-      .replace(/-+/g, "-");
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
   }
 
-  function getSlugFromUrlOrPath() {
-    try {
-      const u = new URL(location.href);
-      const q = (u.searchParams.get("slug") || "").trim();
-      if (q) return q;
-
-      // slug dans pathname (ex: /loc-22177...)
-      const p = u.pathname.replace(/^\/+/, "").trim();
-      if (p && p.includes("-")) return p;
-
-      return "";
-    } catch (_) {
-      return "";
-    }
+  function normPhoneDigits(p) {
+    return String(p || "").trim().replace(/[^\d]/g, "");
   }
 
-  function getSavedSlug() {
+  function getSlugFromPathname() {
+    // Support: https://digiylyfe.com/loc-22177...
     try {
-      return (localStorage.getItem(STORAGE_SLUG_KEY) || "").trim();
-    } catch (_) {
+      const p = String(location.pathname || "").replace(/^\/+/, "").replace(/\/+$/, "");
+      if (!p) return "";
+      // si on a un fichier (planning.html) on ignore
+      if (p.includes(".html")) return "";
+      // si c’est un slug "loc-..." on accepte
+      return normSlug(p);
+    } catch {
       return "";
     }
   }
 
-  function saveSlug(slug) {
-    try {
-      localStorage.setItem(STORAGE_SLUG_KEY, slug);
-      localStorage.setItem(STORAGE_LAST_SLUG, slug);
-    } catch (_) {}
+  function pickSlug() {
+    const qs = qps();
+    const fromQs = normSlug(qs.get("slug") || "");
+    if (fromQs) return fromQs;
+
+    let fromLS = "";
+    try { fromLS = normSlug(localStorage.getItem(STORAGE_SLUG_KEY) || ""); } catch {}
+    if (fromLS) return fromLS;
+
+    const fromPath = getSlugFromPathname();
+    if (fromPath) return fromPath;
+
+    return "";
+  }
+
+  function rememberSlug(slug) {
+    try { localStorage.setItem(STORAGE_SLUG_KEY, slug); } catch {}
+    try { localStorage.setItem(STORAGE_LAST_SLUG, slug); } catch {}
   }
 
   function ensureSlugInUrl(slug) {
-    if (!slug) return;
+    // on évite de toucher si déjà présent
     try {
       const u = new URL(location.href);
       if (!u.searchParams.get("slug")) {
         u.searchParams.set("slug", slug);
         history.replaceState({}, "", u.toString());
       }
-    } catch (_) {}
+    } catch {}
   }
 
-  function makeSb() {
-    if (!window.supabase || typeof window.supabase.createClient !== "function") {
-      throw new Error("supabase_cdn_missing");
+  function getPayUrl(slug) {
+    // si page a défini PAY_URL global, on l’utilise
+    const base = (typeof window.PAY_URL === "string" && window.PAY_URL) ? window.PAY_URL : PAY_URL_DEFAULT;
+    try {
+      const u = new URL(base, location.href);
+      u.searchParams.set("module", MODULE);
+      if (slug) u.searchParams.set("slug", slug);
+      // return = page courante (utile pour revenir)
+      u.searchParams.set("return", location.origin + location.pathname + "?slug=" + encodeURIComponent(slug));
+      return u.toString();
+    } catch {
+      return base;
     }
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error("supabase_config_missing");
+  }
+
+  function getPinUrl(slug) {
+    const pin = (typeof window.DIGIY_PIN_URL === "string" && window.DIGIY_PIN_URL) ? window.DIGIY_PIN_URL : PIN_URL_DEFAULT;
+    try {
+      const u = new URL(pin, location.href);
+      if (slug) u.searchParams.set("slug", slug);
+      return u.toString();
+    } catch {
+      // fallback naïf
+      const sep = pin.includes("?") ? "&" : "?";
+      return pin + sep + "slug=" + encodeURIComponent(slug || "");
     }
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  }
+
+  function safeBodyReady() {
+    if (document.body) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      window.addEventListener("DOMContentLoaded", () => resolve(true), { once: true });
+      setTimeout(() => resolve(true), 1200);
     });
-    return sb;
   }
 
-  // -------- internal state --------
-  let _sb = null;
-  let _session = { ok: false, phone: null, slug: null, module: MODULE };
-  let _booted = false;
+  // ===== UI gate minimal (optionnel) =====
+  let _gateMounted = false;
+  function mountGate() {
+    if (_gateMounted) return;
+    _gateMounted = true;
 
-  // -------- UI helpers (safe) --------
-  function showGate(message) {
-    const U = ui();
-    // ✅ NE JAMAIS CRASH si ça n'existe pas
-    if (U.gate) {
-      show(U.gate, true);
-      // si c'est un container, on peut lui injecter un message basique
-      // mais seulement si utile
-    }
-    if (message) setText(U.msg, message);
+    // page-safe : si body pas prêt, on attend
+    safeBodyReady().then(() => {
+      if (!document.body) return;
+
+      const wrap = document.createElement("div");
+      wrap.id = "digiy-guard-gate";
+      wrap.style.cssText =
+        "position:fixed;inset:0;z-index:999999;background:rgba(2,6,23,.86);backdrop-filter:blur(6px);" +
+        "display:none;align-items:center;justify-content:center;padding:16px;";
+
+      wrap.innerHTML = `
+        <div style="width:min(680px,96vw);border:1px solid rgba(148,163,184,.22);border-radius:18px;
+                    background:linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+                    box-shadow:0 22px 70px rgba(0,0,0,.55);padding:14px;color:#f8fafc;font-family:system-ui;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div style="font-weight:1000;">DIGIY ${MODULE} PRO — Accès sécurisé</div>
+            <div id="dg_tag" style="font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.22);color:#cbd5e1;">
+              Guard
+            </div>
+          </div>
+
+          <div id="dg_msg" style="margin-top:10px;white-space:pre-wrap;color:#e2e8f0;font-weight:850;line-height:1.45;">
+            Vérification…
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+            <a id="dg_btn_pay" href="#" style="flex:1;min-width:180px;text-decoration:none;text-align:center;
+                border:1px solid rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a;
+                padding:10px 12px;border-radius:14px;font-weight:1000;">💳 Commencer à payer</a>
+
+            <a id="dg_btn_pin" href="#" style="flex:1;min-width:180px;text-decoration:none;text-align:center;
+                border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0;
+                padding:10px 12px;border-radius:14px;font-weight:1000;">🔑 Ouvrir (PIN)</a>
+
+            <button id="dg_btn_close" type="button" style="flex:1;min-width:180px;
+                border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.06);color:#e5e7eb;
+                padding:10px 12px;border-radius:14px;font-weight:1000;cursor:pointer;">↻ Recharger</button>
+          </div>
+
+          <div style="margin-top:10px;color:#94a3b8;font-size:12px;font-weight:800;">
+            Astuce : ouvre toujours via ton lien/QR avec <b>?slug=...</b>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(wrap);
+
+      wrap.querySelector("#dg_btn_close")?.addEventListener("click", () => location.reload());
+    });
+  }
+
+  function showGate(message, opts = {}) {
+    // ✅ anti-crash : ne suppose jamais l’existence du DOM
+    mountGate();
+    safeBodyReady().then(() => {
+      const gate = document.getElementById("digiy-guard-gate");
+      if (!gate) return;
+
+      const msg = gate.querySelector("#dg_msg");
+      const tag = gate.querySelector("#dg_tag");
+      const btnPay = gate.querySelector("#dg_btn_pay");
+      const btnPin = gate.querySelector("#dg_btn_pin");
+
+      if (msg) msg.textContent = message || "";
+      if (tag) tag.textContent = opts.tag || "Guard";
+
+      const slug = _session.slug || pickSlug();
+      if (btnPay) btnPay.href = getPayUrl(slug);
+      if (btnPin) btnPin.href = getPinUrl(slug);
+
+      gate.style.display = "flex";
+    });
   }
 
   function hideGate() {
-    const U = ui();
-    if (U.gate) show(U.gate, false);
-    setText(U.msg, "");
+    safeBodyReady().then(() => {
+      const gate = document.getElementById("digiy-guard-gate");
+      if (gate) gate.style.display = "none";
+    });
   }
 
-  // -------- access logic --------
-  async function resolvePhoneFromSlug(slug) {
-    const { data, error } = await _sb
+  // ===== supabase init =====
+  function getConfig() {
+    const url = (window.DIGIY_SUPABASE_URL || "").trim() || FALLBACK_SUPABASE_URL;
+    const key = (window.DIGIY_SUPABASE_ANON_KEY || "").trim() || FALLBACK_SUPABASE_ANON_KEY;
+    return { url, key };
+  }
+
+  function ensureSupabaseClient() {
+    if (_sb) return _sb;
+
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("supabase_lib_missing");
+    }
+
+    const { url, key } = getConfig();
+    if (!url || !key || key.length < 80) throw new Error("supabase_config_missing");
+
+    _sb = window.supabase.createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+      },
+    });
+
+    // expose utile pour debug
+    window.sb = window.sb || _sb;
+
+    return _sb;
+  }
+
+  // ===== core: resolve + access =====
+  async function resolveSlugToPhone(sb, slug) {
+    // digiy_subscriptions_public: slug, phone, module
+    const { data, error } = await sb
       .from("digiy_subscriptions_public")
-      .select("phone, slug, module")
+      .select("slug,phone,module")
       .eq("slug", slug)
       .maybeSingle();
 
     if (error) {
-      warn("subscriptions_public error", error);
-      throw new Error("subscriptions_public_error");
+      console.warn("[GUARD-SOFT] subscriptions_public error", error);
+      const e = new Error("subscriptions_public_error");
+      e.cause = error;
+      throw e;
     }
     if (!data?.phone) {
-      throw new Error("slug_not_found");
+      const e = new Error("subscriptions_public_empty");
+      e.cause = data;
+      throw e;
     }
-    return String(data.phone).trim();
+    return {
+      slug: data.slug || slug,
+      phone: normPhoneDigits(data.phone),
+      module: String(data.module || "").toUpperCase(),
+    };
   }
 
-  async function hasAccess(phone) {
-    const { data, error } = await _sb.rpc("digiy_has_access", {
-      p_phone: phone,
-      p_module: MODULE,
+  async function checkAccess(sb, phoneDigits, module) {
+    const { data, error } = await sb.rpc("digiy_has_access", {
+      p_phone: phoneDigits,
+      p_module: module,
     });
+
     if (error) {
-      warn("digiy_has_access rpc error", error);
-      throw new Error("has_access_rpc_error");
+      const e = new Error("has_access_rpc_error");
+      e.cause = error;
+      throw e;
     }
     return !!data;
   }
 
-  function go(url, mode = "assign") {
-    try {
-      if (mode === "replace") location.replace(url);
-      else location.assign(url);
-    } catch (_) {
-      location.href = url;
-    }
-  }
+  // ===== public API: digiyRequireAccess =====
+  async function digiyRequireAccess(options = {}) {
+    const debug = (qps().get("debug") === "1") || !!options.debug;
+    _session.debug = debug;
 
-  function logout(loginPage = DEFAULT_LOGIN_PAGE) {
-    try {
-      localStorage.removeItem(STORAGE_SLUG_KEY);
-    } catch (_) {}
-    go(loginPage, "replace");
-  }
+    let slug = normSlug(options.slug || pickSlug());
+    _session.slug = slug;
 
-  // ✅ MAIN — this is what your pages call
-  async function digiyRequireAccess(opts = {}) {
-    const login = opts.login || DEFAULT_LOGIN_PAGE;
-    const payUrl = opts.payUrl || DEFAULT_PAY_URL;
-    const requireSlug = opts.requireSlug !== false; // default true
-
-    if (!_sb) _sb = makeSb();
-
-    // slug
-    let slug = cleanSlug(getSlugFromUrlOrPath()) || cleanSlug(getSavedSlug());
-    if (slug) {
-      saveSlug(slug);
-      ensureSlugInUrl(slug);
-    }
-
-    if (!slug && requireSlug) {
-      showGate("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien GO PIN.\nExemple : index.html?slug=loc-22177...");
+    if (!slug) {
+      _session.ok = false;
+      _session.reason = "slug_missing";
+      if (debug) {
+        showGate(
+          "⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien GO PIN.\nExemple : index.html?slug=chez-astou-saly",
+          { tag: "SLUG" }
+        );
+        return { ok: false, reason: _session.reason, slug: "", phone: "" };
+      }
+      // en non-debug on montre gate (pas de boucle agressive)
+      showGate(
+        "⚠️ SLUG manquant.\n➡️ Reviens depuis ton lien GO PIN (avec ?slug=...).",
+        { tag: "SLUG" }
+      );
       throw new Error("slug_missing");
     }
 
-    // resolve phone
-    const phone = slug ? await resolvePhoneFromSlug(slug) : null;
+    rememberSlug(slug);
+    ensureSlugInUrl(slug);
 
-    // check access
-    const ok = phone ? await hasAccess(phone) : false;
-    if (!ok) {
-      // pas de boucle automatique ici : on affiche + on laisse l’UI décider
-      showGate("Accès non actif.\n➡️ Ouvre via PIN ou commence à payer.");
-      // optionnel : rediriger si pas en debug
-      if (!DEBUG && opts.autoRedirectToPay) {
-        const u = new URL(payUrl, location.href);
-        if (slug) u.searchParams.set("slug", slug);
-        if (phone) u.searchParams.set("phone", phone);
-        go(u.toString(), "replace");
-      }
-      throw new Error("has_access_false");
-    }
-
-    hideGate();
-    _session = { ok: true, phone, slug, module: MODULE };
-    log("✅ access ok", _session);
-    return { ok: true, phone, slug, module: MODULE };
-  }
-
-  // Boot wrapper (compat avec ton code actuel)
-  async function boot(opts = {}) {
+    let sb;
     try {
-      const res = await digiyRequireAccess(opts);
-      return res;
+      sb = ensureSupabaseClient();
     } catch (e) {
-      return { ok: false, error: String(e?.message || e) };
+      _session.ok = false;
+      _session.reason = String(e?.message || e);
+      showGate(
+        "Accès verrouillé (pas de boucle).\nRaison : " + _session.reason,
+        { tag: "CONFIG" }
+      );
+      throw e;
     }
+
+    // 1) slug -> phone
+    const brid = await resolveSlugToPhone(sb, slug);
+    const phoneDigits = normPhoneDigits(brid.phone);
+    _session.phone = phoneDigits;
+    _session.slug = brid.slug || slug;
+
+    // 2) has_access
+    const ok = await checkAccess(sb, phoneDigits, MODULE);
+    if (!ok) {
+      _session.ok = false;
+      _session.reason = "has_access_false";
+
+      if (debug) {
+        showGate(
+          "❌ Accès refusé.\n\n" +
+          `slug: ${_session.slug}\nphone: ${_session.phone}\nmodule: ${MODULE}\n\n` +
+          "➡️ Clique Commencer à payer, ou repasse par PIN.",
+          { tag: "NO ACCESS" }
+        );
+        return { ok: false, reason: _session.reason, slug: _session.slug, phone: _session.phone, module: MODULE };
+      }
+
+      // en mode normal : on affiche gate (pas de loop agressive)
+      showGate(
+        "❌ Accès non actif pour ce cockpit.\n➡️ Clique Commencer à payer, ou ouvre via PIN.",
+        { tag: "NO ACCESS" }
+      );
+      const err = new Error("has_access_false");
+      err.code = "has_access_false";
+      throw err;
+    }
+
+    _session.ok = true;
+    _session.reason = "ok";
+    _session.ts = Date.now();
+    hideGate();
+
+    console.log("[GUARD-SOFT] ✅ access ok", { slug: _session.slug, phone: _session.phone, module: MODULE });
+
+    return {
+      ok: true,
+      slug: _session.slug,
+      phone: _session.phone,
+      module: MODULE,
+      sb,
+      session: { ..._session },
+    };
   }
 
-  async function ready(ms = 6000) {
-    // garde compat : certains pages attendent ready()
-    const t0 = Date.now();
-    while (Date.now() - t0 < ms) {
-      if (_sb) return true;
-      await new Promise((r) => setTimeout(r, 50));
-    }
-    return true;
-  }
-
-  // -------- Expose API --------
-  window.digiyRequireAccess = digiyRequireAccess;
-
-  window.DIGIY_GUARD = {
+  // ===== DIGIY_GUARD API =====
+  const DIGIY_GUARD = {
     module: MODULE,
-    boot,
-    ready,
-    go,
-    logout,
+
+    getSlug: () => _session.slug || pickSlug(),
+    getSession: () => ({ ..._session }),
     getSb: () => _sb,
-    getSession: () => _session,
-    getSlug: () => _session?.slug || cleanSlug(getSlugFromUrlOrPath()) || cleanSlug(getSavedSlug()),
+
+    boot: async (opts = {}) => {
+      if (_bootPromise) return _bootPromise;
+      _bootPromise = (async () => {
+        try {
+          const res = await digiyRequireAccess(opts);
+          return { ok: true, ...res };
+        } catch (e) {
+          return { ok: false, reason: String(e?.message || e), error: e };
+        }
+      })();
+      return _bootPromise;
+    },
+
+    ready: async (timeoutMs = 8000) => {
+      if (_readyPromise) return _readyPromise;
+      _readyPromise = (async () => {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+          if (_session.ok && _sb) return true;
+          await sleep(120);
+        }
+        return false;
+      })();
+      return _readyPromise;
+    },
+
+    go: (target, mode = "assign") => {
+      try {
+        if (!target) return;
+        if (target === "__back__") {
+          if (history.length > 1) return history.back();
+          return location.assign("listing.html");
+        }
+        if (mode === "replace") location.replace(target);
+        else location.assign(target);
+      } catch (_) {}
+    },
+
+    logout: (redirect = PIN_URL_DEFAULT) => {
+      try { localStorage.removeItem(STORAGE_SLUG_KEY); } catch {}
+      try { localStorage.removeItem(STORAGE_LAST_SLUG); } catch {}
+      _session.ok = false;
+      _session.phone = "";
+      _session.reason = "logout";
+      const u = getPinUrl("");
+      location.replace(redirect ? new URL(redirect, location.href).toString() : u);
+    },
   };
 
-  // Auto-run minimal (sans casser)
-  (async () => {
-    try {
-      _sb = makeSb();
-      _booted = true;
-      log("booted");
-    } catch (e) {
-      warn("boot crash", e);
-      showGate("❌ Guard non prêt.\n➡️ Vérifie Supabase CDN / clé / chemin guard.js");
-    }
-  })();
+  // expose global
+  window.DIGIY_GUARD = DIGIY_GUARD;
+  window.digiyRequireAccess = digiyRequireAccess;
+
 })();
