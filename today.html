@@ -231,474 +231,536 @@
 </div>
 
 <script>
-/* =========================
-   DIGIY NAV AUTO — QR SAFE ✅
-   - Tous les éléments avec data-go gardent le slug via DIGIY_GUARD.go()
-   - data-mode="replace" optionnel
-========================= */
+/* =============================
+   DIGIY LOC PRO — TODAY (NEW GUARD RAIL) ✅
+   - no boot()
+   - no getSbAsync()
+   - uses: await DIGIY_GUARD.ready + DIGIY_GUARD.state
+============================= */
 (function(){
   "use strict";
-  function bindNav(){
-    if(!window.DIGIY_GUARD?.go) return;
 
-    document.querySelectorAll("[data-go]").forEach((el)=>{
-      if(el.__digiy_bound) return;
-      el.__digiy_bound = true;
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-      const target = (el.getAttribute("data-go") || "").trim();
-      const mode = (el.getAttribute("data-mode") || "assign").trim();
+  const MODULE = "LOC";
+  const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      el.addEventListener("click", (e)=>{
-        e.preventDefault();
-        if(!target) return;
+  const $ = (id)=>document.getElementById(id);
 
-        if(target === "__back__"){
-          if(history.length > 1) return history.back();
-          return window.DIGIY_GUARD.go("index.html", "replace");
-        }
+  function showNote(id, msg){
+    const el = $(id);
+    if(!el) return;
+    el.style.display = "block";
+    el.textContent = msg;
+  }
 
-        window.DIGIY_GUARD.go(target, mode);
-      });
+  function hideNote(id){
+    const el = $(id);
+    if(!el) return;
+    el.style.display = "none";
+    el.textContent = "";
+  }
+
+  function esc(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  function fmtMoney(x){
+    try{ return Number(x || 0).toLocaleString("fr-FR") + " F"; }
+    catch(_){ return String(x || "0") + " F"; }
+  }
+
+  function todayISO(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const da = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+
+  function prettyDateFR(iso){
+    try{
+      const [y,m,d] = String(iso || "").split("-");
+      return `${d}/${m}/${y}`;
+    }catch(_){
+      return iso || "";
+    }
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
+    const ready = window.DIGIY_GUARD.ready;
+
+    if(typeof ready === "function"){
+      return await ready(8000);
+    }
+    if(ready && typeof ready.then === "function"){
+      return await ready;
+    }
+    return !!ready;
+  }
+
+  function pillUserFromState(st){
+    const phone = st?.phone || "PRO";
+    $("pillUser").innerHTML = `👤 <strong>${esc(phone)}</strong>`;
+    $("pillState").textContent = "✅ Connecté";
+    $("pillState").classList.remove("warn","bad");
+    $("pillState").classList.add("ok");
+  }
+
+  function setDisconnected(msg){
+    $("pillUser").innerHTML = `👤 <strong>—</strong>`;
+    $("pillState").textContent = "🔒 Déconnecté";
+    $("pillState").classList.remove("ok","bad");
+    $("pillState").classList.add("warn");
+
+    showNote("noteStats", msg || "Connecte-toi d’abord (PIN).");
+    showNote("notePulse", "Connecte-toi d’abord.");
+    showNote("notePay", "Connecte-toi d’abord.");
+    showNote("noteArrDep", "Connecte-toi d’abord.");
+    showNote("notePending", "Connecte-toi d’abord.");
+  }
+
+  function clearAllNotes(){
+    hideNote("noteStats");
+    hideNote("notePulse");
+    hideNote("notePay");
+    hideNote("noteArrDep");
+    hideNote("notePending");
+  }
+
+  function resetUI(){
+    $("stats").innerHTML = "";
+    $("pulseList").innerHTML = "";
+    $("payList").innerHTML = "";
+    $("arrdepList").innerHTML = "";
+    $("pendingList").innerHTML = "";
+    $("pulseQueued").textContent = "0";
+    $("pulseSent").textContent = "0";
+    $("pulseFailed").textContent = "0";
+  }
+
+  async function rpc(fn, args){
+    const { data, error } = await SB.rpc(fn, args || {});
+    if(error) throw error;
+    if(typeof data === "string"){
+      try{ return JSON.parse(data); }catch(_){ return data; }
+    }
+    return data;
+  }
+
+  async function tryGetBusinessCode(slug){
+    if(!slug) return null;
+    try{
+      const code = await rpc("digiy_loc_get_business_code_by_slug", { p_slug: slug });
+      return code ? String(code).trim().toUpperCase() : null;
+    }catch(_){
+      return null;
+    }
+  }
+
+  function renderStats(cards){
+    $("stats").innerHTML = "";
+    cards.forEach(([lbl,val])=>{
+      const d = document.createElement("div");
+      d.className = "stat";
+      d.innerHTML = `
+        <div class="num">${esc(val)}</div>
+        <div class="lbl">${esc(lbl)}</div>
+      `;
+      $("stats").appendChild(d);
     });
   }
 
-  bindNav();
-  const mo = new MutationObserver(()=>bindNav());
-  mo.observe(document.documentElement, { childList:true, subtree:true });
-})();
-</script>
+  function renderArrDepFromDayListing(payload){
+    $("arrdepList").innerHTML = "";
 
-<script>
-/* =============================
-   DIGIY LOC PRO — TODAY (GUARD FIRST) ✅
-============================= */
+    const arr = payload?.arrivals || [];
+    const dep = payload?.departures || [];
+    const occ = payload?.occupied || [];
 
-const $ = (id)=>document.getElementById(id);
+    const blocks = [];
+    blocks.push({
+      title:"Arrivées",
+      tag:"ok",
+      rows:arr.map(r=>({
+        title: r.guest_name || "Client",
+        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+        right: r.unit_title || ""
+      }))
+    });
 
-function showNote(id, msg){
-  const el = $(id);
-  if(!el) return;
-  el.style.display = "block";
-  el.textContent = msg;
-}
-function hideNote(id){
-  const el = $(id);
-  if(!el) return;
-  el.style.display = "none";
-  el.textContent = "";
-}
-function esc(s){ return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
-function fmtMoney(x){ try{ return Number(x||0).toLocaleString("fr-FR")+" F"; }catch(_){ return (x||"—")+" F"; } }
+    blocks.push({
+      title:"Départs",
+      tag:"warn",
+      rows:dep.map(r=>({
+        title: r.guest_name || "Client",
+        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+        right: r.unit_title || ""
+      }))
+    });
 
-function todayISO(){
-  const d=new Date();
-  const y=d.getFullYear();
-  const m=String(d.getMonth()+1).padStart(2,"0");
-  const da=String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${da}`;
-}
-function prettyDateFR(iso){
-  try{
-    const [y,m,d]=String(iso||"").split("-");
-    return `${d}/${m}/${y}`;
-  }catch(_){ return iso||""; }
-}
+    blocks.push({
+      title:"Occupés",
+      tag:"warn",
+      rows:occ.map(r=>({
+        title: r.guest_name || "Client",
+        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+        right: r.unit_title || ""
+      }))
+    });
 
-function pillUserFromSession(sess){
-  const name = (sess?.title || "PRO").trim();
-  $("pillUser").innerHTML = `👤 <strong>${esc(name || "PRO")}</strong>`;
-  $("pillState").textContent = "✅ Connecté";
-  $("pillState").classList.remove("warn"); $("pillState").classList.add("ok");
-}
+    const all = [];
+    blocks.forEach(b=>{
+      if(!b.rows.length) return;
+      b.rows.forEach(x=> all.push({ ...x, type:b.title, tag:b.tag }));
+    });
 
-function setDisconnected(msg){
-  $("pillUser").innerHTML = `👤 <strong>—</strong>`;
-  $("pillState").textContent = "🔒 Déconnecté";
-  $("pillState").classList.remove("ok"); $("pillState").classList.add("warn");
-  showNote("noteStats", msg || "Connecte-toi d’abord (PIN).");
-  showNote("notePulse", "Connecte-toi d’abord.");
-  showNote("notePay", "Connecte-toi d’abord.");
-  showNote("noteArrDep", "Connecte-toi d’abord.");
-  showNote("notePending", "Connecte-toi d’abord.");
-}
+    if(!all.length){
+      showNote("noteArrDep","Aucune arrivée / départ / occupation pour aujourd’hui.");
+      return;
+    }
 
-function clearAllNotes(){
-  hideNote("noteStats");
-  hideNote("notePulse");
-  hideNote("notePay");
-  hideNote("noteArrDep");
-  hideNote("notePending");
-}
-
-function resetUI(){
-  $("stats").innerHTML = "";
-  $("pulseList").innerHTML = "";
-  $("payList").innerHTML = "";
-  $("arrdepList").innerHTML = "";
-  $("pendingList").innerHTML = "";
-  $("pulseQueued").textContent="0";
-  $("pulseSent").textContent="0";
-  $("pulseFailed").textContent="0";
-}
-
-/* =============================
-   RPC HELPERS
-============================= */
-async function rpc(sb, fn, args){
-  const { data, error } = await sb.rpc(fn, args || {});
-  if(error) throw error;
-  if(typeof data === "string"){
-    try{ return JSON.parse(data); }catch(_){ return data; }
-  }
-  return data;
-}
-async function tryGetBusinessCode(sb, slug){
-  try{
-    const code = await rpc(sb, "digiy_loc_get_business_code_by_slug", { p_slug: slug });
-    return (code && String(code).trim()) ? String(code).trim() : null;
-  }catch(_){
-    return null;
-  }
-}
-
-/* =============================
-   RENDER
-============================= */
-function renderStats(cards){
-  $("stats").innerHTML = "";
-  cards.forEach(([lbl,val])=>{
-    const d=document.createElement("div");
-    d.className="stat";
-    d.innerHTML = `<div class="num">${esc(val)}</div><div class="lbl">${esc(lbl)}</div>`;
-    $("stats").appendChild(d);
-  });
-}
-
-function renderArrDepFromDayListing(payload){
-  $("arrdepList").innerHTML = "";
-  const arr = payload?.arrivals || [];
-  const dep = payload?.departures || [];
-  const occ = payload?.occupied || [];
-
-  const blocks = [];
-  blocks.push({ title:"Arrivées", tag:"ok", rows:arr.map(r=>({
-    title: r.guest_name || "Client",
-    meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-    right: r.unit_title || ""
-  }))});
-  blocks.push({ title:"Départs", tag:"warn", rows:dep.map(r=>({
-    title: r.guest_name || "Client",
-    meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-    right: r.unit_title || ""
-  }))});
-  blocks.push({ title:"Occupés", tag:"warn", rows:occ.map(r=>({
-    title: r.guest_name || "Client",
-    meta: `📅 ${esc(r.start_date||"—")} → ${esc(r.end_date||"—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-    right: r.unit_title || ""
-  }))});
-
-  const all = [];
-  blocks.forEach(b=>{
-    if(!b.rows.length) return;
-    b.rows.forEach(x=> all.push({ ...x, type:b.title, tag:b.tag }));
-  });
-
-  if(!all.length){
-    showNote("noteArrDep","Aucune arrivée / départ / occupé pour aujourd’hui (RPC OK).");
-    return;
+    all.slice(0,40).forEach(r=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="itemTop">
+          <div class="itemTitle">${esc(r.type)} — ${esc(r.title)} <span class="tag ${esc(r.tag)}">${esc(r.type.toUpperCase())}</span></div>
+          <div class="tag">${esc(r.right || "")}</div>
+        </div>
+        <div class="itemMeta">${r.meta}</div>
+      `;
+      $("arrdepList").appendChild(div);
+    });
   }
 
-  all.slice(0, 40).forEach(r=>{
-    const div=document.createElement("div");
-    div.className="item";
-    div.innerHTML = `
-      <div class="itemTop">
-        <div class="itemTitle">${esc(r.type)} — ${esc(r.title)} <span class="tag ${esc(r.tag)}">${esc(r.type.toUpperCase())}</span></div>
-        <div class="tag">${esc(r.right||"")}</div>
-      </div>
-      <div class="itemMeta">${r.meta}</div>
-    `;
-    $("arrdepList").appendChild(div);
-  });
-}
+  function renderPulse(rows){
+    $("pulseList").innerHTML = "";
 
-function renderPulse(rows){
-  $("pulseList").innerHTML = "";
-  const queued = rows.filter(r=>r.status==="queued" || r.status==="sending");
-  const sent = rows.filter(r=>r.status==="sent");
-  const failed = rows.filter(r=>r.status==="failed");
+    const queued = rows.filter(r => r.status === "queued" || r.status === "sending");
+    const sent = rows.filter(r => r.status === "sent");
+    const failed = rows.filter(r => r.status === "failed");
 
-  $("pulseQueued").textContent = String(queued.length);
-  $("pulseSent").textContent = String(sent.length);
-  $("pulseFailed").textContent = String(failed.length);
+    $("pulseQueued").textContent = String(queued.length);
+    $("pulseSent").textContent = String(sent.length);
+    $("pulseFailed").textContent = String(failed.length);
 
-  if(!rows.length){
-    showNote("notePulse","Aucun Pulse visible (ou RLS bloque).");
-    return;
+    if(!rows.length){
+      showNote("notePulse","Aucun Pulse visible.");
+      return;
+    }
+
+    const show = queued.slice(0,10).concat(failed.slice(0,5)).concat(sent.slice(0,5));
+
+    show.forEach(r=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      const st = r.status === "sent" ? "ok" : (r.status === "failed" ? "bad" : "warn");
+
+      div.innerHTML = `
+        <div class="itemTop">
+          <div class="itemTitle">${esc(r.pulse_kind || "Pulse")} <span class="tag ${st}">${esc(r.status || "")}</span></div>
+          <div class="tag">⏱️ ${esc((r.due_at || "").toString().slice(0,16).replace("T"," "))}</div>
+        </div>
+        <div class="itemMeta">
+          📞 ${esc(r.phone || "—")} • 🧾 ${esc(r.business_code || "—")}
+          ${r.last_error ? `<div style="margin-top:6px;color:#fecaca">⚠️ ${esc(r.last_error)}</div>` : ``}
+        </div>
+      `;
+      $("pulseList").appendChild(div);
+    });
   }
 
-  const show = queued.slice(0,10).concat(failed.slice(0,5)).concat(sent.slice(0,5));
-  show.forEach(r=>{
-    const div = document.createElement("div");
-    div.className="item";
-    const st = r.status==="sent" ? "ok" : (r.status==="failed" ? "bad" : "warn");
-    div.innerHTML = `
-      <div class="itemTop">
-        <div class="itemTitle">${esc(r.pulse_kind||"Pulse")} <span class="tag ${st}">${esc(r.status||"")}</span></div>
-        <div class="tag">⏱️ ${esc((r.due_at||"").toString().slice(0,16).replace("T"," "))}</div>
-      </div>
-      <div class="itemMeta">
-        📞 ${esc(r.phone||"—")} • 🧾 ${esc(r.business_code||"—")}
-        ${r.last_error ? `<div style="margin-top:6px;color:#fecaca">⚠️ ${esc(r.last_error)}</div>` : ``}
-      </div>
-    `;
-    $("pulseList").appendChild(div);
-  });
-}
+  function renderPayments(rows){
+    $("payList").innerHTML = "";
 
-function renderPayments(rows){
-  $("payList").innerHTML = "";
-  if(!rows.length){
-    showNote("notePay","Aucune preuve récente.");
-    return;
+    if(!rows.length){
+      showNote("notePay","Aucune preuve récente.");
+      return;
+    }
+
+    rows.forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "item";
+
+      const st = (p.status || "pending").toLowerCase();
+      const tag = st === "confirmed" ? "ok" : (st === "rejected" ? "bad" : "warn");
+
+      div.innerHTML = `
+        <div class="itemTop">
+          <div class="itemTitle">${esc((p.status || "PENDING").toUpperCase())} <span class="tag ${tag}">${fmtMoney(p.amount_expected)}</span></div>
+          <div class="tag">🧾 ${esc(p.wave_tx_ref || "—")}</div>
+        </div>
+        <div class="itemMeta">
+          👤 ${esc(p.client_name || "Client")} ${p.client_phone ? (" • " + esc(p.client_phone)) : ""}<br>
+          🕒 ${esc((p.created_at || "").toString().slice(0,16).replace("T"," "))}
+        </div>
+      `;
+      $("payList").appendChild(div);
+    });
   }
-  rows.forEach(p=>{
-    const div=document.createElement("div");
-    div.className="item";
-    const st = (p.status||"pending").toLowerCase();
-    const tag = st==="confirmed" ? "ok" : (st==="rejected" ? "bad" : "warn");
-    div.innerHTML = `
-      <div class="itemTop">
-        <div class="itemTitle">${esc((p.status||"PENDING").toUpperCase())} <span class="tag ${tag}">${fmtMoney(p.amount_expected)}</span></div>
-        <div class="tag">🧾 ${esc(p.wave_tx_ref||"—")}</div>
-      </div>
-      <div class="itemMeta">
-        👤 ${esc(p.client_name||"Client")} ${p.client_phone?(" • "+esc(p.client_phone)):""}<br>
-        🕒 ${esc((p.created_at||"").toString().slice(0,16).replace("T"," "))}
-      </div>
-    `;
-    $("payList").appendChild(div);
-  });
-}
 
-function renderPending(rows){
-  $("pendingList").innerHTML = "";
-  if(!rows.length){
-    showNote("notePending","Aucune réservation en attente.");
-    return;
+  function renderPending(rows){
+    $("pendingList").innerHTML = "";
+
+    if(!rows.length){
+      showNote("notePending","Aucune réservation en attente.");
+      return;
+    }
+
+    rows.forEach(r=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="itemTop">
+          <div class="itemTitle">${esc(r.client_nom || "Client")} <span class="tag warn">EN ATTENTE</span></div>
+          <div class="tag">${esc(r.tracking_code || "—")}</div>
+        </div>
+        <div class="itemMeta">
+          📅 ${esc(r.date_arrivee || "—")} → ${esc(r.date_depart || "—")} (${esc(r.nb_nuits || 0)} nuits)<br>
+          📞 ${esc(r.client_phone || "—")} • 💰 ${esc(fmtMoney(r.montant_total))}
+        </div>
+      `;
+      $("pendingList").appendChild(div);
+    });
   }
-  rows.forEach(r=>{
-    const div=document.createElement("div");
-    div.className="item";
-    div.innerHTML = `
-      <div class="itemTop">
-        <div class="itemTitle">${esc(r.client_nom||"Client")} <span class="tag warn">EN ATTENTE</span></div>
-        <div class="tag">${esc(r.tracking_code||"—")}</div>
-      </div>
-      <div class="itemMeta">
-        📅 ${esc(r.date_arrivee||"—")} → ${esc(r.date_depart||"—")} (${esc(r.nb_nuits||0)} nuits)<br>
-        📞 ${esc(r.client_phone||"—")} • 💰 ${esc(fmtMoney(r.montant_total))}
-      </div>
-    `;
-    $("pendingList").appendChild(div);
-  });
-}
 
-/* =============================
-   LOADERS
-============================= */
-async function loadDayListing(sb, slug, dayISO){
-  try{
-    const payload = await rpc(sb, "digiy_loc_day_listing", { p_slug: slug, p_day: dayISO });
-    if(payload?.ok){
-      const st = payload.stats || {};
+  async function loadDayListing(slug, dayISO){
+    try{
+      const payload = await rpc("digiy_loc_day_listing", { p_slug: slug, p_day: dayISO });
+
+      if(payload?.ok){
+        const st = payload.stats || {};
+        renderStats([
+          ["Arrivées", st.arr_count ?? (payload.arrivals || []).length],
+          ["Départs", st.dep_count ?? (payload.departures || []).length],
+          ["Occupés", st.occ_count ?? (payload.occupied || []).length],
+          ["Pulse à venir", 0],
+          ["Pulse échecs", 0],
+          ["Pulse envoyés", 0],
+        ]);
+
+        renderArrDepFromDayListing(payload);
+        return { ok:true, payload };
+      }
+
+      return { ok:false, error: payload?.reason || "RPC_DAY_LISTING_NOT_OK" };
+    }catch(e){
+      return { ok:false, error: e?.message || String(e) };
+    }
+  }
+
+  async function loadPulse(businessCode){
+    hideNote("notePulse");
+    $("pulseList").innerHTML = "";
+    $("pulseQueued").textContent = "0";
+    $("pulseSent").textContent = "0";
+    $("pulseFailed").textContent = "0";
+
+    if(!businessCode){
+      showNote("notePulse","business_code introuvable pour Pulse.");
+      return;
+    }
+
+    try{
+      const { data, error } = await SB
+        .from("digiy_loc_outbox")
+        .select("id, due_at, pulse_kind, status, last_error, sent_at, phone, business_code")
+        .eq("business_code", businessCode)
+        .order("due_at", { ascending:true })
+        .limit(60);
+
+      if(error) throw error;
+      renderPulse(data || []);
+    }catch(e){
+      showNote("notePulse","Pulse indisponible :\n" + (e?.message || e));
+    }
+  }
+
+  async function loadPayments(businessCode){
+    hideNote("notePay");
+    $("payList").innerHTML = "";
+
+    if(!businessCode){
+      showNote("notePay","business_code introuvable pour les paiements.");
+      return;
+    }
+
+    try{
+      const { data, error } = await SB
+        .from("loc_payment_intents")
+        .select("id, status, amount_expected, currency, client_name, client_phone, wave_tx_ref, created_at, business_code")
+        .eq("business_code", businessCode)
+        .order("created_at", { ascending:false })
+        .limit(14);
+
+      if(error) throw error;
+      renderPayments(data || []);
+    }catch(e){
+      showNote("notePay","Paiements indisponibles :\n" + (e?.message || e));
+    }
+  }
+
+  async function loadPending(businessCode){
+    hideNote("notePending");
+    $("pendingList").innerHTML = "";
+
+    if(!businessCode){
+      showNote("notePending","business_code introuvable pour les réservations.");
+      return;
+    }
+
+    try{
+      const { data, error } = await SB
+        .from("digiy_reservations")
+        .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code")
+        .eq("business_code", businessCode)
+        .eq("status", "en_attente")
+        .order("created_at", { ascending:false })
+        .limit(18);
+
+      if(error) throw error;
+      renderPending(data || []);
+    }catch(e){
+      showNote("notePending","Réservations indisponibles :\n" + (e?.message || e));
+    }
+  }
+
+  async function fallbackStats(businessCode){
+    if(!businessCode){
       renderStats([
-        ["Arrivées", st.arr_count ?? (payload.arrivals||[]).length],
-        ["Départs",  st.dep_count ?? (payload.departures||[]).length],
-        ["Occupés",  st.occ_count ?? (payload.occupied||[]).length],
+        ["Arrivées", 0],
+        ["Départs", 0],
+        ["En attente", 0],
         ["Pulse à venir", 0],
         ["Pulse échecs", 0],
         ["Pulse envoyés", 0],
       ]);
-      renderArrDepFromDayListing(payload);
-      return { ok:true, payload };
+      return;
     }
-    return { ok:false, error: payload?.reason || "RPC_DAY_LISTING_NOT_OK" };
-  }catch(e){
-    return { ok:false, error: e?.message || String(e) };
+
+    try{
+      const t = todayISO();
+
+      const [outboxRes, pendRes] = await Promise.allSettled([
+        SB.from("digiy_loc_outbox")
+          .select("id,status,business_code")
+          .eq("business_code", businessCode)
+          .limit(600),
+        SB.from("digiy_reservations")
+          .select("id,status,date_arrivee,date_depart,business_code")
+          .eq("business_code", businessCode)
+          .limit(600)
+      ]);
+
+      let queued = 0, sent = 0, failed = 0, arr = 0, dep = 0, pend = 0;
+
+      if(outboxRes.status === "fulfilled" && !outboxRes.value.error){
+        const rows = outboxRes.value.data || [];
+        queued = rows.filter(r => r.status === "queued" || r.status === "sending").length;
+        sent = rows.filter(r => r.status === "sent").length;
+        failed = rows.filter(r => r.status === "failed").length;
+      }
+
+      if(pendRes.status === "fulfilled" && !pendRes.value.error){
+        const rows = pendRes.value.data || [];
+        pend = rows.filter(r => r.status === "en_attente").length;
+        arr = rows.filter(r => r.date_arrivee === t).length;
+        dep = rows.filter(r => r.date_depart === t).length;
+      }
+
+      renderStats([
+        ["Arrivées", arr],
+        ["Départs", dep],
+        ["En attente", pend],
+        ["Pulse à venir", queued],
+        ["Pulse échecs", failed],
+        ["Pulse envoyés", sent],
+      ]);
+    }catch(e){
+      showNote("noteStats","Résumé indisponible :\n" + (e?.message || e));
+    }
   }
-}
 
-async function loadPulse(sb, businessCode){
-  hideNote("notePulse");
-  $("pulseList").innerHTML = "";
-  $("pulseQueued").textContent="0";
-  $("pulseSent").textContent="0";
-  $("pulseFailed").textContent="0";
+  async function refreshAll(){
+    resetUI();
+    clearAllNotes();
 
-  try{
-    let q = sb
-      .from("digiy_loc_outbox")
-      .select("id, due_at, pulse_kind, status, last_error, sent_at, phone, business_code")
-      .order("due_at", { ascending:true })
-      .limit(60);
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      setDisconnected("Guard absent ou non chargé.");
+      return;
+    }
 
-    if(businessCode) q = q.eq("business_code", businessCode);
+    try{
+      await waitGuardReady();
+    }catch(_){
+      setDisconnected("Guard non prêt. Recharge la page ou repasse par PIN.");
+      return;
+    }
 
-    const { data, error } = await q;
-    if(error) throw error;
+    const st = getGuardState();
+    const slug = String(st.slug || "").trim();
+    const day = todayISO();
 
-    renderPulse(data || []);
-  }catch(e){
-    showNote("notePulse","Pulse indisponible (souvent RLS):\n" + (e?.message||e));
-  }
-}
+    $("lblDay").textContent = "Aujourd’hui • " + prettyDateFR(day);
 
-async function loadPayments(sb, businessCode){
-  hideNote("notePay");
-  $("payList").innerHTML = "";
+    if(!slug){
+      setDisconnected("Slug manquant. Ouvre cette page via le cockpit avec ?slug=...");
+      return;
+    }
 
-  try{
-    let q = sb
-      .from("loc_payment_intents")
-      .select("id, status, amount_expected, currency, client_name, client_phone, wave_tx_ref, created_at, business_code")
-      .order("created_at",{ascending:false})
-      .limit(14);
+    if(!st.access_ok){
+      setDisconnected("Accès non actif. Passe par PIN pour ouvrir la vraie vue du jour.");
+      return;
+    }
 
-    if(businessCode) q = q.eq("business_code", businessCode);
+    pillUserFromState(st);
 
-    const { data, error } = await q;
-    if(error) throw error;
-    renderPayments(data || []);
-  }catch(e){
-    showNote("notePay","Paiements indisponibles:\n"+(e?.message||e));
-  }
-}
+    const businessCode = await tryGetBusinessCode(slug);
 
-async function loadPending(sb, businessCode){
-  hideNote("notePending");
-  $("pendingList").innerHTML = "";
+    const dayRes = await loadDayListing(slug, day);
 
-  try{
-    let q = sb
-      .from("digiy_reservations")
-      .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code")
-      .eq("status","en_attente")
-      .order("created_at",{ascending:false})
-      .limit(18);
-
-    if(businessCode) q = q.eq("business_code", businessCode);
-
-    const { data, error } = await q;
-    if(error) throw error;
-    renderPending(data || []);
-  }catch(e){
-    showNote("notePending","Réservations indisponibles:\n"+(e?.message||e));
-  }
-}
-
-async function fallbackStats(sb, businessCode){
-  try{
-    const t = todayISO();
-    const [outboxRes, pendRes] = await Promise.allSettled([
-      (async()=>{
-        let q = sb.from("digiy_loc_outbox").select("id,status,business_code").limit(600);
-        if(businessCode) q = q.eq("business_code", businessCode);
-        return await q;
-      })(),
-      (async()=>{
-        let q = sb.from("digiy_reservations").select("id,status,date_arrivee,date_depart,business_code").limit(600);
-        if(businessCode) q = q.eq("business_code", businessCode);
-        return await q;
-      })()
+    await Promise.allSettled([
+      loadPulse(businessCode),
+      loadPayments(businessCode),
+      loadPending(businessCode),
     ]);
 
-    let queued=0,sent=0,failed=0,arr=0,dep=0,pend=0;
-    if(outboxRes.status==="fulfilled" && !outboxRes.value.error){
-      const rows = outboxRes.value.data || [];
-      queued = rows.filter(r=>r.status==="queued"||r.status==="sending").length;
-      sent = rows.filter(r=>r.status==="sent").length;
-      failed = rows.filter(r=>r.status==="failed").length;
+    if(!dayRes.ok){
+      showNote("noteArrDep","RPC digiy_loc_day_listing indisponible :\n" + (dayRes.error || "—"));
+      await fallbackStats(businessCode);
     }
-    if(pendRes.status==="fulfilled" && !pendRes.value.error){
-      const rows = pendRes.value.data || [];
-      pend = rows.filter(r=>r.status==="en_attente").length;
-      arr = rows.filter(r=>r.date_arrivee===t).length;
-      dep = rows.filter(r=>r.date_depart===t).length;
-    }
-
-    renderStats([
-      ["Arrivées", arr],
-      ["Départs", dep],
-      ["En attente", pend],
-      ["Pulse à venir", queued],
-      ["Pulse échecs", failed],
-      ["Pulse envoyés", sent],
-    ]);
-  }catch(e){
-    showNote("noteStats","Résumé indisponible:\n"+(e?.message||e));
-  }
-}
-
-/* =============================
-   BOOT
-============================= */
-async function refreshAll(){
-  resetUI();
-  clearAllNotes();
-
-  // ✅ Guard session obligatoire
-  const boot = await window.DIGIY_GUARD.boot({ login: "pin.html" });
-  if(!boot?.ok){
-    setDisconnected("Session expirée. Reconnecte-toi (PIN).");
-    return;
   }
 
-  pillUserFromSession(boot.session);
-
-  const slug = window.DIGIY_GUARD.getSlug();
-  const day = todayISO();
-  $("lblDay").textContent = "Aujourd’hui • " + prettyDateFR(day);
-
-  // ✅ Supabase client
-  const sb = await window.DIGIY_GUARD.getSbAsync();
-
-  // ✅ business_code si RPC dispo (sinon null -> best effort)
-  const businessCode = await tryGetBusinessCode(sb, slug);
-
-  // 1) RPC “listing du jour” si dispo
-  const dayRes = await loadDayListing(sb, slug, day);
-
-  // 2) Pulse + Paiements + Pending
-  await Promise.allSettled([
-    loadPulse(sb, businessCode),
-    loadPayments(sb, businessCode),
-    loadPending(sb, businessCode),
-  ]);
-
-  // 3) fallback stats si RPC absent/KO
-  if(!dayRes.ok){
-    showNote("noteArrDep","RPC digiy_loc_day_listing non dispo (ou non autorisé RLS).\nDétail: " + (dayRes.error||"—"));
-    await fallbackStats(sb, businessCode);
-  }
-}
-
-/* =============================
-   ACTIONS (data-action)
-============================= */
-(function bindActions(){
-  document.querySelectorAll("[data-action='refresh']").forEach(el=>{
-    if(el.__digiy_bound_action) return;
-    el.__digiy_bound_action = true;
-    el.addEventListener("click", (e)=>{
-      e.preventDefault();
-      refreshAll();
+  (function bindActions(){
+    document.querySelectorAll("[data-action='refresh']").forEach(el=>{
+      if(el.__digiy_bound_action) return;
+      el.__digiy_bound_action = true;
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        refreshAll();
+      });
     });
-  });
-})();
+  })();
 
-// start
-refreshAll();
+  refreshAll();
+})();
 </script>
 </body>
 </html>
