@@ -160,7 +160,6 @@
     </div>
 
     <div class="grid">
-      <!-- LEFT -->
       <div class="card">
         <div class="head">
           <b>📍 Le lieu</b>
@@ -227,7 +226,6 @@
         </div>
       </div>
 
-      <!-- RIGHT -->
       <div class="card">
         <div class="head">
           <b>🧾 Infos</b>
@@ -275,12 +273,12 @@
 (function(){
   "use strict";
 
-  // ========== SUPABASE ==========
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
   const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  const PIN_PAGE = "https://pro-loc.digiylyfe.com/pin.html";
   const $ = (id)=>document.getElementById(id);
 
   function setPill(txt, cls){
@@ -306,7 +304,6 @@
     return p;
   }
 
-  // ✅ slug clean robuste
   function cleanSlug(s){
     const x = String(s || "").trim();
     if(!x) return "";
@@ -318,7 +315,6 @@
       .replace(/^_+|_+$/g,"");
   }
 
-  // slug
   const u = new URL(location.href);
   const SLUG = cleanSlug(u.searchParams.get("slug") || "");
   $("pillSlug").textContent = "slug: " + (SLUG || "—");
@@ -330,11 +326,9 @@
     return x.toString();
   }
 
-  // ✅ liens internes (repo-safe)
-  $("btnLoc").href = withSlug("./index.html");    // Galerie
-  $("btnPin").href = withSlug("./pin.html");      // Cockpit PIN
+  $("btnLoc").href = withSlug("./listing.html");
+  $("btnPin").href = PIN_PAGE + "?slug=" + encodeURIComponent(SLUG);
 
-  // Share canonique
   const share = new URL(location.href);
   if (SLUG) share.searchParams.set("slug", SLUG);
   const shareUrl = share.toString();
@@ -345,7 +339,6 @@
       await navigator.clipboard.writeText(shareUrl);
       setNote("✅ Lien copié. Tu peux le coller sur WhatsApp/SMS.", "ok");
     }catch(_){
-      // fallback vieux navigateurs
       const t = document.createElement("textarea");
       t.value = shareUrl;
       document.body.appendChild(t);
@@ -392,7 +385,6 @@
     $("dPhone").textContent = phone || "—";
     $("dWhats").textContent = whats || "—";
 
-    // Badge NDIMBAL
     if(nd){
       const tagsRow = $("tagsRow");
       const ndSpan = document.createElement("span");
@@ -402,7 +394,6 @@
       setNote("🤍 NDIMBAL activé — bonus +1 nuit : 1→2 • 2→3", "ok");
     }
 
-    // WhatsApp / Call
     const waMsg = `Bonjour ${title} 👋\nJe viens via DIGIY. Je veux des infos / réserver.`;
     if(whats){
       $("btnWhats").href = "https://wa.me/" + digitsOnly(whats) + "?text=" + encodeURIComponent(waMsg);
@@ -412,17 +403,15 @@
     }
 
     if(phone){
-      $("btnCall").href  = "tel:" + digitsOnly(phone);
+      $("btnCall").href = "tel:" + digitsOnly(phone);
       disable("btnCall", false);
     }else{
       disable("btnCall", true);
     }
 
-    // ===== WAVE =====
     const wavePhone = phone || whats || "";
     $("waveNum").textContent = wavePhone ? wavePhone : "—";
 
-    // “Ouvrir Wave” : pas de deep link universel fiable => fallback WhatsApp vers le proprio
     if(wavePhone){
       const waveHint = digitsOnly(wavePhone);
       $("btnPay").href = "https://wa.me/" + waveHint + "?text=" + encodeURIComponent(
@@ -436,7 +425,6 @@
       setNote("⚠️ Téléphone propriétaire manquant. Le paiement Wave ne peut pas être affiché.", "warn");
     }
 
-    // Déclaration Wave -> RPC (si dispo)
     $("btnDeclare").onclick = async ()=>{
       const amtRaw = $("amount").value || "";
       const amt = parseInt(String(amtRaw).replace(/\D/g,""), 10);
@@ -503,7 +491,6 @@
         return;
       }
 
-      // OK
       console.log("✅ GO PIN public:", data);
       renderPin(data);
 
