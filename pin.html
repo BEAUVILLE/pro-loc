@@ -109,7 +109,7 @@
   const MODULE = "LOC";
   const NEXT_URL = "app.html";
   const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
-  const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8h
+  const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
   const STORAGE_SLUG_KEY = "digiy_loc_slug";
   const STORAGE_LAST_SLUG = "digiy_last_slug";
@@ -158,7 +158,7 @@
       business_code: r.business_code || r.code || "TEST",
       slug: r.slug || slug || "",
       module: (r.module || MODULE || "").toUpperCase(),
-      error: r.error || ""
+      error: r.error || r.reason || ""
     };
   }
 
@@ -178,21 +178,17 @@
       expires_at: now() + SESSION_TTL_MS
     };
 
-    // session brute
     lsSet(SESSION_KEY, JSON.stringify(session));
 
-    // slug memory pour le nouveau guard
     lsSet(STORAGE_SLUG_KEY, session.slug);
     lsSet(STORAGE_LAST_SLUG, session.slug);
     lsSet("DIGIY_SLUG", session.slug);
 
-    // owner context attendu par le cockpit LOC
     lsSet("DIGIY_LOC_OWNER_ID", session.owner_id);
     lsSet("digiy_loc_owner_id", session.owner_id);
     lsSet("DIGIY_OWNER_ID", session.owner_id);
     lsSet("owner_id", session.owner_id);
 
-    // business context
     lsSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
     lsSet("DIGIY_BUSINESS_CODE", session.business_code);
 
@@ -204,13 +200,11 @@
       lsRemove("DIGIY_LOC_BUSINESS_NAME");
     }
 
-    // phone / compat
     if (session.phone) {
       lsSet("DIGIY_PHONE", session.phone);
       lsSet("DIGIY_LOC_PHONE", session.phone);
     }
 
-    // compat ancien monde
     lsSet("DIGIY_PRO_ID", session.owner_id);
 
     return session;
@@ -235,25 +229,33 @@
     $("go").disabled = true;
     msg(`Vérification en cours…`);
 
-    // 1) tentative RPC générique actuelle
     let rpcData = null;
     let rpcError = null;
 
-    ({ data: rpcData, error: rpcError } = await sb.rpc("verify_access_pin", {
-      p_slug: slug,
-      p_pin: pin
-    }));
-
-    // 2) fallback LOC dédié si plus tard tu poses loc_pin_login
-    if (rpcError || !normalizeResult(rpcData)?.ok) {
-      const fallback = await sb.rpc("loc_pin_login", {
+    try {
+      const res = await sb.rpc("verify_access_pin", {
         p_slug: slug,
         p_pin: pin
-      }).catch(() => ({ data: null, error: null }));
+      });
+      rpcData = res.data;
+      rpcError = res.error;
+    } catch (e) {
+      rpcError = e;
+    }
 
-      if (fallback && fallback.data) {
-        rpcData = fallback.data;
-        rpcError = fallback.error || null;
+    if (rpcError || !normalizeResult(rpcData)?.ok) {
+      try {
+        const fallback = await sb.rpc("loc_pin_login", {
+          p_slug: slug,
+          p_pin: pin
+        });
+
+        if (fallback && fallback.data) {
+          rpcData = fallback.data;
+          rpcError = fallback.error || null;
+        }
+      } catch (_) {
+        // fallback absent ou erreur silencieuse
       }
     }
 
