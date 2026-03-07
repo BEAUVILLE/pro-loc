@@ -227,262 +227,385 @@
   </div>
 
   <script>
-  (() => {
-    "use strict";
+(() => {
+  "use strict";
 
-    // ========= DOM =========
-    const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-    // ========= SLUG MEMORY =========
-    const SAVED_KEY = "digiy_loc_slug";
-    const qs = new URLSearchParams(location.search);
-    let slug = (qs.get("slug") || "").trim();
+  const SAVED_KEY = "digiy_loc_slug";
 
-    if (!slug) slug = (localStorage.getItem(SAVED_KEY) || "").trim();
-
-    if (slug) {
-      localStorage.setItem(SAVED_KEY, slug);
-      try {
-        const u = new URL(location.href);
-        u.searchParams.set("slug", slug);
-        history.replaceState({}, "", u.toString());
-      } catch (_) {}
-    }
-
-    // ========= PHONE PASS-THROUGH (optionnel) =========
-    function normPhone(p){
-      if(!p) return "";
-      let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
-      if (s.startsWith("00221")) s = "+221" + s.slice(5);
-      if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-      if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
-      return s;
-    }
-    function getUrlPhone(){
-      try{
-        return normPhone((new URL(location.href)).searchParams.get("phone") || "");
-      }catch(_){}
+  function getUrlSlug(){
+    try{
+      return (new URL(location.href)).searchParams.get("slug") || "";
+    }catch{
       return "";
     }
+  }
 
-    const HUB_PHONE = getUrlPhone();
-    if (HUB_PHONE) {
-      try { sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", HUB_PHONE); } catch(_){}
-      window.DIGIY_LOC_HUB_PHONE = HUB_PHONE;
+  function getSavedSlug(){
+    try{
+      return localStorage.getItem(SAVED_KEY) || "";
+    }catch{
+      return "";
     }
+  }
 
-    // ========= UI =========
-    function show(msg, cls){
-      const el = $("note");
-      if(!el) return;
-      el.className = "note " + (cls || "warn");
-      el.textContent = msg || "";
-      el.style.display = msg ? "block" : "none";
-    }
+  function getSlug(){
+    return (getUrlSlug() || getSavedSlug() || "").trim();
+  }
 
-    function setPills({ phone, slug, ok }){
-      $("pillLieu").textContent = "Lieu : " + (slug || "—");
-      $("vLieu").textContent = slug || "—";
+  function saveSlug(slug){
+    if(!slug) return;
+    try{ localStorage.setItem(SAVED_KEY, slug); }catch(_){}
+    try{ localStorage.setItem("digiy_last_slug", slug); }catch(_){}
+  }
 
-      $("pillPhone").textContent = "👤 " + (phone || "—");
-      $("vPhone").textContent = phone || "—";
-
-      if(ok){
-        $("pillConn").className = "pill ok";
-        $("pillConn").textContent = "✅ Connecté";
-      } else {
-        $("pillConn").className = "pill bad";
-        $("pillConn").textContent = "Bloqué ❌";
+  function ensureSlugInUrl(slug){
+    if(!slug) return;
+    try{
+      const u = new URL(location.href);
+      if(!u.searchParams.get("slug")){
+        u.searchParams.set("slug", slug);
+        history.replaceState({}, "", u.toString());
       }
-    }
+    }catch(_){}
+  }
 
-    function sbState(){
-      const sb = window.DIGIY_GUARD?.getSb?.() || window.sb || null;
-      const ok = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-      $("vSb").textContent = ok ? "OK" : "Pas prêt";
-      return ok;
-    }
+  function normPhone(p){
+    if(!p) return "";
+    let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if (s.startsWith("00221")) s = "+221" + s.slice(5);
+    if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+    if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
+    return s;
+  }
 
-    function buildWidgetContext(){
-      const sess = window.DIGIY_GUARD?.getSession?.() || {};
-      const phone = (sess.phone || HUB_PHONE || "").trim();
-      const s = (sess.slug || slug || "").trim();
-      return {
-        module: "LOC",
-        lang: "wo",
-        slug: s,
-        phone,
-        page: location.pathname,
-        href: location.href,
-        title: document.title,
-        ts: Date.now()
-      };
-    }
-
-    function setWidgetDataAttrs(ctx){
-      const mount = $("digiyWidgetMount");
-      if(!mount) return;
-      mount.setAttribute("data-digiy-module", ctx.module);
-      mount.setAttribute("data-digiy-lang", ctx.lang);
-      mount.setAttribute("data-digiy-slug", ctx.slug || "");
-      mount.setAttribute("data-digiy-phone", ctx.phone || "");
-      mount.setAttribute("data-digiy-page", ctx.page || "");
-    }
-
-    // ========= NAV via GUARD (anti-loop) =========
-    function withPhoneParam(target){
-      const phone = (window.DIGIY_LOC_HUB_PHONE || "").trim();
-      if(!phone) return target;
-      if(target === "__back__") return target;
-      try{
-        const u = new URL(target, location.href);
-        if(!u.searchParams.get("phone")) u.searchParams.set("phone", phone);
-        if (u.origin === location.origin) return u.pathname + u.search + u.hash;
-        return u.toString();
-      }catch(_){
-        const sep = target.includes("?") ? "&" : "?";
-        return target + sep + "phone=" + encodeURIComponent(phone);
+  function getHubPhone(){
+    try{
+      const u = new URL(location.href);
+      const phone = normPhone(u.searchParams.get("phone") || "");
+      if(phone){
+        try{ sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", phone); }catch(_){}
+        window.DIGIY_LOC_HUB_PHONE = phone;
       }
+      return phone || (window.DIGIY_LOC_HUB_PHONE || "");
+    }catch{
+      return window.DIGIY_LOC_HUB_PHONE || "";
+    }
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
+
+    const r = window.DIGIY_GUARD.ready;
+
+    if(typeof r === "function"){
+      return await r(8000);
     }
 
-    function bindNav(){
-      if(!window.DIGIY_GUARD?.go) return;
-      document.querySelectorAll("[data-go]").forEach((el)=>{
-        if(el.__digiy_bound) return;
-        el.__digiy_bound = true;
+    return await r;
+  }
 
-        const targetRaw = (el.getAttribute("data-go") || "").trim();
-        const mode = (el.getAttribute("data-mode") || "assign").trim();
+  function getSb(){
+    return window.DIGIY_GUARD?.getSb?.() || window.sb || null;
+  }
 
-        el.addEventListener("click", (e)=>{
-          e.preventDefault();
-          if(!targetRaw) return;
+  function withSlug(target){
+    const slug = getGuardState().slug || getSlug();
+    const phone = window.DIGIY_LOC_HUB_PHONE || "";
 
-          if(targetRaw === "__back__"){
-            if(history.length > 1) return history.back();
-            const t = withPhoneParam("listing.html");
-            return window.DIGIY_GUARD.go(t, "replace");
-          }
+    if(target === "__back__") return target;
 
-          const target = withPhoneParam(targetRaw);
-          window.DIGIY_GUARD.go(target, mode);
-        });
+    try{
+      const u = new URL(target, location.href);
+      if(slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(phone && !u.searchParams.get("phone")) u.searchParams.set("phone", phone);
+
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      let out = target;
+      if(slug){
+        out += (out.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
+      }
+      if(phone){
+        out += (out.includes("?") ? "&" : "?") + "phone=" + encodeURIComponent(phone);
+      }
+      return out;
+    }
+  }
+
+  function show(msg, cls){
+    const el = $("note");
+    if(!el) return;
+    el.className = "note " + (cls || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function setPills({ phone, slug, ok, preview }){
+    $("pillLieu").textContent = "Lieu : " + (slug || "—");
+    $("vLieu").textContent = slug || "—";
+
+    $("pillPhone").textContent = "👤 " + (phone || "—");
+    $("vPhone").textContent = phone || "—";
+
+    if(ok){
+      $("pillConn").className = "pill ok";
+      $("pillConn").textContent = "✅ Connecté";
+    } else if (preview) {
+      $("pillConn").className = "pill";
+      $("pillConn").textContent = "👁️ Aperçu";
+    } else {
+      $("pillConn").className = "pill bad";
+      $("pillConn").textContent = "Bloqué ❌";
+    }
+  }
+
+  function sbState(){
+    const sb = getSb();
+    const ok = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
+    $("vSb").textContent = ok ? "OK" : "Pas prêt";
+    return ok;
+  }
+
+  function buildWidgetContext(){
+    const st = getGuardState();
+    return {
+      module: "LOC",
+      lang: "wo",
+      slug: st.slug || getSlug(),
+      phone: st.phone || getHubPhone() || "",
+      page: location.pathname,
+      href: location.href,
+      title: document.title,
+      ts: Date.now()
+    };
+  }
+
+  function setWidgetDataAttrs(ctx){
+    const mount = $("digiyWidgetMount");
+    if(!mount) return;
+    mount.setAttribute("data-digiy-module", ctx.module || "LOC");
+    mount.setAttribute("data-digiy-lang", ctx.lang || "wo");
+    mount.setAttribute("data-digiy-slug", ctx.slug || "");
+    mount.setAttribute("data-digiy-phone", ctx.phone || "");
+    mount.setAttribute("data-digiy-page", ctx.page || "");
+  }
+
+  function bindNav(){
+    document.querySelectorAll("[data-go]").forEach((el)=>{
+      if(el.__digiy_bound) return;
+      el.__digiy_bound = true;
+
+      const targetRaw = (el.getAttribute("data-go") || "").trim();
+      const mode = (el.getAttribute("data-mode") || "assign").trim();
+
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        if(!targetRaw) return;
+
+        if(targetRaw === "__back__"){
+          if(history.length > 1) return history.back();
+          const t = withSlug("listing.html");
+          if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, "replace");
+          return location.replace(t);
+        }
+
+        const target = withSlug(targetRaw);
+
+        if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(target, mode);
+        if(mode === "replace") location.replace(target);
+        else location.assign(target);
       });
+    });
+  }
+
+  function setPreviewUi(reason){
+    const st = getGuardState();
+    const slug = st.slug || getSlug();
+    const phone = st.phone || getHubPhone() || "";
+
+    setPills({
+      phone,
+      slug,
+      ok: false,
+      preview: true
+    });
+
+    $("vSess").textContent = "Aperçu";
+
+    show(
+      reason === "slug_missing"
+        ? "👁️ Aucun slug détecté.\n➡️ Ouvre via ton lien GO PIN ou ajoute ?slug=..."
+        : reason === "has_access_false"
+        ? "👁️ Slug présent mais accès non actif.\n➡️ Passe par PIN ou active l’accès."
+        : "👁️ Mode aperçu.\n➡️ Le cockpit reste visible, mais l’accès réel n’est pas confirmé.",
+      "warn"
+    );
+  }
+
+  function setLiveUi(){
+    const st = getGuardState();
+    const phone = (st.phone || getHubPhone() || "").trim();
+    const slug = (st.slug || getSlug() || "").trim();
+
+    setPills({
+      phone,
+      slug,
+      ok: !!st.access_ok,
+      preview: false
+    });
+
+    $("vSess").textContent = st.access_ok ? "OK" : "—";
+
+    if(sbState()){
+      show("", "warn");
+    } else {
+      show("⚠️ Supabase pas prêt.\n➡️ Clique ↻ Recharger ou repasse par PIN.", "warn");
+    }
+  }
+
+  $("btnReload")?.addEventListener("click", ()=> location.reload());
+
+  $("btnLogout")?.addEventListener("click", ()=>{
+    if(!confirm("Se déconnecter ?")) return;
+
+    const pinTarget = withSlug("pin.html");
+
+    try{
+      if(window.DIGIY_GUARD?.logout) return window.DIGIY_GUARD.logout(pinTarget);
+    }catch(_){}
+
+    location.replace(pinTarget);
+  });
+
+  $("btnOpenAssistant")?.addEventListener("click", ()=>{
+    try{
+      if(window.DIGIY_WIDGET_API?.open) return window.DIGIY_WIDGET_API.open();
+    }catch(_){}
+    $("assistantCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  });
+
+  $("btnCheckAccess")?.addEventListener("click", async (e)=>{
+    e.preventDefault();
+
+    try{
+      await waitGuardReady();
+
+      const st = getGuardState();
+      const sb = getSb();
+      const slug = (st.slug || getSlug() || "").trim();
+      const phone = (st.phone || getHubPhone() || "").trim();
+
+      if(!slug) throw new Error("slug_missing");
+      if(!phone) throw new Error("phone_missing");
+      if(!sb || typeof sb.rpc !== "function") throw new Error("sb_missing");
+
+      const { data, error } = await sb.rpc("digiy_has_access", {
+        p_phone: phone,
+        p_module: "LOC"
+      });
+
+      if(error) throw error;
+
+      alert(
+        "✅ SESSION\n" +
+        "slug = " + slug + "\n" +
+        "phone = " + phone + "\n" +
+        "access = " + (data ? "true" : "false")
+      );
+    }catch(err){
+      alert("❌ KO\n" + (err?.message || String(err)));
+    }
+  });
+
+  async function init(){
+    bindNav();
+    const mo = new MutationObserver(()=>bindNav());
+    mo.observe(document.documentElement, { childList:true, subtree:true });
+
+    const hubPhone = getHubPhone();
+    const initialSlug = getSlug();
+
+    if(initialSlug){
+      saveSlug(initialSlug);
+      ensureSlugInUrl(initialSlug);
     }
 
-    // ========= BUTTONS =========
-    $("btnReload")?.addEventListener("click", ()=> location.reload());
+    setWidgetDataAttrs(buildWidgetContext());
 
-    $("btnLogout")?.addEventListener("click", ()=>{
-      if(!confirm("Se déconnecter ?")) return;
-      try{ window.DIGIY_GUARD?.logout?.("pin.html"); }
-      catch(_){ window.DIGIY_GUARD?.go?.("pin.html","replace"); }
-    });
-
-    $("btnOpenAssistant")?.addEventListener("click", ()=>{
-      try{
-        if (window.DIGIY_WIDGET_API?.open) return window.DIGIY_WIDGET_API.open();
-      }catch(_){}
-      $("assistantCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
-    });
-
-    // ✅ Check Access SAFE (sans redirect)
-    $("btnCheckAccess")?.addEventListener("click", async (e)=>{
-      e.preventDefault();
-      try{
-        if (!window.DIGIY_GUARD) throw new Error("guard_absent");
-        const okReady = await window.DIGIY_GUARD.ready(8000);
-        if (!okReady) throw new Error("guard_not_ready");
-
-        const sess = window.DIGIY_GUARD.getSession?.() || {};
-        const sb = window.DIGIY_GUARD.getSb?.();
-
-        const s = (sess.slug || window.DIGIY_GUARD.getSlug?.() || "").trim();
-        const p = (sess.phone || "").trim();
-
-        if (!s) throw new Error("slug_missing");
-        if (!p) throw new Error("phone_missing");
-        if (!sb || typeof sb.rpc !== "function") throw new Error("sb_missing");
-
-        const { data, error } = await sb.rpc("digiy_has_access", { p_phone: p, p_module: "LOC" });
-        if (error) throw error;
-
-        alert("✅ SESSION\nslug = " + s + "\nphone = " + p + "\naccess = " + (data ? "true" : "false"));
-      }catch(err){
-        alert("❌ KO\n" + (err?.message || String(err)));
-      }
-    });
-
-    // ========= BOOT =========
-    async function boot(){
-      bindNav();
-      const mo = new MutationObserver(()=>bindNav());
-      mo.observe(document.documentElement, { childList:true, subtree:true });
-
-      // 1) slug manquant => pas de loop, juste message
-      if(!slug){
-        show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
-        setPills({ phone:"", slug:"", ok:false });
-        sbState();
-        setWidgetDataAttrs(buildWidgetContext());
-        return;
-      }
-
-      // 2) Guard boot + ready (anti-loop, pas de redir automatique ici)
-      show("⏳ Vérification accès…", "warn");
-
-      const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
-      if(!g?.ok){
-        show("🔴 Guard KO.\n➡️ Vérifie guard.js + clé + RLS.\nAstuce : ajoute ?debug=1 côté guard.", "bad");
-        setPills({ phone:"", slug, ok:false });
-        sbState();
-        setWidgetDataAttrs(buildWidgetContext());
-        return;
-      }
-
-      try{ await window.DIGIY_GUARD.ready(8000); }catch(_){}
-
-      const sess = window.DIGIY_GUARD.getSession?.() || {};
-      const phone = (sess.phone || HUB_PHONE || "").trim();
-      const s = (sess.slug || slug || "").trim();
-
-      setPills({ phone, slug: s, ok: !!sess.ok });
-      $("vSess").textContent = sess?.ok ? "OK" : "—";
-
-      const okSb = sbState();
-      if(!okSb){
-        show("⚠️ Supabase pas prêt.\n➡️ Clique ↻ Recharger ou repasse par PIN.", "warn");
-      }else{
-        show("", "warn");
-      }
-
-      // Widget context
-      const ctx = buildWidgetContext();
-      setWidgetDataAttrs(ctx);
-
-      window.DIGIY_WIDGET_PRO = {
-        endpoint: $("digiyWidgetMount")?.getAttribute("data-digiy-endpoint") || "https://knowledge.digiylyfe.com/widget/ask",
-        lang: "wo",
-        module: "LOC",
-        getContext: () => buildWidgetContext(),
-        payloadShape: "query"
-      };
-
-      const fb = $("assistantFallback");
-      if (fb) fb.textContent = "Assistant prêt. Clique “💬 Ouvrir” ou pose ta question.";
-    }
-
-    boot().catch((e)=>{
-      console.error(e);
-      show("🔴 Crash JS.\n" + (e?.message || e), "bad");
-      setPills({ phone:"", slug, ok:false });
+    if(!initialSlug){
+      setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
+      $("vSess").textContent = "—";
       sbState();
-      setWidgetDataAttrs(buildWidgetContext());
-    });
+      show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
+      const fb = $("assistantFallback");
+      if (fb) fb.textContent = "Assistant disponible, mais ajoute un slug pour charger le bon contexte.";
+      return;
+    }
 
-  })();
-  </script>
+    if(!window.DIGIY_GUARD){
+      throw new Error("guard_absent");
+    }
 
+    await waitGuardReady();
+
+    const st = getGuardState();
+
+    const finalSlug = (st.slug || initialSlug || "").trim();
+    if(finalSlug){
+      saveSlug(finalSlug);
+      ensureSlugInUrl(finalSlug);
+    }
+
+    if(!st.access_ok){
+      setPreviewUi(st.reason || "preview");
+    } else {
+      setLiveUi();
+    }
+
+    setWidgetDataAttrs(buildWidgetContext());
+
+    window.DIGIY_WIDGET_PRO = {
+      endpoint: $("digiyWidgetMount")?.getAttribute("data-digiy-endpoint") || "https://knowledge.digiylyfe.com/widget/ask",
+      lang: "wo",
+      module: "LOC",
+      getContext: () => buildWidgetContext(),
+      payloadShape: "query"
+    };
+
+    const fb = $("assistantFallback");
+    if (fb) {
+      fb.textContent = st.access_ok
+        ? "Assistant prêt. Clique “💬 Ouvrir” ou pose ta question."
+        : "Assistant prêt en aperçu. Passe par PIN pour le contexte complet.";
+    }
+  }
+
+  init().catch((e)=>{
+    console.error(e);
+    const slug = getSlug();
+    const phone = getHubPhone();
+    show("🔴 Crash JS.\n" + (e?.message || e), "bad");
+    setPills({ phone, slug, ok:false, preview:false });
+    $("vSess").textContent = "KO";
+    sbState();
+    setWidgetDataAttrs(buildWidgetContext());
+  });
+
+})();
+</script>
   <!-- ✅ Widget externe (Knowledge) -->
   <script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
 
