@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=generator-final-loc-v2"></script>
+<script src="./guard.js?v=generator-final-loc-v3"></script>
 
 <style>
 :root{
@@ -200,12 +200,23 @@ textarea{
   font-weight:700;
 }
 .error-box.show{ display:block; }
+.info-box{
+  display:none;
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(250,204,21,.45);
+  background:rgba(250,204,21,.08);
+  color:#fde68a;
+  font-weight:700;
+}
+.info-box.show{ display:block; }
 </style>
 </head>
 
 <body>
 
-<div id="loading" class="loading">🔒 Vérification accès...</div>
+<div id="loading" class="loading">🔒 Vérification contexte...</div>
 
 <div id="app" style="display:none;">
   <div class="container">
@@ -297,6 +308,7 @@ textarea{
           </div>
         </div>
 
+        <div class="info-box" id="infoBox"></div>
         <div class="error-box" id="errorBox"></div>
 
         <button class="btn btn-generate" type="submit" id="btnSubmit">
@@ -341,6 +353,7 @@ textarea{
   const btnRetour = document.getElementById("btnRetour");
   const btnSubmit = document.getElementById("btnSubmit");
   const errorBox = document.getElementById("errorBox");
+  const infoBox = document.getElementById("infoBox");
 
   const publicLinkBox = document.getElementById("publicLinkBox");
   const publicLink = document.getElementById("publicLink");
@@ -351,7 +364,8 @@ textarea{
     phone: "",
     businessName: "",
     mode: "preview",
-    reason: "booting"
+    reason: "booting",
+    guardAccessOk: false
   };
 
   function showError(msg){
@@ -362,6 +376,16 @@ textarea{
   function clearError(){
     errorBox.textContent = "";
     errorBox.classList.remove("show");
+  }
+
+  function showInfo(msg){
+    infoBox.textContent = msg || "";
+    infoBox.classList.add("show");
+  }
+
+  function clearInfo(){
+    infoBox.textContent = "";
+    infoBox.classList.remove("show");
   }
 
   function getGuardState(){
@@ -431,8 +455,6 @@ textarea{
     showError(
       reason === "slug_missing"
         ? "👁️ Mode aperçu : aucun slug LOC détecté. Passe par le lien GO PIN."
-        : reason === "has_access_false"
-        ? "👁️ Mode aperçu : accès LOC non actif. Passe par PIN ou active l’abonnement."
         : "👁️ Mode aperçu : connexion PIN requise pour créer une fiche logement."
     );
 
@@ -508,6 +530,8 @@ textarea{
   const qs = new URLSearchParams(location.search);
   const st = getGuardState();
 
+  State.guardAccessOk = !!st.access_ok;
+
   State.phone =
     st.phone ||
     localStorage.getItem("DIGIY_PHONE") ||
@@ -534,12 +558,13 @@ textarea{
     return;
   }
 
-  if(!st.access_ok){
-    disableFormForPreview("has_access_false");
-    return;
-  }
-
   enableFormForLive();
+
+  if(!State.guardAccessOk){
+    showInfo("ℹ️ Le guard n’a pas confirmé l’accès, mais le serveur RPC va trancher au moment de l’envoi. Si l’abonnement LOC est actif, la création passera.");
+  } else {
+    clearInfo();
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
