@@ -388,41 +388,143 @@ textarea{
 </div>
 
 <script>
-/* =========================================
-   ✅ PROTECTION + AUTO-FILL + DB SAVE
-========================================= */
 (async function(){
-  const loading = document.getElementById('loading');
-  const app = document.getElementById('app');
-  const form = document.getElementById('formLogement');
-  const successMsg = document.getElementById('successMsg');
-  const btnBack = document.getElementById('btnBack');
-  const btnRetour = document.getElementById('btnRetour');
-  const errorBox = document.getElementById('errorBox');
+  "use strict";
 
-  const publicLinkBox = document.getElementById('publicLinkBox');
-  const publicLink = document.getElementById('publicLink');
-  const btnCopy = document.getElementById('btnCopy');
+  const MODULE = "LOC";
+  const loading = document.getElementById("loading");
+  const app = document.getElementById("app");
+  const form = document.getElementById("formLogement");
+  const successMsg = document.getElementById("successMsg");
+  const btnBack = document.getElementById("btnBack");
+  const btnRetour = document.getElementById("btnRetour");
+  const errorBox = document.getElementById("errorBox");
 
-  // ✅ À ADAPTER si tu veux une autre vitrine
-  const PUBLIC_BASE = "https://digiyloc.com"; // ou "https://digiyloc.com/rooms" selon ta route
+  const publicLinkBox = document.getElementById("publicLinkBox");
+  const publicLink = document.getElementById("publicLink");
+  const btnCopy = document.getElementById("btnCopy");
+
+  // ✅ adapte si besoin
+  const PUBLIC_BASE = "https://digiyloc.com";
+
+  const State = {
+    ownerId: null,
+    phone: "",
+    slug: "",
+    business_code: "TEST",
+    business_name: "",
+    mode: "preview", // preview | live
+    reason: "booting"
+  };
 
   function showError(msg){
     errorBox.textContent = msg || "Erreur inconnue";
-    errorBox.classList.add('show');
+    errorBox.classList.add("show");
   }
+
   function clearError(){
     errorBox.textContent = "";
-    errorBox.classList.remove('show');
+    errorBox.classList.remove("show");
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || null;
+  }
+
+  function withSlug(url){
+    const slug = State.slug || getGuardState().slug || "";
+    if(!slug) return url;
+
+    try{
+      const u = new URL(url, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function pinUrl(){
+    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+    catch { return withSlug("./pin.html"); }
+  }
+
+  function payUrl(){
+    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+    catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+  }
+
+  function isLive(){
+    return State.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
+  }
+
+  function disableFormForPreview(reason){
+    State.mode = "preview";
+    State.reason = reason || "preview";
+
+    form.querySelectorAll("input, textarea, select, button[type='submit']").forEach(el => {
+      if(el.id !== "btnBack" && el.id !== "btnRetour") el.disabled = true;
+    });
+
+    showError(
+      reason === "slug_missing"
+        ? "👁️ Mode aperçu : aucun slug détecté. Passe par le lien GO PIN."
+        : reason === "has_access_false"
+        ? "👁️ Mode aperçu : slug présent mais accès non actif. Passe par PIN ou active l’accès."
+        : reason === "owner_unresolved"
+        ? "👁️ Mode aperçu : owner_id non résolu. La fiche ne peut pas être créée tant que le contexte propriétaire n’est pas complet."
+        : "👁️ Mode aperçu : connexion PIN requise pour créer une fiche logement."
+    );
+
+    const submit = form.querySelector(".btn-generate");
+    if(submit) submit.textContent = "🔒 MODE APERÇU";
+
+    const helper = document.createElement("div");
+    helper.style.marginTop = "14px";
+    helper.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="${pinUrl()}" class="small-btn" style="text-decoration:none">🔐 Ouvrir PIN</a>
+        <a href="${payUrl()}" class="small-btn" style="text-decoration:none">💳 Activer l’accès</a>
+      </div>
+    `;
+    errorBox.insertAdjacentElement("afterend", helper);
+  }
+
+  function enableFormForLive(){
+    State.mode = "live";
+    State.reason = "ok";
+    clearError();
+
+    form.querySelectorAll("input, textarea, select, button").forEach(el => {
+      el.disabled = false;
+    });
+
+    const submit = form.querySelector(".btn-generate");
+    if(submit) submit.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
   }
 
   function makeSlug(str){
     return String(str || "")
       .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
       .slice(0, 90);
   }
 
@@ -430,90 +532,184 @@ textarea{
     return Math.random().toString(36).slice(2, 6);
   }
 
-  // ✅ 1. BOOT GUARD (protège la page)
-  if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
-    loading.innerHTML = '❌ Guard non chargé. <a href="pin.html" style="color:#facc15">Se connecter</a>';
-    return;
+  function normalizeOwnerContext(raw){
+    if (!raw || typeof raw !== "object") return null;
+
+    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
+    if (!owner_id) return null;
+
+    return {
+      owner_id,
+      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
+      business_name: raw.business_name || raw.businessName || raw.name || ""
+    };
   }
 
-  const g = await window.DIGIY_GUARD.boot({ login: "pin.html" });
+  function ownerContextFromStorage(){
+    const owner_id =
+      localStorage.getItem("DIGIY_LOC_OWNER_ID") ||
+      localStorage.getItem("digiy_loc_owner_id") ||
+      localStorage.getItem("DIGIY_OWNER_ID") ||
+      localStorage.getItem("owner_id") ||
+      "";
 
-  if(!g?.ok){
-    loading.innerHTML = '❌ Accès refusé. <a href="pin.html" style="color:#facc15">Se connecter</a>';
-    return;
+    if (!owner_id) return null;
+
+    return normalizeOwnerContext({
+      owner_id,
+      business_code:
+        localStorage.getItem("DIGIY_LOC_BUSINESS_CODE") ||
+        localStorage.getItem("DIGIY_BUSINESS_CODE") ||
+        "TEST",
+      business_name:
+        localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
+        localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+        ""
+    });
   }
 
-  // ✅ 2. RÉCUPÈRE SESSION
-  const sess = window.DIGIY_GUARD.getSession?.() || null;
-  const ownerId = sess?.owner_id || null;
-  const phone = sess?.phone || localStorage.getItem('DIGIY_PHONE') || '';
-  const businessName = localStorage.getItem('DIGIY_BUSINESS_NAME') || '';
-  const slugOwner = window.DIGIY_GUARD.getSlug?.() || '';
+  async function ownerContextFromRpc(){
+    if (!window.DIGIY_GUARD?.rpc) return null;
 
-  if(!ownerId){
-    loading.innerHTML = '❌ Session invalide. <a href="pin.html" style="color:#facc15">Se reconnecter</a>';
-    return;
+    const attempts = [
+      "digiy_loc_owner_context",
+      "digiy_loc_get_owner_context",
+      "digiy_loc_resolve_owner_context"
+    ];
+
+    for (const fn of attempts) {
+      try {
+        const data = await window.DIGIY_GUARD.rpc(fn, {
+          p_phone: State.phone || "",
+          p_slug: State.slug || "",
+          p_module: MODULE
+        });
+
+        const ctx = normalizeOwnerContext(data);
+        if (ctx?.owner_id) return ctx;
+      } catch (_) {}
+    }
+
+    return null;
   }
 
-  // ✅ 3. AUTO-FILL
-  document.getElementById('owner_name').value = businessName || 'Propriétaire';
-  document.getElementById('phone').value = phone || '';
+  async function resolveOwnerContext(){
+    const fromStorage = ownerContextFromStorage();
+    if (fromStorage?.owner_id) return fromStorage;
 
-  // ✅ 4. AFFICHE APP
-  loading.style.display = 'none';
-  app.style.display = 'block';
+    const fromRpc = await ownerContextFromRpc();
+    if (fromRpc?.owner_id) {
+      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+      try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
+      try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+      return fromRpc;
+    }
 
-  // ✅ 5. NAVIGATION
+    return null;
+  }
+
   function goBack(){
-    const url = window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug('./app.html') : './app.html';
-    location.href = url;
+    location.href = withSlug("./app.html");
   }
-  btnBack.addEventListener('click', goBack);
-  btnRetour.addEventListener('click', goBack);
 
-  // ✅ 6. SUBMIT FORM → SAVE DB
-  form.addEventListener('submit', async (e) => {
+  btnBack?.addEventListener("click", goBack);
+  btnRetour?.addEventListener("click", goBack);
+
+  if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+    loading.innerHTML = '❌ Guard absent. <a href="./pin.html" style="color:#facc15">Se connecter</a>';
+    return;
+  }
+
+  try{
+    await window.DIGIY_GUARD.ready;
+  }catch(e){
+    loading.innerHTML = '❌ Guard non prêt. <a href="./pin.html" style="color:#facc15">Se connecter</a>';
+    return;
+  }
+
+  const st = getGuardState();
+  State.phone = st.phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "";
+  State.slug = st.slug || "";
+  State.reason = st.reason || "preview";
+
+  // pré-remplissage léger avant affichage
+  document.getElementById("phone").value = State.phone || "";
+  document.getElementById("owner_name").value =
+    localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
+    localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+    "Propriétaire";
+
+  loading.style.display = "none";
+  app.style.display = "block";
+
+  if(!st.access_ok){
+    disableFormForPreview(State.reason || "preview");
+    return;
+  }
+
+  const ctx = await resolveOwnerContext();
+
+  if(!ctx?.owner_id){
+    disableFormForPreview("owner_unresolved");
+    return;
+  }
+
+  State.ownerId = ctx.owner_id;
+  State.business_code = ctx.business_code || "TEST";
+  State.business_name = ctx.business_name || "";
+
+  try { if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
+
+  document.getElementById("owner_name").value = State.business_name || "Propriétaire";
+  document.getElementById("phone").value = State.phone || "";
+
+  enableFormForLive();
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearError();
 
-    const btn = form.querySelector('.btn-generate');
+    if(!isLive()){
+      showError("🔒 Le générateur n’est pas disponible en aperçu.");
+      return;
+    }
+
+    const btn = form.querySelector(".btn-generate");
     btn.disabled = true;
-    btn.textContent = '⏳ Création en cours...';
+    btn.textContent = "⏳ Création en cours...";
 
     try {
-      const sb = window.DIGIY_GUARD?.getSb?.();
+      const sb = getSB();
       if(!sb) throw new Error("Supabase non initialisé");
 
       const fd = new FormData(form);
 
-      const nom = String(fd.get('nom') || '').trim();
-      const ville = String(fd.get('adresse') || '').trim();
-      const description = String(fd.get('description') || '').trim();
-      const photo_url = String(fd.get('photo_url') || '').trim();
-      const type_logement = String(fd.get('type_logement') || 'Appartement').trim();
+      const nom = String(fd.get("nom") || "").trim();
+      const ville = String(fd.get("adresse") || "").trim();
+      const description = String(fd.get("description") || "").trim();
+      const photo_url = String(fd.get("photo_url") || "").trim();
+      const type_logement = String(fd.get("type_logement") || "Appartement").trim();
 
       if(!nom) throw new Error("Nom du logement requis");
       if(!ville) throw new Error("Ville requise");
       if(!description) throw new Error("Description requise");
       if(!photo_url) throw new Error("URL photo requise");
 
-      const personnes_max = parseInt(fd.get('personnes_max') || '4', 10);
-      const prix_nuit = parseInt(fd.get('prix_nuit') || '0', 10);
+      const personnes_max = parseInt(fd.get("personnes_max") || "4", 10);
+      const prix_nuit = parseInt(fd.get("prix_nuit") || "0", 10);
 
       if(!Number.isFinite(personnes_max) || personnes_max < 1) throw new Error("Capacité invalide");
       if(!Number.isFinite(prix_nuit) || prix_nuit <= 0) throw new Error("Prix/nuit invalide");
 
-      const prix_semaine = String(fd.get('prix_semaine') || '').trim();
-      const prix_mois = String(fd.get('prix_mois') || '').trim();
+      const prix_semaine = String(fd.get("prix_semaine") || "").trim();
+      const prix_mois = String(fd.get("prix_mois") || "").trim();
 
-      // ✅ slug auto
-      const baseSlug = makeSlug(nom + '-' + ville);
-      let finalSlug = baseSlug || ('logement-' + uniqSuffix());
+      const baseSlug = makeSlug(nom + "-" + ville);
+      const finalSlugSeed = baseSlug || ("logement-" + uniqSuffix());
 
-      // ✅ payload (ne force pas created_at: laisse la DB gérer si elle a default now())
       const payloadBase = {
-        owner_id: ownerId,
-        owner_slug: slugOwner || null,          // optionnel (si tu as une colonne)
+        owner_id: State.ownerId,
+        owner_slug: State.slug || null,
         nom,
         adresse: ville,
         type_logement,
@@ -523,80 +719,74 @@ textarea{
         prix_mois: prix_mois ? parseInt(prix_mois, 10) : null,
         description,
         photo_url,
-        phone: phone || null,
-        status: 'actif',
-        is_public: true,
+        phone: State.phone || null,
+        status: "actif",
+        is_public: true
       };
 
-      // ✅ tentative insert, si slug conflict → retente avec suffix
       async function tryInsert(slugTry, attempt){
         const payload = { ...payloadBase, slug: slugTry };
+
         const { data, error } = await sb
-          .from('digiy_loc_rooms')
+          .from("digiy_loc_rooms")
           .insert(payload)
           .select()
           .single();
 
         if(!error) return data;
 
-        // Conflit slug (selon tes contraintes DB)
-        const msg = (error.message || "").toLowerCase();
+        const msg = String(error.message || "").toLowerCase();
         const isConflict =
-          msg.includes('duplicate') ||
-          msg.includes('unique') ||
-          msg.includes('already exists') ||
-          msg.includes('violates unique constraint');
+          msg.includes("duplicate") ||
+          msg.includes("unique") ||
+          msg.includes("already exists") ||
+          msg.includes("violates unique constraint");
 
         if(isConflict && attempt < 2){
-          return await tryInsert(baseSlug + '-' + uniqSuffix(), attempt + 1);
+          return await tryInsert(finalSlugSeed + "-" + uniqSuffix(), attempt + 1);
         }
+
         throw error;
       }
 
-      const created = await tryInsert(finalSlug, 0);
+      const created = await tryInsert(finalSlugSeed, 0);
 
-      // ✅ SUCCÈS
-      form.style.display = 'none';
-      successMsg.classList.add('show');
+      form.style.display = "none";
+      successMsg.classList.add("show");
 
-      // ✅ lien public
-      const slugCreated = created?.slug || finalSlug;
-      // Adapte ton routing ici si besoin : /room/slug, /logements/slug, etc.
-      const urlPublic = PUBLIC_BASE.replace(/\/+$/,'') + '/room/' + encodeURIComponent(slugCreated);
+      const slugCreated = created?.slug || finalSlugSeed;
+      const urlPublic = PUBLIC_BASE.replace(/\/+$/,"") + "/room/" + encodeURIComponent(slugCreated);
 
       publicLink.textContent = urlPublic;
       publicLink.href = urlPublic;
-      publicLinkBox.style.display = 'block';
+      publicLinkBox.style.display = "block";
 
     } catch(err) {
-      console.error('❌ Erreur:', err);
-      const msg = err?.message || String(err);
+      console.error("❌ Erreur:", err);
+      const m = err?.message || String(err);
 
-      // Petit bonus pour les erreurs RLS fréquentes
-      if(msg.toLowerCase().includes('row level security') || msg.toLowerCase().includes('rls')){
-        showError("🚫 RLS bloque l’insert. Vérifie la policy sur digiy_loc_rooms (insert autorisé pour owner_id = auth.uid() ou via guard).");
+      if(m.toLowerCase().includes("row level security") || m.toLowerCase().includes("rls")){
+        showError("🚫 RLS bloque l’insert. Il faudra aligner la policy sur digiy_loc_rooms ou passer par RPC d’écriture.");
       } else {
-        showError('❌ ' + msg);
+        showError("❌ " + m);
       }
 
       btn.disabled = false;
-      btn.textContent = '🚀 CRÉER LA FICHE LOGEMENT';
+      btn.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
     }
   });
 
-  // ✅ copier lien
-  btnCopy?.addEventListener('click', async () => {
+  btnCopy?.addEventListener("click", async () => {
     try{
-      await navigator.clipboard.writeText(publicLink?.href || '');
+      await navigator.clipboard.writeText(publicLink?.href || "");
       btnCopy.textContent = "✅ Copié";
       setTimeout(()=> btnCopy.textContent = "📋 Copier", 1200);
     }catch(e){
-      alert("Impossible de copier automatiquement. Sélectionne le lien et copie manuellement.");
+      alert("Impossible de copier automatiquement. Copie manuellement le lien.");
     }
   });
 
 })();
 </script>
-
 </body>
 </html>
