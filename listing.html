@@ -351,387 +351,393 @@
     // =============================
     // FALLBACK Supabase (si guard absent)
     // =============================
-    const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+   <script>
+(function(){
+  "use strict";
 
-    // =============================
-    // PARAMS URL
-    // =============================
-    const url = new URL(window.location.href);
-    const Q = (k)=> (url.searchParams.get(k) || "").trim();
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-    const SLUG = Q("slug") || "";
-    const todayISO = new Date().toISOString().slice(0,10);
-    const DATE = (Q("date") || todayISO);
+  const MODULE = "LOC";
 
-    // fallback debug (si qqn force ?business=CODE)
-    let BUSINESS = (Q("business") || "").toUpperCase();
+  const $ = (id)=>document.getElementById(id);
 
-    // =============================
-    // GUARD HELPERS
-    // =============================
-    const MODULE = "loc"; // ✅ cohérent LOC PRO
-    const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
+  const url = new URL(window.location.href);
+  const Q = (k)=> (url.searchParams.get(k) || "").trim();
 
-    const $ = (id)=>document.getElementById(id);
+  const DATE = Q("date") || new Date().toISOString().slice(0,10);
 
-    async function guardBoot(){
-      try{
-        if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.boot === "function"){
-          await window.DIGIY_GUARD.boot({
-            module: MODULE,
-            dashboard: "./index.html",
-            login: "./pin.html",
-            pay: PAY_URL,
-            requireSlug: true,
-            checkSubscription: true
-          });
-        }
-      }catch(_){}
+  let SLUG = "";
+  let BUSINESS = "";
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
+    const r = window.DIGIY_GUARD.ready;
+    if(typeof r === "function") return await r(8000);
+    return await r;
+  }
+
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  function withSlug(u){
+    const slug = SLUG || getGuardState().slug || "";
+    if(!slug) return u;
+    try{
+      const x = new URL(u, location.href);
+      if(!x.searchParams.get("slug")) x.searchParams.set("slug", slug);
+      if(x.origin === location.origin) return x.pathname + x.search + x.hash;
+      return x.toString();
+    }catch{
+      const sep = u.includes("?") ? "&" : "?";
+      return u + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function fmtDateFRFromISO(iso){
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  }
+
+  function toast(msg){
+    const t = $("toast");
+    $("toastText").textContent = msg;
+    t.style.display = "flex";
+    window.clearTimeout(window.__toastTimer);
+    window.__toastTimer = window.setTimeout(()=> t.style.display="none", 2600);
+  }
+  $("toastBtn").addEventListener("click", ()=> $("toast").style.display="none");
+
+  function refreshNetwork(){
+    const on = navigator.onLine;
+    $("netLabel").textContent = on ? "En ligne" : "Hors ligne";
+    $("netDot").style.background = on ? "var(--green)" : "var(--bad)";
+  }
+  window.addEventListener("online", refreshNetwork);
+  window.addEventListener("offline", refreshNetwork);
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function sectionHeader(title, subtitle){
+    const h = document.createElement("div");
+    h.className = "sectionHead";
+    h.innerHTML = `<h3>${title}</h3><div class="small">${subtitle||""}</div>`;
+    return h;
+  }
+
+  function emptyState(text){
+    const el = document.createElement("div");
+    el.className = "empty";
+    el.textContent = text;
+    return el;
+  }
+
+  function waLink(phone, message){
+    const p = (phone||"").replace(/[^\d]/g,"");
+    const text = encodeURIComponent(message||"Bonjour 👋");
+    return `https://wa.me/${p}?text=${text}`;
+  }
+
+  function telLink(phone){
+    return `tel:${phone||""}`;
+  }
+
+  function cardCommon(item, kind){
+    const guest = item.guest_name || item.name || "Client";
+    const room = item.room_label || item.place_name || "Logement";
+    const phone = item.phone || item.guest_phone || "";
+    const source = item.source || "—";
+    const status = item.status || (kind==="arr"?"arriving":kind==="dep"?"leaving":"occupied");
+
+    const metaBits = [];
+    metaBits.push(`<span class="tag"><span class="ic ${kind==='arr'?'green':kind==='dep'?'orange':'blue'}"></span> ${escapeHtml(room)}</span>`);
+    metaBits.push(`<span class="tag"><span class="ic blue"></span> ${escapeHtml(source)}</span>`);
+    metaBits.push(`<span class="tag"><span class="ic ${String(status).includes('confirm')?'green':'orange'}"></span> ${escapeHtml(status)}</span>`);
+
+    let extra = "";
+    if(kind==="arr"){
+      extra = `<span class="tag"><span class="ic orange"></span> Arrivée: ${escapeHtml(item.check_in||item.start_date||"—")}</span>`;
+    }else if(kind==="dep"){
+      extra = `<span class="tag"><span class="ic orange"></span> Départ: ${escapeHtml(item.check_out||item.end_date||"—")}</span>`;
+    }else{
+      extra = `<span class="tag"><span class="ic green"></span> ${escapeHtml(item.check_in||item.start_date||"—")} → ${escapeHtml(item.check_out||item.end_date||"—")}</span>`;
     }
 
-    function getSB(){
-      return window.DIGIY_GUARD?.getSb?.()
-          || window.DIGIY_GUARD?.getSupabase?.()
-          || window.DIGIY_GUARD?.sb
-          || null;
-    }
+    const msg = (kind==="arr")
+      ? `Bonjour ${guest} 👋\nNous confirmons votre arrivée aujourd’hui.\nLogement: ${room}\nÀ tout à l’heure.`
+      : (kind==="dep")
+        ? `Bonjour ${guest} 👋\nRappel : départ aujourd’hui.\nLogement: ${room}\nMerci 🙏`
+        : `Bonjour ${guest} 👋\nTout se passe bien ?\nLogement: ${room}\nBesoin d’aide ?`;
 
-    // =============================
-    // UI HELPERS
-    // =============================
-    function fmtDateFRFromISO(iso){
-      const d = new Date(iso + "T00:00:00");
-      return d.toLocaleDateString("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-    }
-
-    function toast(msg){
-      const t = $("toast");
-      $("toastText").textContent = msg;
-      t.style.display = "flex";
-      window.clearTimeout(window.__toastTimer);
-      window.__toastTimer = window.setTimeout(()=> t.style.display="none", 2600);
-    }
-    $("toastBtn").addEventListener("click", ()=> $("toast").style.display="none");
-
-    function refreshNetwork(){
-      const on = navigator.onLine;
-      $("netLabel").textContent = on ? "En ligne" : "Hors ligne";
-      $("netDot").style.background = on ? "var(--green)" : "var(--bad)";
-    }
-    window.addEventListener("online", refreshNetwork);
-    window.addEventListener("offline", refreshNetwork);
-
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function sectionHeader(title, subtitle){
-      const h = document.createElement("div");
-      h.className = "sectionHead";
-      h.innerHTML = `<h3>${title}</h3><div class="small">${subtitle||""}</div>`;
-      return h;
-    }
-
-    function emptyState(text){
-      const el = document.createElement("div");
-      el.className = "empty";
-      el.textContent = text;
-      return el;
-    }
-
-    function waLink(phone, message){
-      const p = (phone||"").replace(/[^\d]/g,"");
-      const text = encodeURIComponent(message||"Bonjour 👋");
-      return `https://wa.me/${p}?text=${text}`;
-    }
-    function telLink(phone){ return `tel:${phone||""}`; }
-
-    function cardCommon(item, kind){
-      const guest = item.guest_name || item.name || "Client";
-      const room = item.room_label || item.place_name || "Logement";
-      const phone = item.phone || item.guest_phone || "";
-      const source = item.source || "—";
-      const status = item.status || (kind==="arr"?"arriving":kind==="dep"?"leaving":"occupied");
-
-      const metaBits = [];
-      metaBits.push(`<span class="tag"><span class="ic ${kind==='arr'?'green':kind==='dep'?'orange':'blue'}"></span> ${escapeHtml(room)}</span>`);
-      metaBits.push(`<span class="tag"><span class="ic blue"></span> ${escapeHtml(source)}</span>`);
-      metaBits.push(`<span class="tag"><span class="ic ${String(status).includes('confirm')?'green':'orange'}"></span> ${escapeHtml(status)}</span>`);
-
-      let extra = "";
-      if(kind==="arr"){
-        extra = `<span class="tag"><span class="ic orange"></span> Arrivée: ${escapeHtml(item.check_in||item.start_date||"—")}</span>`;
-      }else if(kind==="dep"){
-        extra = `<span class="tag"><span class="ic orange"></span> Départ: ${escapeHtml(item.check_out||item.end_date||"—")}</span>`;
-      }else{
-        extra = `<span class="tag"><span class="ic green"></span> ${escapeHtml(item.check_in||item.start_date||"—")} → ${escapeHtml(item.check_out||item.end_date||"—")}</span>`;
-      }
-
-      const msg = (kind==="arr")
-        ? `Bonjour ${guest} 👋\nNous confirmons votre arrivée aujourd’hui.\nLogement: ${room}\nÀ tout à l’heure.`
-        : (kind==="dep")
-          ? `Bonjour ${guest} 👋\nRappel : départ aujourd’hui.\nLogement: ${room}\nMerci 🙏`
-          : `Bonjour ${guest} 👋\nTout se passe bien ?\nLogement: ${room}\nBesoin d’aide ?`;
-
-      const el = document.createElement("div");
-      el.className = "card";
-      el.innerHTML = `
-        <div class="row">
-          <div class="main">
-            <div class="name">${escapeHtml(guest)}</div>
-            <div class="meta">
-              ${metaBits.join("")}
-              ${extra}
-            </div>
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML = `
+      <div class="row">
+        <div class="main">
+          <div class="name">${escapeHtml(guest)}</div>
+          <div class="meta">
+            ${metaBits.join("")}
+            ${extra}
           </div>
-          <div class="status">${escapeHtml(kind==='arr'?'Arrivée':kind==='dep'?'Départ':'En cours')}</div>
         </div>
-        <div class="actions">
-          <a class="btn whatsapp" href="${waLink(phone, msg)}" target="_blank" rel="noopener">📲 WhatsApp</a>
-          <a class="btn call" href="${telLink(phone)}">📞 Appeler</a>
-        </div>
-      `;
-      return el;
-    }
+        <div class="status">${escapeHtml(kind==='arr'?'Arrivée':kind==='dep'?'Départ':'En cours')}</div>
+      </div>
+      <div class="actions">
+        <a class="btn whatsapp" href="${waLink(phone, msg)}" target="_blank" rel="noopener">📲 WhatsApp</a>
+        <a class="btn call" href="${telLink(phone)}">📞 Appeler</a>
+      </div>
+    `;
+    return el;
+  }
 
-    function setTab(key){
-      const keys = ["arr","dep","occ"];
-      keys.forEach(k=>{
-        $("tab-"+k).classList.toggle("active", k===key);
-        $("tab-"+k).setAttribute("aria-selected", k===key ? "true":"false");
-        $("tab-"+k).setAttribute("tabindex", k===key ? "0":"-1");
-        $("panel-"+k).style.display = (k===key) ? "block":"none";
-      });
-      localStorage.setItem("digiy_loc_listing_tab", key);
-    }
-
-    document.querySelectorAll(".tab").forEach(t=>{
-      t.addEventListener("click", ()=> setTab(t.dataset.tab));
-      t.addEventListener("keydown", (e)=>{
-        if(e.key==="Enter" || e.key===" "){ e.preventDefault(); setTab(t.dataset.tab); }
-      });
+  function setTab(key){
+    const keys = ["arr","dep","occ"];
+    keys.forEach(k=>{
+      $("tab-"+k).classList.toggle("active", k===key);
+      $("tab-"+k).setAttribute("aria-selected", k===key ? "true":"false");
+      $("tab-"+k).setAttribute("tabindex", k===key ? "0":"-1");
+      $("panel-"+k).style.display = (k===key) ? "block":"none";
     });
+    localStorage.setItem("digiy_loc_listing_tab", key);
+  }
 
-    // =============================
-    // SHARE
-    // =============================
-    function buildListingUrl(){
-      const u = new URL(window.location.href);
-      if(SLUG) u.searchParams.set("slug", SLUG);
-      if(DATE) u.searchParams.set("date", DATE);
-      if(BUSINESS) u.searchParams.set("business", BUSINESS); // debug/optionnel
-      return u.toString();
-    }
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click", ()=> setTab(t.dataset.tab));
+    t.addEventListener("keydown", (e)=>{
+      if(e.key==="Enter" || e.key===" "){
+        e.preventDefault();
+        setTab(t.dataset.tab);
+      }
+    });
+  });
 
-    function buildShareMessage(data){
-      const arr = (data?.arrivals||[]).length;
-      const dep = (data?.departures||[]).length;
-      const occ = (data?.occupied||[]).length;
-      const dateLabel = fmtDateFRFromISO(DATE);
-      const link = buildListingUrl();
+  function buildListingUrl(){
+    const u = new URL(window.location.href);
+    if(SLUG) u.searchParams.set("slug", SLUG);
+    if(DATE) u.searchParams.set("date", DATE);
+    if(BUSINESS) u.searchParams.set("business", BUSINESS);
+    return u.toString();
+  }
 
-      return `📋 DIGIY LOC — Listing du Jour
+  function buildShareMessage(data){
+    const arr = (data?.arrivals||[]).length;
+    const dep = (data?.departures||[]).length;
+    const occ = (data?.occupied||[]).length;
+    const dateLabel = fmtDateFRFromISO(DATE);
+    const link = buildListingUrl();
+
+    return `📋 DIGIY LOC — Listing du Jour
 📍 ${SLUG || (data?.slug||"")}
 🏠 ${BUSINESS || (data?.business_code||"")}
 📅 ${dateLabel}
 Arrivées: ${arr} • Départs: ${dep} • En cours: ${occ}
 
 Ouvrir: ${link}`;
+  }
+
+  function openWhatsAppShare(msg){
+    window.open("https://wa.me/?text="+encodeURIComponent(msg), "_blank", "noopener");
+  }
+
+  function openSmsShare(msg){
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const sep = isIOS ? "&" : "?";
+    window.location.href = `sms:${sep}body=${encodeURIComponent(msg)}`;
+  }
+
+  async function copyToClipboard(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("Copié ✅");
+    }catch(_){
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toast("Copié ✅");
+    }
+  }
+
+  let LAST_DATA = null;
+
+  async function resolveBusinessFromSlug(sb, slug){
+    if(!slug) return "";
+    const { data, error } = await sb.rpc("digiy_loc_get_business_code_by_slug", { p_slug: slug });
+    if(error) throw error;
+    return (data || "").toString().trim().toUpperCase();
+  }
+
+  function renderEmpty(msg){
+    ["arr","dep","occ"].forEach(k=>{
+      const p = $("panel-"+k);
+      p.innerHTML = "";
+      p.appendChild(sectionHeader(
+        k==="arr" ? "Arrivées" : k==="dep" ? "Départs" : "En cours",
+        "—"
+      ));
+      p.appendChild(emptyState(msg));
+    });
+
+    $("kpiArr").textContent = "0";
+    $("kpiDep").textContent = "0";
+    $("kpiOcc").textContent = "0";
+    $("countArr").textContent = "0";
+    $("countDep").textContent = "0";
+    $("countOcc").textContent = "0";
+  }
+
+  function renderAll(data){
+    const arr = data?.arrivals || [];
+    const dep = data?.departures || [];
+    const occ = data?.occupied || [];
+
+    $("kpiArr").textContent = arr.length;
+    $("kpiDep").textContent = dep.length;
+    $("kpiOcc").textContent = occ.length;
+
+    $("countArr").textContent = arr.length;
+    $("countDep").textContent = dep.length;
+    $("countOcc").textContent = occ.length;
+
+    const pArr = $("panel-arr");
+    const pDep = $("panel-dep");
+    const pOcc = $("panel-occ");
+    pArr.innerHTML = "";
+    pDep.innerHTML = "";
+    pOcc.innerHTML = "";
+
+    pArr.appendChild(sectionHeader("Arrivées aujourd’hui", "Contacts rapides WhatsApp / Appel"));
+    if(arr.length===0) pArr.appendChild(emptyState("Aucune arrivée aujourd’hui."));
+    arr.forEach(x=> pArr.appendChild(cardCommon(x,"arr")));
+
+    pDep.appendChild(sectionHeader("Départs aujourd’hui", "Contacts rapides WhatsApp / Appel"));
+    if(dep.length===0) pDep.appendChild(emptyState("Aucun départ aujourd’hui."));
+    dep.forEach(x=> pDep.appendChild(cardCommon(x,"dep")));
+
+    pOcc.appendChild(sectionHeader("En cours", "Clients actuellement présents"));
+    if(occ.length===0) pOcc.appendChild(emptyState("Aucun client en cours."));
+    occ.forEach(x=> pOcc.appendChild(cardCommon(x,"occ")));
+  }
+
+  (function pwa(){
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+    if(!isStandalone) $("pwaHint").style.display = "block";
+  })();
+
+  (function wireShareButtons(){
+    $("shareWA").addEventListener("click", ()=>{
+      const msg = buildShareMessage(LAST_DATA || {});
+      openWhatsAppShare(msg);
+    });
+    $("shareSMS").addEventListener("click", ()=>{
+      const msg = buildShareMessage(LAST_DATA || {});
+      openSmsShare(msg);
+    });
+    $("copyLink").addEventListener("click", ()=> copyToClipboard(buildListingUrl()));
+    $("copyMsg").addEventListener("click", ()=> copyToClipboard(buildShareMessage(LAST_DATA || {})));
+  })();
+
+  async function loadData(){
+    refreshNetwork();
+    $("todayLabel").textContent = fmtDateFRFromISO(DATE);
+
+    const st = getGuardState();
+    SLUG = (Q("slug") || st.slug || "").trim();
+
+    if(!SLUG){
+      renderEmpty("Slug manquant. Ouvre depuis le cockpit avec ?slug=...");
+      return;
     }
 
-    function openWhatsAppShare(msg){
-      window.open("https://wa.me/?text="+encodeURIComponent(msg), "_blank", "noopener");
+    if(!st.access_ok){
+      renderEmpty("Accès non actif. Passe par PIN pour ouvrir le listing réel.");
+      return;
     }
 
-    function openSmsShare(msg){
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const sep = isIOS ? "&" : "?";
-      window.location.href = `sms:${sep}body=${encodeURIComponent(msg)}`;
-    }
+    const sb = getSB();
 
-    async function copyToClipboard(text){
-      try{
-        await navigator.clipboard.writeText(text);
-        toast("Copié ✅");
-      }catch(_){
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-        toast("Copié ✅");
+    try{
+      const sess = window.DIGIY_GUARD?.getSession?.() || null;
+      const bc = (sess?.business_code || sess?.businessCode || "").toString().trim().toUpperCase();
+      if(bc) BUSINESS = bc;
+
+      if(!BUSINESS && SLUG){
+        BUSINESS = await resolveBusinessFromSlug(sb, SLUG);
       }
-    }
 
-    let LAST_DATA = null;
-
-    // =============================
-    // SQL BRIDGE: slug -> business_code
-    // (nécessite la fonction SQL digiy_loc_get_business_code_by_slug(p_slug text) returns text)
-    // =============================
-    async function resolveBusinessFromSlug(sb, slug){
-      if(!slug) return "";
-      const { data, error } = await sb.rpc("digiy_loc_get_business_code_by_slug", { p_slug: slug });
-      if(error) throw error;
-      return (data || "").toString().trim().toUpperCase();
-    }
-
-    // =============================
-    // DATA LOAD
-    // =============================
-    async function loadData(){
-      refreshNetwork();
-      $("todayLabel").textContent = fmtDateFRFromISO(DATE);
-
-      // 1) boot guard (si présent)
-      await guardBoot();
-
-      // 2) BUSINESS auto depuis session guard (si dispo)
-      try{
-        const sess = window.DIGIY_GUARD?.getSession?.() || null;
-        const bc = (sess?.business_code || sess?.businessCode || "").toString().trim().toUpperCase();
-        if(bc) BUSINESS = bc;
-      }catch(_){}
-
-      // 3) supabase client
-      const sb = getSB() || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      // 4) business code label (pré-affichage)
       $("businessCode").textContent = "CODE • " + (BUSINESS || "—");
 
-      // 5) on a besoin de slug OU business
-      if(!SLUG && !BUSINESS){
-        renderEmpty("Paramètre manquant. Mets ?slug=chez-astou-saly (recommandé) ou ?business=CODE.");
+      if(!BUSINESS){
+        renderEmpty("business_code introuvable. Vérifie le slug ou reconnecte-toi via PIN.");
         return;
       }
 
-      try{
-        // ✅ slug-first MAIS la function listing est business_code-only
-        if(!BUSINESS && SLUG){
-          BUSINESS = await resolveBusinessFromSlug(sb, SLUG);
-        }
-
-        if(!BUSINESS){
-          renderEmpty("business_code introuvable. Vérifie le slug (ou reconnecte-toi via PIN).");
-          return;
-        }
-
-        $("businessCode").textContent = "CODE • " + BUSINESS;
-
-        // ✅ Appel officiel (celle qui existe)
-        const { data, error } = await sb.rpc("digiy_loc_get_listing_day", {
-          p_business_code: BUSINESS,
-          p_date: DATE
-        });
-
-        if(error) throw error;
-
-        LAST_DATA = data;
-        renderAll(data);
-
-      }catch(err){
-        console.error(err);
-        toast("Erreur chargement. Vérifie RPC/RLS.");
-        renderEmpty("Impossible de charger le listing.");
-      }
-    }
-
-    function renderEmpty(msg){
-      ["arr","dep","occ"].forEach(k=>{
-        const p = $("panel-"+k);
-        p.innerHTML = "";
-        p.appendChild(sectionHeader(
-          k==="arr" ? "Arrivées" : k==="dep" ? "Départs" : "En cours",
-          "—"
-        ));
-        p.appendChild(emptyState(msg));
+      const { data, error } = await sb.rpc("digiy_loc_get_listing_day", {
+        p_business_code: BUSINESS,
+        p_date: DATE
       });
 
-      $("kpiArr").textContent = "0";
-      $("kpiDep").textContent = "0";
-      $("kpiOcc").textContent = "0";
-      $("countArr").textContent = "0";
-      $("countDep").textContent = "0";
-      $("countOcc").textContent = "0";
+      if(error) throw error;
+
+      LAST_DATA = data;
+      renderAll(data);
+
+    }catch(err){
+      console.error(err);
+      toast("Erreur chargement. Vérifie RPC/RLS.");
+      renderEmpty("Impossible de charger le listing.");
+    }
+  }
+
+  async function init(){
+    const last = localStorage.getItem("digiy_loc_listing_tab") || "arr";
+    setTab(["arr","dep","occ"].includes(last) ? last : "arr");
+
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      renderEmpty("Guard absent ou non chargé.");
+      return;
     }
 
-    function renderAll(data){
-      const arr = data?.arrivals || [];
-      const dep = data?.departures || [];
-      const occ = data?.occupied || [];
-
-      $("kpiArr").textContent = arr.length;
-      $("kpiDep").textContent = dep.length;
-      $("kpiOcc").textContent = occ.length;
-
-      $("countArr").textContent = arr.length;
-      $("countDep").textContent = dep.length;
-      $("countOcc").textContent = occ.length;
-
-      const pArr = $("panel-arr");
-      const pDep = $("panel-dep");
-      const pOcc = $("panel-occ");
-      pArr.innerHTML = ""; pDep.innerHTML = ""; pOcc.innerHTML = "";
-
-      pArr.appendChild(sectionHeader("Arrivées aujourd’hui", "Contacts rapides WhatsApp / Appel"));
-      if(arr.length===0) pArr.appendChild(emptyState("Aucune arrivée aujourd’hui."));
-      arr.forEach(x=> pArr.appendChild(cardCommon(x,"arr")));
-
-      pDep.appendChild(sectionHeader("Départs aujourd’hui", "Contacts rapides WhatsApp / Appel"));
-      if(dep.length===0) pDep.appendChild(emptyState("Aucun départ aujourd’hui."));
-      dep.forEach(x=> pDep.appendChild(cardCommon(x,"dep")));
-
-      pOcc.appendChild(sectionHeader("En cours", "Clients actuellement présents"));
-      if(occ.length===0) pOcc.appendChild(emptyState("Aucun client en cours."));
-      occ.forEach(x=> pOcc.appendChild(cardCommon(x,"occ")));
+    try{
+      await waitGuardReady();
+    }catch(e){
+      renderEmpty("Guard non prêt.");
+      return;
     }
 
-    // =============================
-    // PWA hint
-    // =============================
-    (function pwa(){
-      const isStandalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.navigator.standalone === true;
-      if(!isStandalone) $("pwaHint").style.display = "block";
-    })();
+    await loadData();
+  }
 
-    // =============================
-    // Share buttons
-    // =============================
-    (function wireShareButtons(){
-      $("shareWA").addEventListener("click", ()=>{
-        const msg = buildShareMessage(LAST_DATA || {});
-        openWhatsAppShare(msg);
-      });
-      $("shareSMS").addEventListener("click", ()=>{
-        const msg = buildShareMessage(LAST_DATA || {});
-        openSmsShare(msg);
-      });
-      $("copyLink").addEventListener("click", ()=> copyToClipboard(buildListingUrl()));
-      $("copyMsg").addEventListener("click", ()=> copyToClipboard(buildShareMessage(LAST_DATA || {})));
-    })();
-
-    // =============================
-    // Boot page
-    // =============================
-    (function boot(){
-      const last = localStorage.getItem("digiy_loc_listing_tab") || "arr";
-      setTab(["arr","dep","occ"].includes(last) ? last : "arr");
-      loadData();
-    })();
-
-  })();
+  init();
+})();
   </script>
 </body>
 </html>
