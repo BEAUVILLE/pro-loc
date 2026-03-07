@@ -199,45 +199,50 @@
 </div>
 
 <script>
-(function(){
+(async function(){
   "use strict";
+
   const $ = (id)=>document.getElementById(id);
 
-  // =========================
-  // CONFIG SUPABASE (fallback)
-  // =========================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  // =========================
-  // UI helpers
-  // =========================
+  const MODULE = "LOC";
+  const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
+
+  let LINKS = [];
+  let UX_MODE = "preview";
+  let UX_REASON = "booting";
+
   function show(msg, cls){
     const el = $("note");
+    if(!el) return;
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
   }
 
   function copyText(txt){
-    try{ return navigator.clipboard.writeText(txt).then(()=>true).catch(()=>false); }
-    catch(_){
+    try{
+      return navigator.clipboard.writeText(txt).then(()=>true).catch(()=>false);
+    }catch(_){
       try{
         const ta = document.createElement("textarea");
-        ta.value = txt; document.body.appendChild(ta);
-        ta.select(); document.execCommand("copy");
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
         ta.remove();
         return Promise.resolve(true);
-      }catch(__){ return Promise.resolve(false); }
+      }catch(__){
+        return Promise.resolve(false);
+      }
     }
   }
 
-  // =========================
-  // Slug + phones
-  // =========================
-  function getSlug(){
-    return (window.DIGIY_GUARD?.getSlug?.() || new URL(location.href).searchParams.get("slug") || "").trim();
+  function digitsOnly(p){
+    return String(p||"").replace(/\D/g,"");
   }
 
   function normPhone(p){
@@ -253,92 +258,72 @@
     return p ? p.slice(-4) : "";
   }
 
-  function digitsOnly(p){ return String(p||"").replace(/\D/g,""); }
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
 
-  // =========================
-  // Supabase getter (guard -> fallback local)
-  // =========================
+  function getSlug(){
+    const st = getGuardState();
+    if(st.slug) return String(st.slug).trim();
+
+    try{
+      return (new URL(location.href)).searchParams.get("slug") || "";
+    }catch{
+      return "";
+    }
+  }
+
+  function withSlug(url){
+    const slug = getSlug();
+    if(!slug) return url;
+
+    try{
+      const u = new URL(url, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    return normPhone(
+      st.phone ||
+      localStorage.getItem("DIGIY_PHONE") ||
+      localStorage.getItem("DIGIY_LOC_PHONE") ||
+      ""
+    );
+  }
+
+  function isLive(){
+    return UX_MODE === "live" && !!getGuardState().access_ok;
+  }
+
   async function getSB(){
     try{
-      if(window.DIGIY_GUARD?.getSbAsync) return await window.DIGIY_GUARD.getSbAsync();
       const sb1 = window.DIGIY_GUARD?.getSb?.();
       if(sb1) return sb1;
-    }catch(e){ console.warn("guard sb fail", e); }
+    }catch(e){
+      console.warn("guard sb fail", e);
+    }
+
     try{
+      if(window.sb) return window.sb;
       return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }catch(e){
       console.error(e);
       return null;
     }
   }
-
-  // =========================
-  // Pages / URLs du module
-  // =========================
-  const slug = getSlug();
-  $("pillSlug").textContent = "slug : " + (slug || "—");
-
-  // Pages LOC-PRO (tes vrais fichiers)
-  const PAGE_APP    = "./index.html";
-  const PAGE_PUBLIC = "./go-pin-public.html";
-  const PAGE_PIN    = "./pin.html";
-
-  const appUrl = new URL(PAGE_APP, location.href);
-  const publicUrl = new URL(PAGE_PUBLIC, location.href);
-  const pinUrl = new URL(PAGE_PIN, location.href);
-
-  if(slug){
-    appUrl.searchParams.set("slug", slug);
-    publicUrl.searchParams.set("slug", slug);
-    pinUrl.searchParams.set("slug", slug);
-  }
-
-  $("btnBack").href = appUrl.toString();
-  $("btnOpenApp").href = appUrl.toString();
-  $("btnOpenPublic").href = publicUrl.toString();
-  $("btnOpenPin").href = pinUrl.toString();
-
-  $("btnCopyAll").addEventListener("click", async ()=>{
-    const pack =
-`DIGIY URLs
-slug: ${slug || "—"}
-
-APP: ${appUrl.toString()}
-PUBLIC: ${publicUrl.toString()}
-PIN: ${pinUrl.toString()}
-`;
-    const ok = await copyText(pack);
-    show(ok ? "✅ URLs copiées." : "❌ Copie impossible (navigateur).", ok ? "ok" : "bad");
-  });
-
-  // =========================
-  // QR-PRO officiel
-  // =========================
-  const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
-  const qrPro = new URL(QR_PRO_BASE);
-  if(slug) qrPro.searchParams.set("slug", slug);
-  $("qrProUrl").textContent = qrPro.toString();
-  $("qrInfo").textContent = "QR-PRO centralise tes QR (app/public/pin).";
-
-  function openQrPro(type){
-    const u = new URL(QR_PRO_BASE);
-    if(slug) u.searchParams.set("slug", slug);
-    if(type) u.searchParams.set("t", type);
-    window.open(u.toString(), "_blank", "noopener,noreferrer");
-    $("qrInfo").textContent = "Ouvert QR-PRO (" + (type || "—") + ") → " + u.toString();
-  }
-  $("btnQrApp").addEventListener("click", ()=> openQrPro("app"));
-  $("btnQrPublic").addEventListener("click", ()=> openQrPro("public"));
-  $("btnQrPin").addEventListener("click", ()=> openQrPro("pin"));
-  $("btnCopyQr").addEventListener("click", async ()=>{
-    const ok = await copyText(qrPro.toString());
-    show(ok ? "✅ Lien QR-PRO copié." : "❌ Copie impossible.", ok ? "ok" : "bad");
-  });
-
-  // =========================
-  // LINKS model (local state)
-  // =========================
-  let LINKS = [];
 
   function nextOrder(){
     const max = LINKS.reduce((m,x)=>Math.max(m, Number(x.order||0)), 0);
@@ -349,22 +334,17 @@ PIN: ${pinUrl.toString()}
     u = String(u||"").trim();
     if(!u) return "";
 
-    // WhatsApp convenience: "22177..." or "+221..." => wa.me
     if(/^\+?\d{9,15}$/.test(u.replace(/\s+/g,""))){
       const d = digitsOnly(u);
       return "https://wa.me/" + d;
     }
 
-    // If user pastes wa.me without protocol
     if(/^wa\.me\//i.test(u)) return "https://" + u;
 
-    // Basic allowlist
     const lower = u.toLowerCase();
     if(lower.startsWith("javascript:") || lower.startsWith("data:")) return "";
 
-    // Auto add https if looks like domain
     if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)){
-      // no scheme
       if(u.includes(".")) u = "https://" + u;
     }
 
@@ -381,14 +361,10 @@ PIN: ${pinUrl.toString()}
       if(!label || !url) continue;
       clean.push({ order, label, url, active });
     }
-    // Sort by order then label
     clean.sort((a,b)=>(a.order-b.order) || a.label.localeCompare(b.label));
     return clean;
   }
 
-  // =========================
-  // DOM rendering (SAFE)
-  // =========================
   function makeEl(tag, attrs, children){
     const el = document.createElement(tag);
     if(attrs){
@@ -405,16 +381,21 @@ PIN: ${pinUrl.toString()}
 
   function render(){
     const tb = $("rows");
+    if(!tb) return;
+
     tb.innerHTML = "";
 
     if(!LINKS.length){
       tb.appendChild(makeEl("tr", null, [
-        makeEl("td", { colspan:"5", style:"color:rgba(203,213,245,.9)" , text:"— aucun lien —" })
+        makeEl("td", {
+          colspan:"5",
+          style:"color:rgba(203,213,245,.9)",
+          text:"— aucun lien —"
+        })
       ]));
       return;
     }
 
-    // Stable sort for display
     const display = LINKS.map((x,idx)=>({x,idx}))
       .sort((a,b)=> (Number(a.x.order||999)-Number(b.x.order||999)) || (a.idx-b.idx));
 
@@ -424,20 +405,33 @@ PIN: ${pinUrl.toString()}
 
       const tr = document.createElement("tr");
 
-      // order
-      const order = makeEl("input", { class:"field", type:"number", value:String(Number(x.order||100)), style:"width:90px" });
+      const order = makeEl("input", {
+        class:"field",
+        type:"number",
+        value:String(Number(x.order||100)),
+        style:"width:90px"
+      });
+      order.disabled = !isLive();
       order.addEventListener("change", ()=>{ x.order = Number(order.value||100); });
 
-      // label
-      const label = makeEl("input", { class:"field", value:String(x.label||""), placeholder:"Ex: WhatsApp / Réserver / Commander" });
+      const label = makeEl("input", {
+        class:"field",
+        value:String(x.label||""),
+        placeholder:"Ex: WhatsApp / Réserver / Commander"
+      });
+      label.disabled = !isLive();
       label.addEventListener("change", ()=>{ x.label = String(label.value||"").trim(); });
 
-      // url
-      const url = makeEl("input", { class:"field", value:String(x.url||""), placeholder:"https://... ou wa.me/..." });
+      const url = makeEl("input", {
+        class:"field",
+        value:String(x.url||""),
+        placeholder:"https://... ou wa.me/..."
+      });
+      url.disabled = !isLive();
       url.addEventListener("change", ()=>{
         const n = normalizeUrl(url.value);
         if(!n){
-          show("⚠️ URL invalide (refusée). Utilise https://..., tel:..., mailto:..., wa.me/...", "warn");
+          show("⚠️ URL invalide. Utilise https://..., tel:..., mailto:..., wa.me/...", "warn");
           url.value = "";
           x.url = "";
           return;
@@ -446,7 +440,6 @@ PIN: ${pinUrl.toString()}
         x.url = n;
       });
 
-      // active
       const sel = document.createElement("select");
       sel.className = "field";
       sel.style.width = "90px";
@@ -455,10 +448,11 @@ PIN: ${pinUrl.toString()}
         <option value="false">Non</option>
       `;
       sel.value = x.active ? "true" : "false";
+      sel.disabled = !isLive();
       sel.addEventListener("change", ()=>{ x.active = (sel.value==="true"); });
 
-      // actions
       const actions = makeEl("div", { class:"row" });
+
       const bTest = makeEl("button", { class:"miniBtn", type:"button", text:"🔎 Tester" });
       const bCopy = makeEl("button", { class:"miniBtn gold", type:"button", text:"📋 Copier" });
       const bDup  = makeEl("button", { class:"miniBtn green", type:"button", text:"📎 Dupliquer" });
@@ -478,13 +472,28 @@ PIN: ${pinUrl.toString()}
         show(ok ? "✅ URL copiée." : "❌ Copie impossible.", ok ? "ok" : "bad");
       });
 
+      bDup.disabled = !isLive();
       bDup.addEventListener("click", ()=>{
-        LINKS.push({ order: nextOrder(), label: (x.label||"") + " (copy)", url: x.url||"", active: x.active!==false });
+        if(!isLive()){
+          show("👁️ Passe par PIN pour modifier les liens.", "warn");
+          return;
+        }
+        LINKS.push({
+          order: nextOrder(),
+          label: (x.label||"") + " (copy)",
+          url: x.url||"",
+          active: x.active!==false
+        });
         render();
         show("✅ Lien dupliqué.", "ok");
       });
 
+      bDel.disabled = !isLive();
       bDel.addEventListener("click", ()=>{
+        if(!isLive()){
+          show("👁️ En aperçu, suppression désactivée.", "warn");
+          return;
+        }
         LINKS.splice(i, 1);
         render();
         show("Lien supprimé (pense à Enregistrer).", "warn");
@@ -495,7 +504,6 @@ PIN: ${pinUrl.toString()}
       actions.appendChild(bDup);
       actions.appendChild(bDel);
 
-      // append tds
       tr.appendChild(makeEl("td", null, [order]));
       tr.appendChild(makeEl("td", null, [label]));
       tr.appendChild(makeEl("td", null, [url]));
@@ -506,24 +514,28 @@ PIN: ${pinUrl.toString()}
     }
   }
 
-  // =========================
-  // RPC creds (session)
-  // =========================
   function getCreds(){
-    const sess = window.DIGIY_GUARD?.getSession?.() || null;
-    const phone = normPhone(sess?.phone || "");
+    const phone = getPhone();
     const pin4 = pin4FromPhone(phone);
-    return { sess, phone, pin4 };
+    const st = getGuardState();
+
+    return {
+      slug: getSlug(),
+      phone,
+      pin4,
+      access_ok: !!st.access_ok
+    };
   }
 
   async function loadLinks(){
     const sb = await getSB();
-    if(!sb) return show("❌ Supabase pas prêt (sb null). Recharge.", "bad");
-    if(!slug) return show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
+    const { slug, phone, pin4, access_ok } = getCreds();
 
-    const { sess, phone, pin4 } = getCreds();
-    if(!sess?.ok || !phone) return show("⚠️ Session manquante. Retourne sur PIN.", "bad");
-    if(!pin4) return show("⚠️ PIN4 absent. Vérifie ton téléphone session.", "bad");
+    if(!sb) return show("❌ Supabase pas prêt. Recharge.", "bad");
+    if(!slug) return show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
+    if(!access_ok) return show("👁️ Mode aperçu. Les liens réels demandent un accès actif.", "warn");
+    if(!phone) return show("⚠️ Téléphone session manquant. Retour PIN.", "bad");
+    if(!pin4) return show("⚠️ PIN4 absent. Vérifie le téléphone session.", "bad");
 
     $("btnLoad").disabled = true;
     show("⏳ Chargement…", "warn");
@@ -538,12 +550,14 @@ PIN: ${pinUrl.toString()}
       if(error) return show("❌ Erreur: " + (error.message || error), "bad");
       if(!data?.ok) return show("❌ Accès refusé: " + (data?.error || "unknown"), "bad");
 
-      LINKS = Array.isArray(data.links) ? data.links.map(x=>({
-        order:Number(x.order||100),
-        label:String(x.label||"").trim(),
-        url:String(x.url||"").trim(),
-        active: x.active!==false
-      })) : [];
+      LINKS = Array.isArray(data.links)
+        ? data.links.map(x=>({
+            order:Number(x.order||100),
+            label:String(x.label||"").trim(),
+            url:String(x.url||"").trim(),
+            active:x.active!==false
+          }))
+        : [];
 
       render();
       show("✅ Liens chargés.", "ok");
@@ -558,16 +572,17 @@ PIN: ${pinUrl.toString()}
 
   async function saveLinks(){
     const sb = await getSB();
-    if(!sb) return show("❌ Supabase pas prêt (sb null).", "bad");
-    if(!slug) return show("❌ slug manquant.", "bad");
+    const { slug, phone, pin4, access_ok } = getCreds();
 
-    const { sess, phone, pin4 } = getCreds();
-    if(!sess?.ok || !phone) return show("⚠️ Session manquante. Retour PIN.", "bad");
-    if(!pin4) return show("⚠️ PIN4 absent. Vérifie ton téléphone session.", "bad");
+    if(!sb) return show("❌ Supabase pas prêt.", "bad");
+    if(!slug) return show("❌ slug manquant.", "bad");
+    if(!access_ok) return show("👁️ Mode aperçu. Enregistrement désactivé.", "warn");
+    if(!phone) return show("⚠️ Téléphone session manquant.", "bad");
+    if(!pin4) return show("⚠️ PIN4 absent. Vérifie la session.", "bad");
 
     const clean = validateLinks(LINKS);
     if(!clean.length){
-      show("⚠️ Aucun lien valide à enregistrer. (Label + URL obligatoires)", "warn");
+      show("⚠️ Aucun lien valide à enregistrer. Label + URL obligatoires.", "warn");
       return;
     }
 
@@ -585,10 +600,8 @@ PIN: ${pinUrl.toString()}
       if(error) return show("❌ Erreur: " + (error.message || error), "bad");
       if(!data?.ok) return show("❌ Refusé: " + (data?.error || "unknown"), "bad");
 
-      // Remet la version clean (normalisée)
       LINKS = clean;
       render();
-
       show("✅ Enregistré (" + (data.count ?? clean.length) + " lien(s)).", "ok");
 
     }catch(e){
@@ -599,49 +612,181 @@ PIN: ${pinUrl.toString()}
     }
   }
 
-  // =========================
-  // UI events
-  // =========================
-  $("btnAdd").addEventListener("click", ()=>{
-    LINKS.push({ order: nextOrder(), label:"WhatsApp", url:"https://wa.me/221XXXXXXXXX", active:true });
+  function setPreviewUi(reason){
+    UX_MODE = "preview";
+    UX_REASON = reason || "preview";
+
+    if($("pillStatus")) $("pillStatus").textContent = "Aperçu 👁️";
+    if($("who")) $("who").textContent = "Accès réel non confirmé.";
+
+    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id=>{
+      if($(id)) $(id).disabled = true;
+    });
+
     render();
-    show("✅ Nouveau lien ajouté (pense à Enregistrer).", "ok");
-  });
 
-  $("btnSort").addEventListener("click", ()=>{
-    LINKS = validateLinks(LINKS);
-    render();
-    show("✅ Tri + nettoyage appliqués (pense à Enregistrer).", "ok");
-  });
-
-  $("btnReset").addEventListener("click", ()=>{
-    if(!confirm("Vider la liste ?")) return;
-    LINKS = [];
-    render();
-    show("Liste vidée. Clique Enregistrer pour appliquer.", "warn");
-  });
-
-  $("btnLoad").addEventListener("click", loadLinks);
-  $("btnSave").addEventListener("click", saveLinks);
-
-  // =========================
-  // INIT session banner
-  // =========================
-  const sess = window.DIGIY_GUARD?.getSession?.() || null;
-  const phone = normPhone(sess?.phone || "");
-  $("pillStatus").textContent = sess?.ok ? "Connecté ✅" : "Non connecté ❌";
-  $("who").textContent = sess?.ok
-    ? ("Téléphone: " + phone + " · PIN auto: " + pin4FromPhone(phone) + " · (PIN4 = contrôle rapide, pas un secret)")
-    : "Session absente. Retourne sur PIN et reconnecte-toi.";
-
-  render();
-
-  if(!slug) show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
-  else if(!sess?.ok) show("❌ Session manquante. Reconnecte-toi via PIN.", "bad");
-  else {
-    show("✅ Prêt. Chargement auto…", "ok");
-    loadLinks();
+    show(
+      reason === "slug_missing"
+        ? "👁️ Aucun slug détecté. Tu vois un aperçu propre."
+        : reason === "has_access_false"
+        ? "👁️ Slug présent mais accès non actif. Passe par PIN pour modifier les liens."
+        : "👁️ Mode aperçu. Les actions d’écriture sont désactivées.",
+      "warn"
+    );
   }
+
+  function setLiveUi(){
+    UX_MODE = "live";
+    UX_REASON = "ok";
+
+    const phone = getPhone();
+    if($("pillStatus")) $("pillStatus").textContent = "Connecté ✅";
+    if($("who")) $("who").textContent =
+      "Téléphone: " + phone + " · PIN4 auto: " + pin4FromPhone(phone) + " · (PIN4 = contrôle rapide, pas un secret)";
+
+    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id=>{
+      if($(id)) $(id).disabled = false;
+    });
+
+    show("✅ Prêt. Chargement auto…", "ok");
+  }
+
+  function initStaticUi(){
+    const slug = getSlug();
+
+    if($("pillSlug")) $("pillSlug").textContent = "slug : " + (slug || "—");
+
+    const PAGE_APP = "./app.html";
+    const PAGE_PUBLIC = "./go-pin-public.html";
+    const PAGE_PIN = "./pin.html";
+
+    const appUrl = new URL(PAGE_APP, location.href);
+    const publicUrl = new URL(PAGE_PUBLIC, location.href);
+    const pinUrl = new URL(PAGE_PIN, location.href);
+
+    if(slug){
+      appUrl.searchParams.set("slug", slug);
+      publicUrl.searchParams.set("slug", slug);
+      pinUrl.searchParams.set("slug", slug);
+    }
+
+    if($("btnBack")) $("btnBack").href = appUrl.toString();
+    if($("btnOpenApp")) $("btnOpenApp").href = appUrl.toString();
+    if($("btnOpenPublic")) $("btnOpenPublic").href = publicUrl.toString();
+    if($("btnOpenPin")) $("btnOpenPin").href = pinUrl.toString();
+
+    if($("btnCopyAll")){
+      $("btnCopyAll").addEventListener("click", async ()=>{
+        const pack =
+`DIGIY URLs
+slug: ${slug || "—"}
+
+APP: ${appUrl.toString()}
+PUBLIC: ${publicUrl.toString()}
+PIN: ${pinUrl.toString()}
+`;
+        const ok = await copyText(pack);
+        show(ok ? "✅ URLs copiées." : "❌ Copie impossible.", ok ? "ok" : "bad");
+      });
+    }
+
+    const qrPro = new URL(QR_PRO_BASE);
+    if(slug) qrPro.searchParams.set("slug", slug);
+
+    if($("qrProUrl")) $("qrProUrl").textContent = qrPro.toString();
+    if($("qrInfo")) $("qrInfo").textContent = "QR-PRO centralise tes QR (app/public/pin).";
+
+    function openQrPro(type){
+      const u = new URL(QR_PRO_BASE);
+      if(slug) u.searchParams.set("slug", slug);
+      if(type) u.searchParams.set("t", type);
+      window.open(u.toString(), "_blank", "noopener,noreferrer");
+      if($("qrInfo")) $("qrInfo").textContent = "Ouvert QR-PRO (" + (type || "—") + ") → " + u.toString();
+    }
+
+    $("btnQrApp")?.addEventListener("click", ()=> openQrPro("app"));
+    $("btnQrPublic")?.addEventListener("click", ()=> openQrPro("public"));
+    $("btnQrPin")?.addEventListener("click", ()=> openQrPro("pin"));
+
+    $("btnCopyQr")?.addEventListener("click", async ()=>{
+      const ok = await copyText(qrPro.toString());
+      show(ok ? "✅ Lien QR-PRO copié." : "❌ Copie impossible.", ok ? "ok" : "bad");
+    });
+
+    $("btnAdd")?.addEventListener("click", ()=>{
+      if(!isLive()){
+        show("👁️ Passe par PIN pour ajouter un lien.", "warn");
+        return;
+      }
+      LINKS.push({
+        order: nextOrder(),
+        label:"WhatsApp",
+        url:"https://wa.me/221XXXXXXXXX",
+        active:true
+      });
+      render();
+      show("✅ Nouveau lien ajouté (pense à Enregistrer).", "ok");
+    });
+
+    $("btnSort")?.addEventListener("click", ()=>{
+      if(!isLive()){
+        show("👁️ En aperçu, tri désactivé.", "warn");
+        return;
+      }
+      LINKS = validateLinks(LINKS);
+      render();
+      show("✅ Tri + nettoyage appliqués (pense à Enregistrer).", "ok");
+    });
+
+    $("btnReset")?.addEventListener("click", ()=>{
+      if(!isLive()){
+        show("👁️ En aperçu, reset désactivé.", "warn");
+        return;
+      }
+      if(!confirm("Vider la liste ?")) return;
+      LINKS = [];
+      render();
+      show("Liste vidée. Clique Enregistrer pour appliquer.", "warn");
+    });
+
+    $("btnLoad")?.addEventListener("click", loadLinks);
+    $("btnSave")?.addEventListener("click", saveLinks);
+  }
+
+  async function init(){
+    initStaticUi();
+    render();
+
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      show("❌ Guard absent ou non chargé.", "bad");
+      return;
+    }
+
+    try{
+      await window.DIGIY_GUARD.ready;
+    }catch(e){
+      show("❌ Guard non prêt.", "bad");
+      return;
+    }
+
+    const st = getGuardState();
+    const slug = getSlug();
+
+    if(!slug){
+      setPreviewUi("slug_missing");
+      return;
+    }
+
+    if(!st.access_ok){
+      setPreviewUi(st.reason || "preview");
+      return;
+    }
+
+    setLiveUi();
+    await loadLinks();
+  }
+
+  init();
 })();
 </script>
 </body>
