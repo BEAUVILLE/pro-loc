@@ -101,68 +101,133 @@
 
 <script>
 (async () => {
-  // =========================
-  // ✅ GUARD COMPAT (même clés que guard.js)
-  // =========================
+  "use strict";
+
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-  
-  const SESSION_KEY = "DIGIY_LOC_PRO_SESSION"; // ✅ MÊME CLÉ que guard.js
-  const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8h
+
+  const MODULE = "LOC";
   const NEXT_URL = "app.html";
+  const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
+  const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8h
+
+  const STORAGE_SLUG_KEY = "digiy_loc_slug";
+  const STORAGE_LAST_SLUG = "digiy_last_slug";
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const $ = (id) => document.getElementById(id);
 
-  const $ = (id)=>document.getElementById(id);
-
-  // slug depuis URL ?slug=
   const url = new URL(location.href);
-  const slug = (url.searchParams.get("slug") || "").trim().toLowerCase();
+  const slug = String(url.searchParams.get("slug") || "").trim().toLowerCase();
 
   $("slugBox").textContent = slug || "—";
-  $("subtitle").textContent = slug ? "Accès sécurisé — PIN requis" : "SLUG manquant";
+  $("subtitle").textContent = slug
+    ? "Accès sécurisé — PIN requis"
+    : "SLUG manquant";
 
-  const msg = (html)=>{ $("msg").innerHTML = html; };
+  function msg(html) {
+    $("msg").innerHTML = html;
+  }
 
-  if(!slug){
+  function now() {
+    return Date.now();
+  }
+
+  function lsSet(k, v) {
+    try { localStorage.setItem(k, String(v ?? "")); } catch {}
+  }
+
+  function lsRemove(k) {
+    try { localStorage.removeItem(k); } catch {}
+  }
+
+  function safeJsonParse(x) {
+    try { return typeof x === "string" ? JSON.parse(x) : x; }
+    catch { return null; }
+  }
+
+  function normalizeResult(raw) {
+    const r = safeJsonParse(raw) || {};
+
+    return {
+      ok: !!r.ok,
+      owner_id: r.owner_id || r.ownerId || r.pro_id || r.id || "",
+      phone: r.phone || r.pro_phone || "",
+      title: r.title || r.business_name || r.name || "",
+      business_name: r.business_name || r.title || r.name || "",
+      business_code: r.business_code || r.code || "TEST",
+      slug: r.slug || slug || "",
+      module: (r.module || MODULE || "").toUpperCase(),
+      error: r.error || ""
+    };
+  }
+
+  function saveSession(raw) {
+    const data = normalizeResult(raw);
+
+    const session = {
+      ok: true,
+      module: MODULE,
+      owner_id: data.owner_id,
+      slug: data.slug || slug,
+      phone: data.phone || "",
+      title: data.title || "",
+      business_name: data.business_name || "",
+      business_code: data.business_code || "TEST",
+      created_at: now(),
+      expires_at: now() + SESSION_TTL_MS
+    };
+
+    // session brute
+    lsSet(SESSION_KEY, JSON.stringify(session));
+
+    // slug memory pour le nouveau guard
+    lsSet(STORAGE_SLUG_KEY, session.slug);
+    lsSet(STORAGE_LAST_SLUG, session.slug);
+    lsSet("DIGIY_SLUG", session.slug);
+
+    // owner context attendu par le cockpit LOC
+    lsSet("DIGIY_LOC_OWNER_ID", session.owner_id);
+    lsSet("digiy_loc_owner_id", session.owner_id);
+    lsSet("DIGIY_OWNER_ID", session.owner_id);
+    lsSet("owner_id", session.owner_id);
+
+    // business context
+    lsSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
+    lsSet("DIGIY_BUSINESS_CODE", session.business_code);
+
+    if (session.business_name) {
+      lsSet("DIGIY_LOC_BUSINESS_NAME", session.business_name);
+      lsSet("DIGIY_BUSINESS_NAME", session.business_name);
+      lsSet("DIGIY_TITLE", session.business_name);
+    } else {
+      lsRemove("DIGIY_LOC_BUSINESS_NAME");
+    }
+
+    // phone / compat
+    if (session.phone) {
+      lsSet("DIGIY_PHONE", session.phone);
+      lsSet("DIGIY_LOC_PHONE", session.phone);
+    }
+
+    // compat ancien monde
+    lsSet("DIGIY_PRO_ID", session.owner_id);
+
+    return session;
+  }
+
+  if (!slug) {
     msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton lien GO PIN (avec ?slug=...).`);
     $("go").disabled = true;
     return;
   }
 
-  setTimeout(()=>$("pin").focus(), 150);
+  setTimeout(() => $("pin").focus(), 150);
 
-  function now(){ return Date.now(); }
-
-  function lsSet(k,v){
-    try{ localStorage.setItem(k, String(v ?? "")); }catch(_){}
-  }
-
-  function saveSession(data){
-    // ✅ MÊME FORMAT que guard.js
-    const session = {
-      ok: true,
-      owner_id: data.owner_id,
-      slug: slug,
-      title: data.title || "",
-      phone: data.phone || "",
-      created_at: now(),
-      expires_at: now() + SESSION_TTL_MS
-    };
-
-    // ✅ CLÉ PRINCIPALE (guard.js)
-    lsSet(SESSION_KEY, JSON.stringify(session));
-
-    // ✅ Sync LS utiles
-    lsSet("DIGIY_PRO_ID", session.owner_id);
-    lsSet("DIGIY_SLUG", session.slug);
-    if(session.title) lsSet("DIGIY_TITLE", session.title);
-    if(session.phone) lsSet("DIGIY_PHONE", session.phone);
-  }
-
-  async function enter(){
+  async function enter() {
     const pin = $("pin").value.trim();
-    if(pin.length < 3){
+
+    if (pin.length < 3) {
       msg(`<span class="bad">❌ PIN invalide.</span>`);
       return;
     }
@@ -170,32 +235,47 @@
     $("go").disabled = true;
     msg(`Vérification en cours…`);
 
-    // ✅ MÊME RPC que guard.js (verify_access_pin)
-    const { data, error } = await sb.rpc("verify_access_pin", {
+    // 1) tentative RPC générique actuelle
+    let rpcData = null;
+    let rpcError = null;
+
+    ({ data: rpcData, error: rpcError } = await sb.rpc("verify_access_pin", {
       p_slug: slug,
       p_pin: pin
-    });
+    }));
 
-    if(error){
+    // 2) fallback LOC dédié si plus tard tu poses loc_pin_login
+    if (rpcError || !normalizeResult(rpcData)?.ok) {
+      const fallback = await sb.rpc("loc_pin_login", {
+        p_slug: slug,
+        p_pin: pin
+      }).catch(() => ({ data: null, error: null }));
+
+      if (fallback && fallback.data) {
+        rpcData = fallback.data;
+        rpcError = fallback.error || null;
+      }
+    }
+
+    if (rpcError) {
       $("go").disabled = false;
-      msg(`<span class="bad">❌ Erreur.</span><br>${String(error.message || error)}`);
+      msg(`<span class="bad">❌ Erreur.</span><br>${String(rpcError.message || rpcError)}`);
       return;
     }
 
-    // Parse si string
-    const result = typeof data === "string" ? JSON.parse(data) : data;
+    const result = normalizeResult(rpcData);
 
-    if(!result?.ok || !result?.owner_id){
+    if (!result.ok || !result.owner_id) {
       $("go").disabled = false;
-      msg(`<span class="bad">❌ Accès refusé.</span><br>${result?.error || "PIN incorrect"}`);
+      msg(`<span class="bad">❌ Accès refusé.</span><br>${result.error || "PIN incorrect ou owner_id manquant"}`);
       return;
     }
 
-    // ✅ Sauvegarde session (compat guard)
     saveSession(result);
+
     msg(`<span class="ok">✅ Accès validé.</span> Ouverture de ton espace…`);
 
-    setTimeout(()=>{
+    setTimeout(() => {
       const next = new URL(NEXT_URL, location.href);
       next.searchParams.set("slug", slug);
       location.href = next.toString();
@@ -203,10 +283,9 @@
   }
 
   $("go").addEventListener("click", enter);
-  $("pin").addEventListener("keydown", (e)=>{
-    if(e.key === "Enter") enter();
+  $("pin").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") enter();
   });
-
 })();
 </script>
 </body>
