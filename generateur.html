@@ -1,17 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
 <meta charset="utf-8">
 <title>🔥 GÉNÉRATEUR DIGIY LOC - Créer une fiche logement en 2 min ! 🔥</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
 <script>
   window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   window.DIGIY_SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 </script>
 
+<!-- ✅ Supabase + Guard (UN SEUL client, créé par le guard) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=generator-final-loc-v8"></script>
-</script>
-<script src="./guard.js?v=generator-final-loc-v5"></script>
+<script src="./guard.js?v=generator-final-loc-v9"></script>
 
 <style>
 :root{
@@ -203,6 +206,7 @@ textarea{
   background:rgba(239,68,68,.08);
   color:#fecaca;
   font-weight:700;
+  white-space:pre-wrap;
 }
 .error-box.show{ display:block; }
 .info-box{
@@ -214,6 +218,7 @@ textarea{
   background:rgba(250,204,21,.08);
   color:#fde68a;
   font-weight:700;
+  white-space:pre-wrap;
 }
 .info-box.show{ display:block; }
 </style>
@@ -255,7 +260,7 @@ textarea{
           <div class="form-group">
             <label>Capacité max (info vitrine)</label>
             <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20">
-            <div class="hint">Gardé dans le formulaire pour plus tard, mais non envoyé au RPC actuel.</div>
+            <div class="hint">Gardé pour plus tard, non envoyé au RPC actuel.</div>
           </div>
 
           <div class="form-group">
@@ -309,7 +314,7 @@ textarea{
           <div class="form-group full">
             <label>URL de la photo principale <span class="required">*</span></label>
             <input type="url" name="photo_url" id="photo_url" placeholder="https://..." required>
-            <div class="hint">Upload d'abord sur orange-pig-270004.hostingersite.com, puis colle l'URL</div>
+            <div class="hint">Upload d'abord sur ton hébergement, puis colle l'URL</div>
           </div>
         </div>
 
@@ -393,6 +398,17 @@ textarea{
     infoBox.classList.remove("show");
   }
 
+  function errText(err){
+    if (!err) return "Erreur inconnue";
+    if (typeof err === "string") return err;
+    if (err.message) return err.message;
+    if (err.error_description) return err.error_description;
+    if (err.details) return err.details;
+    if (err.hint) return err.hint;
+    try { return JSON.stringify(err, null, 2); } catch {}
+    return String(err);
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
@@ -404,10 +420,7 @@ textarea{
   }
 
   function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || null;
+    return window.DIGIY_GUARD?.getSb?.() || window.sb || null;
   }
 
   async function waitGuardReady(){
@@ -621,11 +634,14 @@ textarea{
         p_is_public: true
       });
 
-      if(error) throw error;
+      console.log("RPC loc_create_room data:", data);
+      console.log("RPC loc_create_room error:", error);
+
+      if (error) throw error;
 
       const result = typeof data === "string" ? JSON.parse(data) : data;
 
-      if(!result?.ok){
+      if (!result?.ok) {
         throw new Error(result?.message || result?.error || "Création impossible");
       }
 
@@ -659,8 +675,8 @@ textarea{
       info.textContent = "Slug logement : " + roomSlug;
 
     } catch(err) {
-      console.error("❌ Erreur:", err);
-      showError("❌ " + (err?.message || String(err)));
+      console.error("❌ Erreur complète:", err);
+      showError("❌ " + errText(err));
       btnSubmit.disabled = false;
       btnSubmit.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
     }
