@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=generator-final-loc"></script>
+<script src="./guard.js?v=generator-final-loc-v2"></script>
 
 <style>
 :root{
@@ -237,18 +237,19 @@ textarea{
           </div>
 
           <div class="form-group">
-            <label>Capacité max (personnes) <span class="required">*</span></label>
-            <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20" required>
+            <label>Capacité max (info vitrine)</label>
+            <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20">
+            <div class="hint">Gardé dans le formulaire pour plus tard, mais non envoyé au RPC actuel.</div>
           </div>
 
           <div class="form-group">
             <label>Type de logement</label>
             <select name="type_logement" id="type_logement">
-              <option>Appartement</option>
-              <option>Villa</option>
-              <option>Studio</option>
-              <option>Maison</option>
-              <option>Chambre</option>
+              <option value="Appartement">Appartement</option>
+              <option value="Villa">Villa</option>
+              <option value="Studio">Studio</option>
+              <option value="Maison">Maison</option>
+              <option value="Chambre">Chambre</option>
             </select>
           </div>
         </div>
@@ -298,7 +299,7 @@ textarea{
 
         <div class="error-box" id="errorBox"></div>
 
-        <button class="btn btn-generate" type="submit">
+        <button class="btn btn-generate" type="submit" id="btnSubmit">
           🚀 CRÉER LA FICHE LOGEMENT
         </button>
 
@@ -332,13 +333,13 @@ textarea{
 (async function(){
   "use strict";
 
-  const MODULE = "LOC";
   const loading = document.getElementById("loading");
   const app = document.getElementById("app");
   const form = document.getElementById("formLogement");
   const successMsg = document.getElementById("successMsg");
   const btnBack = document.getElementById("btnBack");
   const btnRetour = document.getElementById("btnRetour");
+  const btnSubmit = document.getElementById("btnSubmit");
   const errorBox = document.getElementById("errorBox");
 
   const publicLinkBox = document.getElementById("publicLinkBox");
@@ -346,11 +347,9 @@ textarea{
   const btnCopy = document.getElementById("btnCopy");
 
   const State = {
-    ownerId: null,
+    proSlug: "",
     phone: "",
-    slug: "",
-    business_code: "TEST",
-    business_name: "",
+    businessName: "",
     mode: "preview",
     reason: "booting"
   };
@@ -390,17 +389,16 @@ textarea{
   }
 
   function withSlug(url){
-    const slug = State.slug || getGuardState().slug || "";
-    if(!slug) return url;
+    const proSlug = State.proSlug || "";
+    if(!proSlug) return url;
 
     try{
       const u = new URL(url, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", proSlug);
+      return u.origin === location.origin ? (u.pathname + u.search + u.hash) : u.toString();
     }catch{
       const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(slug);
+      return url + sep + "slug=" + encodeURIComponent(proSlug);
     }
   }
 
@@ -414,8 +412,12 @@ textarea{
     catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
   }
 
+  function goBack(){
+    location.href = withSlug("./app.html");
+  }
+
   function isLive(){
-    return State.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
+    return State.mode === "live" && !!State.proSlug;
   }
 
   function disableFormForPreview(reason){
@@ -428,16 +430,13 @@ textarea{
 
     showError(
       reason === "slug_missing"
-        ? "👁️ Mode aperçu : aucun slug détecté. Passe par le lien GO PIN."
+        ? "👁️ Mode aperçu : aucun slug LOC détecté. Passe par le lien GO PIN."
         : reason === "has_access_false"
-        ? "👁️ Mode aperçu : slug présent mais accès non actif. Passe par PIN ou active l’accès."
-        : reason === "owner_unresolved"
-        ? "👁️ Mode aperçu : owner_id non résolu. La fiche ne peut pas être créée tant que le contexte propriétaire n’est pas complet."
+        ? "👁️ Mode aperçu : accès LOC non actif. Passe par PIN ou active l’abonnement."
         : "👁️ Mode aperçu : connexion PIN requise pour créer une fiche logement."
     );
 
-    const submit = form.querySelector(".btn-generate");
-    if(submit) submit.textContent = "🔒 MODE APERÇU";
+    btnSubmit.textContent = "🔒 MODE APERÇU";
 
     if(!document.getElementById("previewHelper")){
       const helper = document.createElement("div");
@@ -465,88 +464,30 @@ textarea{
     const helper = document.getElementById("previewHelper");
     if(helper) helper.remove();
 
-    const submit = form.querySelector(".btn-generate");
-    if(submit) submit.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
+    btnSubmit.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
   }
 
-  function normalizeOwnerContext(raw){
-    if (!raw || typeof raw !== "object") return null;
-
-    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
-    if (!owner_id) return null;
-
-    return {
-      owner_id,
-      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
-      business_name: raw.business_name || raw.businessName || raw.name || ""
-    };
+  function numOrNull(v){
+    const s = String(v || "").trim();
+    if(!s) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
   }
 
-  function ownerContextFromStorage(){
-    const owner_id =
-      localStorage.getItem("DIGIY_LOC_OWNER_ID") ||
-      localStorage.getItem("digiy_loc_owner_id") ||
-      localStorage.getItem("DIGIY_OWNER_ID") ||
-      localStorage.getItem("owner_id") ||
+  function hydrateReadonlyFields(){
+    const ownerNameEl = document.getElementById("owner_name");
+    const phoneEl = document.getElementById("phone");
+
+    ownerNameEl.value =
+      localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
+      localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+      "Propriétaire";
+
+    phoneEl.value =
+      State.phone ||
+      localStorage.getItem("DIGIY_PHONE") ||
+      localStorage.getItem("DIGIY_LOC_PHONE") ||
       "";
-
-    if (!owner_id) return null;
-
-    return normalizeOwnerContext({
-      owner_id,
-      business_code:
-        localStorage.getItem("DIGIY_LOC_BUSINESS_CODE") ||
-        localStorage.getItem("DIGIY_BUSINESS_CODE") ||
-        "TEST",
-      business_name:
-        localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
-        localStorage.getItem("DIGIY_BUSINESS_NAME") ||
-        ""
-    });
-  }
-
-  async function ownerContextFromRpc(){
-    if (!window.DIGIY_GUARD?.rpc) return null;
-
-    const attempts = [
-      "digiy_loc_owner_context",
-      "digiy_loc_get_owner_context",
-      "digiy_loc_resolve_owner_context"
-    ];
-
-    for (const fn of attempts) {
-      try {
-        const data = await window.DIGIY_GUARD.rpc(fn, {
-          p_phone: State.phone || "",
-          p_slug: State.slug || "",
-          p_module: MODULE
-        });
-
-        const ctx = normalizeOwnerContext(data);
-        if (ctx?.owner_id) return ctx;
-      } catch (_) {}
-    }
-
-    return null;
-  }
-
-  async function resolveOwnerContext(){
-    const fromStorage = ownerContextFromStorage();
-    if (fromStorage?.owner_id) return fromStorage;
-
-    const fromRpc = await ownerContextFromRpc();
-    if (fromRpc?.owner_id) {
-      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-      try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
-      try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
-      return fromRpc;
-    }
-
-    return null;
-  }
-
-  function goBack(){
-    location.href = withSlug("./app.html");
   }
 
   btnBack?.addEventListener("click", goBack);
@@ -564,42 +505,39 @@ textarea{
     return;
   }
 
+  const qs = new URLSearchParams(location.search);
   const st = getGuardState();
-  State.phone = st.phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "";
-  State.slug = st.slug || "";
-  State.reason = st.reason || "preview";
 
-  document.getElementById("phone").value = State.phone || "";
-  document.getElementById("owner_name").value =
-    localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
-    localStorage.getItem("DIGIY_BUSINESS_NAME") ||
-    "Propriétaire";
+  State.phone =
+    st.phone ||
+    localStorage.getItem("DIGIY_PHONE") ||
+    localStorage.getItem("DIGIY_LOC_PHONE") ||
+    "";
+
+  State.proSlug =
+    (qs.get("pro_slug") || "").trim() ||
+    (qs.get("slug") || "").trim() ||
+    (st.slug || "").trim() ||
+    (localStorage.getItem("digiy_loc_pro_slug") || "").trim();
+
+  if(State.proSlug){
+    try { localStorage.setItem("digiy_loc_pro_slug", State.proSlug); } catch {}
+  }
+
+  hydrateReadonlyFields();
 
   loading.style.display = "none";
   app.style.display = "block";
 
+  if(!State.proSlug){
+    disableFormForPreview("slug_missing");
+    return;
+  }
+
   if(!st.access_ok){
-    disableFormForPreview(State.reason || "preview");
+    disableFormForPreview("has_access_false");
     return;
   }
-
-  const ctx = await resolveOwnerContext();
-
-  if(!ctx?.owner_id){
-    disableFormForPreview("owner_unresolved");
-    return;
-  }
-
-  State.ownerId = ctx.owner_id;
-  State.business_code = ctx.business_code || "TEST";
-  State.business_name = ctx.business_name || "";
-
-  try {
-    if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name);
-  } catch {}
-
-  document.getElementById("owner_name").value = State.business_name || "Propriétaire";
-  document.getElementById("phone").value = State.phone || "";
 
   enableFormForLive();
 
@@ -612,9 +550,8 @@ textarea{
       return;
     }
 
-    const btn = form.querySelector(".btn-generate");
-    btn.disabled = true;
-    btn.textContent = "⏳ Création en cours...";
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "⏳ Création en cours...";
 
     try {
       const sb = getSB();
@@ -633,36 +570,25 @@ textarea{
       if(!description) throw new Error("Description requise");
       if(!photo_url) throw new Error("URL photo requise");
 
-      const personnes_max = parseInt(fd.get("personnes_max") || "4", 10);
-      const prix_nuit = parseInt(fd.get("prix_nuit") || "0", 10);
+      const prix_nuit = numOrNull(fd.get("prix_nuit"));
+      const prix_semaine = numOrNull(fd.get("prix_semaine"));
+      const prix_mois = numOrNull(fd.get("prix_mois"));
 
-      if(!Number.isFinite(personnes_max) || personnes_max < 1) throw new Error("Capacité invalide");
-      if(!Number.isFinite(prix_nuit) || prix_nuit <= 0) throw new Error("Prix/nuit invalide");
-
-      const prix_semaine_raw = String(fd.get("prix_semaine") || "").trim();
-      const prix_mois_raw = String(fd.get("prix_mois") || "").trim();
-
-      const prix_semaine = prix_semaine_raw ? parseInt(prix_semaine_raw, 10) : null;
-      const prix_mois = prix_mois_raw ? parseInt(prix_mois_raw, 10) : null;
+      if(!Number.isFinite(prix_nuit) || prix_nuit <= 0){
+        throw new Error("Prix / nuit invalide");
+      }
 
       const { data, error } = await sb.rpc("loc_create_room", {
-        p_owner_id: State.ownerId,
+        p_pro_slug: State.proSlug,
         p_nom: nom,
+        p_type_logement: type_logement || null,
         p_adresse: adresse,
-        p_personnes_max: personnes_max,
+        p_description: description,
         p_prix_nuit: prix_nuit,
         p_prix_semaine: prix_semaine,
         p_prix_mois: prix_mois,
-        p_description: description,
         p_photo_url: photo_url,
-        p_phone: State.phone || null,
-        p_business_code: State.business_code || null,
-        p_status: "actif",
-        p_keybox_enabled: false,
-        p_keybox_code: null,
-        p_keybox_location: null,
-        p_access_note: null,
-        p_type_logement: type_logement || null
+        p_is_public: true
       });
 
       if(error) throw error;
@@ -670,18 +596,20 @@ textarea{
       const result = typeof data === "string" ? JSON.parse(data) : data;
 
       if(!result?.ok){
-        throw new Error(result?.error || "Création impossible");
+        throw new Error(result?.message || result?.error || "Création impossible");
       }
+
+      try { localStorage.setItem("digiy_loc_last_room_slug", result.room_slug || ""); } catch {}
 
       form.style.display = "none";
       successMsg.classList.add("show");
 
-      const createdId = result?.id || "—";
+      const roomSlug = result?.room_slug || "—";
       const urlPublic = result?.public_url || "";
 
       publicLinkBox.style.display = "block";
 
-      if (urlPublic) {
+      if(urlPublic){
         publicLink.textContent = urlPublic;
         publicLink.href = urlPublic;
       } else {
@@ -689,26 +617,28 @@ textarea{
         publicLink.removeAttribute("href");
       }
 
-      const info = document.createElement("div");
-      info.style.marginTop = "10px";
-      info.style.fontWeight = "900";
-      info.style.color = "#bbf7d0";
-      info.textContent = "ID technique : " + createdId;
-      publicLinkBox.appendChild(info);
+      let info = document.getElementById("createdRoomInfo");
+      if(!info){
+        info = document.createElement("div");
+        info.id = "createdRoomInfo";
+        info.style.marginTop = "10px";
+        info.style.fontWeight = "900";
+        info.style.color = "#bbf7d0";
+        publicLinkBox.appendChild(info);
+      }
+      info.textContent = "Slug logement : " + roomSlug;
 
     } catch(err) {
       console.error("❌ Erreur:", err);
-      const m = err?.message || String(err);
-      showError("❌ " + m);
-
-      btn.disabled = false;
-      btn.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
+      showError("❌ " + (err?.message || String(err)));
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
     }
   });
 
   btnCopy?.addEventListener("click", async () => {
     try{
-      if (!publicLink?.href) {
+      if (!publicLink?.href || publicLink.href === "#") {
         alert("Pas encore de lien public disponible.");
         return;
       }
