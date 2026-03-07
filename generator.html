@@ -404,7 +404,9 @@ textarea{
   const publicLink = document.getElementById("publicLink");
   const btnCopy = document.getElementById("btnCopy");
 
-  // ✅ adapte si besoin
+  // ✅ Si ta vitrine ouvre une fiche par ID, laisse true et adapte la route
+  // ✅ Si ta vitrine n'est pas encore branchée, mets false
+  const PUBLIC_LINK_BY_ID = false;
   const PUBLIC_BASE = "https://digiyloc.com";
 
   const State = {
@@ -413,7 +415,7 @@ textarea{
     slug: "",
     business_code: "TEST",
     business_name: "",
-    mode: "preview", // preview | live
+    mode: "preview",
     reason: "booting"
   };
 
@@ -478,7 +480,7 @@ textarea{
     State.reason = reason || "preview";
 
     form.querySelectorAll("input, textarea, select, button[type='submit']").forEach(el => {
-      if(el.id !== "btnBack" && el.id !== "btnRetour") el.disabled = true;
+      el.disabled = true;
     });
 
     showError(
@@ -516,20 +518,6 @@ textarea{
 
     const submit = form.querySelector(".btn-generate");
     if(submit) submit.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
-  }
-
-  function makeSlug(str){
-    return String(str || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 90);
-  }
-
-  function uniqSuffix(){
-    return Math.random().toString(36).slice(2, 6);
   }
 
   function normalizeOwnerContext(raw){
@@ -632,7 +620,6 @@ textarea{
   State.slug = st.slug || "";
   State.reason = st.reason || "preview";
 
-  // pré-remplissage léger avant affichage
   document.getElementById("phone").value = State.phone || "";
   document.getElementById("owner_name").value =
     localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
@@ -685,13 +672,12 @@ textarea{
       const fd = new FormData(form);
 
       const nom = String(fd.get("nom") || "").trim();
-      const ville = String(fd.get("adresse") || "").trim();
+      const adresse = String(fd.get("adresse") || "").trim();
       const description = String(fd.get("description") || "").trim();
       const photo_url = String(fd.get("photo_url") || "").trim();
-      const type_logement = String(fd.get("type_logement") || "Appartement").trim();
 
       if(!nom) throw new Error("Nom du logement requis");
-      if(!ville) throw new Error("Ville requise");
+      if(!adresse) throw new Error("Ville / adresse requise");
       if(!description) throw new Error("Description requise");
       if(!photo_url) throw new Error("URL photo requise");
 
@@ -701,75 +687,68 @@ textarea{
       if(!Number.isFinite(personnes_max) || personnes_max < 1) throw new Error("Capacité invalide");
       if(!Number.isFinite(prix_nuit) || prix_nuit <= 0) throw new Error("Prix/nuit invalide");
 
-      const prix_semaine = String(fd.get("prix_semaine") || "").trim();
-      const prix_mois = String(fd.get("prix_mois") || "").trim();
+      const prix_semaine_raw = String(fd.get("prix_semaine") || "").trim();
+      const prix_mois_raw = String(fd.get("prix_mois") || "").trim();
 
-      const baseSlug = makeSlug(nom + "-" + ville);
-      const finalSlugSeed = baseSlug || ("logement-" + uniqSuffix());
+      const prix_semaine = prix_semaine_raw ? parseInt(prix_semaine_raw, 10) : null;
+      const prix_mois = prix_mois_raw ? parseInt(prix_mois_raw, 10) : null;
 
-      const payloadBase = {
-        owner_id: State.ownerId,
-        owner_slug: State.slug || null,
-        nom,
-        adresse: ville,
-        type_logement,
-        personnes_max,
-        prix_nuit,
-        prix_semaine: prix_semaine ? parseInt(prix_semaine, 10) : null,
-        prix_mois: prix_mois ? parseInt(prix_mois, 10) : null,
-        description,
-        photo_url,
-        phone: State.phone || null,
-        status: "actif",
-        is_public: true
-      };
+      const { data, error } = await sb.rpc("loc_create_room", {
+        p_owner_id: State.ownerId,
+        p_nom: nom,
+        p_adresse: adresse,
+        p_personnes_max: personnes_max,
+        p_prix_nuit: prix_nuit,
+        p_prix_semaine: prix_semaine,
+        p_prix_mois: prix_mois,
+        p_description: description,
+        p_photo_url: photo_url,
+        p_phone: State.phone || null,
+        p_business_code: State.business_code || null,
+        p_status: "actif",
+        p_keybox_enabled: false,
+        p_keybox_code: null,
+        p_keybox_location: null,
+        p_access_note: null
+      });
 
-      async function tryInsert(slugTry, attempt){
-        const payload = { ...payloadBase, slug: slugTry };
+      if(error) throw error;
 
-        const { data, error } = await sb
-          .from("digiy_loc_rooms")
-          .insert(payload)
-          .select()
-          .single();
+      const result = typeof data === "string" ? JSON.parse(data) : data;
 
-        if(!error) return data;
-
-        const msg = String(error.message || "").toLowerCase();
-        const isConflict =
-          msg.includes("duplicate") ||
-          msg.includes("unique") ||
-          msg.includes("already exists") ||
-          msg.includes("violates unique constraint");
-
-        if(isConflict && attempt < 2){
-          return await tryInsert(finalSlugSeed + "-" + uniqSuffix(), attempt + 1);
-        }
-
-        throw error;
+      if(!result?.ok){
+        throw new Error(result?.error || "Création impossible");
       }
-
-      const created = await tryInsert(finalSlugSeed, 0);
 
       form.style.display = "none";
       successMsg.classList.add("show");
 
-      const slugCreated = created?.slug || finalSlugSeed;
-      const urlPublic = PUBLIC_BASE.replace(/\/+$/,"") + "/room/" + encodeURIComponent(slugCreated);
+      const createdId = result?.id || "—";
 
-      publicLink.textContent = urlPublic;
-      publicLink.href = urlPublic;
-      publicLinkBox.style.display = "block";
+      if (PUBLIC_LINK_BY_ID && createdId && createdId !== "—") {
+        const urlPublic =
+          PUBLIC_BASE.replace(/\/+$/,"") + "/room/" + encodeURIComponent(createdId);
+
+        publicLink.textContent = urlPublic;
+        publicLink.href = urlPublic;
+        publicLinkBox.style.display = "block";
+      } else {
+        publicLinkBox.style.display = "block";
+        publicLink.textContent = "Fiche créée — route publique à brancher";
+        publicLink.removeAttribute("href");
+      }
+
+      const info = document.createElement("div");
+      info.style.marginTop = "10px";
+      info.style.fontWeight = "900";
+      info.style.color = "#bbf7d0";
+      info.textContent = "ID technique : " + createdId;
+      publicLinkBox.appendChild(info);
 
     } catch(err) {
       console.error("❌ Erreur:", err);
       const m = err?.message || String(err);
-
-      if(m.toLowerCase().includes("row level security") || m.toLowerCase().includes("rls")){
-        showError("🚫 RLS bloque l’insert. Il faudra aligner la policy sur digiy_loc_rooms ou passer par RPC d’écriture.");
-      } else {
-        showError("❌ " + m);
-      }
+      showError("❌ " + m);
 
       btn.disabled = false;
       btn.textContent = "🚀 CRÉER LA FICHE LOGEMENT";
@@ -778,7 +757,11 @@ textarea{
 
   btnCopy?.addEventListener("click", async () => {
     try{
-      await navigator.clipboard.writeText(publicLink?.href || "");
+      if (!publicLink?.href) {
+        alert("Pas encore de lien public branché. La fiche est créée, mais la route publique doit être reliée.");
+        return;
+      }
+      await navigator.clipboard.writeText(publicLink.href || "");
       btnCopy.textContent = "✅ Copié";
       setTimeout(()=> btnCopy.textContent = "📋 Copier", 1200);
     }catch(e){
