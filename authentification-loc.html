@@ -53,16 +53,21 @@
     <button class="btn" id="btn">Entrer</button>
     <button class="btn2" id="btnForgot" type="button">❓ PIN oublié</button>
 
-    <div class="msg" id="msg">Entre ton téléphone + PIN.</div>
+    <div class="msg" id="msg">Initialisation…</div>
   </div>
 
   <script>
   (async function(){
-    // ✅ MODULE (reco: "loc" en minuscule, cohérent RPC)
-    const MODULE = "loc";
+    "use strict";
 
-    // ✅ Support WhatsApp (DIGIY LOC PRO PIN reset)
+    const MODULE = "LOC";
     const SUPPORT_WA = "+221771342889";
+    const NEXT_URL = "./planning.html";
+    const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+
+    const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
+    const STORAGE_SLUG_KEY = "digiy_loc_slug";
+    const STORAGE_LAST_SLUG = "digiy_last_slug";
 
     const msg = document.getElementById("msg");
     const btn = document.getElementById("btn");
@@ -87,89 +92,220 @@
       pinEl.disabled = v;
     }
 
-    function digitsOnly(v){ return String(v || "").replace(/\D/g, ""); }
-
-    function nextUrl(path){
-      return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
+    function digitsOnly(v){
+      return String(v || "").replace(/\D/g, "");
     }
 
-    // ✅ Guard présent ?
-    if(!window.DIGIY_GUARD){
-      setMsg("❌ Guard absent. Vérifie que ./guard.js est bien chargé.", "bad");
-      return;
-    }
-    if(typeof window.DIGIY_GUARD.boot !== "function"){
-      setMsg("❌ Guard incomplet: boot() manquant.", "bad");
-      return;
-    }
-    if(typeof window.DIGIY_GUARD.loginWithPin !== "function"){
-      setMsg("❌ Guard incomplet: loginWithPin() manquant.", "bad");
-      return;
+    function normPhone(v){
+      let d = digitsOnly(v);
+      if (d.startsWith("00")) d = d.slice(2);
+      if (d.startsWith("221") && d.length >= 12) return d;
+      if (d.length === 9) return "221" + d;
+      return d;
     }
 
-    // ✅ Boot guard (slug obligatoire + abonnement si tu veux)
-    setMsg("⏳ Initialisation…", "");
-    lock(true);
-
-    const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
-    const bootRes = await window.DIGIY_GUARD.boot({
-      module: MODULE,
-      login: "./pin.html",
-      dashboard: "./planning.html",     // destination après login
-      pay: PAY_URL,
-      requireSlug: true,
-      checkSubscription: true
-    });
-
-    // Si boot refuse -> guard gère souvent la redirection, sinon on affiche
-    if(!bootRes?.ok){
-      lock(false);
-      setMsg("🔒 Accès non ouvert.\n➡️ Vérifie le lien (slug) ou l’abonnement.", "bad");
-      return;
-    }
-
-    // slug UI
-    const slug = window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "";
-    pillSlug.textContent = "slug: " + (slug || "—");
-    if(!slug){
-      lock(false);
-      setMsg("⚠️ Slug manquant.\n➡️ Ouvre depuis GO PIN / galerie (lien avec ?slug=...).", "bad");
-      return;
-    }
-
-    // Prefill phone
-    try{
-      const p = window.DIGIY_GUARD.getPhone && window.DIGIY_GUARD.getPhone();
-      if(p) phoneEl.value = p;
-    }catch(_){}
-
-    // Si session déjà OK -> direct planning (mais seulement si ok + owner_id)
-    try{
-      const s = window.DIGIY_GUARD.getSession && window.DIGIY_GUARD.getSession();
-      if(s && s.ok === true && s.phone && (s.owner_id || s.ownerId)){
-        const next = nextUrl("./planning.html");
-        location.replace(next);
-        return;
+    function withSlug(path){
+      const slug = getSlug();
+      if(!slug) return path;
+      try{
+        const u = new URL(path, location.href);
+        if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+        if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+        return u.toString();
+      }catch{
+        const sep = path.includes("?") ? "&" : "?";
+        return path + sep + "slug=" + encodeURIComponent(slug);
       }
-    }catch(_){}
+    }
 
+    function now(){
+      return Date.now();
+    }
+
+    function lsSet(k,v){
+      try{ localStorage.setItem(k, String(v ?? "")); }catch(_){}
+    }
+
+    function lsRemove(k){
+      try{ localStorage.removeItem(k); }catch(_){}
+    }
+
+    function safeJsonParse(x){
+      try { return typeof x === "string" ? JSON.parse(x) : x; }
+      catch { return null; }
+    }
+
+    function getSlug(){
+      const st = window.DIGIY_GUARD?.state || {};
+      if (st.slug) return String(st.slug).trim();
+
+      try {
+        return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
+      } catch {
+        return "";
+      }
+    }
+
+    function getPinUrl(){
+      try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+      catch { return withSlug("./pin.html"); }
+    }
+
+    function getPayUrl(){
+      try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+      catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+    }
+
+    function normalizeResult(raw){
+      const r = safeJsonParse(raw) || {};
+
+      return {
+        ok: !!r.ok,
+        owner_id: r.owner_id || r.ownerId || r.pro_id || r.id || "",
+        phone: r.phone || r.pro_phone || "",
+        slug: r.slug || getSlug() || "",
+        title: r.title || r.business_name || r.name || "",
+        business_name: r.business_name || r.title || r.name || "",
+        business_code: r.business_code || r.code || "TEST",
+        error: r.error || r.reason || ""
+      };
+    }
+
+    function saveSession(raw){
+      const data = normalizeResult(raw);
+
+      const session = {
+        ok: true,
+        module: MODULE,
+        owner_id: data.owner_id,
+        slug: data.slug,
+        phone: data.phone || "",
+        title: data.title || "",
+        business_name: data.business_name || "",
+        business_code: data.business_code || "TEST",
+        created_at: now(),
+        expires_at: now() + SESSION_TTL_MS
+      };
+
+      lsSet(SESSION_KEY, JSON.stringify(session));
+
+      // slug memory
+      lsSet(STORAGE_SLUG_KEY, session.slug);
+      lsSet(STORAGE_LAST_SLUG, session.slug);
+      lsSet("DIGIY_SLUG", session.slug);
+
+      // owner context attendu par LOC cockpit
+      lsSet("DIGIY_LOC_OWNER_ID", session.owner_id);
+      lsSet("digiy_loc_owner_id", session.owner_id);
+      lsSet("DIGIY_OWNER_ID", session.owner_id);
+      lsSet("owner_id", session.owner_id);
+      lsSet("DIGIY_PRO_ID", session.owner_id);
+
+      // business context
+      lsSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
+      lsSet("DIGIY_BUSINESS_CODE", session.business_code);
+
+      if (session.business_name) {
+        lsSet("DIGIY_LOC_BUSINESS_NAME", session.business_name);
+        lsSet("DIGIY_BUSINESS_NAME", session.business_name);
+        lsSet("DIGIY_TITLE", session.business_name);
+      } else {
+        lsRemove("DIGIY_LOC_BUSINESS_NAME");
+      }
+
+      // phone
+      if (session.phone) {
+        lsSet("DIGIY_PHONE", session.phone);
+        lsSet("DIGIY_LOC_PHONE", session.phone);
+      }
+
+      return session;
+    }
+
+    async function callPinRpc(phone, pin){
+      const sb = window.DIGIY_GUARD?.getSb?.() || window.sb;
+      if (!sb) throw new Error("supabase_not_ready");
+
+      // priorité RPC dédiée LOC
+      try{
+        const { data, error } = await sb.rpc("loc_pin_login", {
+          p_phone: phone,
+          p_pin: pin,
+          p_slug: getSlug()
+        });
+        if (!error && data) return data;
+      }catch(_){}
+
+      // fallback RPC générique
+      const { data, error } = await sb.rpc("verify_access_pin", {
+        p_slug: getSlug(),
+        p_pin: pin
+      });
+
+      if (error) throw error;
+      return data;
+    }
+
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      setMsg("❌ Guard absent ou non chargé.", "bad");
+      return;
+    }
+
+    lock(true);
+    setMsg("⏳ Initialisation…");
+
+    try{
+      await window.DIGIY_GUARD.ready;
+    }catch(e){
+      setMsg("❌ Guard non prêt.", "bad");
+      lock(false);
+      return;
+    }
+
+    const slug = getSlug();
+    pillSlug.textContent = "slug: " + (slug || "—");
+
+    if(!slug){
+      setMsg("❌ SLUG manquant.\n➡️ Ouvre depuis ton lien GO PIN avec ?slug=...", "bad");
+      lock(false);
+      return;
+    }
+
+    // si déjà vivant avec owner stocké, on repart direct
+    const existingOwner =
+      localStorage.getItem("DIGIY_LOC_OWNER_ID") ||
+      localStorage.getItem("digiy_loc_owner_id") ||
+      localStorage.getItem("DIGIY_OWNER_ID") ||
+      localStorage.getItem("owner_id") ||
+      "";
+
+    const st = window.DIGIY_GUARD.state || {};
+    if (st.access_ok && existingOwner) {
+      location.replace(withSlug(NEXT_URL));
+      return;
+    }
+
+    if (st.phone) {
+      phoneEl.value = st.phone;
+    }
+
+    setMsg("Entre ton téléphone + PIN.");
     lock(false);
-    setMsg("Entre ton téléphone + PIN.", "");
 
-    // Focus intelligent
     if(!phoneEl.value) phoneEl.focus();
     else pinEl.focus();
 
     async function doLogin(){
       const rawPhone = (phoneEl.value || "").trim();
       const pin = (pinEl.value || "").trim();
-      const phone = window.DIGIY_GUARD.normPhone ? window.DIGIY_GUARD.normPhone(rawPhone) : rawPhone;
+      const phone = normPhone(rawPhone);
 
       if(!phone){
         setMsg("⚠️ Téléphone requis.\nExemple: +221771234567", "bad");
         phoneEl.focus();
         return;
       }
+
       if(!/^\d{4,8}$/.test(pin)){
         setMsg("⚠️ PIN invalide.\n➡️ 4 à 8 chiffres.", "bad");
         pinEl.focus();
@@ -177,15 +313,16 @@
       }
 
       lock(true);
-      setMsg("⏳ Vérification PIN…", "");
+      setMsg("⏳ Vérification PIN…");
 
       try{
-        const out = await window.DIGIY_GUARD.loginWithPin(phone, pin, MODULE);
+        const rpcData = await callPinRpc(phone, pin);
+        const result = normalizeResult(rpcData);
 
-        if(!out || out.ok !== true){
-          const reason = out?.res?.reason ? String(out.res.reason) : "";
+        if(!result.ok || !result.owner_id){
           setMsg(
-            "❌ PIN incorrect.\n" + (reason ? ("Raison: " + reason) : "Réessaie."),
+            "❌ PIN incorrect ou session incomplète.\n" +
+            (result.error ? ("Raison: " + result.error) : "Réessaie."),
             "bad"
           );
           lock(false);
@@ -194,17 +331,16 @@
           return;
         }
 
-        // sécurité: session doit avoir owner_id
-        const s = window.DIGIY_GUARD.getSession && window.DIGIY_GUARD.getSession();
-        if(!s || s.ok !== true || !(s.owner_id || s.ownerId)){
-          setMsg("⚠️ Session incomplète (owner_id manquant).\n➡️ Retour PIN.", "bad");
-          lock(false);
-          return;
-        }
+        saveSession({
+          ...result,
+          phone
+        });
+
+        // refresh accès côté guard
+        try { await window.DIGIY_GUARD.refresh?.(); } catch {}
 
         setMsg("✅ OK. Ouverture du planning…", "ok");
-        const next = nextUrl("./planning.html");
-        location.replace(next);
+        location.replace(withSlug(NEXT_URL));
 
       }catch(e){
         console.error(e);
@@ -215,12 +351,11 @@
 
     btn.addEventListener("click", doLogin);
     pinEl.addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") doLogin(); });
-    phoneEl.addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") { pinEl.focus(); } });
+    phoneEl.addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") pinEl.focus(); });
 
     btnForgot.addEventListener("click", ()=>{
-      const rawPhone = (phoneEl.value || "").trim();
-      const phone = window.DIGIY_GUARD.normPhone ? window.DIGIY_GUARD.normPhone(rawPhone) : rawPhone;
-      const s = window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "";
+      const phone = normPhone((phoneEl.value || "").trim());
+      const s = getSlug();
 
       const msgTxt =
 `DIGIY • Support LOC PRO
@@ -235,7 +370,6 @@ Merci. — DIGIY`;
       const wa = "https://wa.me/" + digitsOnly(SUPPORT_WA) + "?text=" + encodeURIComponent(msgTxt);
       location.href = wa;
     });
-
   })();
   </script>
 </body>
