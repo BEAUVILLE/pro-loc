@@ -198,353 +198,449 @@
 (async function(){
   "use strict";
 
-  // -----------------------------
-  // Guard
-  // -----------------------------
-  const boot = await window.DIGIY_GUARD.boot({
-    module:"loc",
-    dashboard:"./photos.html",
-    login:"./pin.html",
-    requireSlug:true
-  });
-  if(!boot?.ok) return;
+  const MODULE = "LOC";
+  const $ = (id)=>document.getElementById(id);
 
-  const sb = await window.DIGIY_GUARD.getSbAsync();
-  if(!sb?.rpc) return alert("Supabase non prêt.");
+  const State = {
+    slug: "",
+    phone: "",
+    ownerId: "",
+    mode: "preview", // preview | live
+    reason: "booting",
+    photos: []
+  };
 
-  const slug = (window.DIGIY_GUARD.getSlug() || "").trim();
-  const sess = window.DIGIY_GUARD.getSession() || {};
-  const ownerPhone = String(sess?.phone || "").trim();
-
-  const galleryEl = document.getElementById("gallery");
-  const noteEl = document.getElementById("note");
-  const btnAdd = document.getElementById("btnAdd");
-  const btnSave = document.getElementById("btnSave");
-  const dbgEl = document.getElementById("dbg");
-
-  dbgEl.textContent = `slug: ${slug || "—"} · phone: ${ownerPhone || "—"}`;
-
-  if(!slug) return alert("❌ slug manquant. Ouvre la page avec ?slug=...");
-  if(!ownerPhone) return alert("❌ Téléphone manquant en session. Reconnecte-toi via PIN.");
-
-  // -----------------------------
-  // State + cache
-  // -----------------------------
-  const LS_BASE = "DIGIY_LOC_PHOTOS_CACHE_V2";
-  const LS_KEY = LS_BASE + ":" + slug;
-
-  let photos = [];
-  let cover = null;
-
-  function note(msg,type){
-    noteEl.style.display = msg ? "block" : "none";
-    noteEl.className = "note " + (type||"");
-    noteEl.textContent = msg || "";
+  function show(msg, cls){
+    const el = $("note");
+    if(!el) return;
+    el.className = "note " + (cls || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
   }
 
-  function cacheSave(){
+  function dbg(txt){
+    const el = $("dbg");
+    if(el) el.textContent = txt || "";
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  function getSlug(){
+    const st = getGuardState();
+    if(st.slug) return String(st.slug).trim();
+
     try{
-      const payload = { v:2, slug, cover, photos, ts: Date.now() };
-      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
+    }catch{
+      return "";
+    }
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    return String(
+      st.phone ||
+      localStorage.getItem("DIGIY_PHONE") ||
+      localStorage.getItem("DIGIY_LOC_PHONE") ||
+      ""
+    ).trim();
+  }
+
+  function withSlug(url){
+    const slug = State.slug || getSlug();
+    if(!slug) return url;
+
+    try{
+      const u = new URL(url, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function pinUrl(){
+    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+    catch { return withSlug("./pin.html"); }
+  }
+
+  function payUrl(){
+    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+    catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+  }
+
+  function isLive(){
+    return State.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
+  }
+
+  function normalizeUrl(u){
+    u = String(u || "").trim();
+    if(!u) return "";
+
+    const lower = u.toLowerCase();
+    if(lower.startsWith("javascript:") || lower.startsWith("data:")) return "";
+
+    if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)){
+      if(u.includes(".")) u = "https://" + u;
+    }
+
+    if(!/^https?:\/\//i.test(u)) return "";
+    return u;
+  }
+
+  function getLSKey(){
+    return "DIGIY_LOC_PHOTOS_CACHE_V1:" + (State.slug || "noslug");
+  }
+
+  function saveLocal(){
+    try{
+      localStorage.setItem(getLSKey(), JSON.stringify({
+        slug: State.slug,
+        photos: State.photos,
+        ts: Date.now()
+      }));
     }catch(_){}
   }
-  function cacheLoad(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(!raw) return null;
-      const j = JSON.parse(raw);
-      if(!j || j.slug !== slug) return null;
-      return j;
-    }catch(_){ return null; }
-  }
 
-  // -----------------------------
-  // URL validation (safe terrain)
-  // -----------------------------
-  function safeUrl(u){
-    const t = String(u||"").trim();
-    if(!t) return "";
-    const low = t.toLowerCase();
-    if(low.startsWith("javascript:") || low.startsWith("data:")) return "";
+  function loadLocal(){
     try{
-      const x = new URL(t);
-      if(x.protocol !== "https:") return "";
-      if(!x.hostname) return "";
-      return x.toString();
-    }catch{ return ""; }
-  }
-
-  function uniq(arr){
-    const s = new Set();
-    const out = [];
-    for(const x of (arr||[])){
-      const v = safeUrl(x);
-      if(!v) continue;
-      if(s.has(v)) continue;
-      s.add(v);
-      out.push(v);
+      const raw = localStorage.getItem(getLSKey());
+      if(!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed?.photos) ? parsed.photos : [];
+    }catch{
+      return [];
     }
-    return out;
   }
 
-  async function probeImage(url){
-    // vérifie que l’image charge avant de l’ajouter
-    return new Promise((resolve)=>{
-      const img = new Image();
-      const timer = setTimeout(()=>{ try{ img.src=""; }catch(_){} resolve(false); }, 4500);
-      img.onload = ()=>{ clearTimeout(timer); resolve(true); };
-      img.onerror = ()=>{ clearTimeout(timer); resolve(false); };
-      img.referrerPolicy = "no-referrer";
-      img.src = url;
-    });
-  }
+  function uniqueCover(list){
+    let found = false;
+    return (list || []).map((x, idx)=>{
+      const row = {
+        url: String(x?.url || "").trim(),
+        cover: !!x?.cover
+      };
 
-  function setBusy(on){
-    btnAdd.disabled = !!on;
-    btnSave.disabled = !!on;
-    btnSave.textContent = on ? "⏳ Sauvegarde..." : "💾 Sauvegarder";
-  }
-
-  // -----------------------------
-  // Render DOM SAFE (pas de template html avec URL)
-  // -----------------------------
-  function clearEl(el){ while(el.firstChild) el.removeChild(el.firstChild); }
-
-  function make(tag, attrs){
-    const el = document.createElement(tag);
-    if(attrs){
-      for(const [k,v] of Object.entries(attrs)){
-        if(k==="class") el.className = v;
-        else if(k==="text") el.textContent = v;
-        else el.setAttribute(k, String(v));
+      if(row.cover && !found){
+        found = true;
+      } else {
+        row.cover = false;
       }
-    }
-    return el;
-  }
 
-  function swap(arr, i, j){
-    if(i<0 || j<0 || i>=arr.length || j>=arr.length) return;
-    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      if(idx === 0 && !found && row.url){
+        row.cover = true;
+        found = true;
+      }
+
+      return row;
+    }).filter(x => x.url);
   }
 
   function render(){
-    clearEl(galleryEl);
+    const box = $("gallery");
+    if(!box) return;
 
-    const all = [];
-    if(cover) all.push({url:cover, cover:true});
-    for(const u of photos) all.push({url:u, cover:false});
+    box.innerHTML = "";
 
-    if(!all.length){
-      for(let k=0;k<3;k++){
-        const tile = make("div",{class:"tile"});
-        const empty = make("div",{class:"empty", text:"+"});
-        tile.appendChild(empty);
-        tile.addEventListener("click", ()=> btnAdd.click());
-        galleryEl.appendChild(tile);
-      }
+    if(!State.photos.length){
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      tile.innerHTML = `<div class="empty">+</div>`;
+      box.appendChild(tile);
       return;
     }
 
-    all.forEach((p, idx)=>{
-      const tile = make("div",{class:"tile"});
+    State.photos.forEach((photo, idx)=>{
+      const tile = document.createElement("div");
+      tile.className = "tile";
 
-      if(p.cover){
-        tile.appendChild(make("div",{class:"badge", text:"Cover"}));
-      }
-
-      // delete
-      const del = make("button",{class:"iconbtn", title:"Supprimer", type:"button"});
-      del.textContent = "✕";
-      del.addEventListener("click", (ev)=>{
-        ev.stopPropagation();
-        if(p.cover){
-          cover = null;
-        }else{
-          const i = cover ? (idx - 1) : idx;
-          if(i>=0) photos.splice(i,1);
-        }
-        photos = uniq(photos).slice(0, 12);
-        cacheSave();
-        render();
-        note("🧹 Supprimé (local). Pense à Sauvegarder.", "warn");
-      });
-      tile.appendChild(del);
-
-      // img (safe)
-      const img = new Image();
-      img.alt = "Photo";
+      const img = document.createElement("img");
+      img.src = photo.url;
+      img.alt = "Photo logement " + (idx + 1);
       img.loading = "lazy";
-      img.decoding = "async";
-      img.referrerPolicy = "no-referrer";
-      img.src = p.url;
+      img.onerror = function(){
+        this.style.display = "none";
+      };
+
+      if(photo.cover){
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.textContent = "⭐ Cover";
+        tile.appendChild(badge);
+      }
+
+      const del = document.createElement("button");
+      del.className = "iconbtn";
+      del.type = "button";
+      del.textContent = "×";
+      del.disabled = !isLive();
+      del.title = isLive() ? "Supprimer" : "Mode aperçu";
+      del.addEventListener("click", ()=>{
+        if(!isLive()){
+          show("👁️ En aperçu, suppression désactivée.", "warn");
+          return;
+        }
+        State.photos.splice(idx, 1);
+        State.photos = uniqueCover(State.photos);
+        saveLocal();
+        render();
+        show("🗑️ Photo supprimée. Pense à sauvegarder.", "warn");
+      });
+
+      const menu = document.createElement("div");
+      menu.className = "menu";
+
+      const bCover = document.createElement("button");
+      bCover.className = "chip gold";
+      bCover.type = "button";
+      bCover.disabled = !isLive();
+      bCover.textContent = photo.cover ? "⭐ Cover" : "Mettre cover";
+      bCover.addEventListener("click", ()=>{
+        if(!isLive()){
+          show("👁️ En aperçu, action désactivée.", "warn");
+          return;
+        }
+        State.photos = State.photos.map((p, i)=>({
+          url: p.url,
+          cover: i === idx
+        }));
+        saveLocal();
+        render();
+        show("✅ Cover définie. Pense à sauvegarder.", "ok");
+      });
+
+      const bOpen = document.createElement("button");
+      bOpen.className = "chip ok";
+      bOpen.type = "button";
+      bOpen.textContent = "Ouvrir";
+      bOpen.addEventListener("click", ()=>{
+        window.open(photo.url, "_blank", "noopener,noreferrer");
+      });
+
+      menu.appendChild(bCover);
+      menu.appendChild(bOpen);
+
       tile.appendChild(img);
-
-      // menu actions
-      const menu = make("div",{class:"menu"});
-
-      // Set cover
-      const setCoverBtn = make("button",{class:"chip gold", type:"button"});
-      setCoverBtn.textContent = p.cover ? "⭐ Cover" : "⭐ Mettre cover";
-      setCoverBtn.disabled = !!p.cover;
-      setCoverBtn.addEventListener("click",(ev)=>{
-        ev.stopPropagation();
-        if(p.cover) return;
-        const u = p.url;
-        photos = photos.filter(x=>x!==u);
-        if(cover) photos.unshift(cover);
-        cover = u;
-        photos = uniq(photos).slice(0, 12);
-        cacheSave();
-        render();
-        note("✅ Cover mise à jour (local). Pense à Sauvegarder.", "ok");
-      });
-      menu.appendChild(setCoverBtn);
-
-      // Move up/down (sur galerie)
-      const up = make("button",{class:"chip", type:"button"});
-      up.textContent = "⬆️";
-      const down = make("button",{class:"chip", type:"button"});
-      down.textContent = "⬇️";
-
-      // Position dans photos[] (cover exclue)
-      const pIndex = p.cover ? -1 : (cover ? (idx-1) : idx);
-
-      // Désactive si cover ou hors range
-      up.disabled = p.cover || pIndex <= 0;
-      down.disabled = p.cover || pIndex < 0 || pIndex >= photos.length-1;
-
-      up.addEventListener("click",(ev)=>{
-        ev.stopPropagation();
-        swap(photos, pIndex, pIndex-1);
-        cacheSave();
-        render();
-      });
-      down.addEventListener("click",(ev)=>{
-        ev.stopPropagation();
-        swap(photos, pIndex, pIndex+1);
-        cacheSave();
-        render();
-      });
-
-      menu.appendChild(up);
-      menu.appendChild(down);
-
+      tile.appendChild(del);
       tile.appendChild(menu);
-      galleryEl.appendChild(tile);
+
+      box.appendChild(tile);
     });
+
+    dbg(
+      `mode=${State.mode} • slug=${State.slug || "—"} • phone=${State.phone || "—"} • photos=${State.photos.length}`
+    );
   }
 
-  // -----------------------------
-  // RPC load/save
-  // -----------------------------
-  async function loadPhotos(){
-    note("⏳ Chargement photos…","warn");
-
-    const { data, error } = await sb.rpc("digiy_loc_get_photos_owner", {
-      p_slug: slug,
-      p_owner_phone: ownerPhone
-    });
-    if(error) throw error;
-
-    const res = (typeof data === "string") ? JSON.parse(data) : data;
-    if(!res?.ok) throw new Error(res?.reason || "load_failed");
-
-    cover = safeUrl(res.cover_url) || null;
-    photos = uniq(Array.isArray(res.gallery_urls) ? res.gallery_urls : []).slice(0, 12);
-
-    cacheSave();
-    render();
-    note("✅ Photos chargées depuis Supabase.", "ok");
-  }
-
-  // Add URL (avec probe)
-  btnAdd.addEventListener("click", async ()=>{
-    const raw = prompt("Colle une URL image (https://...)");
-    if(!raw) return;
-
-    const u = safeUrl(raw);
-    if(!u){
-      note("⚠️ URL invalide. Il faut https://... (pas de data:, pas de http).", "warn");
+  function addPhoto(){
+    if(!isLive()){
+      show(
+        State.reason === "slug_missing"
+          ? "👁️ Aucun slug détecté. Passe par GO PIN."
+          : "👁️ Mode aperçu. Passe par PIN pour ajouter des photos.",
+        "warn"
+      );
       return;
     }
 
-    note("⏳ Vérification de l’image…", "warn");
-    const ok = await probeImage(u);
-    if(!ok){
-      note("❌ Image non chargeable. Vérifie l’URL (ou accès privé).", "bad");
+    const raw = prompt("Colle l’URL de la photo (https://...)");
+    if(raw === null) return;
+
+    const url = normalizeUrl(raw);
+    if(!url){
+      show("❌ URL invalide. Utilise une vraie URL https://...", "bad");
       return;
     }
 
-    if(!cover){
-      cover = u;
-      note("✅ Cover définie.", "ok");
-    }else{
-      photos.push(u);
-      photos = uniq(photos).slice(0, 12);
-      note("✅ Ajouté à la galerie (local). Clique Sauvegarder.", "ok");
+    if(State.photos.some(x => x.url === url)){
+      show("⚠️ Cette photo est déjà dans la galerie.", "warn");
+      return;
     }
 
-    cacheSave();
-    render();
-  });
+    State.photos.push({
+      url,
+      cover: State.photos.length === 0
+    });
 
-  // Save (RPC)
-  btnSave.addEventListener("click", async ()=>{
-    setBusy(true);
+    State.photos = uniqueCover(State.photos);
+    saveLocal();
+    render();
+    show("✅ Photo ajoutée en cache local. Clique sur Sauvegarder.", "ok");
+  }
+
+  async function savePhotos(){
+    if(!isLive()){
+      show("👁️ Mode aperçu. Sauvegarde désactivée.", "warn");
+      return;
+    }
+
+    saveLocal();
+
+    // Pour l’instant: sauvegarde locale only.
+    // On branchera la RPC/table réelle quand tu me montreras le backend photo.
+    show(
+      "✅ Photos sauvegardées en cache local.\nBackend photo à brancher ensuite (RPC ou table dédiée).",
+      "ok"
+    );
+  }
+
+  function disablePreviewUi(reason){
+    State.mode = "preview";
+    State.reason = reason || "preview";
+
+    if($("btnAdd")) $("btnAdd").disabled = true;
+    if($("btnSave")) $("btnSave").disabled = true;
+
+    show(
+      reason === "slug_missing"
+        ? "👁️ Aucun slug détecté. Tu vois un aperçu propre.\n➡️ Ouvre la page depuis ton lien GO PIN."
+        : reason === "has_access_false"
+        ? "👁️ Slug présent mais accès non actif.\n➡️ Passe par PIN ou active l’accès."
+        : reason === "owner_unresolved"
+        ? "👁️ owner_id introuvable. On reste en aperçu pour éviter le crash."
+        : "👁️ Mode aperçu. Ajout et sauvegarde désactivés.",
+      "warn"
+    );
+
+    const helper = document.createElement("div");
+    helper.className = "card";
+    helper.style.marginTop = "14px";
+    helper.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn ghost" href="${pinUrl()}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🔐 Ouvrir PIN</a>
+        <a class="btn ghost" href="${payUrl()}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">💳 Activer l’accès</a>
+        <a class="btn ghost" href="${withSlug("./app.html")}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">🏠 Retour cockpit</a>
+      </div>
+    `;
+    document.querySelector(".wrap")?.appendChild(helper);
+  }
+
+  function enableLiveUi(){
+    State.mode = "live";
+    State.reason = "ok";
+
+    if($("btnAdd")) $("btnAdd").disabled = false;
+    if($("btnSave")) $("btnSave").disabled = false;
+
+    show("✅ Accès OK. Tu peux gérer tes photos.", "ok");
+  }
+
+  function normalizeOwnerContext(raw){
+    if (!raw || typeof raw !== "object") return null;
+
+    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
+    if (!owner_id) return null;
+
+    return {
+      owner_id,
+      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
+      business_name: raw.business_name || raw.businessName || raw.name || ""
+    };
+  }
+
+  function ownerContextFromStorage(){
+    const owner_id =
+      localStorage.getItem("DIGIY_LOC_OWNER_ID") ||
+      localStorage.getItem("digiy_loc_owner_id") ||
+      localStorage.getItem("DIGIY_OWNER_ID") ||
+      localStorage.getItem("owner_id") ||
+      "";
+
+    if (!owner_id) return null;
+
+    return normalizeOwnerContext({ owner_id });
+  }
+
+  async function ownerContextFromRpc(){
+    if (!window.DIGIY_GUARD?.rpc) return null;
+
+    const attempts = [
+      "digiy_loc_owner_context",
+      "digiy_loc_get_owner_context",
+      "digiy_loc_resolve_owner_context"
+    ];
+
+    for (const fn of attempts) {
+      try {
+        const data = await window.DIGIY_GUARD.rpc(fn, {
+          p_phone: State.phone || "",
+          p_slug: State.slug || "",
+          p_module: MODULE
+        });
+
+        const ctx = normalizeOwnerContext(data);
+        if (ctx?.owner_id) return ctx;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  async function resolveOwnerContext(){
+    const fromStorage = ownerContextFromStorage();
+    if (fromStorage?.owner_id) return fromStorage;
+    return await ownerContextFromRpc();
+  }
+
+  async function init(){
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      show("❌ Guard absent ou non chargé.", "bad");
+      State.photos = loadLocal();
+      render();
+      return;
+    }
+
     try{
-      note("⏳ Sauvegarde…","warn");
-
-      const cleanCover = safeUrl(cover) || null;
-      const cleanGallery = uniq(photos).slice(0, 12);
-
-      const before = { cover, photos: [...photos] };
-
-      const { data, error } = await sb.rpc("digiy_loc_set_photos_owner", {
-        p_slug: slug,
-        p_owner_phone: ownerPhone,
-        p_cover_url: cleanCover,
-        p_gallery_urls: cleanGallery,
-        p_provider: "external"
-      });
-
-      if(error) throw error;
-      if(!data?.ok) throw new Error(data?.reason || "save_failed");
-
-      cover = cleanCover;
-      photos = cleanGallery;
-
-      cacheSave();
-      render();
-      note("✅ Photos sauvegardées avec succès.", "ok");
+      await window.DIGIY_GUARD.ready;
     }catch(e){
-      console.error(e);
-      note("❌ Erreur save: " + (e?.message || e), "bad");
-    }finally{
-      setBusy(false);
+      show("❌ Guard non prêt.", "bad");
+      State.photos = loadLocal();
+      render();
+      return;
     }
-  });
 
-  // -----------------------------
-  // GO: load SQL, fallback cache
-  // -----------------------------
-  try{
-    await loadPhotos();
-  }catch(e){
-    console.error(e);
-    const cached = cacheLoad();
-    if(cached){
-      cover = safeUrl(cached.cover) || null;
-      photos = uniq(Array.isArray(cached.photos) ? cached.photos : []).slice(0, 12);
-      render();
-      note("⚠️ Supabase KO / lecture bloquée. Cache local chargé. Clique Sauvegarder plus tard.", "warn");
-    }else{
-      render();
-      note("❌ Erreur load: " + (e?.message || e), "bad");
+    const st = getGuardState();
+    State.slug = getSlug();
+    State.phone = getPhone();
+    State.reason = st.reason || "preview";
+
+    State.photos = uniqueCover(loadLocal());
+    render();
+
+    $("btnAdd")?.addEventListener("click", addPhoto);
+    $("btnSave")?.addEventListener("click", savePhotos);
+
+    if(!State.slug){
+      disablePreviewUi("slug_missing");
+      return;
     }
+
+    if(!st.access_ok){
+      disablePreviewUi(st.reason || "preview");
+      return;
+    }
+
+    const ctx = await resolveOwnerContext();
+    if(!ctx?.owner_id){
+      disablePreviewUi("owner_unresolved");
+      return;
+    }
+
+    State.ownerId = ctx.owner_id;
+    enableLiveUi();
   }
 
+  init();
 })();
 </script>
-
 </body>
 </html>
