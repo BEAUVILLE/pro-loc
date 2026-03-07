@@ -444,56 +444,486 @@
 </div>
 
 <script>
-/* =========================================================
-   ✅ PATCH 1 — DIGIY NAV AUTO (data-go) + slug safe + Actions
-   - Enforce slug param on every navigation, even if guard.go missing
-========================================================= */
-(function(){
+(() => {
   "use strict";
 
-  const Actions = {};
+  /* =============================
+     CONFIG
+  ============================= */
+  const MODULE = "LOC";
+  const PAY_URL = "https://beauville.github.io/commencer-a-payer/?module=LOC";
 
-  function getSlug(){
-    try{
-      const s = window.DIGIY_GUARD?.getSlug?.();
-      if(s) return String(s).trim();
-    }catch(_){}
-    try{
-      return (new URL(location.href)).searchParams.get("slug") || "";
-    }catch(_){}
-    return "";
+  const DB = {
+    rooms: "digiy_loc_rooms",
+    reservations: "digiy_loc_reservations",
+
+    roomOwnerId: "owner_id",
+    roomTitle: "nom",
+    roomAddress: "adresse",
+    roomMaxPeople: "personnes_max",
+    roomPriceNight: "prix_nuit",
+    roomPriceWeek: "prix_semaine",
+    roomPriceMonth: "prix_mois",
+    roomDesc: "description",
+    roomPhoto: "photo_url",
+    roomStatus: "status",
+
+    resOwnerId: "owner_id",
+    resRoomId: "room_id",
+    resClientName: "client_name",
+    resPhone: "phone",
+    resCheckin: "checkin",
+    resCheckout: "checkout",
+    resAmount: "amount_total",
+    resStatus: "status",
+    resPayStatus: "payment_status",
+  };
+
+  const PULSE = {
+    enabled: true,
+    base: "https://api.digiylyfe.com",
+    apiKey: "",
+    endpoint: "/loc/pulse/send"
+  };
+
+  const State = {
+    ownerId: null,
+    phone: "",
+    slug: "",
+    business_code: "TEST",
+    business_name: "",
+    rooms: [],
+    reservations: [],
+    _calRoom: null
+  };
+
+  const UX = {
+    mode: "preview", // preview | live
+    reason: "booting"
+  };
+
+  /* =============================
+     HELPERS
+  ============================= */
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function safeImg(url){
+    const u = String(url || "").trim();
+    if(!u) return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+    if(/^https?:\/\//i.test(u)) return u;
+    return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+  }
+
+  function moneyFCFA(x){
+    const n = Number(x || 0);
+    return n.toLocaleString("fr-FR") + " F";
+  }
+
+  function fmtDate(d){
+    if(!d) return "—";
+    try { return new Date(d).toLocaleDateString("fr-FR"); }
+    catch { return String(d); }
+  }
+
+  function startOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth(), 1); }
+  function endOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth()+1, 0); }
+
+  function ymd(dt){
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,"0");
+    const d = String(dt.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function todayYMD(){
+    const t = new Date();
+    return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate()));
+  }
+
+  function setText(id, value){
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function setHTML(id, html){
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || null;
+  }
+
+  function sbReady(){
+    const sb = getSB();
+    return !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
+  }
+
+  function isLiveMode(){
+    return UX.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
+  }
+
+  function getCurrentSlug(){
+    const st = getGuardState();
+    if (st?.slug) return String(st.slug).trim();
+    try {
+      return new URL(location.href).searchParams.get("slug") || "";
+    } catch {
+      return "";
+    }
   }
 
   function withSlug(url){
-    // Prefer guard helper
-    try{
-      if(window.DIGIY_GUARD?.withSlug) return window.DIGIY_GUARD.withSlug(url);
-    }catch(_){}
-
-    // Fallback: append slug if missing
-    const slug = getSlug();
-    if(!slug) return url;
+    const slug = getCurrentSlug();
+    if (!slug) return url;
 
     try{
       const u = new URL(url, location.href);
       if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      // Keep same-origin links short
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
-    }catch(_){
+    }catch{
       const sep = url.includes("?") ? "&" : "?";
       return url + sep + "slug=" + encodeURIComponent(slug);
     }
   }
 
-  function go(target, mode){
+  function go(target, mode = "assign"){
     const t = withSlug(target);
     try{
-      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, mode || "assign");
-    }catch(_){}
-    if((mode||"assign")==="replace") location.replace(t);
-    else location.href = t;
+      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, mode);
+    }catch{}
+    if(mode === "replace") location.replace(t);
+    else location.assign(t);
   }
+
+  function pinUrl(){
+    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+    catch { return withSlug("./pin.html"); }
+  }
+
+  function payUrl(){
+    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug(PAY_URL); }
+    catch { return withSlug(PAY_URL); }
+  }
+
+  function badgeForStatus(res){
+    const pay = (res?.[DB.resPayStatus] || "").toLowerCase();
+    const st = (res?.[DB.resStatus] || "").toLowerCase();
+
+    if(pay === "paid" || pay === "succeeded") return `<span class="badge badge-success">Payé</span>`;
+    if(pay === "pending" || pay === "requires_payment" || pay === "unpaid") return `<span class="badge badge-warning">Paiement en attente</span>`;
+
+    if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
+    if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
+    if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
+    return `<span class="badge badge-warning">${esc(res?.[DB.resStatus] || "—")}</span>`;
+  }
+
+  function roomNameById(id) {
+    const r = State.rooms.find(x => String(x.id) === String(id));
+    return r?.[DB.roomTitle] || r?.title || "—";
+  }
+
+  function reservationIsActive(r){
+    const st = String(r?.[DB.resStatus] || "").toLowerCase();
+    if(st.includes("cancel")) return false;
+
+    const t = todayYMD();
+    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+    const co = String(r?.[DB.resCheckout] || "").slice(0,10);
+    return ci && co && t >= ci && t < co;
+  }
+
+  function reservationIsUpcoming(r){
+    const t = todayYMD();
+    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+    return ci && ci >= t;
+  }
+
+  function reservationIsPending(r){
+    const st = String(r?.[DB.resStatus] || "").toLowerCase();
+    const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
+    return st.includes("pending") || pay.includes("pending") || pay.includes("requires");
+  }
+
+  function requireLive(actionLabel = "Cette action"){
+    if (isLiveMode()) return true;
+
+    showAccessBanner(UX.reason || "preview");
+    alert(
+      `${actionLabel} demande le mode vivant.\n\n` +
+      `Pour l’instant tu es en aperçu propre.\n` +
+      `Passe par PIN ou active l’accès pour travailler sur les vraies données.`
+    );
+    return false;
+  }
+
+  /* =============================
+     ACCESS BANNER
+  ============================= */
+  function ensureAccessBanner(){
+    let box = document.getElementById("accessBanner");
+    if (box) return box;
+
+    const header = document.querySelector(".header");
+    if (!header || !header.parentNode) return null;
+
+    box = document.createElement("div");
+    box.id = "accessBanner";
+    box.className = "card";
+    box.style.display = "none";
+    box.style.borderColor = "rgba(250,204,21,.28)";
+    box.style.background = "rgba(250,204,21,.06)";
+    box.style.marginTop = "0";
+    box.style.marginBottom = "1rem";
+
+    header.parentNode.insertBefore(box, header.nextSibling);
+    return box;
+  }
+
+  function showAccessBanner(reason){
+    const box = ensureAccessBanner();
+    if (!box) return;
+
+    const st = getGuardState();
+    const pin = pinUrl();
+    const pay = payUrl();
+
+    let title = "👁️ Mode aperçu";
+    let text = "Le cockpit reste visible proprement, sans mur brutal.";
+    let tone = "rgba(250,204,21,.06)";
+    let border = "rgba(250,204,21,.28)";
+
+    if (st.access_ok && isLiveMode()) {
+      title = "✅ Mode vivant";
+      text = "Accès confirmé. Le cockpit charge les vraies données.";
+      tone = "rgba(34,197,94,.08)";
+      border = "rgba(34,197,94,.28)";
+    } else if (reason === "slug_missing") {
+      text = "Aucun slug détecté. Tu vois l’aperçu élégant du cockpit.";
+    } else if (reason === "has_access_false") {
+      text = "Slug présent mais accès non actif. On garde un aperçu propre.";
+    } else if (reason === "owner_unresolved") {
+      text = "Accès détecté, mais le contexte propriétaire n’est pas encore résolu. On reste en aperçu propre pour éviter le crash.";
+    } else if (reason && reason !== "preview") {
+      text = "Raison actuelle : " + reason;
+    }
+
+    box.style.display = "block";
+    box.style.background = tone;
+    box.style.borderColor = border;
+
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0 0 .5rem;color:var(--accent)">${esc(title)}</h2>
+          <div style="color:var(--text);font-weight:700;line-height:1.5">
+            ${esc(text)}
+          </div>
+          <div style="margin-top:.5rem;color:var(--muted);font-size:.9rem">
+            slug: <b>${esc(st.slug || "—")}</b> · téléphone: <b>${esc(State.phone || st.phone || "—")}</b>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="${esc(pin)}">🔑 Ouvrir PIN</a>
+          <a class="btn btn-primary" href="${esc(pay)}">💳 Activer l’accès</a>
+        </div>
+      </div>
+    `;
+  }
+
+  /* =============================
+     HEADER / PREVIEW
+  ============================= */
+  function hydrateHeader() {
+    const st = getGuardState();
+    const phone = State.phone || st.phone || "—";
+    const businessName =
+      State.business_name ||
+      localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+      (isLiveMode() ? "Gestionnaire" : "Aperçu DIGIY LOC");
+
+    setText("userPhone", phone || "—");
+    setText("userName", businessName || "Gestionnaire");
+  }
+
+  function renderPreviewShell(reason){
+    UX.mode = "preview";
+    UX.reason = reason || "preview";
+
+    setText("revenusMois", "—");
+    setText("tauxOccupation", "—");
+    setText("resasActives", "—");
+    setText("logementsActifs", "—");
+
+    setHTML("prochainesArrivees", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Aperçu du cockpit LOC. Les prochaines arrivées réelles apparaîtront après connexion PIN et accès actif.
+      </div>
+    `);
+
+    setHTML("demandesAttente", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Aperçu propre des demandes. Passe en mode vivant pour voir les vraies réservations.
+      </div>
+    `);
+
+    setHTML("listeLogements", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Aucun logement affiché en aperçu. Clique sur <b>PIN</b> pour ouvrir le cockpit réel.
+      </div>
+    `);
+
+    setHTML("tableReservations", `
+      <tr>
+        <td colspan="6" style="text-align:center;color:var(--muted)">
+          Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.
+        </td>
+      </tr>
+    `);
+
+    setHTML("calendarView", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Calendrier en aperçu. Le planning réel arrive dès que l’accès est confirmé.
+      </div>
+    `);
+
+    setHTML("statsDetails", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Statistiques détaillées en attente du mode vivant.
+      </div>
+    `);
+
+    showAccessBanner(reason);
+    hydrateHeader();
+  }
+
+  function fail(msg){
+    const loading = document.getElementById("loading");
+    if(!loading) return;
+
+    loading.innerHTML = `
+      <div class="box">
+        <div class="t">❌ Accès impossible</div>
+        <div class="s">${esc(msg || "Erreur inconnue")}</div>
+        <div class="s" style="margin-top:.6rem">
+          <a href="./pin.html">Se connecter</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function activateApp(){
+    const loading = document.getElementById("loading");
+    const app = document.getElementById("app");
+    if (loading) loading.style.display = "none";
+    if (app) app.style.display = "block";
+  }
+
+  /* =============================
+     OWNER CONTEXT
+  ============================= */
+  function normalizeOwnerContext(raw){
+    if (!raw || typeof raw !== "object") return null;
+
+    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
+    if (!owner_id) return null;
+
+    return {
+      owner_id,
+      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
+      business_name: raw.business_name || raw.businessName || raw.name || ""
+    };
+  }
+
+  function ownerContextFromStorage(){
+    const owner_id =
+      localStorage.getItem("DIGIY_LOC_OWNER_ID") ||
+      localStorage.getItem("digiy_loc_owner_id") ||
+      localStorage.getItem("DIGIY_OWNER_ID") ||
+      localStorage.getItem("owner_id") ||
+      "";
+
+    if (!owner_id) return null;
+
+    return normalizeOwnerContext({
+      owner_id,
+      business_code:
+        localStorage.getItem("DIGIY_LOC_BUSINESS_CODE") ||
+        localStorage.getItem("DIGIY_BUSINESS_CODE") ||
+        "TEST",
+      business_name:
+        localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
+        localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+        ""
+    });
+  }
+
+  async function ownerContextFromRpc(){
+    if (!window.DIGIY_GUARD?.rpc) return null;
+
+    const st = getGuardState();
+    const attempts = [
+      "digiy_loc_owner_context",
+      "digiy_loc_get_owner_context",
+      "digiy_loc_resolve_owner_context"
+    ];
+
+    for (const fn of attempts) {
+      try {
+        const data = await window.DIGIY_GUARD.rpc(fn, {
+          p_phone: st.phone || State.phone || "",
+          p_slug: st.slug || State.slug || "",
+          p_module: MODULE
+        });
+
+        const ctx = normalizeOwnerContext(data);
+        if (ctx?.owner_id) return ctx;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  async function resolveOwnerContext(){
+    const fromStorage = ownerContextFromStorage();
+    if (fromStorage?.owner_id) return fromStorage;
+
+    const fromRpc = await ownerContextFromRpc();
+    if (fromRpc?.owner_id) {
+      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+      try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
+      try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+      return fromRpc;
+    }
+
+    return null;
+  }
+
+  /* =============================
+     NAV / ACTIONS
+  ============================= */
+  const Actions = {
+    logout: () => logout(),
+    pulseTest: () => pulseTest()
+  };
 
   function bindNav(){
     document.querySelectorAll("[data-go]").forEach((el)=>{
@@ -517,769 +947,680 @@
 
       el.addEventListener("click", (e)=>{
         const name = (el.getAttribute("data-action") || "").trim();
-        if(!name) return;
-        const fn = Actions[name];
-        if(typeof fn !== "function") return;
+        if(!name || typeof Actions[name] !== "function") return;
         e.preventDefault();
-        fn(el, e);
+        Actions[name](el, e);
       });
+    });
+  }
+
+  function bindTabs(){
+    const tabs = document.getElementById("tabs");
+    if(!tabs) return;
+    tabs.addEventListener("click", (e)=>{
+      const el = e.target.closest(".tab");
+      if(!el) return;
+      const tab = (el.getAttribute("data-tab") || "").trim();
+      if(tab) switchTab(tab);
+    });
+  }
+
+  function bindNdimbal(){
+    const btn = document.getElementById("quickNdimbal");
+    if(!btn || btn.__digiy_ndimbal_bound) return;
+    btn.__digiy_ndimbal_bound = true;
+
+    btn.addEventListener("click", ()=>{
+      alert(
+        "♾️ Astuce terrain :\n" +
+        "Si toi ou ton client n’êtes pas sûrs du point, ouvre NDIMBAL et partage le point GPS 📍.\n" +
+        "Ensuite reviens ici."
+      );
     });
   }
 
   window.DIGIY_NAV = { go, withSlug, Actions };
 
-  function boot(){
-    bindNav();
-    bindActions();
+  /* =============================
+     UI
+  ============================= */
+  function switchTab(tabName) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+
+    const t = document.querySelector(`.tab[data-tab="${tabName}"]`);
+    if(t) t.classList.add("active");
+
+    const el = document.getElementById(tabName);
+    if(el) el.classList.add("active");
+
+    if (tabName === "logements") loadLogements();
+    if (tabName === "reservations") loadReservations();
+    if (tabName === "calendrier") loadCalendar();
   }
 
-  boot();
-  const mo = new MutationObserver(()=>boot());
-  mo.observe(document.documentElement, { childList:true, subtree:true });
-
-  // Register actions
-  Actions.logout = ()=> logout();
-  Actions.pulseTest = ()=> pulseTest();
-})();
-</script>
-
-<script>
-/* =============================
-   ✅ PATCH 3 — SUPABASE via GUARD (source unique) + Fallback ready
-============================= */
-function getSB(){
-  return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.getSupabase?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || null;
-}
-
-function sbReady(){
-  const sb = getSB();
-  return !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-}
-
-/* =============================
-   CONFIG TABLES / FIELDS
-============================= */
-const DB = {
-  rooms: "digiy_loc_rooms",
-  reservations: "digiy_loc_reservations",
-
-  roomOwnerId: "owner_id",
-  roomTitle: "nom",
-  roomAddress: "adresse",
-  roomMaxPeople: "personnes_max",
-  roomPriceNight: "prix_nuit",
-  roomPriceWeek: "prix_semaine",
-  roomPriceMonth: "prix_mois",
-  roomDesc: "description",
-  roomPhoto: "photo_url",
-  roomStatus: "status",
-
-  resOwnerId: "owner_id",
-  resRoomId: "room_id",
-  resClientName: "client_name",
-  resPhone: "phone",
-  resCheckin: "checkin",
-  resCheckout: "checkout",
-  resAmount: "amount_total",
-  resStatus: "status",
-  resPayStatus: "payment_status",
-};
-
-/* =============================
-   PULSE API (OPTIONNEL)
-============================= */
-const PULSE = {
-  enabled: true,
-  base: "https://api.digiylyfe.com",
-  apiKey: "",
-  endpoint: "/loc/pulse/send"
-};
-
-/* =============================
-   STATE
-============================= */
-const State = {
-  ownerId: null,
-  phone: "",
-  business_code: "TEST",
-  rooms: [],
-  reservations: [],
-  _calRoom: null
-};
-
-/* =============================
-   PATCH 4 — SAFE helpers
-============================= */
-function esc(s){
-  return String(s ?? "").replace(/[&<>"']/g, (c)=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-}
-function safeImg(url){
-  const u = String(url || "").trim();
-  if(!u) return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-  // basic allow list: http(s) only
-  if(/^https?:\/\//i.test(u)) return u;
-  return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-}
-
-/* =============================
-   HELPERS
-============================= */
-function moneyFCFA(x){
-  const n = Number(x || 0);
-  return n.toLocaleString("fr-FR") + " F";
-}
-function fmtDate(d){
-  if(!d) return "—";
-  try { return new Date(d).toLocaleDateString("fr-FR"); } catch { return String(d); }
-}
-function startOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth(), 1); }
-function endOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth()+1, 0); }
-function ymd(dt){
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth()+1).padStart(2,"0");
-  const d = String(dt.getDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
-}
-function todayYMD(){
-  const t = new Date();
-  return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate()));
-}
-function badgeForStatus(res){
-  const pay = (res?.[DB.resPayStatus] || "").toLowerCase();
-  const st = (res?.[DB.resStatus] || "").toLowerCase();
-
-  if(pay === "paid" || pay === "succeeded") return `<span class="badge badge-success">Payé</span>`;
-  if(pay === "pending" || pay === "requires_payment" || pay === "unpaid") return `<span class="badge badge-warning">Paiement en attente</span>`;
-
-  if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
-  if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
-  if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
-  return `<span class="badge badge-warning">${esc(res?.[DB.resStatus] || "—")}</span>`;
-}
-
-/* =============================
-   UI
-============================= */
-function switchTab(tabName) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-
-  const t = document.querySelector(`.tab[data-tab="${tabName}"]`);
-  if(t) t.classList.add('active');
-
-  const el = document.getElementById(tabName);
-  if(el) el.classList.add('active');
-
-  if (tabName === 'logements') loadLogements();
-  if (tabName === 'reservations') loadReservations();
-  if (tabName === 'calendrier') loadCalendar();
-}
-(function bindTabs(){
-  const tabs = document.getElementById("tabs");
-  if(!tabs) return;
-  tabs.addEventListener("click", (e)=>{
-    const el = e.target.closest(".tab");
-    if(!el) return;
-    const tab = (el.getAttribute("data-tab") || "").trim();
-    if(tab) switchTab(tab);
-  });
-})();
-
-/* ✅ PATCH 2 — NDIMBAL GPS Suggestion */
-(function(){
-  const btn = document.getElementById("quickNdimbal");
-  if(!btn) return;
-  btn.addEventListener("click", ()=>{
-    // petit rappel terrain avant d’ouvrir
-    alert("♾️ Astuce terrain :\nSi toi (ou ton client) n’êtes pas sûr du point, ouvre NDIMBAL et partage le point GPS 📍.\nEnsuite reviens ici.");
-  });
-})();
-
-function logout() {
-  if (!confirm("Se déconnecter ?")) return;
-  const go = window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") :
-             (window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html");
-  try{
-    window.DIGIY_GUARD?.logout?.(go);
-  }catch(_){
-    location.href = go;
-  }
-}
-
-function hydrateHeader() {
-  const phoneEl = document.getElementById("userPhone");
-  if(phoneEl) phoneEl.textContent = State.phone || "—";
-
-  const nameEl = document.getElementById("userName");
-  const bn = (localStorage.getItem("DIGIY_BUSINESS_NAME") || "").trim();
-  if(nameEl) nameEl.textContent = bn || "Gestionnaire";
-}
-
-/* =============================
-   DB CALLS
-============================= */
-async function fetchRooms() {
-  const sb = getSB();
-  const ownerId = State.ownerId;
-  if(!sb || !ownerId) return [];
-
-  const { data, error } = await sb
-    .from(DB.rooms)
-    .select("*")
-    .eq(DB.roomOwnerId, ownerId)
-    .order("created_at", { ascending: false });
-
-  if(error) throw error;
-  return data || [];
-}
-
-async function fetchReservations() {
-  const sb = getSB();
-  const ownerId = State.ownerId;
-  if(!sb || !ownerId) return [];
-
-  const { data, error } = await sb
-    .from(DB.reservations)
-    .select("*")
-    .eq(DB.resOwnerId, ownerId)
-    .order(DB.resCheckin, { ascending: true })
-    .limit(200);
-
-  if(error) throw error;
-  return data || [];
-}
-
-function roomNameById(id) {
-  const r = State.rooms.find(x => String(x.id) === String(id));
-  return r?.[DB.roomTitle] || r?.title || "—";
-}
-
-/* =============================
-   RENDER: LOGEMENTS
-============================= */
-function renderRooms(list) {
-  const container = document.getElementById('listeLogements');
-  if(!container) return;
-
-  if(!list.length){
-    container.innerHTML = `<p style="color:var(--muted)">Aucun logement. Clique "CRÉER UNE FICHE LOGEMENT".</p>`;
-    return;
+  function logout() {
+    if (!confirm("Se déconnecter ?")) return;
+    try {
+      window.DIGIY_GUARD?.logout?.(pinUrl());
+    } catch {
+      location.assign(pinUrl());
+    }
   }
 
-  container.innerHTML = list.map(room => {
-    const title = room?.[DB.roomTitle] || room?.title || "Logement";
-    const addr = room?.[DB.roomAddress] || room?.address || "—";
-    const desc = room?.[DB.roomDesc] || "";
-    const pmax = room?.[DB.roomMaxPeople] ?? room?.max_people ?? "—";
-    const pn = room?.[DB.roomPriceNight] ?? room?.price_per_night ?? 0;
-    const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
-    const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
-    const img = safeImg(room?.[DB.roomPhoto] || room?.cover_url);
-    const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
-    const badge = status.includes("act") ? `<span class="badge badge-success">Actif</span>` : `<span class="badge badge-warning">${esc(status)}</span>`;
-
-    return `
-      <div class="logement-card">
-        <img src="${img}" alt="${esc(title)}" class="logement-img" onerror="this.src='https://via.placeholder.com/600x400?text=DIGIY+LOC'">
-        <div class="logement-info">
-          <h3>${esc(title)}</h3>
-          <p>📍 ${esc(addr)}</p>
-          <p>👥 ${esc(pmax)} personnes max</p>
-          ${desc ? `<p>${esc(desc)}</p>` : `<p style="color:var(--muted)">—</p>`}
-          <p style="margin-top:0.5rem">
-            <strong>Tarifs:</strong><br>
-            Nuit: ${moneyFCFA(pn)}<br>
-            Semaine: ${moneyFCFA(pw)}<br>
-            Mois: ${moneyFCFA(pm)}
-          </p>
-          <p style="margin-top:0.5rem">${badge}</p>
-        </div>
-        <div class="logement-actions">
-          <button class="btn btn-secondary" type="button" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
-          <button class="btn btn-secondary" type="button" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
-          <button class="btn btn-danger" type="button" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-async function loadLogements() {
-  try{
-    if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-    State.rooms = await fetchRooms();
-    renderRooms(State.rooms);
-
-    const actifs = State.rooms.filter(r => String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")).length;
-    const el = document.getElementById("logementsActifs");
-    if(el) el.textContent = String(actifs);
-  }catch(e){
-    console.error(e);
-    const box = document.getElementById('listeLogements');
-    if(box) box.innerHTML = `<p style="color:var(--danger)">Erreur chargement logements: ${esc(e.message || e)}</p>`;
-  }
-}
-
-/* =============================
-   CRUD: LOGEMENT
-============================= */
-function openEditLogement(roomId){
-  const room = State.rooms.find(r => String(r.id) === String(roomId));
-  if(!room) return alert("Logement introuvable");
-
-  const newName = prompt("Nom du logement :", room?.[DB.roomTitle] || room?.title || "");
-  if(newName === null) return;
-
-  const newAddr = prompt("Adresse :", room?.[DB.roomAddress] || room?.address || "");
-  if(newAddr === null) return;
-
-  updateLogement(roomId, {
-    [DB.roomTitle]: newName.trim(),
-    [DB.roomAddress]: newAddr.trim()
-  });
-}
-
-async function updateLogement(roomId, patch){
-  try{
+  /* =============================
+     DB CALLS
+  ============================= */
+  async function fetchRooms() {
     const sb = getSB();
-    if(!sb) throw new Error("supabase_not_ready");
+    if(!sb || !State.ownerId) return [];
 
-    const { error } = await sb
+    const { data, error } = await sb
       .from(DB.rooms)
-      .update(patch)
-      .eq("id", roomId)
-      .eq(DB.roomOwnerId, State.ownerId);
+      .select("*")
+      .eq(DB.roomOwnerId, State.ownerId)
+      .order("created_at", { ascending: false });
 
     if(error) throw error;
-    await loadLogements();
-    alert("✅ Modifié !");
-  }catch(e){
-    console.error(e);
-    alert("❌ " + (e?.message || e));
+    return data || [];
   }
-}
 
-async function deleteLogement(roomId){
-  if(!confirm("Supprimer ce logement ?")) return;
-  try{
+  async function fetchReservations() {
     const sb = getSB();
-    if(!sb) throw new Error("supabase_not_ready");
+    if(!sb || !State.ownerId) return [];
 
-    const { error } = await sb
-      .from(DB.rooms)
-      .delete()
-      .eq("id", roomId)
-      .eq(DB.roomOwnerId, State.ownerId);
+    const { data, error } = await sb
+      .from(DB.reservations)
+      .select("*")
+      .eq(DB.resOwnerId, State.ownerId)
+      .order(DB.resCheckin, { ascending: true })
+      .limit(200);
 
     if(error) throw error;
-    await loadLogements();
-    alert("✅ Supprimé !");
-  }catch(e){
-    console.error(e);
-    alert("❌ " + (e?.message || e));
-  }
-}
-
-function goCalendarRoom(roomId){
-  switchTab("calendrier");
-  loadCalendar(roomId);
-}
-
-/* =============================
-   RENDER: RESERVATIONS
-============================= */
-function renderReservations(list){
-  const tb = document.getElementById("tableReservations");
-  if(!tb) return;
-
-  if(!list.length){
-    tb.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align:center;color:var(--muted)">Aucune réservation</td>
-      </tr>`;
-    return;
+    return data || [];
   }
 
-  tb.innerHTML = list.map(r => {
-    const client = r?.[DB.resClientName] || "Client";
-    const logement = roomNameById(r?.[DB.resRoomId]);
-    const dates = `${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`;
-    const amount = moneyFCFA(r?.[DB.resAmount]);
-    const status = badgeForStatus(r);
+  /* =============================
+     RENDER: LOGEMENTS
+  ============================= */
+  function renderRooms(list) {
+    const container = document.getElementById("listeLogements");
+    if(!container) return;
 
-    return `
-      <tr>
-        <td>${esc(client)}<div style="color:var(--muted);font-size:0.85rem">${esc(r?.[DB.resPhone] || "")}</div></td>
-        <td>${esc(logement)}</td>
-        <td>${esc(dates)}</td>
-        <td><strong>${esc(amount)}</strong></td>
-        <td>${status}</td>
-        <td>
-          <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
+    if(!list.length){
+      container.innerHTML = `
+        <p style="color:var(--muted)">
+          ${isLiveMode()
+            ? `Aucun logement. Clique "CRÉER UNE FICHE LOGEMENT".`
+            : `Aucun logement affiché en aperçu. Passe en mode vivant pour gérer le parc réel.`}
+        </p>`;
+      return;
+    }
 
-function viewReservation(resId){
-  const r = State.reservations.find(x => String(x.id) === String(resId));
-  if(!r) return alert("Réservation introuvable");
+    container.innerHTML = list.map(room => {
+      const title = room?.[DB.roomTitle] || room?.title || "Logement";
+      const addr = room?.[DB.roomAddress] || room?.address || "—";
+      const desc = room?.[DB.roomDesc] || "";
+      const pmax = room?.[DB.roomMaxPeople] ?? room?.max_people ?? "—";
+      const pn = room?.[DB.roomPriceNight] ?? room?.price_per_night ?? 0;
+      const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
+      const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
+      const img = safeImg(room?.[DB.roomPhoto] || room?.cover_url);
+      const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
+      const badge = status.includes("act")
+        ? `<span class="badge badge-success">Actif</span>`
+        : `<span class="badge badge-warning">${esc(status)}</span>`;
 
-  const lines = [
-    `Client: ${r?.[DB.resClientName] || "—"}`,
-    `Tel: ${r?.[DB.resPhone] || "—"}`,
-    `Logement: ${roomNameById(r?.[DB.resRoomId])}`,
-    `Dates: ${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`,
-    `Montant: ${moneyFCFA(r?.[DB.resAmount])}`,
-    `Status: ${r?.[DB.resStatus] || "—"}`,
-    `Paiement: ${r?.[DB.resPayStatus] || "—"}`
-  ];
-  alert(lines.join("\n"));
-}
+      const disabled = isLiveMode() ? "" : "opacity:.55;pointer-events:none;";
+      const liveHint = isLiveMode() ? "" : `<div style="color:var(--muted);font-size:.85rem;margin-top:.5rem">Action disponible en mode vivant.</div>`;
 
-async function loadReservations(){
-  try{
-    if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-    if(!State.rooms.length) State.rooms = await fetchRooms();
-    State.reservations = await fetchReservations();
-    renderReservations(State.reservations);
-    await loadDashboard();
-  }catch(e){
-    console.error(e);
+      return `
+        <div class="logement-card">
+          <img src="${img}" alt="${esc(title)}" class="logement-img" onerror="this.src='https://via.placeholder.com/600x400?text=DIGIY+LOC'">
+          <div class="logement-info">
+            <h3>${esc(title)}</h3>
+            <p>📍 ${esc(addr)}</p>
+            <p>👥 ${esc(pmax)} personnes max</p>
+            ${desc ? `<p>${esc(desc)}</p>` : `<p style="color:var(--muted)">—</p>`}
+            <p style="margin-top:0.5rem">
+              <strong>Tarifs:</strong><br>
+              Nuit: ${moneyFCFA(pn)}<br>
+              Semaine: ${moneyFCFA(pw)}<br>
+              Mois: ${moneyFCFA(pm)}
+            </p>
+            <p style="margin-top:0.5rem">${badge}</p>
+            ${liveHint}
+          </div>
+          <div class="logement-actions" style="${disabled}">
+            <button class="btn btn-secondary" type="button" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
+            <button class="btn btn-secondary" type="button" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
+            <button class="btn btn-danger" type="button" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function loadLogements() {
+    if(!isLiveMode()){
+      renderRooms([]);
+      return;
+    }
+
+    try{
+      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
+      State.rooms = await fetchRooms();
+      renderRooms(State.rooms);
+
+      const actifs = State.rooms.filter(r =>
+        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
+      ).length;
+
+      setText("logementsActifs", String(actifs));
+    }catch(e){
+      console.error(e);
+      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur chargement logements: ${esc(e.message || e)}</p>`);
+    }
+  }
+
+  function openEditLogement(roomId){
+    if(!requireLive("Modifier un logement")) return;
+
+    const room = State.rooms.find(r => String(r.id) === String(roomId));
+    if(!room) return alert("Logement introuvable");
+
+    const newName = prompt("Nom du logement :", room?.[DB.roomTitle] || room?.title || "");
+    if(newName === null) return;
+
+    const newAddr = prompt("Adresse :", room?.[DB.roomAddress] || room?.address || "");
+    if(newAddr === null) return;
+
+    updateLogement(roomId, {
+      [DB.roomTitle]: newName.trim(),
+      [DB.roomAddress]: newAddr.trim()
+    });
+  }
+
+  async function updateLogement(roomId, patch){
+    if(!requireLive("Mettre à jour un logement")) return;
+
+    try{
+      const sb = getSB();
+      if(!sb) throw new Error("supabase_not_ready");
+
+      const { error } = await sb
+        .from(DB.rooms)
+        .update(patch)
+        .eq("id", roomId)
+        .eq(DB.roomOwnerId, State.ownerId);
+
+      if(error) throw error;
+      await loadLogements();
+      alert("✅ Modifié !");
+    }catch(e){
+      console.error(e);
+      alert("❌ " + (e?.message || e));
+    }
+  }
+
+  async function deleteLogement(roomId){
+    if(!requireLive("Supprimer un logement")) return;
+    if(!confirm("Supprimer ce logement ?")) return;
+
+    try{
+      const sb = getSB();
+      if(!sb) throw new Error("supabase_not_ready");
+
+      const { error } = await sb
+        .from(DB.rooms)
+        .delete()
+        .eq("id", roomId)
+        .eq(DB.roomOwnerId, State.ownerId);
+
+      if(error) throw error;
+      await loadLogements();
+      alert("✅ Supprimé !");
+    }catch(e){
+      console.error(e);
+      alert("❌ " + (e?.message || e));
+    }
+  }
+
+  function goCalendarRoom(roomId){
+    switchTab("calendrier");
+    loadCalendar(roomId);
+  }
+
+  /* =============================
+     RENDER: RESERVATIONS
+  ============================= */
+  function renderReservations(list){
     const tb = document.getElementById("tableReservations");
-    if(tb) tb.innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${esc(e.message || e)}</td></tr>`;
+    if(!tb) return;
+
+    if(!list.length){
+      tb.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;color:var(--muted)">
+            ${isLiveMode()
+              ? `Aucune réservation`
+              : `Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.`}
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tb.innerHTML = list.map(r => {
+      const client = r?.[DB.resClientName] || "Client";
+      const logement = roomNameById(r?.[DB.resRoomId]);
+      const dates = `${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`;
+      const amount = moneyFCFA(r?.[DB.resAmount]);
+      const status = badgeForStatus(r);
+
+      return `
+        <tr>
+          <td>${esc(client)}<div style="color:var(--muted);font-size:0.85rem">${esc(r?.[DB.resPhone] || "")}</div></td>
+          <td>${esc(logement)}</td>
+          <td>${esc(dates)}</td>
+          <td><strong>${esc(amount)}</strong></td>
+          <td>${status}</td>
+          <td>
+            <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
   }
-}
 
-/* =============================
-   DASHBOARD
-============================= */
-function reservationIsActive(r){
-  const st = String(r?.[DB.resStatus] || "").toLowerCase();
-  if(st.includes("cancel")) return false;
+  function viewReservation(resId){
+    if(!requireLive("Ouvrir une réservation")) return;
 
-  const t = todayYMD();
-  const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-  const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-  return ci && co && t >= ci && t < co;
-}
-function reservationIsUpcoming(r){
-  const t = todayYMD();
-  const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-  return ci && ci >= t;
-}
-function reservationIsPending(r){
-  const st = String(r?.[DB.resStatus] || "").toLowerCase();
-  const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
-  return st.includes("pending") || pay.includes("pending") || pay.includes("requires");
-}
+    const r = State.reservations.find(x => String(x.id) === String(resId));
+    if(!r) return alert("Réservation introuvable");
 
-async function loadDashboard(){
-  try{
-    if(!State.rooms.length) State.rooms = await fetchRooms();
-    if(!State.reservations.length) State.reservations = await fetchReservations();
+    const lines = [
+      `Client: ${r?.[DB.resClientName] || "—"}`,
+      `Tel: ${r?.[DB.resPhone] || "—"}`,
+      `Logement: ${roomNameById(r?.[DB.resRoomId])}`,
+      `Dates: ${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`,
+      `Montant: ${moneyFCFA(r?.[DB.resAmount])}`,
+      `Status: ${r?.[DB.resStatus] || "—"}`,
+      `Paiement: ${r?.[DB.resPayStatus] || "—"}`
+    ];
+    alert(lines.join("\n"));
+  }
 
-    const now = new Date();
-    const mStart = startOfMonth(now);
-    const mEnd = endOfMonth(now);
-    const mStartY = ymd(mStart);
-    const mEndY = ymd(mEnd);
+  async function loadReservations(){
+    if(!isLiveMode()){
+      renderReservations([]);
+      return;
+    }
 
-    let revenus = 0;
-    let activeCount = 0;
-    let upcoming = [];
-    let pending = [];
+    try{
+      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
+      if(!State.rooms.length) State.rooms = await fetchRooms();
+      State.reservations = await fetchReservations();
+      renderReservations(State.reservations);
+      await loadDashboard();
+    }catch(e){
+      console.error(e);
+      setHTML("tableReservations",
+        `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${esc(e.message || e)}</td></tr>`
+      );
+    }
+  }
 
-    const daysInMonth = mEnd.getDate();
-    const busyDays = new Set();
+  /* =============================
+     DASHBOARD
+  ============================= */
+  async function loadDashboard(){
+    if(!isLiveMode()){
+      renderPreviewShell(UX.reason || "preview");
+      return;
+    }
 
-    for(const r of State.reservations){
-      const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
-      const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-      const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-      const roomId = r?.[DB.resRoomId];
+    try{
+      if(!State.rooms.length) State.rooms = await fetchRooms();
+      if(!State.reservations.length) State.reservations = await fetchReservations();
 
-      if(ci >= mStartY && ci <= mEndY && (pay === "paid" || pay === "succeeded")){
-        revenus += Number(r?.[DB.resAmount] || 0);
-      }
+      const now = new Date();
+      const mStart = startOfMonth(now);
+      const mEnd = endOfMonth(now);
+      const mStartY = ymd(mStart);
+      const mEndY = ymd(mEnd);
 
-      if(reservationIsActive(r)) activeCount++;
-      if(reservationIsUpcoming(r)) upcoming.push(r);
-      if(reservationIsPending(r)) pending.push(r);
+      let revenus = 0;
+      let activeCount = 0;
+      let upcoming = [];
+      let pending = [];
 
-      if(roomId && ci && co){
-        let d = new Date(ci + "T00:00:00");
-        const end = new Date(co + "T00:00:00");
-        while(d < end){
-          const dy = ymd(d);
-          if(dy >= mStartY && dy <= mEndY) busyDays.add(`${roomId}|${dy}`);
-          d.setDate(d.getDate()+1);
+      const daysInMonth = mEnd.getDate();
+      const busyDays = new Set();
+
+      for(const r of State.reservations){
+        const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
+        const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+        const co = String(r?.[DB.resCheckout] || "").slice(0,10);
+        const roomId = r?.[DB.resRoomId];
+
+        if(ci >= mStartY && ci <= mEndY && (pay === "paid" || pay === "succeeded")){
+          revenus += Number(r?.[DB.resAmount] || 0);
+        }
+
+        if(reservationIsActive(r)) activeCount++;
+        if(reservationIsUpcoming(r)) upcoming.push(r);
+        if(reservationIsPending(r)) pending.push(r);
+
+        if(roomId && ci && co){
+          let d = new Date(ci + "T00:00:00");
+          const end = new Date(co + "T00:00:00");
+          while(d < end){
+            const dy = ymd(d);
+            if(dy >= mStartY && dy <= mEndY) busyDays.add(`${roomId}|${dy}`);
+            d.setDate(d.getDate()+1);
+          }
         }
       }
-    }
 
-    document.getElementById('revenusMois').textContent = moneyFCFA(revenus);
-    document.getElementById('resasActives').textContent = String(activeCount);
+      setText("revenusMois", moneyFCFA(revenus));
+      setText("resasActives", String(activeCount));
 
-    const actifs = State.rooms.filter(r => String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")).length;
-    document.getElementById('logementsActifs').textContent = String(actifs);
+      const actifs = State.rooms.filter(r =>
+        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
+      ).length;
+      setText("logementsActifs", String(actifs));
 
-    const denom = Math.max(1, actifs * daysInMonth);
-    const occ = Math.round((busyDays.size / denom) * 100);
-    document.getElementById('tauxOccupation').textContent = String(occ) + "%";
+      const denom = Math.max(1, actifs * daysInMonth);
+      const occ = Math.round((busyDays.size / denom) * 100);
+      setText("tauxOccupation", String(occ) + "%");
 
-    upcoming = upcoming
-      .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
-      .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
-      .slice(0,5);
+      upcoming = upcoming
+        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
+        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
+        .slice(0,5);
 
-    const upBox = document.getElementById("prochainesArrivees");
-    if(upBox){
-      upBox.innerHTML = !upcoming.length
-        ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
-        : upcoming.map(r => `
-          <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-            <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
-            <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · <strong>${esc(moneyFCFA(r?.[DB.resAmount]))}</strong></div>
+      setHTML("prochainesArrivees",
+        !upcoming.length
+          ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
+          : upcoming.map(r => `
+            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
+              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
+              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · <strong>${esc(moneyFCFA(r?.[DB.resAmount]))}</strong></div>
+            </div>
+          `).join("")
+      );
+
+      pending = pending
+        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
+        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
+        .slice(0,5);
+
+      setHTML("demandesAttente",
+        !pending.length
+          ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
+          : pending.map(r => `
+            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
+              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
+              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · ${badgeForStatus(r)}</div>
+            </div>
+          `).join("")
+      );
+
+      setHTML("statsDetails", `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+          <div class="stat-card">
+            <div class="stat-label">Téléphone</div>
+            <div class="stat-value" style="font-size:1.15rem">${esc(State.phone || "—")}</div>
           </div>
-        `).join("");
-    }
-
-    pending = pending
-      .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
-      .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
-      .slice(0,5);
-
-    const pBox = document.getElementById("demandesAttente");
-    if(pBox){
-      pBox.innerHTML = !pending.length
-        ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
-        : pending.map(r => `
-          <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-            <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
-            <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · ${badgeForStatus(r)}</div>
+          <div class="stat-card">
+            <div class="stat-label">Slug</div>
+            <div class="stat-value" style="font-size:1.15rem">${esc(State.slug || "—")}</div>
           </div>
-        `).join("");
-    }
-  }catch(e){
-    console.error(e);
-  }
-}
+          <div class="stat-card">
+            <div class="stat-label">Business code</div>
+            <div class="stat-value" style="font-size:1.15rem">${esc(State.business_code || "TEST")}</div>
+          </div>
+        </div>
+      `);
 
-/* =============================
-   CALENDAR
-============================= */
-function buildCalendar(monthDate, reservations, roomIdFilter=null){
-  const view = document.getElementById("calendarView");
-  if(!view) return;
+      showAccessBanner("live");
+      hydrateHeader();
 
-  const monthStart = startOfMonth(monthDate);
-  const monthEnd = endOfMonth(monthDate);
-  const firstDow = (monthStart.getDay() + 6) % 7;
-  const days = monthEnd.getDate();
-
-  const busy = new Set();
-  for(const r of reservations){
-    if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
-    const st = String(r?.[DB.resStatus] || "").toLowerCase();
-    if(st.includes("cancel")) continue;
-
-    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-    const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-    if(!ci || !co) continue;
-
-    let d = new Date(ci + "T00:00:00");
-    const end = new Date(co + "T00:00:00");
-    while(d < end){
-      const key = ymd(d);
-      if(key.slice(0,7) === ymd(monthStart).slice(0,7)) busy.add(key);
-      d.setDate(d.getDate()+1);
+    }catch(e){
+      console.error(e);
     }
   }
 
-  const monthLabel = monthStart.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
-  const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(x=>`<div class="cal-dow">${x}</div>`).join("");
+  /* =============================
+     CALENDAR
+  ============================= */
+  function buildCalendar(monthDate, reservations, roomIdFilter=null){
+    const view = document.getElementById("calendarView");
+    if(!view) return;
 
-  let cells = "";
-  for(let i=0;i<firstDow;i++) cells += `<div class="cal-day off"></div>`;
+    const monthStart = startOfMonth(monthDate);
+    const monthEnd = endOfMonth(monthDate);
+    const firstDow = (monthStart.getDay() + 6) % 7;
+    const days = monthEnd.getDate();
 
-  for(let day=1; day<=days; day++){
-    const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
-    const key = ymd(dt);
-    const isBusy = busy.has(key);
-    cells += `
-      <div class="cal-day ${isBusy ? "busy":"free"}">
-        <div class="n">${day}</div>
-        <div class="mini">${isBusy ? "Occupé" : "Libre"}</div>
+    const busy = new Set();
+    for(const r of reservations){
+      if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
+      const st = String(r?.[DB.resStatus] || "").toLowerCase();
+      if(st.includes("cancel")) continue;
+
+      const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+      const co = String(r?.[DB.resCheckout] || "").slice(0,10);
+      if(!ci || !co) continue;
+
+      let d = new Date(ci + "T00:00:00");
+      const end = new Date(co + "T00:00:00");
+      while(d < end){
+        const key = ymd(d);
+        if(key.slice(0,7) === ymd(monthStart).slice(0,7)) busy.add(key);
+        d.setDate(d.getDate()+1);
+      }
+    }
+
+    const monthLabel = monthStart.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
+    const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(x=>`<div class="cal-dow">${x}</div>`).join("");
+
+    let cells = "";
+    for(let i=0;i<firstDow;i++) cells += `<div class="cal-day off"></div>`;
+
+    for(let day=1; day<=days; day++){
+      const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
+      const key = ymd(dt);
+      const isBusy = busy.has(key);
+      cells += `
+        <div class="cal-day ${isBusy ? "busy":"free"}">
+          <div class="n">${day}</div>
+          <div class="mini">${isBusy ? "Occupé" : "Libre"}</div>
+        </div>
+      `;
+    }
+
+    let filterLabel = "";
+    if(roomIdFilter){
+      filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${esc(roomNameById(roomIdFilter))}</strong></span>`;
+    }
+
+    view.innerHTML = `
+      <div class="cal-wrap">
+        <div class="cal-box">
+          <div class="cal-head">
+            <div style="font-weight:900;text-transform:capitalize">${esc(monthLabel)}${filterLabel}</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
+              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
+              ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="loadCalendar()">Tout voir</button>` : ``}
+            </div>
+          </div>
+          <div class="cal-grid">${dows}${cells}</div>
+        </div>
       </div>
     `;
   }
 
-  let filterLabel = "";
-  if(roomIdFilter){
-    filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${esc(roomNameById(roomIdFilter))}</strong></span>`;
+  let _calCursor = new Date();
+
+  function calPrev(){
+    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()-1, 1);
+    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
+    else renderPreviewShell(UX.reason || "preview");
   }
 
-  view.innerHTML = `
-    <div class="cal-wrap">
-      <div class="cal-box">
-        <div class="cal-head">
-          <div style="font-weight:900;text-transform:capitalize">${esc(monthLabel)}${filterLabel}</div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
-            <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
-            ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="loadCalendar()">Tout voir</button>` : ``}
-          </div>
-        </div>
-        <div class="cal-grid">${dows}${cells}</div>
-      </div>
-    </div>
-  `;
-}
-
-let _calCursor = new Date();
-
-function calPrev(){
-  _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()-1, 1);
-  buildCalendar(_calCursor, State.reservations, State._calRoom || null);
-}
-function calNext(){
-  _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()+1, 1);
-  buildCalendar(_calCursor, State.reservations, State._calRoom || null);
-}
-
-async function loadCalendar(roomId=null){
-  try{
-    if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-    State._calRoom = roomId || null;
-    if(!State.rooms.length) State.rooms = await fetchRooms();
-    if(!State.reservations.length) State.reservations = await fetchReservations();
-    buildCalendar(_calCursor, State.reservations, roomId);
-  }catch(e){
-    console.error(e);
-    const view = document.getElementById("calendarView");
-    if(view) view.innerHTML = `<p style="color:var(--danger)">Erreur calendrier: ${esc(e.message || e)}</p>`;
-  }
-}
-
-/* =============================
-   PULSE TEST
-============================= */
-async function pulseTest(){
-  const msgEl = document.getElementById("pulseMsg");
-  if(!PULSE.enabled){
-    if(msgEl) msgEl.textContent = "Pulse désactivé.";
-    return;
-  }
-  try{
-    if(msgEl) msgEl.textContent = "Envoi en cours…";
-
-    const headers = { "Content-Type":"application/json" };
-    if(PULSE.apiKey) headers["x-api-key"] = PULSE.apiKey;
-
-    const body = {
-      channel: "whatsapp",
-      phone: State.phone,
-      business_code: State.business_code || "TEST",
-      pulse_kind: "TEST",
-      message: "Test DIGIY PULSE ✅"
-    };
-
-    if(!body.phone) throw new Error("Téléphone introuvable (session).");
-
-    const r = await fetch(PULSE.base + PULSE.endpoint, { method:"POST", headers, body: JSON.stringify(body) });
-    const j = await r.json().catch(()=> ({}));
-    if(!r.ok) throw new Error(j?.error || ("HTTP " + r.status));
-
-    if(msgEl) msgEl.textContent = "✅ Test envoyé";
-  }catch(e){
-    console.error(e);
-    if(msgEl) msgEl.textContent = "❌ " + (e.message || e);
-  }
-}
-
-/* =============================
-   ✅ INIT (GUARD FIRST) + SHOW APP
-============================= */
-(async function init(){
-  const MODULE = "LOC";
-  const PAY_URL = "https://beauville.github.io/commencer-a-payer/?module=LOC";
-  const loading = document.getElementById("loading");
-  const app = document.getElementById("app");
-
-  function fail(msg){
-    if(!loading) return;
-    loading.innerHTML = `
-      <div class="box">
-        <div class="t">❌ Accès impossible</div>
-        <div class="s">${esc(msg || "Erreur inconnue")}</div>
-        <div class="s" style="margin-top:.6rem">
-          <a href="./pin.html">Se connecter</a>
-        </div>
-      </div>`;
+  function calNext(){
+    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()+1, 1);
+    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
+    else renderPreviewShell(UX.reason || "preview");
   }
 
-  if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
-    fail("Guard absent (guard.js non chargé).");
-    return;
+  async function loadCalendar(roomId=null){
+    if(!isLiveMode()){
+      renderPreviewShell(UX.reason || "preview");
+      return;
+    }
+
+    try{
+      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
+      State._calRoom = roomId || null;
+      if(!State.rooms.length) State.rooms = await fetchRooms();
+      if(!State.reservations.length) State.reservations = await fetchReservations();
+      buildCalendar(_calCursor, State.reservations, roomId);
+    }catch(e){
+      console.error(e);
+      setHTML("calendarView", `<p style="color:var(--danger)">Erreur calendrier: ${esc(e.message || e)}</p>`);
+    }
   }
 
-  const guardRes = await window.DIGIY_GUARD.boot({
-    module: MODULE,
-    dashboard: "./app.html",
-    login: "./pin.html",
-    pay: PAY_URL,
-    requireSlug: true,
-    checkSubscription: true
-  });
+  /* =============================
+     PULSE TEST
+  ============================= */
+  async function pulseTest(){
+    if(!requireLive("Envoyer un test Pulse")) return;
 
-  if(!guardRes?.ok){
-    fail("Accès refusé (PIN / abonnement / slug).");
-    return;
+    const msgEl = document.getElementById("pulseMsg");
+    if(!PULSE.enabled){
+      if(msgEl) msgEl.textContent = "Pulse désactivé.";
+      return;
+    }
+
+    try{
+      if(msgEl) msgEl.textContent = "Envoi en cours…";
+
+      const headers = { "Content-Type":"application/json" };
+      if(PULSE.apiKey) headers["x-api-key"] = PULSE.apiKey;
+
+      const body = {
+        channel: "whatsapp",
+        phone: State.phone,
+        business_code: State.business_code || "TEST",
+        pulse_kind: "TEST",
+        message: "Test DIGIY PULSE ✅"
+      };
+
+      if(!body.phone) throw new Error("Téléphone introuvable (session).");
+
+      const r = await fetch(PULSE.base + PULSE.endpoint, {
+        method:"POST",
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const j = await r.json().catch(()=> ({}));
+      if(!r.ok) throw new Error(j?.error || ("HTTP " + r.status));
+
+      if(msgEl) msgEl.textContent = "✅ Test envoyé";
+    }catch(e){
+      console.error(e);
+      if(msgEl) msgEl.textContent = "❌ " + (e.message || e);
+    }
   }
 
-  // after guard OK, ensure sb ready (soft)
-  if(!sbReady()){
-    console.warn("Supabase pas prêt (sb null).");
+  /* =============================
+     GLOBALS FOR INLINE BUTTONS
+  ============================= */
+  window.openEditLogement = openEditLogement;
+  window.goCalendarRoom = goCalendarRoom;
+  window.deleteLogement = deleteLogement;
+  window.viewReservation = viewReservation;
+  window.calPrev = calPrev;
+  window.calNext = calNext;
+  window.loadCalendar = loadCalendar;
+
+  /* =============================
+     INIT
+  ============================= */
+  async function init(){
+    bindNav();
+    bindActions();
+    bindTabs();
+    bindNdimbal();
+
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      fail("Guard absent ou non chargé.");
+      return;
+    }
+
+    try{
+      await window.DIGIY_GUARD.ready;
+    }catch(e){
+      fail("Guard non prêt.");
+      return;
+    }
+
+    const st = getGuardState();
+    State.phone = st.phone || "";
+    State.slug = st.slug || "";
+    UX.reason = st.reason || "preview";
+
+    hydrateHeader();
+    activateApp();
+
+    // 1) Pas d’accès réel => aperçu propre
+    if(!st.access_ok){
+      renderPreviewShell(UX.reason || "preview");
+      return;
+    }
+
+    // 2) Accès réel OK => on tente de résoudre le contexte owner
+    const ctx = await resolveOwnerContext();
+
+    if(!ctx?.owner_id){
+      UX.reason = "owner_unresolved";
+      renderPreviewShell("owner_unresolved");
+      return;
+    }
+
+    State.ownerId = ctx.owner_id;
+    State.business_code = ctx.business_code || "TEST";
+    State.business_name = ctx.business_name || "";
+    UX.mode = "live";
+    UX.reason = "ok";
+
+    try { localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
+    try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
+    try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
+    try { if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
+
+    hydrateHeader();
+
+    try{
+      State.rooms = await fetchRooms();
+      State.reservations = await fetchReservations();
+
+      renderRooms(State.rooms);
+      renderReservations(State.reservations);
+      buildCalendar(_calCursor, State.reservations, null);
+      await loadDashboard();
+    }catch(e){
+      console.warn("Init error:", e);
+      showAccessBanner("live");
+    }
   }
 
-  const sess = window.DIGIY_GUARD.getSession?.() || null;
-  State.ownerId = sess?.owner_id || null;
-  State.phone = sess?.phone || "";
-  State.business_code = sess?.business_code || sess?.businessCode || "TEST";
-
-  if(!State.ownerId){
-    const go = (window.DIGIY_NAV?.withSlug ? window.DIGIY_NAV.withSlug("./pin.html") : window.DIGIY_GUARD.withSlug("./pin.html"));
-    window.location.replace(go);
-    return;
-  }
-
-  hydrateHeader();
-
-  // ✅ show app
-  if(loading) loading.style.display = "none";
-  if(app) app.style.display = "block";
-
-  try{
-    State.rooms = await fetchRooms();
-    State.reservations = await fetchReservations();
-
-    renderRooms(State.rooms);
-    renderReservations(State.reservations);
-    buildCalendar(_calCursor, State.reservations, null);
-
-    await loadDashboard();
-  }catch(e){
-    console.warn("Init error:", e);
-  }
+  init();
 })();
 </script>
 
