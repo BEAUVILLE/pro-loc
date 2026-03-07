@@ -279,25 +279,26 @@
   </div>
 
 <script>
-(function(){
+(async function(){
   "use strict";
 
-  // ---------------------------
-  // CONFIG
-  // ---------------------------
   const MODULE = "LOC";
-  const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
   const SUPPORT_WA = "+221771342889";
-
   const $ = (id)=>document.getElementById(id);
 
+  let ITEMS = [];
+  let UX_MODE = "preview";
+  let UX_REASON = "booting";
+
   function setSub(text){ $("sub").textContent = text; }
+
   function show(msg, cls){
     const el = $("note");
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
   }
+
   function showRight(msg, cls){
     const el = $("noteRight");
     el.className = "note " + (cls || "ok");
@@ -305,113 +306,121 @@
     el.style.display = msg ? "block" : "none";
   }
 
-  function digits(v){ return String(v||"").replace(/\D/g,""); }
-
-  // ---------------------------
-  // Guard required
-  // ---------------------------
-  if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
-    setSub("❌ Guard absent. Vérifie guard.js.");
-    show("❌ guard.js non chargé.\n➡️ Vérifie le chemin ./guard.js et le cache-bust.", "bad");
-    return;
-  }
-
-  // Boot guard: si pas OK, il redirige (login/pay) et on ne continue pas
-  try{
-    window.DIGIY_GUARD.boot({
-      module: MODULE,
-      dashboard: "./planning.html",
-      login: "./login.html",
-      pay: PAY_URL,
-      requireSlug: true,
-      checkSubscription: true
-    });
-  }catch(e){
-    console.error(e);
-    setSub("❌ Boot guard KO.");
-    show("❌ Boot guard a échoué.\nDétail: " + String(e?.message || e), "bad");
-    return;
-  }
-
-  // Slug + UI
-  const slug = (window.DIGIY_GUARD.getSlug ? window.DIGIY_GUARD.getSlug() : "") || "";
-  $("pillSlug").textContent = "slug: " + (slug || "—");
-  $("pillModule").textContent = MODULE;
-
-  // Date
-  const today = new Date();
-  const fmt = new Intl.DateTimeFormat("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-  $("pillToday").textContent = fmt.format(today);
-
-  // Official URL
-  const official = new URL("./planning.html", location.href);
-  if(slug) official.searchParams.set("slug", slug);
-  $("officialUrl").textContent = official.pathname + official.search;
-
-  // Internal links keep slug
-  if(window.DIGIY_GUARD.withSlug){
-    document.querySelectorAll('a[href^="./"]').forEach(a=>{
-      a.href = window.DIGIY_GUARD.withSlug(a.getAttribute("href"));
-    });
-  }
-
-  // Session info
-  const sess = window.DIGIY_GUARD.getSession ? window.DIGIY_GUARD.getSession() : null;
-  const phone = (window.DIGIY_GUARD.getPhone && window.DIGIY_GUARD.getPhone()) || sess?.phone || "";
-  $("who").textContent = sess?.ok ? ("✅ Connecté · " + phone) : "❌ Non connecté";
-  $("abo").textContent = "Abo: vérifié par Guard (si tu restes ici, c’est OK).";
-
-  // Sub ok
-  setSub("✅ Accès OK.");
-
-  // Logout
-  $("btnLogout").onclick = ()=>{
-    try{ window.DIGIY_GUARD.clearSession(); }catch(_){}
-    const u = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html";
-    location.replace(u);
-  };
-
-  // Support WhatsApp
-  $("btnSupport").onclick = (e)=>{
-    e.preventDefault();
-    const msg =
-`DIGIY LOC PRO • Support
-
-Module: ${MODULE}
-Slug: ${slug || "—"}
-Téléphone: ${phone || "—"}
-Page: planning
-
-Merci. — DIGIY`;
-    location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(msg);
-  };
-
-  // Back to PIN
-  $("btnPin").href = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./login.html") : "./login.html";
-
-  // ---------------------------
-  // MINI PLANNING OFFLINE (LocalStorage)
-  // ---------------------------
-  const LS_KEY = "DIGIY_LOC_PLANNING_CACHE_V1:" + (slug || "noslug");
-  let ITEMS = [];
-
-  function saveLS(){
-    try{
-      localStorage.setItem(LS_KEY, JSON.stringify({ slug, items: ITEMS, ts: Date.now() }));
-    }catch(_){}
-  }
-  function loadLS(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(!raw) return null;
-      return JSON.parse(raw);
-    }catch(_){ return null; }
+  function digits(v){
+    return String(v || "").replace(/\D/g, "");
   }
 
   function esc(s){
     return String(s||"").replace(/[&<>"']/g, (m)=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  function getSlug(){
+    const st = getGuardState();
+    if (st.slug) return String(st.slug).trim();
+
+    try {
+      return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
+    } catch {
+      return "";
+    }
+  }
+
+  function withSlug(path){
+    const slug = getSlug();
+    if(!slug) return path;
+
+    try{
+      const u = new URL(path, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = path.includes("?") ? "&" : "?";
+      return path + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function pinUrl(){
+    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+    catch { return withSlug("./pin.html"); }
+  }
+
+  function payUrl(){
+    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+    catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+  }
+
+  function isLive(){
+    return UX_MODE === "live" && !!getGuardState().access_ok;
+  }
+
+  function renderPreview(reason){
+    UX_MODE = "preview";
+    UX_REASON = reason || "preview";
+
+    setSub("👁️ Aperçu planning LOC");
+    show(
+      reason === "slug_missing"
+        ? "👁️ Aucun slug détecté.\n➡️ Tu vois un aperçu propre du planning."
+        : reason === "has_access_false"
+        ? "👁️ Slug présent mais accès non actif.\n➡️ Aperçu propre, sans mur brutal."
+        : reason === "owner_unresolved"
+        ? "👁️ Accès détecté mais contexte propriétaire incomplet.\n➡️ On reste en aperçu pour éviter le crash."
+        : "👁️ Planning en aperçu.\n➡️ Passe par PIN pour ouvrir le mode vivant.",
+      "warn"
+    );
+
+    $("who").textContent = "👁️ Aperçu";
+    $("abo").textContent = "Accès réel non confirmé.";
+  }
+
+  function renderLiveHeader(){
+    const st = getGuardState();
+    const phone = st.phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "—";
+
+    UX_MODE = "live";
+    UX_REASON = "ok";
+
+    setSub("✅ Accès OK.");
+    $("who").textContent = "✅ Connecté · " + phone;
+    $("abo").textContent = "Abo validé par le nouveau guard.";
+    show("✅ Planning prêt. (Le mini planning reste offline tant qu’on n’a pas branché le vrai planning Supabase.)", "ok");
+  }
+
+  function getLSKey(){
+    return "DIGIY_LOC_PLANNING_CACHE_V1:" + (getSlug() || "noslug");
+  }
+
+  function saveLS(){
+    try{
+      localStorage.setItem(getLSKey(), JSON.stringify({
+        slug: getSlug(),
+        items: ITEMS,
+        ts: Date.now()
+      }));
+    }catch(_){}
+  }
+
+  function loadLS(){
+    try{
+      const raw = localStorage.getItem(getLSKey());
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(_){
+      return null;
+    }
   }
 
   function badgeStatus(st){
@@ -439,14 +448,13 @@ Merci. — DIGIY`;
             <div class="itMeta">Ajoute une arrivée / départ / occupé.\n(Mode offline pour le terrain.)</div>
           </div>
           <div class="itR">
-            <span class="badge gold">🧪 Démo</span>
+            <span class="badge">🧪 Offline</span>
           </div>
         </div>
       `;
       return;
     }
 
-    // tri date (si possible)
     rows.sort((a,b)=>{
       const da = Date.parse(a.date || "") || 0;
       const db = Date.parse(b.date || "") || 0;
@@ -459,6 +467,7 @@ Merci. — DIGIY`;
       const tel = esc(x.phone || "");
       const note = esc(x.note || "");
       const st = x.status || "info";
+
       return `
         <div class="it">
           <div class="itL">
@@ -478,6 +487,11 @@ Merci. — DIGIY`;
 
     el.querySelectorAll("[data-del]").forEach(b=>{
       b.addEventListener("click", ()=>{
+        if(!isLive()){
+          showRight("👁️ En aperçu, tu peux consulter mais pas modifier le terrain réel.", "warn");
+          return;
+        }
+
         const i = Number(b.getAttribute("data-del"));
         if(!Number.isFinite(i)) return;
         ITEMS.splice(i,1);
@@ -489,6 +503,11 @@ Merci. — DIGIY`;
   }
 
   function addItem(){
+    if(!isLive()){
+      showRight("👁️ Passe par PIN pour entrer en mode vivant avant d’ajouter un élément.", "warn");
+      return;
+    }
+
     const name = prompt("Nom client (ex: Mamadou)") || "";
     if(!name.trim()) return;
 
@@ -507,10 +526,15 @@ Merci. — DIGIY`;
 
     saveLS();
     render(ITEMS);
-    showRight("✅ Ajouté (offline). Clique recharger pour relire.", "ok");
+    showRight("✅ Ajouté (offline).", "ok");
   }
 
   function clearAll(){
+    if(!isLive()){
+      showRight("👁️ En aperçu, on ne vide rien.", "warn");
+      return;
+    }
+
     if(!confirm("Vider le mini planning offline ?")) return;
     ITEMS = [];
     saveLS();
@@ -525,16 +549,85 @@ Merci. — DIGIY`;
     showRight("↻ Rechargé (offline).", "ok");
   }
 
-  // Bind
-  $("btnAdd").addEventListener("click", addItem);
-  $("btnClear").addEventListener("click", clearAll);
-  $("btnReload").addEventListener("click", reload);
-  $("btnSearch").addEventListener("click", ()=> render(ITEMS));
-  $("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(ITEMS); });
+  async function init(){
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      setSub("❌ Guard absent.");
+      show("❌ Guard absent ou non chargé.\n➡️ Vérifie ./guard.js", "bad");
+      return;
+    }
 
-  // Init
-  reload();
-  show("✅ Planning prêt. (Le mini planning est offline; ton vrai planning Supabase peut venir après.)", "ok");
+    try{
+      await window.DIGIY_GUARD.ready;
+    }catch(e){
+      setSub("❌ Guard non prêt.");
+      show("❌ Le guard n’a pas pu s’initialiser.", "bad");
+      return;
+    }
+
+    const st = getGuardState();
+    const slug = getSlug();
+
+    $("pillSlug").textContent = "slug: " + (slug || "—");
+    $("pillModule").textContent = MODULE;
+
+    const today = new Date();
+    const fmt = new Intl.DateTimeFormat("fr-FR", {
+      weekday:"long",
+      year:"numeric",
+      month:"long",
+      day:"numeric"
+    });
+    $("pillToday").textContent = fmt.format(today);
+
+    const official = new URL("./planning.html", location.href);
+    if(slug) official.searchParams.set("slug", slug);
+    $("officialUrl").textContent = official.pathname + official.search;
+
+    $("btnApp").href = withSlug("./app.html");
+    $("btnListing").href = withSlug("./listing.html");
+    $("btnPin").href = pinUrl();
+
+    $("btnLogout").onclick = ()=>{
+      try{
+        window.DIGIY_GUARD?.logout?.(pinUrl());
+      }catch(_){
+        location.replace(pinUrl());
+      }
+    };
+
+    $("btnSupport").onclick = (e)=>{
+      e.preventDefault();
+      const phone = st.phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "";
+      const txt =
+`DIGIY LOC PRO • Support
+
+Module: ${MODULE}
+Slug: ${slug || "—"}
+Téléphone: ${phone || "—"}
+Page: planning
+
+Merci. — DIGIY`;
+
+      location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
+    };
+
+    $("btnAdd").addEventListener("click", addItem);
+    $("btnClear").addEventListener("click", clearAll);
+    $("btnReload").addEventListener("click", reload);
+    $("btnSearch").addEventListener("click", ()=> render(ITEMS));
+    $("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(ITEMS); });
+
+    reload();
+
+    if(!st.access_ok){
+      renderPreview(st.reason || "preview");
+      return;
+    }
+
+    renderLiveHeader();
+  }
+
+  init();
 })();
 </script>
 </body>
