@@ -135,10 +135,60 @@
       color:var(--muted);
       font-weight:900;
     }
+
+    .floating-site-btn{
+      position:fixed;
+      right:16px;
+      bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index:80;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:48px;
+      padding:14px 16px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.28);
+      background:rgba(2,6,23,.88);
+      backdrop-filter:blur(10px);
+      color:var(--ink);
+      text-decoration:none;
+      font-size:13px;
+      font-weight:1000;
+      letter-spacing:.2px;
+      box-shadow:0 14px 34px rgba(0,0,0,.34);
+      transition:transform .14s ease, background .14s ease, border-color .14s ease;
+    }
+    .floating-site-btn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(250,204,21,.44);
+      background:rgba(11,16,32,.94);
+    }
+    .floating-site-btn:active{
+      transform:translateY(1px);
+    }
+
+    @media(max-width:700px){
+      .floating-site-btn{
+        left:12px;
+        right:12px;
+        bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+        min-height:46px;
+        padding:14px 14px;
+        font-size:12px;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <a
+    class="floating-site-btn"
+    href="https://digiylyfe.com/"
+    aria-label="Retour au site DIGIYLYFE"
+    title="Retour au site"
+  >← Retour au site</a>
+
   <div class="wrap">
     <div class="top">
       <div class="brand">
