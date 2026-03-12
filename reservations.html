@@ -1,50 +1,296 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DIGIY LOC • Réservations</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DIGIY LOC PRO — Réservations</title>
+  <meta name="theme-color" content="#061b14"/>
 
-  <link rel="stylesheet" href="./ui.css">
+  <!-- ✅ CONFIG SUPABASE -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-reservations-v2"></script>
+
+  <style>
+    :root{
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:#0b2a1f;
+      --line:rgba(255,255,255,.12);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.72);
+      --gold:#facc15;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --blue:#38bdf8;
+      --radius:18px;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
+        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:16px;
+    }
+
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+    .wrap{max-width:1180px;margin:0 auto}
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+    }
+
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .ico{
+      width:44px;height:44px;border-radius:16px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
+      border:1px solid rgba(250,204,21,.35);
+      font-size:20px;
+      flex:0 0 auto;
+    }
+    .title{font-size:16px;font-weight:1000;line-height:1.1}
+    .sub{margin-top:4px;font-size:12px;color:var(--muted);font-weight:800;line-height:1.35}
+
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill{
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:999px;
+      padding:8px 10px;
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+    .btn{
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:14px;
+      padding:11px 13px;
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:1000;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:44px;
+    }
+    .btn:hover{filter:brightness(1.08)}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .access{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(250,204,21,.22);
+      background:rgba(250,204,21,.07);
+      color:#fde68a;
+      font-weight:900;
+      line-height:1.45;
+      display:none;
+      white-space:pre-wrap;
+    }
+
+    .card{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+
+    .muted{color:var(--muted)}
+    .sep{height:1px;background:rgba(148,163,184,.16);margin:12px 0}
+
+    .filters{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media(max-width:980px){.filters{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.filters{grid-template-columns:1fr}}
+
+    .f label{
+      display:block;
+      margin-bottom:6px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+    }
+    .f input,.f select{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      padding:11px 12px;
+      font-weight:900;
+      outline:none;
+    }
+    .f input:focus,.f select:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.12);
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .grid{
+      display:grid;
+      grid-template-columns:1.12fr .88fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .list{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:18px;
+      padding:12px;
+      background:rgba(2,44,34,.22);
+      cursor:pointer;
+      transition:transform .08s ease, border-color .08s ease;
+    }
+    .item:hover{transform:translateY(-1px);border-color:rgba(250,204,21,.35)}
+    .item.active{border-color:rgba(250,204,21,.60);background:rgba(250,204,21,.08)}
+
+    .top{
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+    }
+    .name{font-weight:1000}
+    .meta{color:var(--muted);font-size:12px;margin-top:4px;line-height:1.55}
+    .badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .badge{
+      font-size:11px;font-weight:1000;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(15,23,42,.28);
+      white-space:nowrap;
+    }
+    .b-digiy{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .b-booking{border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10);color:#bfdbfe}
+    .b-ota{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.10);color:#ddd6fe}
+    .s-confirmed{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0}
+    .s-pending{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12);color:#fde68a}
+    .s-cancelled{border-color:rgba(249,115,115,.45);background:rgba(249,115,115,.12);color:#fecaca}
+    .p-paid{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0}
+    .p-due{border-color:rgba(249,115,115,.35);background:rgba(249,115,115,.12);color:#fecaca}
+
+    .empty{
+      display:none;
+      margin-top:12px;
+      padding:16px 14px;
+      text-align:center;
+      color:var(--muted);
+      border:1px dashed rgba(255,255,255,.16);
+      border-radius:18px;
+      background:rgba(0,0,0,.12);
+    }
+
+    .detailBox{
+      margin-top:12px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(0,0,0,.12);
+      min-height:180px;
+    }
+
+    .smallbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .smallchip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(2,44,34,.25);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .note{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+      white-space:pre-wrap;
+      display:none;
+      line-height:1.4;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+  </style>
 </head>
 
 <body>
 <div class="wrap">
 
-  <!-- TOP BAR -->
   <div class="topbar">
     <div class="brand">
       <div class="ico">🧾</div>
       <div>
         <div class="title">DIGIY LOC • PRO</div>
-        <div class="sub">Réservations — liste & filtres (UI)</div>
+        <div class="sub" id="topSub">Réservations — lecture réelle alignée sur le rail LOC PRO</div>
       </div>
     </div>
+
     <div class="actions">
-      <div class="pill" onclick="location.href='index.html'">← Dashboard</div>
-      <div class="pill" onclick="location.href='https://beauville.github.io/mon-espace-digiy/?choose=1'">🦅 Menu</div>
+      <div class="pill" id="pillSlug">slug: —</div>
+      <div class="pill warn" id="pillState">aperçu</div>
+      <a class="btn" id="btnBack" href="#">⬅️ Cockpit</a>
+      <a class="btn blue" id="btnPlanning" href="#">📅 Planning</a>
+      <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
     </div>
   </div>
 
-  <!-- NAV -->
-  <div class="nav">
-    <a href="planning.html">📅 Planning</a>
-    <a href="reservations.html">🧾 Réservations</a>
-    <a href="encaissements.html">💸 Encaissements</a>
-    <a href="tarifs.html">🏷️ Tarifs</a>
-    <a href="medias.html">📸 Photos</a>
-    <a href="fiche.html">👤 Fiche</a>
-  </div>
+  <div class="access" id="accessBox"></div>
 
-  <!-- FILTER BAR -->
   <div class="card">
-    <h2>Filtres</h2>
-    <div class="muted">Filtre rapide (interface). Plus tard → branchage Supabase.</div>
+    <h2 style="margin:0 0 8px;font-size:18px">Filtres</h2>
+    <div class="muted">Recherche réelle sur les réservations du propriétaire lié au slug actif.</div>
 
     <div class="filters">
       <div class="f">
         <label>Recherche</label>
-        <input id="q" placeholder="Nom client / téléphone / logement..." />
+        <input id="q" placeholder="Nom client / téléphone / logement / référence..." />
       </div>
 
       <div class="f">
@@ -78,322 +324,664 @@
     </div>
 
     <div class="row" style="margin-top:12px">
-      <button class="btn" id="reset">♻️ Réinitialiser</button>
-      <button class="btn" id="export">⬇️ Export (à brancher)</button>
+      <button class="btn" id="reset" type="button">♻️ Réinitialiser</button>
+      <button class="btn green" id="export" type="button">⬇️ Export CSV</button>
+      <span class="pill" id="count">0 réservation</span>
     </div>
+
+    <div class="note" id="noteMain"></div>
   </div>
 
-  <!-- LIST -->
   <div class="grid">
     <div class="card">
-      <h2>Liste des réservations</h2>
-      <div class="muted" id="count">—</div>
+      <h2 style="margin:0;font-size:18px">Liste des réservations</h2>
+      <div class="muted" id="countSub" style="margin-top:6px">—</div>
 
       <div id="list" class="list"></div>
-      <div class="muted" id="empty" style="display:none;margin-top:12px">
-        Aucune réservation ne correspond aux filtres.
-      </div>
+      <div id="empty" class="empty">Aucune réservation ne correspond aux filtres.</div>
     </div>
 
-    <!-- SIDE PANEL -->
     <div class="card">
-      <h2>Vue rapide</h2>
-      <div class="muted">
-        - Clique une réservation pour voir les détails<br>
-        - Les boutons “Encaisser / Contacter” sont UI pour l’instant
+      <h2 style="margin:0;font-size:18px">Vue rapide</h2>
+      <div class="muted" style="margin-top:6px">
+        Clique une réservation à gauche pour voir le détail. En mode vivant, le contact ouvre le vrai numéro du client.
       </div>
 
-      <hr class="sep">
-
-      <div class="muted" id="detail">
+      <div class="detailBox" id="detail">
         Sélectionne une réservation à gauche.
       </div>
 
-      <button class="btn" id="btnPay" disabled>💸 Encaisser (UI)</button>
-      <button class="btn" id="btnContact" disabled>📞 Contacter (UI)</button>
-      <button class="btn" id="btnClose" disabled>✅ Clôturer (UI)</button>
+      <div class="row" style="margin-top:12px">
+        <button class="btn gold" id="btnPay" disabled>💸 Encaisser</button>
+        <button class="btn green" id="btnContact" disabled>📞 Contacter</button>
+        <button class="btn" id="btnClose" disabled>✅ Clôturer (UI)</button>
+      </div>
+
+      <div class="note" id="noteSide"></div>
     </div>
   </div>
 
 </div>
 
-<!-- PAGE CSS (spécifique) -->
-<style>
-.filters{
-  margin-top:12px;
-  display:grid;
-  grid-template-columns:2fr 1fr 1fr 1fr;
-  gap:10px;
-}
-@media(max-width:900px){.filters{grid-template-columns:1fr 1fr}}
-@media(max-width:520px){.filters{grid-template-columns:1fr}}
-.f input,.f select{width:100%}
-
-.list{margin-top:12px;display:flex;flex-direction:column;gap:10px}
-.item{
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:18px;
-  padding:12px;
-  background:rgba(2,44,34,.22);
-  cursor:pointer;
-  transition:transform .08s ease, border-color .08s ease;
-}
-.item:hover{transform:translateY(-1px);border-color:rgba(250,204,21,.35)}
-.item.active{border-color:rgba(250,204,21,.60);background:rgba(250,204,21,.08)}
-.top{
-  display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
-}
-.name{font-weight:1000}
-.meta{color:var(--muted);font-size:12px;margin-top:3px;line-height:1.5}
-.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.badge{
-  font-size:11px;font-weight:1000;
-  padding:6px 10px;border-radius:999px;
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(15,23,42,.28);
-}
-.b-digiy{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10)}
-.b-booking{border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10)}
-.b-ota{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.10)}
-.s-confirmed{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12)}
-.s-pending{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12)}
-.s-cancelled{border-color:rgba(249,115,115,.45);background:rgba(249,115,115,.12)}
-.p-paid{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12)}
-.p-due{border-color:rgba(249,115,115,.35);background:rgba(249,115,115,.12)}
-.kpi{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.kpi .chip{display:flex;gap:8px;align-items:center}
-.smallbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.smallbtns .pill{background:rgba(2,44,34,.25)}
-</style>
-
-<!-- JS UI -->
 <script>
-/** UI dataset (mock) : plus tard, remplacé par Supabase */
-const DATA = [
-  {
-    id:"R-1001",
-    client:"Awa Ndiaye",
-    phone:"+221 77 111 22 33",
-    logement:"Studio • Chez Baptiste",
-    checkin:"2025-12-18",
-    checkout:"2025-12-22",
-    source:"digiy",
-    status:"confirmed",
-    pay:"paid",
-    total:120000
-  },
-  {
-    id:"R-1002",
-    client:"Jean Martin",
-    phone:"+33 6 12 34 56 78",
-    logement:"Chambre Double • Chez Baptiste",
-    checkin:"2025-12-24",
-    checkout:"2025-12-27",
-    source:"booking",
-    status:"confirmed",
-    pay:"due",
-    total:95000
-  },
-  {
-    id:"R-1003",
-    client:"Fatou Sarr",
-    phone:"+221 78 555 66 77",
-    logement:"Studio • Chez Baptiste",
-    checkin:"2025-12-28",
-    checkout:"2025-12-29",
-    source:"ota",
-    status:"pending",
-    pay:"due",
-    total:25000
-  },
-  {
-    id:"R-1004",
-    client:"Mamadou Diallo",
-    phone:"+221 76 999 00 11",
-    logement:"Chambre Triple • Chez Baptiste",
-    checkin:"2025-12-14",
-    checkout:"2025-12-16",
-    source:"digiy",
-    status:"cancelled",
-    pay:"due",
-    total:70000
+(() => {
+  "use strict";
+
+  const MODULE = "LOC";
+
+  const DB = {
+    rooms: "digiy_loc_rooms",
+    reservations: "digiy_loc_reservations",
+
+    roomOwnerId: "owner_id",
+    roomTitle: "nom",
+
+    resOwnerId: "owner_id",
+    resRoomId: "room_id",
+    resClientName: "client_name",
+    resPhone: "phone",
+    resCheckin: "checkin",
+    resCheckout: "checkout",
+    resAmount: "amount_total",
+    resStatus: "status",
+    resPayStatus: "payment_status"
+  };
+
+  const $ = (id)=>document.getElementById(id);
+
+  const State = {
+    slug: "",
+    phone: "",
+    ownerId: "",
+    businessName: "",
+    rooms: [],
+    reservations: [],
+    filtered: [],
+    current: null,
+    mode: "preview",
+    reason: "booting"
+  };
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
   }
-];
 
-const $ = (id)=>document.getElementById(id);
+  function fmtMoney(x){
+    const n = Number(x || 0);
+    return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
+  }
 
-function fmtMoney(x){
-  try{ return new Intl.NumberFormat('fr-FR').format(x) + " FCFA"; }
-  catch(e){ return x + " FCFA"; }
-}
+  function fmtDate(x){
+    if(!x) return "—";
+    try{
+      return new Date(x).toLocaleDateString("fr-FR");
+    }catch{
+      return String(x);
+    }
+  }
 
-function badgeSource(s){
-  if(s==="digiy") return ["DIGIY","b-digiy"];
-  if(s==="booking") return ["Booking","b-booking"];
-  return ["OTA","b-ota"];
-}
-function badgeStatus(s){
-  if(s==="confirmed") return ["Confirmée","s-confirmed"];
-  if(s==="pending") return ["En attente","s-pending"];
-  return ["Annulée","s-cancelled"];
-}
-function badgePay(s){
-  if(s==="paid") return ["Payé","p-paid"];
-  return ["À encaisser","p-due"];
-}
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
 
-let current = null;
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
 
-function applyFilters(){
-  const q = ($("q").value||"").trim().toLowerCase();
-  const source = $("source").value;
-  const status = $("status").value;
-  const pay = $("pay").value;
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
+    const ready = window.DIGIY_GUARD.ready;
 
-  const filtered = DATA.filter(r=>{
-    const matchQ = !q || (
-      r.client.toLowerCase().includes(q) ||
-      r.phone.toLowerCase().includes(q) ||
-      r.logement.toLowerCase().includes(q) ||
-      r.id.toLowerCase().includes(q)
-    );
-    const matchSource = (source==="all") || (r.source===source);
-    const matchStatus = (status==="all") || (r.status===status);
-    const matchPay = (pay==="all") || (r.pay===pay);
-    return matchQ && matchSource && matchStatus && matchPay;
-  });
+    if(typeof ready === "function"){
+      const maybe = ready(8000);
+      if (maybe && typeof maybe.then === "function") return await maybe;
+      return maybe;
+    }
 
-  renderList(filtered);
-}
+    if(ready && typeof ready.then === "function"){
+      return await ready;
+    }
 
-function renderList(rows){
-  const list = $("list");
-  list.innerHTML = "";
+    if(ready) return true;
+    throw new Error("guard_not_ready");
+  }
 
-  $("count").textContent = rows.length + " réservation(s)";
-  $("empty").style.display = rows.length ? "none" : "block";
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.()
+      || window.DIGIY_GUARD?.getSupabase?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || null;
+  }
 
-  rows.forEach(r=>{
-    const [S, sCls] = badgeSource(r.source);
-    const [ST, stCls] = badgeStatus(r.status);
-    const [P, pCls] = badgePay(r.pay);
+  function withSlug(path){
+    const slug = State.slug || getGuardState().slug || "";
+    if(!slug) return path;
 
-    const el = document.createElement("div");
-    el.className = "item";
-    el.dataset.id = r.id;
+    try{
+      const u = new URL(path, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = path.includes("?") ? "&" : "?";
+      return path + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
 
-    el.innerHTML = `
-      <div class="top">
-        <div>
-          <div class="name">${r.client}</div>
-          <div class="meta">
-            ${r.logement}<br>
-            ${r.checkin} → ${r.checkout} • <b>${fmtMoney(r.total)}</b><br>
-            <span style="opacity:.8">${r.id}</span>
-          </div>
-        </div>
-        <div class="badges">
-          <span class="badge ${sCls}">${S}</span>
-          <span class="badge ${stCls}">${ST}</span>
-          <span class="badge ${pCls}">${P}</span>
-        </div>
+  function phoneDigits(v){
+    return String(v || "").replace(/[^\d]/g, "");
+  }
+
+  function setNoteMain(msg, cls="warn"){
+    const el = $("noteMain");
+    el.className = "note " + cls;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function setNoteSide(msg, cls="warn"){
+    const el = $("noteSide");
+    el.className = "note " + cls;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function setAccessBox(msg){
+    const el = $("accessBox");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function roomNameById(id){
+    const r = State.rooms.find(x => String(x.id) === String(id));
+    return r?.[DB.roomTitle] || r?.title || "Logement";
+  }
+
+  function normalizeSource(r){
+    const raw = String(r.source || r.booking_source || r.channel || "").toLowerCase();
+    if (raw.includes("booking")) return "booking";
+    if (raw.includes("ota")) return "ota";
+    return "digiy";
+  }
+
+  function normalizeStatus(r){
+    const raw = String(r?.[DB.resStatus] || r.status || "").toLowerCase();
+    if (raw.includes("cancel")) return "cancelled";
+    if (raw.includes("pending") || raw.includes("attente")) return "pending";
+    if (raw.includes("confirm")) return "confirmed";
+    return raw || "confirmed";
+  }
+
+  function normalizePay(r){
+    const raw = String(r?.[DB.resPayStatus] || r.payment_status || "").toLowerCase();
+    if (raw === "paid" || raw === "succeeded" || raw === "confirmé" || raw === "confirmed") return "paid";
+    return "due";
+  }
+
+  function badgeSource(s){
+    if(s==="digiy") return ["DIGIY","b-digiy"];
+    if(s==="booking") return ["Booking","b-booking"];
+    return ["OTA","b-ota"];
+  }
+
+  function badgeStatus(s){
+    if(s==="confirmed") return ["Confirmée","s-confirmed"];
+    if(s==="pending") return ["En attente","s-pending"];
+    return ["Annulée","s-cancelled"];
+  }
+
+  function badgePay(s){
+    if(s==="paid") return ["Payé","p-paid"];
+    return ["À encaisser","p-due"];
+  }
+
+  function resetDetail(){
+    State.current = null;
+    $("detail").innerHTML = "Sélectionne une réservation à gauche.";
+    $("btnPay").disabled = true;
+    $("btnContact").disabled = true;
+    $("btnClose").disabled = true;
+    setNoteSide("", "warn");
+  }
+
+  function renderDetail(r){
+    const [S] = badgeSource(r._source);
+    const [ST] = badgeStatus(r._status);
+    const [P] = badgePay(r._pay);
+
+    $("detail").innerHTML = `
+      <div style="font-weight:1000;font-size:16px;margin-bottom:8px">${esc(r._client)}</div>
+      <div class="muted" style="line-height:1.65">
+        <b>${esc(r._room)}</b><br>
+        ${esc(fmtDate(r._checkin))} → ${esc(fmtDate(r._checkout))}<br>
+        Téléphone : <b>${esc(r._phone || "—")}</b><br>
+        Réf : <b>${esc(r._ref)}</b><br><br>
+        Source : <b>${esc(S)}</b><br>
+        Statut : <b>${esc(ST)}</b><br>
+        Paiement : <b>${esc(P)}</b><br>
+        Total : <b>${esc(fmtMoney(r._amount))}</b>
+      </div>
+
+      <div class="smallbtns">
+        <div class="smallchip">🧍 Client</div>
+        <div class="smallchip">🏠 Bien</div>
+        <div class="smallchip">💸 Paiement</div>
       </div>
     `;
 
-    el.onclick = ()=>{
-      document.querySelectorAll(".item").forEach(x=>x.classList.remove("active"));
-      el.classList.add("active");
-      current = r;
-      renderDetail(r);
-    };
-
-    list.appendChild(el);
-  });
-
-  // Si current n'est plus dans la liste, reset détail
-  if(current && !rows.find(x=>x.id===current.id)){
-    current = null;
-    resetDetail();
+    $("btnPay").disabled = State.mode !== "live";
+    $("btnContact").disabled = State.mode !== "live";
+    $("btnClose").disabled = State.mode !== "live";
   }
-}
 
-function resetDetail(){
-  $("detail").innerHTML = "Sélectionne une réservation à gauche.";
-  $("btnPay").disabled = true;
-  $("btnContact").disabled = true;
-  $("btnClose").disabled = true;
-}
+  function renderList(rows){
+    const list = $("list");
+    list.innerHTML = "";
 
-function renderDetail(r){
-  const [S] = badgeSource(r.source);
-  const [ST] = badgeStatus(r.status);
-  const [P] = badgePay(r.pay);
+    $("count").textContent = rows.length + " réservation(s)";
+    $("countSub").textContent = rows.length
+      ? `${rows.length} ligne(s) visibles dans ce filtre`
+      : "Aucune ligne visible";
 
-  $("detail").innerHTML = `
-    <div style="font-weight:1000;margin-bottom:6px">${r.client}</div>
-    <div class="muted">
-      <b>${r.logement}</b><br>
-      ${r.checkin} → ${r.checkout}<br>
-      Téléphone : <b>${r.phone}</b><br>
-      Réf : <b>${r.id}</b><br><br>
-      Source : <b>${S}</b><br>
-      Statut : <b>${ST}</b><br>
-      Paiement : <b>${P}</b><br>
-      Total : <b>${fmtMoney(r.total)}</b>
-    </div>
+    $("empty").style.display = rows.length ? "none" : "block";
 
-    <div class="kpi">
-      <div class="chip">🧍 Client</div>
-      <div class="chip">🏠 Bien</div>
-      <div class="chip">💸 Paiement</div>
-    </div>
+    rows.forEach(r=>{
+      const [S, sCls] = badgeSource(r._source);
+      const [ST, stCls] = badgeStatus(r._status);
+      const [P, pCls] = badgePay(r._pay);
 
-    <div class="smallbtns">
-      <div class="pill" onclick="alert('UI: voir détail complet')">👁️ Détail</div>
-      <div class="pill" onclick="alert('UI: ajouter note')">📝 Note</div>
-      <div class="pill" onclick="alert('UI: envoyer message')">💬 Message</div>
-    </div>
-  `;
+      const el = document.createElement("div");
+      el.className = "item" + (State.current && State.current.id === r.id ? " active" : "");
 
-  $("btnPay").disabled = false;
-  $("btnContact").disabled = false;
-  $("btnClose").disabled = false;
-}
+      el.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="name">${esc(r._client)}</div>
+            <div class="meta">
+              ${esc(r._room)}<br>
+              ${esc(fmtDate(r._checkin))} → ${esc(fmtDate(r._checkout))} • <b>${esc(fmtMoney(r._amount))}</b><br>
+              <span style="opacity:.8">${esc(r._ref)}</span>
+            </div>
+          </div>
+          <div class="badges">
+            <span class="badge ${sCls}">${esc(S)}</span>
+            <span class="badge ${stCls}">${esc(ST)}</span>
+            <span class="badge ${pCls}">${esc(P)}</span>
+          </div>
+        </div>
+      `;
 
-$("q").addEventListener("input", applyFilters);
-$("source").addEventListener("change", applyFilters);
-$("status").addEventListener("change", applyFilters);
-$("pay").addEventListener("change", applyFilters);
+      el.addEventListener("click", ()=>{
+        document.querySelectorAll(".item").forEach(x=>x.classList.remove("active"));
+        el.classList.add("active");
+        State.current = r;
+        renderDetail(r);
+      });
 
-$("reset").onclick = ()=>{
-  $("q").value="";
-  $("source").value="all";
-  $("status").value="all";
-  $("pay").value="all";
-  current=null;
-  resetDetail();
-  applyFilters();
-};
+      list.appendChild(el);
+    });
 
-$("export").onclick = ()=>alert("Export UI — plus tard: CSV depuis Supabase ✅");
+    if(State.current){
+      const found = rows.find(x => x.id === State.current.id);
+      if(!found){
+        resetDetail();
+      }
+    }
+  }
 
-$("btnPay").onclick = ()=> {
-  if(!current) return;
-  alert("Encaissement UI : " + current.id + " (" + fmtMoney(current.total) + ")");
-};
-$("btnContact").onclick = ()=> {
-  if(!current) return;
-  alert("Contact UI : " + current.client + " / " + current.phone);
-};
-$("btnClose").onclick = ()=> {
-  if(!current) return;
-  alert("Clôture UI : " + current.id);
-};
+  function applyFilters(){
+    const q = ($("q").value || "").trim().toLowerCase();
+    const source = $("source").value;
+    const status = $("status").value;
+    const pay = $("pay").value;
 
-resetDetail();
-applyFilters();
+    State.filtered = State.reservations.filter(r=>{
+      const matchQ = !q || [
+        r._client,
+        r._phone,
+        r._room,
+        r._ref
+      ].join(" ").toLowerCase().includes(q);
+
+      const matchSource = source === "all" || r._source === source;
+      const matchStatus = status === "all" || r._status === status;
+      const matchPay = pay === "all" || r._pay === pay;
+
+      return matchQ && matchSource && matchStatus && matchPay;
+    });
+
+    renderList(State.filtered);
+  }
+
+  function exportCSV(){
+    const rows = State.filtered.length ? State.filtered : State.reservations;
+    if(!rows.length){
+      setNoteMain("Aucune réservation à exporter.", "warn");
+      return;
+    }
+
+    const header = [
+      "reference","client","telephone","logement","checkin","checkout","source","status","paiement","total"
+    ];
+
+    const lines = rows.map(r => [
+      r._ref,
+      r._client,
+      r._phone,
+      r._room,
+      r._checkin,
+      r._checkout,
+      r._source,
+      r._status,
+      r._pay,
+      r._amount
+    ]);
+
+    const csv = [header, ...lines]
+      .map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";"))
+      .join("\n");
+
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `digiy-loc-reservations-${State.slug || "export"}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    setNoteMain("✅ Export CSV généré.", "ok");
+  }
+
+  function setPreview(reason){
+    State.mode = "preview";
+    State.reason = reason || "preview";
+
+    $("pillState").textContent = "aperçu";
+    $("pillState").className = "pill warn";
+
+    setAccessBox(
+      reason === "slug_missing"
+        ? "👁️ Aucun slug détecté. Coque protégée affichée."
+        : reason === "has_access_false"
+        ? "👁️ Slug présent mais accès non actif. Coque protégée affichée."
+        : reason === "owner_unresolved"
+        ? "👁️ Accès détecté mais owner_id non résolu. Coque protégée affichée."
+        : "👁️ Mode aperçu propre."
+    );
+
+    State.rooms = [];
+    State.reservations = [];
+    State.filtered = [];
+    renderList([]);
+    resetDetail();
+
+    setNoteMain("Passe par PIN pour voir les vraies réservations du propriétaire.", "warn");
+  }
+
+  function setLive(){
+    State.mode = "live";
+    State.reason = "ok";
+
+    $("pillState").textContent = "vivant";
+    $("pillState").className = "pill ok";
+    setAccessBox("");
+  }
+
+  function resolveOwnerContext(){
+    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+
+    State.ownerId =
+      sess?.owner_id ||
+      sess?.ownerId ||
+      storageGet("DIGIY_LOC_OWNER_ID") ||
+      storageGet("digiy_loc_owner_id") ||
+      storageGet("DIGIY_OWNER_ID") ||
+      storageGet("owner_id") ||
+      "";
+
+    State.businessName =
+      sess?.business_name ||
+      sess?.businessName ||
+      storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+      storageGet("DIGIY_BUSINESS_NAME") ||
+      "";
+
+    return !!State.ownerId;
+  }
+
+  async function ownerContextFromRpc(){
+    const guardRpc = window.DIGIY_GUARD?.rpc;
+    if(typeof guardRpc !== "function") return false;
+
+    const tries = [
+      "digiy_loc_owner_context",
+      "digiy_loc_get_owner_context",
+      "digiy_loc_resolve_owner_context"
+    ];
+
+    for (const fn of tries){
+      try{
+        const data = await guardRpc(fn, {
+          p_phone: State.phone || "",
+          p_slug: State.slug || "",
+          p_module: MODULE
+        });
+
+        const ownerId = data?.owner_id || data?.ownerId || data?.id || "";
+        if(ownerId){
+          State.ownerId = ownerId;
+          State.businessName = data?.business_name || data?.businessName || data?.name || "";
+
+          try{ localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); }catch{}
+          try{ localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.businessName || ""); }catch{}
+          return true;
+        }
+      }catch{}
+    }
+
+    return false;
+  }
+
+  async function fetchRooms(sb){
+    const { data, error } = await sb
+      .from(DB.rooms)
+      .select("id, nom, owner_id")
+      .eq(DB.roomOwnerId, State.ownerId)
+      .order("created_at", { ascending:false });
+
+    if(error) throw error;
+    return data || [];
+  }
+
+  async function fetchReservations(sb){
+    const { data, error } = await sb
+      .from(DB.reservations)
+      .select("*")
+      .eq(DB.resOwnerId, State.ownerId)
+      .order(DB.resCheckin, { ascending:false })
+      .limit(500);
+
+    if(error) throw error;
+
+    return (data || []).map(r => ({
+      ...r,
+      _client: r?.[DB.resClientName] || r.client_nom || r.client_name || "Client",
+      _phone: r?.[DB.resPhone] || r.client_phone || r.phone || "",
+      _room: roomNameById(r?.[DB.resRoomId]),
+      _checkin: r?.[DB.resCheckin] || r.date_arrivee || "",
+      _checkout: r?.[DB.resCheckout] || r.date_depart || "",
+      _amount: Number(r?.[DB.resAmount] || r.montant_total || 0) || 0,
+      _source: normalizeSource(r),
+      _status: normalizeStatus(r),
+      _pay: normalizePay(r),
+      _ref: r.id || r.reference || r.tracking_code || "—"
+    }));
+  }
+
+  async function loadLiveData(){
+    const sb = getSB();
+    if(!sb) throw new Error("supabase_not_ready");
+
+    State.rooms = await fetchRooms(sb);
+    State.reservations = await fetchReservations(sb);
+    applyFilters();
+
+    if(!State.reservations.length){
+      setNoteMain("✅ Accès vivant OK. Aucune réservation pour l’instant.", "ok");
+    }else{
+      setNoteMain(`✅ ${State.reservations.length} réservation(s) chargée(s).`, "ok");
+    }
+  }
+
+  async function reloadAll(){
+    $("btnReload").disabled = true;
+    setNoteMain("⏳ Chargement des réservations…", "warn");
+
+    try{
+      const st = getGuardState();
+      State.slug = (
+        new URL(location.href).searchParams.get("slug") ||
+        st.slug ||
+        storageGet("digiy_loc_slug") ||
+        storageGet("digiy_last_slug") ||
+        storageGet("DIGIY_SLUG") ||
+        ""
+      ).trim().toLowerCase();
+
+      State.phone = st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+
+      $("pillSlug").textContent = "slug: " + (State.slug || "—");
+
+      if(!State.slug){
+        setPreview("slug_missing");
+        return;
+      }
+
+      if(!st.access_ok){
+        setPreview("has_access_false");
+        return;
+      }
+
+      if(!resolveOwnerContext()){
+        const ok = await ownerContextFromRpc();
+        if(!ok){
+          setPreview("owner_unresolved");
+          return;
+        }
+      }
+
+      setLive();
+      await loadLiveData();
+
+    }catch(e){
+      console.error(e);
+      setNoteMain("❌ Impossible de charger les réservations.\n" + (e?.message || e), "bad");
+      renderList([]);
+      resetDetail();
+    }finally{
+      $("btnReload").disabled = false;
+    }
+  }
+
+  function bindNav(){
+    $("btnBack").href = withSlug("./app.html");
+    $("btnPlanning").href = withSlug("./planning.html");
+  }
+
+  function bindFilters(){
+    $("q").addEventListener("input", applyFilters);
+    $("source").addEventListener("change", applyFilters);
+    $("status").addEventListener("change", applyFilters);
+    $("pay").addEventListener("change", applyFilters);
+
+    $("reset").addEventListener("click", ()=>{
+      $("q").value = "";
+      $("source").value = "all";
+      $("status").value = "all";
+      $("pay").value = "all";
+      resetDetail();
+      applyFilters();
+    });
+
+    $("export").addEventListener("click", exportCSV);
+    $("btnReload").addEventListener("click", reloadAll);
+  }
+
+  function bindActions(){
+    $("btnPay").addEventListener("click", ()=>{
+      if(!State.current) return;
+      location.assign(withSlug("./wave.html"));
+    });
+
+    $("btnContact").addEventListener("click", ()=>{
+      if(!State.current) return;
+
+      const p = phoneDigits(State.current._phone);
+      if(!p){
+        setNoteSide("Numéro client indisponible.", "warn");
+        return;
+      }
+
+      const msg = `Bonjour ${State.current._client} 👋
+Réservation ${State.current._ref}
+Logement : ${State.current._room}
+Dates : ${fmtDate(State.current._checkin)} → ${fmtDate(State.current._checkout)}
+
+DIGIY LOC PRO`;
+      window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+      setNoteSide("✅ WhatsApp client ouvert.", "ok");
+    });
+
+    $("btnClose").addEventListener("click", ()=>{
+      if(!State.current) return;
+      setNoteSide("UI seulement pour l’instant. Aucun backend modifié.", "warn");
+    });
+  }
+
+  async function init(){
+    bindNav();
+    bindFilters();
+    bindActions();
+
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      setPreview("guard_missing");
+      setNoteMain("❌ Guard absent ou non chargé.", "bad");
+      return;
+    }
+
+    try{
+      await waitGuardReady();
+    }catch{
+      setPreview("guard_not_ready");
+      setNoteMain("❌ Guard non prêt.", "bad");
+      return;
+    }
+
+    bindNav();
+    reloadAll();
+  }
+
+  init();
+})();
 </script>
-
-<script src="./ui.js"></script>
 </body>
 </html>
