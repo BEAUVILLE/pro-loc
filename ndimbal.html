@@ -6,9 +6,16 @@
   <title>NDIMBAL LOC ♾️ — Bureau nomade</title>
   <meta name="theme-color" content="#0b1020"/>
 
+  <!-- ✅ CONFIG SUPABASE -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
   <!-- Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-final"></script>
+  <script src="./guard.js?v=locpro-ndimbal-v2"></script>
 
   <style>
     :root{
@@ -150,12 +157,12 @@
   </div>
 
 <script>
-(async function(){
+(function(){
   "use strict";
 
-  // =========================
-  // Helpers UI
-  // =========================
+  const MODULE = "LOC";
+  const NDIMBAL_VIEW = "v_ndimbal_loc";
+
   const $ = (id)=>document.getElementById(id);
   const note = $("note");
   const grid = $("grid");
@@ -163,90 +170,141 @@
   const q = $("q");
   const mode = $("mode");
 
+  let SLUG = "";
+  let OWNER_ID = "";
+  let PHONE = "";
+  let BUSINESS_CODE = "";
+
   function show(msg, type){
     note.className = "note " + (type || "warn");
     note.textContent = msg || "";
     note.style.display = msg ? "block" : "none";
   }
+
   function clear(){
     show("", "warn");
     grid.innerHTML = "";
     pillCount.textContent = "0 résultat";
   }
+
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, (m)=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
 
-  // =========================
-  // Slug (bureau nomade)
-  // =========================
-  const url = new URL(location.href);
-  const SLUG = (url.searchParams.get("slug") || "").trim();
-  $("pillSlug").innerHTML = `Lieu : <strong>${esc(SLUG || "—")}</strong>`;
-
-  // =========================
-  // Guard boot (await)
-  // =========================
-  const MODULE = "loc"; // ⚠️ garde le même que ton cockpit
-  const PAY_URL = "https://beauville.github.io/commencer-a-payer/";
-
-  if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.boot !== "function"){
-    show("❌ Guard absent.\n➡️ Vérifie le script ./guard.js", "bad");
-    return;
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
   }
 
-  const g = await window.DIGIY_GUARD.boot({
-    module: MODULE,
-    login: "./pin.html",
-    dashboard: "./ndimbal.html",
-    pay: PAY_URL,
-    requireSlug: true,
-    checkSubscription: true
-  });
-
-  if(!g?.ok){
-    show("🔒 Accès non ouvert.\n➡️ Retour PIN…", "warn");
-    const go = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./pin.html") : "./pin.html";
-    setTimeout(()=> window.DIGIY_GUARD.logout?.(go), 200);
-    return;
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
   }
 
-  // Retour cockpit (app.html) en gardant slug
-  const back = window.DIGIY_GUARD.withSlug
-    ? window.DIGIY_GUARD.withSlug("./app.html")
-    : (new URL("./app.html", location.href).toString());
-  $("btnBack").href = back;
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
+    const r = window.DIGIY_GUARD.ready;
 
-  // =========================
-  // Supabase: via Guard (source unique)
-  // =========================
+    if(typeof r === "function"){
+      const maybe = r(8000);
+      if (maybe && typeof maybe.then === "function") return await maybe;
+      return maybe;
+    }
+
+    if(r && typeof r.then === "function"){
+      return await r;
+    }
+
+    if(r) return true;
+    throw new Error("guard_not_ready");
+  }
+
   function getSB(){
     return window.DIGIY_GUARD?.getSb?.()
-        || window.DIGIY_GUARD?.getSupabase?.()
-        || window.DIGIY_GUARD?.sb
-        || window.sb
-        || null;
-  }
-  const SB = getSB();
-  if(!SB){
-    show("❌ Supabase pas prêt (guard).\n➡️ Recharge la page.", "bad");
-    return;
+      || window.DIGIY_GUARD?.getSupabase?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || window.supabase.createClient(
+          window.DIGIY_SUPABASE_URL,
+          window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON,
+          {
+            auth:{
+              persistSession:false,
+              autoRefreshToken:false,
+              detectSessionInUrl:false
+            }
+          }
+        );
   }
 
-  // =========================
-  // Session (owner_id + phone)
-  // =========================
-  const sess = window.DIGIY_GUARD.getSession?.() || null;
-  const ownerId = sess?.owner_id || sess?.ownerId || null;
-  const phone = sess?.phone || "";
-  const businessCode = sess?.business_code || sess?.businessCode || "TEST";
+  function getSlug(){
+    const st = getGuardState();
+    return (
+      new URL(location.href).searchParams.get("slug") ||
+      st.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      ""
+    ).trim().toLowerCase();
+  }
 
-  // =========================
-  // Source NDIMBAL (View)
-  // =========================
-  const NDIMBAL_VIEW = "v_ndimbal_loc";
+  function withSlug(path){
+    const slug = SLUG || getSlug();
+    if(!slug) return path;
+
+    try{
+      const u = new URL(path, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = path.includes("?") ? "&" : "?";
+      return path + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function resolveSession(){
+    const st = getGuardState();
+    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+
+    OWNER_ID =
+      sess?.owner_id ||
+      sess?.ownerId ||
+      storageGet("DIGIY_LOC_OWNER_ID") ||
+      storageGet("digiy_loc_owner_id") ||
+      storageGet("DIGIY_OWNER_ID") ||
+      storageGet("owner_id") ||
+      "";
+
+    PHONE =
+      sess?.phone ||
+      st.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      "";
+
+    BUSINESS_CODE =
+      (sess?.business_code ||
+      sess?.businessCode ||
+      storageGet("DIGIY_LOC_BUSINESS_CODE") ||
+      storageGet("DIGIY_BUSINESS_CODE") ||
+      "").toString().trim().toUpperCase();
+  }
 
   function pick(obj, keys){
     for(const k of keys){
@@ -305,16 +363,50 @@
   function sortRows(rows){
     return rows.slice().sort((a,b)=>{
       const ra = rankVal(a); const rb = rankVal(b);
-      // rank ASC
+
       if(ra !== null && rb !== null && ra !== rb) return ra - rb;
       if(ra !== null && rb === null) return -1;
       if(ra === null && rb !== null) return 1;
 
-      // title ASC
       const ta = String(pick(a, ["title","name","nom","label","business_name"]) || "");
       const tb = String(pick(b, ["title","name","nom","label","business_name"]) || "");
       return ta.localeCompare(tb);
     });
+  }
+
+  async function queryBySlug(sb){
+    const tries = [
+      { col: "slug", value: SLUG },
+      { col: "room_slug", value: SLUG },
+      { col: "business_slug", value: SLUG }
+    ];
+
+    for (const t of tries){
+      try{
+        const { data, error } = await sb.from(NDIMBAL_VIEW).select("*").eq(t.col, t.value).limit(250);
+        if(!error) return { ok:true, rows:data || [], mode:`slug:${t.col}` };
+      }catch{}
+    }
+
+    return { ok:false, rows:[], mode:"slug:none" };
+  }
+
+  async function queryByOwner(sb){
+    if(!OWNER_ID) return { ok:false, rows:[], mode:"owner:none" };
+
+    const tries = [
+      { col: "owner_id", value: OWNER_ID },
+      { col: "pro_id", value: OWNER_ID }
+    ];
+
+    for (const t of tries){
+      try{
+        const { data, error } = await sb.from(NDIMBAL_VIEW).select("*").eq(t.col, t.value).limit(250);
+        if(!error) return { ok:true, rows:data || [], mode:`owner:${t.col}` };
+      }catch{}
+    }
+
+    return { ok:false, rows:[], mode:"owner:none" };
   }
 
   async function load(){
@@ -334,44 +426,49 @@
     show("⏳ Chargement NDIMBAL…", "warn");
 
     try{
-      let query = SB.from(NDIMBAL_VIEW).select("*").limit(250);
+      const st = getGuardState();
 
-      // Mode “Mon bureau” = owner_id si dispo
-      if(mode.value === "office"){
-        if(!ownerId){
-          show("⚠️ owner_id absent dans la session.\n➡️ Bascule sur “Ce lieu (slug)” ou vérifie le guard.", "warn");
-          query = SB.from(NDIMBAL_VIEW).select("*").eq("slug", SLUG).limit(250);
-        }else{
-          // On tente owner_id, et si la vue n’a pas la colonne, on fallback slug
-          query = SB.from(NDIMBAL_VIEW).select("*").eq("owner_id", ownerId).limit(250);
-        }
-      }else{
-        // Mode “Ce lieu”
-        query = SB.from(NDIMBAL_VIEW).select("*").eq("slug", SLUG).limit(250);
+      if(!st.access_ok){
+        show("🔒 Accès non ouvert.\n➡️ Passe par PIN pour ouvrir le bureau réel.", "warn");
+        grid.innerHTML = "";
+        pillCount.textContent = "0 résultat";
+        return;
       }
 
-      const { data, error } = await query;
-      if(error){
-        // fallback si owner_id inexistant dans la vue
-        if(mode.value === "office"){
-          const { data: d2, error: e2 } = await SB.from(NDIMBAL_VIEW).select("*").eq("slug", SLUG).limit(250);
-          if(e2) throw e2;
-          const rows2 = sortRows(applySearch(d2 || [], keyword));
-          render(rows2, true);
+      const sb = getSB();
+      const officeMode = mode.value === "office";
+
+      let result;
+
+      if(officeMode){
+        result = await queryByOwner(sb);
+
+        if(!result.ok || !result.rows.length){
+          result = await queryBySlug(sb);
+          const rows = sortRows(applySearch(result.rows || [], keyword));
+          render(rows, true, result.mode);
           return;
         }
-        throw error;
+
+        const rows = sortRows(applySearch(result.rows || [], keyword));
+        render(rows, false, result.mode);
+        return;
       }
 
-      const rows = sortRows(applySearch(data || [], keyword));
-      render(rows, false);
+      result = await queryBySlug(sb);
+      if(!result.ok){
+        throw new Error("Impossible de lire v_ndimbal_loc avec le slug courant.");
+      }
+
+      const rows = sortRows(applySearch(result.rows || [], keyword));
+      render(rows, false, result.mode);
 
     }catch(e){
       console.error(e);
       show(
         "❌ NDIMBAL indisponible.\n" +
         "➡️ Vérifie RLS/permissions sur v_ndimbal_loc.\n" +
-        "➡️ Vérifie que la vue contient les colonnes attendues (slug / owner_id).\n\n" +
+        "➡️ Vérifie les colonnes de la vue (slug / owner_id / room_slug / business_slug).\n\n" +
         "Erreur: " + (e?.message || e),
         "bad"
       );
@@ -382,13 +479,13 @@
     }
   }
 
-  function render(rows, fallbackUsed){
+  function render(rows, fallbackUsed, queryMode){
     if(!rows.length){
       pillCount.textContent = "0 résultat";
       show(
         "ℹ️ Rien trouvé.\n" +
         (mode.value === "office"
-          ? "➡️ Mode bureau: soit tu n’as pas d’éléments NDIMBAL, soit la vue filtre via RLS."
+          ? "➡️ Mode bureau: soit tu n’as pas d’éléments NDIMBAL, soit la vue ne renvoie rien pour ton owner_id."
           : "➡️ Mode lieu: aucun NDIMBAL pour ce slug."),
         "ok"
       );
@@ -401,21 +498,37 @@
 
     const info =
       "✅ NDIMBAL chargé." +
-      (fallbackUsed ? "\n(Mode bureau: fallback slug car owner_id non dispo dans la vue.)" : "") +
-      (ownerId ? `\nowner_id: ${ownerId}` : "") +
-      (phone ? `\nphone: ${phone}` : "") +
-      (businessCode ? `\nbusiness_code: ${businessCode}` : "");
+      (fallbackUsed ? "\n(Fallback appliqué vers le slug.)" : "") +
+      (queryMode ? `\nquery: ${queryMode}` : "") +
+      (OWNER_ID ? `\nowner_id: ${OWNER_ID}` : "") +
+      (PHONE ? `\nphone: ${PHONE}` : "") +
+      (BUSINESS_CODE ? `\nbusiness_code: ${BUSINESS_CODE}` : "");
     show(info, "ok");
   }
 
-  $("btnReload").addEventListener("click", load);
-  $("btnSearch").addEventListener("click", load);
-  q.addEventListener("keydown", (e)=>{ if(e.key==="Enter") load(); });
-  mode.addEventListener("change", load);
+  async function init(){
+    try{
+      await waitGuardReady();
+    }catch(e){
+      show("❌ Guard absent ou non prêt.\n➡️ Vérifie ./guard.js puis recharge.", "bad");
+      return;
+    }
 
-  // GO
-  load();
+    SLUG = getSlug();
+    resolveSession();
 
+    $("pillSlug").innerHTML = `Lieu : <strong>${esc(SLUG || "—")}</strong>`;
+    $("btnBack").href = withSlug("./app.html");
+
+    $("btnReload").addEventListener("click", load);
+    $("btnSearch").addEventListener("click", load);
+    q.addEventListener("keydown", (e)=>{ if(e.key==="Enter") load(); });
+    mode.addEventListener("change", load);
+
+    load();
+  }
+
+  init();
 })();
 </script>
 </body>
