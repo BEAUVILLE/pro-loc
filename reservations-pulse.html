@@ -3,78 +3,218 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC • PRO — Aujourd’hui</title>
+  <title>DIGIY LOC PRO — Aujourd’hui</title>
   <meta name="theme-color" content="#16a34a"/>
+
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-today-v2"></script>
+
   <style>
     :root{
-      --bg:#061b14; --card:#0b2a1f; --card2:#0f3427; --line:rgba(255,255,255,.14);
-      --text:#eafff1; --muted:rgba(234,255,241,.72);
-      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --gold:#facc15;
+      --bg:#061b14;
+      --card:#0b2a1f;
+      --card2:#0f3427;
+      --line:rgba(255,255,255,.14);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.72);
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --gold:#facc15;
+      --blue:#38bdf8;
       --r:18px;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
     }
+
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 800px at 20% 0%, #0f3a2a 0%, var(--bg) 55%);
-      color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; padding:16px;}
-    .wrap{max-width:1050px;margin:0 auto;display:grid;gap:14px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 20% 0%, #0f3a2a 0%, var(--bg) 55%);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      padding:16px;
+    }
+
+    .wrap{max-width:1080px;margin:0 auto;display:grid;gap:14px}
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
     .brand{display:flex;flex-direction:column}
     .brand b{font-size:18px;letter-spacing:.2px}
-    .brand small{color:var(--muted)}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);
-      background:rgba(11,42,31,.75);border-radius:999px;color:var(--text)}
+    .brand small{color:var(--muted);line-height:1.35}
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background:rgba(11,42,31,.75);
+      border-radius:999px;
+      color:var(--text);
+      font-weight:900;
+      font-size:.9rem;
+      white-space:nowrap;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+    .card{
+      background:rgba(11,42,31,.78);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+
     .grid{display:grid;gap:12px}
-    @media(min-width:900px){ .grid{grid-template-columns:360px 1fr} }
-    .card{background:rgba(11,42,31,.78);border:1px solid var(--line);border-radius:var(--r);padding:14px}
-    .card h3{margin:0 0 10px 0;font-size:14px;color:var(--muted);font-weight:650;letter-spacing:.3px}
+    @media(min-width:920px){ .grid{grid-template-columns:360px 1fr} }
+
     .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .kpi{background:rgba(15,52,39,.6);border:1px solid var(--line);border-radius:16px;padding:12px}
+    .kpi{
+      background:rgba(15,52,39,.6);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
     .kpi b{font-size:22px}
     .kpi span{display:block;color:var(--muted);margin-top:6px;font-size:12px}
-    .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
-    .btn{cursor:pointer;border:1px solid var(--line);background:rgba(15,52,39,.6);
-      color:var(--text);padding:10px 12px;border-radius:14px;font-weight:700}
+
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:rgba(15,52,39,.6);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:44px;
+    }
     .btn:hover{border-color:rgba(250,204,21,.45)}
     .btn.primary{background:linear-gradient(135deg,#16a34a,#0ea5e9);border-color:rgba(255,255,255,.18)}
     .btn.ghost{background:transparent}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
     .list{display:grid;gap:10px}
-    .item{padding:12px;border-radius:16px;border:1px solid var(--line);background:rgba(15,52,39,.55);cursor:pointer}
+    .item{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(15,52,39,.55);
+      cursor:pointer;
+      transition:transform .08s ease,border-color .08s ease;
+    }
     .item:hover{border-color:rgba(250,204,21,.35)}
+    .item.active{border-color:rgba(250,204,21,.60);background:rgba(250,204,21,.08)}
+
     .item .top{display:flex;justify-content:space-between;gap:10px}
-    .tag{font-size:12px;color:var(--muted)}
-    .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(6,27,20,.55)}
+    .tag{font-size:12px;color:var(--muted);line-height:1.45}
+    .chip{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(6,27,20,.55);
+      font-weight:900;
+      white-space:nowrap;
+    }
     .chip.ok{border-color:rgba(34,197,94,.45);color:#bff7cf}
     .chip.warn{border-color:rgba(245,158,11,.45);color:#ffe2ad}
     .chip.bad{border-color:rgba(239,68,68,.45);color:#ffb4b4}
+
     .detail{display:grid;gap:10px}
     .muted{color:var(--muted)}
-    input,select{width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);
-      background:rgba(6,27,20,.45);color:var(--text);outline:none}
+    input,select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(6,27,20,.45);
+      color:var(--text);
+      outline:none;
+      font-weight:900;
+    }
     .two{display:grid;gap:10px}
-    @media(min-width:900px){ .two{grid-template-columns:1fr 1fr} }
+    @media(min-width:900px){ .two{grid-template-columns:1fr 1fr } }
+
     .sep{height:1px;background:var(--line);margin:8px 0}
-    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.18);padding:10px 12px;border-radius:14px;display:none}
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:16px;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.18);
+      padding:10px 12px;
+      border-radius:14px;
+      display:none;
+      z-index:50;
+    }
+
+    .note{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+      white-space:pre-wrap;
+      display:none;
+      line-height:1.4;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+
+    .empty{
+      padding:14px;
+      border-radius:16px;
+      border:1px dashed rgba(255,255,255,.16);
+      color:var(--muted);
+      text-align:center;
+      background:rgba(0,0,0,.12);
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
+
   <header>
     <div class="brand">
       <b>DIGIY LOC • PRO</b>
-      <small>Vue “Aujourd’hui” + messages WhatsApp (facultatif)</small>
+      <small id="topSub">Vue “Aujourd’hui” — branchée au slug actif</small>
     </div>
-    <div class="pill">
-      <span>🏷️ Business</span>
-      <b id="bizLabel">—</b>
-    </div>
+    <div class="pill" id="bizLabel">🏷️ Business • —</div>
   </header>
 
   <div class="card">
     <div class="two">
       <div>
-        <label class="muted">Business code</label>
-        <input id="business_code" placeholder="ex: BEAUVILLE" autocomplete="off"/>
+        <label class="muted">Business code résolu</label>
+        <input id="business_code" readonly placeholder="Résolution en cours..." />
       </div>
       <div>
         <label class="muted">Fenêtre “à venir”</label>
@@ -85,13 +225,25 @@
         </select>
       </div>
     </div>
+
     <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="btnLoad">🔄 Charger</button>
-      <button class="btn ghost" id="btnToday">📅 Aujourd’hui</button>
+      <div class="row">
+        <div class="pill" id="pillSlug">slug: —</div>
+        <div class="pill warn" id="pillState">aperçu</div>
+      </div>
+
+      <div class="row">
+        <a class="btn ghost" id="btnBack" href="#">⬅️ Cockpit</a>
+        <a class="btn ghost" id="btnPlanning" href="#">📅 Planning</a>
+        <button class="btn primary" id="btnLoad" type="button">🔄 Charger</button>
+      </div>
     </div>
+
     <div class="muted" style="margin-top:10px;font-size:12px">
-      DIGIY ne lit jamais tes messages. Il note seulement le geste (date/heure).
+      DIGIY n’ouvre que le message WhatsApp. Le texte reste côté propriétaire. Le marquage est tenté si le RPC existe, sinon on reste souple.
     </div>
+
+    <div class="note" id="noteMain"></div>
   </div>
 
   <div class="grid">
@@ -157,6 +309,8 @@
           <span class="chip ok" id="cWelcome">Accueil : —</span>
           <span class="chip ok" id="cAfter">Après séjour : —</span>
         </div>
+
+        <div class="note" id="noteSide"></div>
       </div>
     </div>
   </div>
@@ -165,238 +319,521 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* =========================
-   SUPABASE
-========================= */
-const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZn lqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA".replace(/\s+/g,'');
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+(() => {
+  "use strict";
 
-/* =========================
-   TEMPLATES
-========================= */
-function tmplWelcome(res){
-  const name = (res.client_nom || "").trim();
-  const greet = name ? `Bonjour ${name},` : `Bonjour,`;
-  return [
-    `${greet} merci pour votre réservation 🙏`,
-    `Nous sommes ravis de vous accueillir à ${res.logement_nom || "la maison"}.`,
-    `Parking gratuit à proximité, accès très facile.`,
-    `N’hésitez pas si vous avez des questions.`
-  ].join("\n");
-}
+  const MODULE = "LOC";
 
-function tmplAfterStay(res){
-  return [
-    `Vos suggestions nous permettent de nous améliorer.`,
-    `Merci pour votre séjour.`,
-    `Au plaisir de vous recevoir à nouveau.`
-  ].join("\n");
-}
+  const $ = (id)=>document.getElementById(id);
 
-/* =========================
-   HELPERS
-========================= */
-const $ = (id)=>document.getElementById(id);
-const toast = (msg)=>{
-  const el = $("toast");
-  el.textContent = msg;
-  el.style.display="block";
-  clearTimeout(window.__t);
-  window.__t = setTimeout(()=>el.style.display="none", 2200);
-};
+  const State = {
+    slug: "",
+    phone: "",
+    businessCode: "",
+    mode: "preview",
+    reason: "booting",
+    reservations: [],
+    selected: null
+  };
 
-function todayYMD(){
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth()+1).padStart(2,'0');
-  const d = String(now.getDate()).padStart(2,'0');
-  return `${y}-${m}-${d}`;
-}
+  function toast(msg){
+    const el = $("toast");
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(window.__digiy_toast);
+    window.__digiy_toast = setTimeout(()=> el.style.display="none", 2200);
+  }
 
-function addDaysYMD(ymd, days){
-  const [y,m,d] = ymd.split('-').map(Number);
-  const dt = new Date(Date.UTC(y,m-1,d));
-  dt.setUTCDate(dt.getUTCDate()+Number(days));
-  const yy=dt.getUTCFullYear(), mm=String(dt.getUTCMonth()+1).padStart(2,'0'), dd=String(dt.getUTCDate()).padStart(2,'0');
-  return `${yy}-${mm}-${dd}`;
-}
+  function setNote(msg, type="warn"){
+    const el = $("noteMain");
+    el.className = "note " + type;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
 
-function normalizePhone(p){
-  return (p||"").toString().replace(/[^0-9+]/g,'').trim();
-}
+  function setSide(msg, type="warn"){
+    const el = $("noteSide");
+    el.className = "note " + type;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
 
-function waLink(phone, text){
-  const p = normalizePhone(phone).replace(/^00/, '+');
-  const digits = p.startsWith('+') ? p.slice(1) : p;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
-}
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
 
-function statusChip(status){
-  const t = (status||"").toLowerCase();
-  if(t.includes("cancel")) return {cls:"bad", label:"Annulée"};
-  if(t.includes("confirm")) return {cls:"ok", label:"Confirmée"};
-  if(t.includes("pend")) return {cls:"warn", label:"En attente"};
-  return {cls:"", label: status || "—"};
-}
+  function fmtMoney(x){
+    try{ return Number(x || 0).toLocaleString("fr-FR") + " F"; }
+    catch(_){ return String(x || "0") + " F"; }
+  }
 
-/* =========================
-   STATE
-========================= */
-let RES = [];
-let SELECTED = null;
+  function todayYMD(){
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,"0");
+    const d = String(now.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
 
-/* =========================
-   LOAD DATA
-========================= */
-async function loadReservations(){
-  const biz = $("business_code").value.trim();
-  if(!biz){ toast("Entre ton business_code"); return; }
-  $("bizLabel").textContent = biz;
+  function addDaysYMD(ymd, days){
+    const [y,m,d] = ymd.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m-1, d));
+    dt.setUTCDate(dt.getUTCDate() + Number(days));
+    const yy = dt.getUTCFullYear();
+    const mm = String(dt.getUTCMonth()+1).padStart(2,"0");
+    const dd = String(dt.getUTCDate()).padStart(2,"0");
+    return `${yy}-${mm}-${dd}`;
+  }
 
-  const today = todayYMD();
-  const windowDays = parseInt($("windowDays").value || "7", 10);
-  const end = addDaysYMD(today, windowDays);
+  function normalizePhone(p){
+    return String(p || "").replace(/[^0-9+]/g,"").trim();
+  }
 
-  // Fenêtre: on récupère arrivées proche (pour la vue "Aujourd’hui + à venir")
-  const { data, error } = await db
-    .from("digiy_reservations")
-    .select(`
-      id, created_at, updated_at, business_code,
-      logement_nom, tracking_code,
-      client_nom, client_phone, client_email,
-      date_arrivee, date_depart,
-      nb_nuits, nb_personnes, montant_total, mode_paiement,
-      status, notes,
-      welcome_message_sent_at, afterstay_message_sent_at
-    `)
-    .eq("business_code", biz)
-    .gte("date_arrivee", addDaysYMD(today, -7))
-    .lte("date_arrivee", end)
-    .order("date_arrivee", {ascending:true});
+  function digitsOnly(v){
+    return String(v || "").replace(/\D/g, "");
+  }
 
-  if(error){ console.error(error); toast("Erreur chargement"); return; }
-  RES = data || [];
-  renderKPIs();
-  renderList();
-  toast("Chargé ✅");
-}
+  function waLink(phone, text){
+    const p = normalizePhone(phone).replace(/^00/, "+");
+    const digits = p.startsWith("+") ? p.slice(1) : p;
+    return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+  }
 
-function renderKPIs(){
-  const t = todayYMD();
-  const soonEnd = addDaysYMD(t, parseInt($("windowDays").value || "7", 10));
+  function tmplWelcome(res){
+    const name = (res.client_nom || "").trim();
+    const greet = name ? `Bonjour ${name},` : `Bonjour,`;
+    return [
+      `${greet} merci pour votre réservation 🙏`,
+      `Nous sommes ravis de vous accueillir à ${res.logement_nom || "la maison"}.`,
+      `Parking gratuit à proximité, accès très facile.`,
+      `N’hésitez pas si vous avez des questions.`
+    ].join("\n");
+  }
 
-  const arrivals = RES.filter(r=>String(r.date_arrivee)===t).length;
-  const deps = RES.filter(r=>String(r.date_depart)===t).length;
+  function tmplAfterStay(res){
+    return [
+      `Vos suggestions nous permettent de nous améliorer.`,
+      `Merci pour votre séjour.`,
+      `Au plaisir de vous recevoir à nouveau.`
+    ].join("\n");
+  }
 
-  const occ = RES.filter(r=>{
-    const ci = String(r.date_arrivee), co = String(r.date_depart);
-    return ci <= t && co > t;
-  }).length;
+  function statusChip(status){
+    const t = String(status || "").toLowerCase();
+    if(t.includes("cancel")) return { cls:"bad", label:"Annulée" };
+    if(t.includes("confirm")) return { cls:"ok", label:"Confirmée" };
+    if(t.includes("pend")) return { cls:"warn", label:"En attente" };
+    return { cls:"", label: status || "—" };
+  }
 
-  const soon = RES.filter(r=>{
-    const ci = String(r.date_arrivee);
-    return ci > t && ci <= soonEnd;
-  }).length;
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
 
-  $("kArr").textContent = arrivals;
-  $("kDep").textContent = deps;
-  $("kOcc").textContent = occ;
-  $("kSoon").textContent = soon;
-}
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
+    const ready = window.DIGIY_GUARD.ready;
+    if(typeof ready === "function"){
+      const out = ready(8000);
+      if(out && typeof out.then === "function") return await out;
+      return out;
+    }
+    if(ready && typeof ready.then === "function") return await ready;
+    if(ready) return true;
+    throw new Error("guard_not_ready");
+  }
 
-function renderList(){
-  const el = $("list");
-  el.innerHTML = "";
-  $("countLabel").textContent = `${RES.length}`;
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.()
+      || window.DIGIY_GUARD?.getSupabase?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || null;
+  }
 
-  RES.forEach(r=>{
-    const chip = statusChip(r.status);
-    const div = document.createElement("div");
-    div.className="item";
-    div.innerHTML = `
-      <div class="top">
-        <div>
-          <div style="font-weight:800">${(r.client_nom||"Client").toString()}</div>
-          <div class="tag">📅 ${r.date_arrivee} → ${r.date_depart} • 🏠 ${(r.logement_nom||"—")}</div>
+  function withSlug(path){
+    const slug = State.slug || getGuardState().slug || "";
+    if(!slug) return path;
+    try{
+      const u = new URL(path, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = path.includes("?") ? "&" : "?";
+      return path + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function setPreview(reason){
+    State.mode = "preview";
+    State.reason = reason || "preview";
+
+    $("pillState").textContent = "aperçu";
+    $("pillState").className = "pill warn";
+
+    const msg =
+      reason === "slug_missing" ? "Aucun slug détecté. La page reste en aperçu propre."
+      : reason === "has_access_false" ? "Slug détecté mais accès non actif. Passe par PIN."
+      : reason === "business_missing" ? "Business code introuvable. Vérifie le rail slug → business."
+      : "Mode aperçu actif.";
+
+    setNote("👁️ " + msg, "warn");
+    clearView();
+  }
+
+  function setLive(){
+    State.mode = "live";
+    State.reason = "ok";
+    $("pillState").textContent = "vivant";
+    $("pillState").className = "pill ok";
+  }
+
+  function clearView(){
+    State.reservations = [];
+    State.selected = null;
+    $("kArr").textContent = "0";
+    $("kDep").textContent = "0";
+    $("kOcc").textContent = "0";
+    $("kSoon").textContent = "0";
+    $("countLabel").textContent = "0";
+    $("list").innerHTML = `<div class="empty">Aucune donnée à afficher.</div>`;
+    resetDetail();
+  }
+
+  function resetDetail(){
+    State.selected = null;
+    $("empty").style.display = "block";
+    $("detail").style.display = "none";
+    setSide("", "warn");
+  }
+
+  function renderKPIs(){
+    const t = todayYMD();
+    const soonEnd = addDaysYMD(t, parseInt($("windowDays").value || "7", 10));
+
+    const activeRows = State.reservations.filter(r => !String(r.status || "").toLowerCase().includes("cancel"));
+
+    const arrivals = activeRows.filter(r => String(r.date_arrivee) === t).length;
+    const deps = activeRows.filter(r => String(r.date_depart) === t).length;
+
+    const occ = activeRows.filter(r => {
+      const ci = String(r.date_arrivee || "");
+      const co = String(r.date_depart || "");
+      return ci <= t && co > t;
+    }).length;
+
+    const soon = activeRows.filter(r => {
+      const ci = String(r.date_arrivee || "");
+      return ci > t && ci <= soonEnd;
+    }).length;
+
+    $("kArr").textContent = arrivals;
+    $("kDep").textContent = deps;
+    $("kOcc").textContent = occ;
+    $("kSoon").textContent = soon;
+  }
+
+  function renderList(){
+    const el = $("list");
+    el.innerHTML = "";
+
+    $("countLabel").textContent = String(State.reservations.length);
+
+    if(!State.reservations.length){
+      el.innerHTML = `<div class="empty">Aucune réservation visible dans la fenêtre choisie.</div>`;
+      return;
+    }
+
+    State.reservations.forEach(r => {
+      const chip = statusChip(r.status);
+      const div = document.createElement("div");
+      div.className = "item" + (State.selected && State.selected.id === r.id ? " active" : "");
+
+      div.innerHTML = `
+        <div class="top">
+          <div>
+            <div style="font-weight:800">${esc(r.client_nom || "Client")}</div>
+            <div class="tag">📅 ${esc(r.date_arrivee || "—")} → ${esc(r.date_depart || "—")} • 🏠 ${esc(r.logement_nom || "—")}</div>
+          </div>
+          <div class="chip ${chip.cls}">${esc(chip.label)}</div>
         </div>
-        <div class="chip ${chip.cls}">${chip.label}</div>
-      </div>
-      <div class="tag" style="margin-top:8px">
-        📞 ${normalizePhone(r.client_phone)||"—"} • Accueil: ${r.welcome_message_sent_at ? "✅" : "—"} • Après: ${r.afterstay_message_sent_at ? "✅" : "—"}
-      </div>
-    `;
-    div.onclick = ()=>selectReservation(r.id);
-    el.appendChild(div);
+        <div class="tag" style="margin-top:8px">
+          📞 ${esc(normalizePhone(r.client_phone) || "—")} • Accueil: ${r.welcome_message_sent_at ? "✅" : "—"} • Après: ${r.afterstay_message_sent_at ? "✅" : "—"}
+        </div>
+      `;
+
+      div.addEventListener("click", ()=> selectReservation(r.id));
+      el.appendChild(div);
+    });
+  }
+
+  function selectReservation(id){
+    const r = State.reservations.find(x => x.id === id);
+    if(!r) return;
+    State.selected = r;
+
+    $("empty").style.display = "none";
+    $("detail").style.display = "grid";
+
+    $("dGuest").textContent = r.client_nom || "Client";
+    $("dDates").textContent = `📅 ${r.date_arrivee || "—"} → ${r.date_depart || "—"}`;
+
+    const chip = statusChip(r.status);
+    $("dStatus").className = `chip ${chip.cls}`;
+    $("dStatus").textContent = chip.label;
+
+    $("dPhone").textContent = normalizePhone(r.client_phone) || "—";
+    $("dEmail").textContent = r.client_email || "—";
+    $("dLogement").textContent = r.logement_nom || "—";
+    $("dTrack").textContent = `Tracking: ${r.tracking_code || "—"} • ID: ${r.id}`;
+
+    $("cWelcome").textContent = `Accueil : ${r.welcome_message_sent_at ? new Date(r.welcome_message_sent_at).toLocaleString() : "—"}`;
+    $("cAfter").textContent = `Après séjour : ${r.afterstay_message_sent_at ? new Date(r.afterstay_message_sent_at).toLocaleString() : "—"}`;
+
+    renderList();
+  }
+
+  async function tryResolveBusinessCode(sb){
+    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+
+    const direct =
+      sess?.business_code ||
+      sess?.businessCode ||
+      localStorage.getItem("DIGIY_LOC_BUSINESS_CODE") ||
+      localStorage.getItem("DIGIY_BUSINESS_CODE") ||
+      "";
+
+    if(direct){
+      return String(direct).trim().toUpperCase();
+    }
+
+    if(!State.slug) return "";
+
+    try{
+      const { data, error } = await sb.rpc("digiy_loc_get_business_code_by_slug", {
+        p_slug: State.slug
+      });
+      if(error) throw error;
+      return String(data || "").trim().toUpperCase();
+    }catch{
+      return "";
+    }
+  }
+
+  async function loadReservations(){
+    const sb = getSB();
+    if(!sb){
+      setNote("❌ Supabase non prêt via le guard.", "bad");
+      return;
+    }
+
+    State.slug = (
+      new URL(location.href).searchParams.get("slug") ||
+      getGuardState().slug ||
+      localStorage.getItem("digiy_loc_slug") ||
+      localStorage.getItem("digiy_last_slug") ||
+      localStorage.getItem("DIGIY_SLUG") ||
+      ""
+    ).trim().toLowerCase();
+
+    State.phone = getGuardState().phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "";
+
+    $("pillSlug").textContent = "slug: " + (State.slug || "—");
+    $("btnBack").href = withSlug("./app.html");
+    $("btnPlanning").href = withSlug("./planning.html");
+
+    if(!State.slug){
+      setPreview("slug_missing");
+      return;
+    }
+
+    if(!getGuardState().access_ok){
+      setPreview("has_access_false");
+      return;
+    }
+
+    State.businessCode = await tryResolveBusinessCode(sb);
+    $("business_code").value = State.businessCode || "";
+    $("bizLabel").innerHTML = `🏷️ Business • ${esc(State.businessCode || "—")}`;
+
+    if(!State.businessCode){
+      setPreview("business_missing");
+      return;
+    }
+
+    setLive();
+    setNote("⏳ Chargement des réservations…", "warn");
+
+    const today = todayYMD();
+    const windowDays = parseInt($("windowDays").value || "7", 10);
+    const end = addDaysYMD(today, windowDays);
+
+    try{
+      const { data, error } = await sb
+        .from("digiy_reservations")
+        .select(`
+          id, created_at, updated_at, business_code,
+          logement_nom, tracking_code,
+          client_nom, client_phone, client_email,
+          date_arrivee, date_depart,
+          nb_nuits, nb_personnes, montant_total, mode_paiement,
+          status, notes,
+          welcome_message_sent_at, afterstay_message_sent_at
+        `)
+        .eq("business_code", State.businessCode)
+        .lte("date_arrivee", end)
+        .gte("date_depart", today)
+        .order("date_arrivee", { ascending:true });
+
+      if(error) throw error;
+
+      State.reservations = data || [];
+      renderKPIs();
+      renderList();
+      resetDetail();
+
+      setNote(`✅ ${State.reservations.length} réservation(s) chargée(s) pour ${State.businessCode}.`, "ok");
+    }catch(e){
+      console.error(e);
+      clearView();
+      setNote("❌ Erreur chargement réservations.\n" + (e?.message || e), "bad");
+    }
+  }
+
+  async function tryMarkSent(kind){
+    if(!State.selected) return false;
+
+    const sb = getSB();
+    if(!sb) return false;
+
+    try{
+      const { error } = await sb.rpc("digiy_loc_mark_message_sent", {
+        p_reservation_id: State.selected.id,
+        p_kind: kind
+      });
+      if(error) throw error;
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  async function afterMark(kind){
+    const field = kind === "welcome" ? "welcome_message_sent_at" : "afterstay_message_sent_at";
+    const now = new Date().toISOString();
+
+    if(State.selected){
+      State.selected[field] = now;
+      const idx = State.reservations.findIndex(x => x.id === State.selected.id);
+      if(idx >= 0) State.reservations[idx][field] = now;
+      selectReservation(State.selected.id);
+    }
+  }
+
+  $("btnWelcome").addEventListener("click", async ()=>{
+    if(!State.selected){
+      toast("Sélectionne une réservation");
+      return;
+    }
+
+    const text = tmplWelcome(State.selected);
+    const phone = State.selected.client_phone || "";
+    if(!digitsOnly(phone)){
+      setSide("Téléphone client introuvable.", "warn");
+      return;
+    }
+
+    window.open(waLink(phone, text), "_blank", "noopener");
+    const marked = await tryMarkSent("welcome");
+    if(marked){
+      await afterMark("welcome");
+      setSide("✅ WhatsApp accueil ouvert et marquage enregistré.", "ok");
+    }else{
+      setSide("✅ WhatsApp accueil ouvert. Marquage non confirmé côté backend, mais rien n’a cassé.", "warn");
+    }
   });
-}
 
-function selectReservation(id){
-  const r = RES.find(x=>x.id===id);
-  if(!r) return;
-  SELECTED = r;
+  $("btnAfter").addEventListener("click", async ()=>{
+    if(!State.selected){
+      toast("Sélectionne une réservation");
+      return;
+    }
 
-  $("empty").style.display="none";
-  $("detail").style.display="grid";
+    const text = tmplAfterStay(State.selected);
+    const phone = State.selected.client_phone || "";
+    if(!digitsOnly(phone)){
+      setSide("Téléphone client introuvable.", "warn");
+      return;
+    }
 
-  $("dGuest").textContent = r.client_nom || "Client";
-  $("dDates").textContent = `📅 ${r.date_arrivee} → ${r.date_depart}`;
-
-  const chip = statusChip(r.status);
-  $("dStatus").className = `chip ${chip.cls}`;
-  $("dStatus").textContent = chip.label;
-
-  $("dPhone").textContent = normalizePhone(r.client_phone) || "—";
-  $("dEmail").textContent = (r.client_email || "—");
-  $("dLogement").textContent = (r.logement_nom || "—");
-  $("dTrack").textContent = `Tracking: ${r.tracking_code || "—"} • ID: ${r.id}`;
-
-  $("cWelcome").textContent = `Accueil : ${r.welcome_message_sent_at ? new Date(r.welcome_message_sent_at).toLocaleString() : "—"}`;
-  $("cAfter").textContent = `Après séjour : ${r.afterstay_message_sent_at ? new Date(r.afterstay_message_sent_at).toLocaleString() : "—"}`;
-}
-
-async function markSent(kind){
-  if(!SELECTED) return;
-  const { error } = await db.rpc("digiy_loc_mark_message_sent", {
-    p_reservation_id: SELECTED.id,
-    p_kind: kind
+    window.open(waLink(phone, text), "_blank", "noopener");
+    const marked = await tryMarkSent("afterstay");
+    if(marked){
+      await afterMark("afterstay");
+      setSide("✅ WhatsApp après séjour ouvert et marquage enregistré.", "ok");
+    }else{
+      setSide("✅ WhatsApp après séjour ouvert. Marquage non confirmé côté backend, mais rien n’a cassé.", "warn");
+    }
   });
-  if(error){ console.error(error); toast("Erreur update"); return; }
 
-  const field = kind==='welcome' ? 'welcome_message_sent_at' : 'afterstay_message_sent_at';
-  SELECTED[field] = new Date().toISOString();
-  const idx = RES.findIndex(x=>x.id===SELECTED.id);
-  if(idx>=0) RES[idx][field] = SELECTED[field];
+  $("btnCopyPhone").addEventListener("click", async ()=>{
+    if(!State.selected){
+      toast("Sélectionne une réservation");
+      return;
+    }
 
-  selectReservation(SELECTED.id);
-  renderList();
-}
+    const p = normalizePhone(State.selected.client_phone);
+    if(!p){
+      setSide("Téléphone client indisponible.", "warn");
+      return;
+    }
 
-$("btnWelcome").onclick = async ()=>{
-  if(!SELECTED){ toast("Sélectionne une réservation"); return; }
-  const text = tmplWelcome(SELECTED);
-  window.open(waLink(SELECTED.client_phone, text), "_blank");
-  await markSent('welcome');
-  toast("Accueil: WhatsApp + marqué ✅");
-};
+    try{
+      await navigator.clipboard.writeText(p);
+      toast("Téléphone copié ✅");
+    }catch{
+      toast("Copie impossible");
+    }
+  });
 
-$("btnAfter").onclick = async ()=>{
-  if(!SELECTED){ toast("Sélectionne une réservation"); return; }
-  const text = tmplAfterStay(SELECTED);
-  window.open(waLink(SELECTED.client_phone, text), "_blank");
-  await markSent('afterstay');
-  toast("Après séjour: WhatsApp + marqué ✅");
-};
+  $("btnLoad").addEventListener("click", loadReservations);
+  $("windowDays").addEventListener("change", ()=>{
+    if(State.mode === "live") loadReservations();
+  });
 
-$("btnCopyPhone").onclick = async ()=>{
-  if(!SELECTED) return;
-  const p = normalizePhone(SELECTED.client_phone);
-  try{ await navigator.clipboard.writeText(p); toast("Téléphone copié ✅"); }
-  catch{ toast("Copie impossible"); }
-};
+  async function init(){
+    $("pillSlug").textContent = "slug: —";
+    $("btnBack").href = "./app.html";
+    $("btnPlanning").href = "./planning.html";
 
-$("btnLoad").onclick = loadReservations;
-$("btnToday").onclick = ()=>{ renderKPIs(); toast("KPIs mis à jour"); };
+    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+      setPreview("guard_missing");
+      setNote("❌ Guard absent ou non chargé.", "bad");
+      return;
+    }
+
+    try{
+      await waitGuardReady();
+    }catch{
+      setPreview("guard_not_ready");
+      setNote("❌ Guard non prêt.", "bad");
+      return;
+    }
+
+    await loadReservations();
+  }
+
+  init();
+})();
 </script>
 </body>
 </html>
