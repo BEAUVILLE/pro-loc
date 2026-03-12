@@ -6,11 +6,18 @@
   <title>DIGIY LOC PRO — Gestion Location</title>
   <meta name="theme-color" content="#0b1020"/>
 
+  <!-- ✅ CONFIG SUPABASE -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- ✅ Guard (fournit sb + session + slug) -->
-  <script src="./guard.js?v=locpro-final"></script>
+  <script src="./guard.js?v=locpro-final-v2"></script>
 
   <style>
     :root{
@@ -297,11 +304,11 @@
 
         <!-- ✅ MINI NAV TOP -->
         <div class="miniNav">
-          <a class="btn btn-secondary" data-go="./index.html" data-mode="replace" href="#">🏠 Cockpit</a>
+          <a class="btn btn-secondary" data-go="./app.html" data-mode="replace" href="#">🏠 Cockpit</a>
           <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
           <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
           <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
-        <a class="btn btn-secondary" data-go="./wave.html" href="#">💳 Déclarations Wave</a>        
+          <a class="btn btn-secondary" data-go="./wave.html" href="#">💳 Déclarations Wave</a>
         </div>
       </div>
 
@@ -555,6 +562,18 @@
     if (el) el.innerHTML = html;
   }
 
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
@@ -563,6 +582,26 @@
       phone: "",
       reason: "guard_missing"
     };
+  }
+
+  async function waitGuardReady(){
+    const guard = window.DIGIY_GUARD;
+    if (!guard) throw new Error("guard_missing");
+
+    if (guard.ready && typeof guard.ready.then === "function") {
+      await guard.ready;
+      return;
+    }
+
+    if (typeof guard.ready === "function") {
+      const maybe = guard.ready();
+      if (maybe && typeof maybe.then === "function") {
+        await maybe;
+      }
+      return;
+    }
+
+    throw new Error("guard_not_ready");
   }
 
   function getSB(){
@@ -584,11 +623,19 @@
   function getCurrentSlug(){
     const st = getGuardState();
     if (st?.slug) return String(st.slug).trim();
+
     try {
-      return new URL(location.href).searchParams.get("slug") || "";
-    } catch {
-      return "";
-    }
+      const u = new URL(location.href);
+      const qsSlug = u.searchParams.get("slug") || "";
+      if (qsSlug) return qsSlug.trim();
+    } catch {}
+
+    return (
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      ""
+    ).trim();
   }
 
   function withSlug(url){
@@ -740,7 +787,7 @@
             ${esc(text)}
           </div>
           <div style="margin-top:.5rem;color:var(--muted);font-size:.9rem">
-            slug: <b>${esc(st.slug || "—")}</b> · téléphone: <b>${esc(State.phone || st.phone || "—")}</b>
+            slug: <b>${esc(st.slug || State.slug || "—")}</b> · téléphone: <b>${esc(State.phone || st.phone || "—")}</b>
           </div>
         </div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
@@ -756,10 +803,11 @@
   ============================= */
   function hydrateHeader() {
     const st = getGuardState();
-    const phone = State.phone || st.phone || "—";
+    const phone = State.phone || st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "—";
     const businessName =
       State.business_name ||
-      localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+      storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+      storageGet("DIGIY_BUSINESS_NAME") ||
       (isLiveMode() ? "Gestionnaire" : "Aperçu DIGIY LOC");
 
     setText("userPhone", phone || "—");
@@ -826,7 +874,7 @@
         <div class="t">❌ Accès impossible</div>
         <div class="s">${esc(msg || "Erreur inconnue")}</div>
         <div class="s" style="margin-top:.6rem">
-          <a href="./pin.html">Se connecter</a>
+          <a href="${esc(pinUrl())}">Se connecter</a>
         </div>
       </div>
     `;
@@ -857,10 +905,10 @@
 
   function ownerContextFromStorage(){
     const owner_id =
-      localStorage.getItem("DIGIY_LOC_OWNER_ID") ||
-      localStorage.getItem("digiy_loc_owner_id") ||
-      localStorage.getItem("DIGIY_OWNER_ID") ||
-      localStorage.getItem("owner_id") ||
+      storageGet("DIGIY_LOC_OWNER_ID") ||
+      storageGet("digiy_loc_owner_id") ||
+      storageGet("DIGIY_OWNER_ID") ||
+      storageGet("owner_id") ||
       "";
 
     if (!owner_id) return null;
@@ -868,12 +916,12 @@
     return normalizeOwnerContext({
       owner_id,
       business_code:
-        localStorage.getItem("DIGIY_LOC_BUSINESS_CODE") ||
-        localStorage.getItem("DIGIY_BUSINESS_CODE") ||
+        storageGet("DIGIY_LOC_BUSINESS_CODE") ||
+        storageGet("DIGIY_BUSINESS_CODE") ||
         "TEST",
       business_name:
-        localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
-        localStorage.getItem("DIGIY_BUSINESS_NAME") ||
+        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+        storageGet("DIGIY_BUSINESS_NAME") ||
         ""
     });
   }
@@ -910,8 +958,14 @@
     const fromRpc = await ownerContextFromRpc();
     if (fromRpc?.owner_id) {
       try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+
       try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
+
       try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+
       return fromRpc;
     }
 
@@ -1559,21 +1613,21 @@
     bindTabs();
     bindNdimbal();
 
-    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+    if(!window.DIGIY_GUARD){
       fail("Guard absent ou non chargé.");
       return;
     }
 
     try{
-      await window.DIGIY_GUARD.ready;
+      await waitGuardReady();
     }catch(e){
       fail("Guard non prêt.");
       return;
     }
 
     const st = getGuardState();
-    State.phone = st.phone || "";
-    State.slug = st.slug || "";
+    State.phone = st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+    State.slug = st.slug || getCurrentSlug() || "";
     UX.reason = st.reason || "preview";
 
     hydrateHeader();
@@ -1601,9 +1655,13 @@
     UX.reason = "ok";
 
     try { localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
+    try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
     try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
+    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
     try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
+    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
     try { if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
+    try { if (State.business_name) sessionStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
 
     hydrateHeader();
 
@@ -1618,6 +1676,9 @@
     }catch(e){
       console.warn("Init error:", e);
       showAccessBanner("live");
+      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur initiale logements: ${esc(e.message || e)}</p>`);
+      setHTML("tableReservations", `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur initiale réservations: ${esc(e.message || e)}</td></tr>`);
+      setHTML("calendarView", `<p style="color:var(--danger)">Erreur initiale calendrier: ${esc(e.message || e)}</p>`);
     }
   }
 
