@@ -6,10 +6,17 @@
   <title>DIGIY LOC PRO — Vue du jour</title>
   <meta name="theme-color" content="#0b1020"/>
 
+  <!-- ✅ CONFIG SUPABASE -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- ✅ GUARD -->
-  <script src="./guard.js?v=locpro-guard-final"></script>
+  <script src="./guard.js?v=locpro-guard-final-v2"></script>
 
   <style>
     :root{
@@ -149,7 +156,6 @@
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
       <div class="pill warn" id="pillState">🔒 Déconnecté</div>
 
-      <!-- ✅ NAV AUTO -->
       <a class="btn ghost" data-go="__back__" href="#">⬅️ Retour</a>
       <button class="btn gold" data-action="refresh" type="button">↻ Rafraîchir</button>
     </div>
@@ -231,21 +237,22 @@
 </div>
 
 <script>
-/* =============================
-   DIGIY LOC PRO — TODAY (NEW GUARD RAIL) ✅
-   - no boot()
-   - no getSbAsync()
-   - uses: await DIGIY_GUARD.ready + DIGIY_GUARD.state
-============================= */
 (function(){
   "use strict";
 
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
   const MODULE = "LOC";
-  const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPPORT_WA = "+221771342889";
+
+  const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON;
+
+  const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth:{
+      persistSession:false,
+      autoRefreshToken:false,
+      detectSessionInUrl:false
+    }
+  });
 
   const $ = (id)=>document.getElementById(id);
 
@@ -292,6 +299,18 @@
     }
   }
 
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
@@ -307,16 +326,66 @@
     const ready = window.DIGIY_GUARD.ready;
 
     if(typeof ready === "function"){
-      return await ready(8000);
+      const maybe = ready(8000);
+      if (maybe && typeof maybe.then === "function") {
+        return await maybe;
+      }
+      return maybe;
     }
+
     if(ready && typeof ready.then === "function"){
       return await ready;
     }
-    return !!ready;
+
+    if(ready) return true;
+
+    throw new Error("guard_not_ready");
+  }
+
+  function getSlug(){
+    const st = getGuardState();
+    if (st.slug) return String(st.slug).trim();
+
+    try {
+      const qs = new URL(location.href).searchParams.get("slug") || "";
+      if (qs) return String(qs).trim();
+    } catch {}
+
+    return (
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      ""
+    ).trim();
+  }
+
+  function withSlug(path){
+    const slug = getSlug();
+    if(!slug) return path;
+
+    try{
+      const u = new URL(path, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = path.includes("?") ? "&" : "?";
+      return path + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function pinUrl(){
+    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+    catch { return withSlug("./pin.html"); }
   }
 
   function pillUserFromState(st){
-    const phone = st?.phone || "PRO";
+    const phone =
+      st?.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      "PRO";
+
     $("pillUser").innerHTML = `👤 <strong>${esc(phone)}</strong>`;
     $("pillState").textContent = "✅ Connecté";
     $("pillState").classList.remove("warn","bad");
@@ -365,7 +434,14 @@
   }
 
   async function tryGetBusinessCode(slug){
+    const fromStorage =
+      storageGet("DIGIY_LOC_BUSINESS_CODE") ||
+      storageGet("DIGIY_BUSINESS_CODE") ||
+      "";
+
+    if (fromStorage) return String(fromStorage).trim().toUpperCase();
     if(!slug) return null;
+
     try{
       const code = await rpc("digiy_loc_get_business_code_by_slug", { p_slug: slug });
       return code ? String(code).trim().toUpperCase() : null;
@@ -698,6 +774,34 @@
     }
   }
 
+  function goBackSmart(){
+    if (history.length > 1) {
+      history.back();
+      return;
+    }
+    location.assign(withSlug("./app.html"));
+  }
+
+  function bindActions(){
+    document.querySelectorAll("[data-action='refresh']").forEach(el=>{
+      if(el.__digiy_bound_action) return;
+      el.__digiy_bound_action = true;
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        refreshAll();
+      });
+    });
+
+    document.querySelectorAll("[data-go='__back__']").forEach(el=>{
+      if(el.__digiy_bound_back) return;
+      el.__digiy_bound_back = true;
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        goBackSmart();
+      });
+    });
+  }
+
   async function refreshAll(){
     resetUI();
     clearAllNotes();
@@ -715,7 +819,7 @@
     }
 
     const st = getGuardState();
-    const slug = String(st.slug || "").trim();
+    const slug = getSlug();
     const day = todayISO();
 
     $("lblDay").textContent = "Aujourd’hui • " + prettyDateFR(day);
@@ -748,17 +852,12 @@
     }
   }
 
-  (function bindActions(){
-    document.querySelectorAll("[data-action='refresh']").forEach(el=>{
-      if(el.__digiy_bound_action) return;
-      el.__digiy_bound_action = true;
-      el.addEventListener("click", (e)=>{
-        e.preventDefault();
-        refreshAll();
-      });
-    });
-  })();
-
+  bindActions();
+  refreshAll();
+})();
+</script>
+</body>
+</html>
   refreshAll();
 })();
 </script>
