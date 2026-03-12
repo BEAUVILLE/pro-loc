@@ -6,9 +6,16 @@
   <title>DIGIY LOC PRO • Planning</title>
   <meta name="theme-color" content="#16a34a"/>
 
+  <!-- ✅ CONFIG SUPABASE -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
   <!-- Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-FINAL-003"></script>
+  <script src="./guard.js?v=locpro-planning-final-v2"></script>
 
   <style>
     :root{
@@ -28,7 +35,7 @@
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.10), transparent 60%),
         radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
@@ -190,7 +197,7 @@
           <span class="pill mono" id="pillSlug">slug: —</span>
           <span class="pill">module: <span class="mono" id="pillModule">LOC</span></span>
 
-          <a class="btn gold" id="btnApp" href="./index.html">🏠 Cockpit</a>
+          <a class="btn gold" id="btnApp" href="./app.html">🏠 Cockpit</a>
           <a class="btn ok" id="btnListing" href="./listing.html">📋 Listing</a>
           <button class="btn bad" id="btnLogout" type="button">🚪 Déconnexion</button>
         </div>
@@ -226,7 +233,7 @@
           <div class="panelBody">
             <div class="tools">
               <input id="q" placeholder="Recherche: nom, date, tel…" />
-              <button class="btn green ok" id="btnSearch" type="button">🔎 Chercher</button>
+              <button class="btn ok" id="btnSearch" type="button">🔎 Chercher</button>
             </div>
 
             <div class="sep"></div>
@@ -259,7 +266,7 @@
 
         <div class="row" style="margin-top:12px">
           <a class="btn warn" id="btnSupport" href="#" role="button">💬 Support WhatsApp</a>
-          <a class="btn gold" id="btnPin" href="./login.html">🔐 Revenir au PIN</a>
+          <a class="btn gold" id="btnPin" href="./pin.html">🔐 Revenir au PIN</a>
         </div>
 
         <div class="kpi" style="margin-top:12px">
@@ -290,7 +297,9 @@
   let UX_MODE = "preview";
   let UX_REASON = "booting";
 
-  function setSub(text){ $("sub").textContent = text; }
+  function setSub(text){
+    $("sub").textContent = text;
+  }
 
   function show(msg, cls){
     const el = $("note");
@@ -316,6 +325,50 @@
     }[m]));
   }
 
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
+
+  function waitGuardReady(){
+    return new Promise(async (resolve, reject) => {
+      try{
+        if (!window.DIGIY_GUARD) {
+          reject(new Error("guard_missing"));
+          return;
+        }
+
+        const guard = window.DIGIY_GUARD;
+
+        if (guard.ready && typeof guard.ready.then === "function") {
+          await guard.ready;
+          resolve();
+          return;
+        }
+
+        if (typeof guard.ready === "function") {
+          const maybe = guard.ready();
+          if (maybe && typeof maybe.then === "function") {
+            await maybe;
+          }
+          resolve();
+          return;
+        }
+
+        reject(new Error("guard_not_ready"));
+      }catch(err){
+        reject(err);
+      }
+    });
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
@@ -331,10 +384,16 @@
     if (st.slug) return String(st.slug).trim();
 
     try {
-      return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
-    } catch {
-      return "";
-    }
+      const qsSlug = new URL(location.href).searchParams.get("slug") || "";
+      if (qsSlug) return String(qsSlug).trim().toLowerCase();
+    } catch {}
+
+    return (
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      ""
+    ).trim().toLowerCase();
   }
 
   function withSlug(path){
@@ -366,6 +425,24 @@
     return UX_MODE === "live" && !!getGuardState().access_ok;
   }
 
+  function makeItemId(){
+    return "locplan_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+  }
+
+  function normalizeItems(items){
+    if (!Array.isArray(items)) return [];
+    return items
+      .filter(Boolean)
+      .map((x) => ({
+        id: String(x.id || makeItemId()),
+        name: String(x.name || "").trim(),
+        date: String(x.date || "").trim(),
+        phone: String(x.phone || "").trim(),
+        status: String(x.status || "info").trim(),
+        note: String(x.note || "").trim()
+      }));
+  }
+
   function renderPreview(reason){
     UX_MODE = "preview";
     UX_REASON = reason || "preview";
@@ -388,7 +465,11 @@
 
   function renderLiveHeader(){
     const st = getGuardState();
-    const phone = st.phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "—";
+    const phone =
+      st.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      "—";
 
     UX_MODE = "live";
     UX_REASON = "ok";
@@ -431,14 +512,26 @@
     return `<span class="badge">• ${esc(st||"info")}</span>`;
   }
 
-  function render(list){
-    const el = $("list");
+  function getFilteredSortedRows(){
     const q = ($("q").value || "").trim().toLowerCase();
-    let rows = Array.isArray(list) ? list.slice() : [];
+    let rows = Array.isArray(ITEMS) ? ITEMS.slice() : [];
 
     if(q){
-      rows = rows.filter(x => JSON.stringify(x||{}).toLowerCase().includes(q));
+      rows = rows.filter(x => JSON.stringify(x || {}).toLowerCase().includes(q));
     }
+
+    rows.sort((a,b)=>{
+      const da = Date.parse(a.date || "") || 0;
+      const db = Date.parse(b.date || "") || 0;
+      return da - db;
+    });
+
+    return rows;
+  }
+
+  function render(){
+    const el = $("list");
+    const rows = getFilteredSortedRows();
 
     if(!rows.length){
       el.innerHTML = `
@@ -455,13 +548,7 @@
       return;
     }
 
-    rows.sort((a,b)=>{
-      const da = Date.parse(a.date || "") || 0;
-      const db = Date.parse(b.date || "") || 0;
-      return da - db;
-    });
-
-    el.innerHTML = rows.map((x,idx)=>{
+    el.innerHTML = rows.map((x)=>{
       const date = esc(x.date || "");
       const name = esc(x.name || "Client");
       const tel = esc(x.phone || "");
@@ -479,24 +566,25 @@
           </div>
           <div class="itR">
             ${badgeStatus(st)}
-            <button class="btn bad" style="min-height:38px;padding:8px 10px" data-del="${idx}">🗑️</button>
+            <button class="btn bad" style="min-height:38px;padding:8px 10px" data-del-id="${esc(x.id)}">🗑️</button>
           </div>
         </div>
       `;
     }).join("");
 
-    el.querySelectorAll("[data-del]").forEach(b=>{
+    el.querySelectorAll("[data-del-id]").forEach(b=>{
       b.addEventListener("click", ()=>{
         if(!isLive()){
           showRight("👁️ En aperçu, tu peux consulter mais pas modifier le terrain réel.", "warn");
           return;
         }
 
-        const i = Number(b.getAttribute("data-del"));
-        if(!Number.isFinite(i)) return;
-        ITEMS.splice(i,1);
+        const id = String(b.getAttribute("data-del-id") || "").trim();
+        if(!id) return;
+
+        ITEMS = ITEMS.filter(item => String(item.id) !== id);
         saveLS();
-        render(ITEMS);
+        render();
         showRight("✅ Supprimé (offline).", "ok");
       });
     });
@@ -517,6 +605,7 @@
     const note = prompt("Note (optionnel)") || "";
 
     ITEMS.push({
+      id: makeItemId(),
       name: name.trim(),
       date: date.trim(),
       phone: phone.trim(),
@@ -525,7 +614,7 @@
     });
 
     saveLS();
-    render(ITEMS);
+    render();
     showRight("✅ Ajouté (offline).", "ok");
   }
 
@@ -538,26 +627,27 @@
     if(!confirm("Vider le mini planning offline ?")) return;
     ITEMS = [];
     saveLS();
-    render(ITEMS);
+    render();
     showRight("🧹 Mini planning vidé (offline).", "warn");
   }
 
   function reload(){
     const cached = loadLS();
-    ITEMS = Array.isArray(cached?.items) ? cached.items : [];
-    render(ITEMS);
+    ITEMS = normalizeItems(cached?.items);
+    saveLS();
+    render();
     showRight("↻ Rechargé (offline).", "ok");
   }
 
   async function init(){
-    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+    if(!window.DIGIY_GUARD){
       setSub("❌ Guard absent.");
       show("❌ Guard absent ou non chargé.\n➡️ Vérifie ./guard.js", "bad");
       return;
     }
 
     try{
-      await window.DIGIY_GUARD.ready;
+      await waitGuardReady();
     }catch(e){
       setSub("❌ Guard non prêt.");
       show("❌ Le guard n’a pas pu s’initialiser.", "bad");
@@ -597,7 +687,12 @@
 
     $("btnSupport").onclick = (e)=>{
       e.preventDefault();
-      const phone = st.phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "";
+      const phone =
+        st.phone ||
+        storageGet("DIGIY_PHONE") ||
+        storageGet("DIGIY_LOC_PHONE") ||
+        "";
+
       const txt =
 `DIGIY LOC PRO • Support
 
@@ -614,13 +709,14 @@ Merci. — DIGIY`;
     $("btnAdd").addEventListener("click", addItem);
     $("btnClear").addEventListener("click", clearAll);
     $("btnReload").addEventListener("click", reload);
-    $("btnSearch").addEventListener("click", ()=> render(ITEMS));
-    $("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(ITEMS); });
+    $("btnSearch").addEventListener("click", render);
+    $("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(); });
+    $("q").addEventListener("input", render);
 
     reload();
 
     if(!st.access_ok){
-      renderPreview(st.reason || "preview");
+      renderPreview(st.reason || (slug ? "has_access_false" : "slug_missing"));
       return;
     }
 
