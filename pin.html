@@ -5,23 +5,42 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#061b14"/>
   <title>DIGIY LOC PRO — PIN</title>
+
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
-      --bg:#061b14; --card:#0b2a1f; --line:rgba(255,255,255,.14);
-      --text:#eafff1; --muted:rgba(234,255,241,.72);
-      --gold:#facc15; --ok:#22c55e; --bad:#fb7185;
-      --shadow:0 18px 55px rgba(0,0,0,.45); --r:18px;
+      --bg:#061b14;
+      --card:#0b2a1f;
+      --line:rgba(255,255,255,.14);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.72);
+      --gold:#facc15;
+      --ok:#22c55e;
+      --bad:#fb7185;
+      --shadow:0 18px 55px rgba(0,0,0,.45);
+      --r:18px;
     }
+
     *{box-sizing:border-box}
+
     body{
-      margin:0; min-height:100vh; display:grid; place-items:center;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto;
-      background:radial-gradient(circle at top, rgba(250,204,21,.10), transparent 55%),
-                 linear-gradient(135deg,#04160f,#0a2b1f);
-      color:var(--text); padding:18px;
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(250,204,21,.10), transparent 55%),
+        linear-gradient(135deg,#04160f,#0a2b1f);
+      color:var(--text);
+      padding:18px;
     }
+
     .card{
       width:min(520px,92vw);
       background:linear-gradient(145deg,rgba(11,42,31,.96),rgba(6,35,25,.96));
@@ -30,45 +49,131 @@
       box-shadow:var(--shadow);
       padding:18px;
     }
-    .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .brand{display:flex;align-items:center;gap:10px}
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
     .ico{
-      width:46px;height:46px;border-radius:50%;
-      display:grid;place-items:center;
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
       background:radial-gradient(circle at 30% 0,var(--gold),transparent 60%);
-      color:#062015;font-weight:1000;
+      color:#062015;
+      font-weight:1000;
       border:1px solid rgba(250,204,21,.35);
     }
-    .t{font-weight:1000;letter-spacing:.12em;font-size:12px}
-    .sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+    .t{
+      font-weight:1000;
+      letter-spacing:.12em;
+      font-size:12px;
+    }
+
+    .sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
     .pill{
       border:1px solid var(--line);
       background:rgba(250,204,21,.10);
-      padding:7px 10px;border-radius:999px;
-      font-size:12px;font-weight:900;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
     }
-    .sep{height:1px;background:var(--line);margin:14px 0}
-    label{display:block;font-size:12px;color:var(--muted);margin:8px 0 6px}
+
+    .sep{
+      height:1px;
+      background:var(--line);
+      margin:14px 0;
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:8px 0 6px;
+    }
+
     input{
-      width:100%; padding:14px 14px;
-      border-radius:14px; border:1px solid var(--line);
-      background:rgba(0,0,0,.22); color:var(--text);
-      font-size:16px; font-weight:900; letter-spacing:.14em;
+      width:100%;
+      padding:14px 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:.14em;
       outline:none;
     }
+
+    input:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.10);
+    }
+
     button{
-      width:100%; margin-top:12px; padding:14px 14px;
-      border-radius:14px; border:none;
+      width:100%;
+      margin-top:12px;
+      padding:14px 14px;
+      border-radius:14px;
+      border:none;
       background:linear-gradient(90deg,var(--ok),var(--gold));
-      color:#062015; font-weight:1000; font-size:15px;
+      color:#062015;
+      font-weight:1000;
+      font-size:15px;
       cursor:pointer;
     }
-    button:disabled{opacity:.6; cursor:not-allowed}
-    .msg{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.5}
-    .ok{color:var(--ok); font-weight:900}
-    .bad{color:var(--bad); font-weight:900}
-    .mini{margin-top:10px; font-size:12px; color:var(--muted)}
-    .mini b{color:var(--text)}
+
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .msg{
+      margin-top:12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+      min-height:18px;
+    }
+
+    .ok{
+      color:var(--ok);
+      font-weight:900;
+    }
+
+    .bad{
+      color:var(--bad);
+      font-weight:900;
+    }
+
+    .mini{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .mini b{
+      color:var(--text);
+      word-break:break-word;
+    }
   </style>
 </head>
 
@@ -103,9 +208,6 @@
 (async () => {
   "use strict";
 
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
   const MODULE = "LOC";
   const NEXT_URL = "app.html";
   const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
@@ -114,16 +216,44 @@
   const STORAGE_SLUG_KEY = "digiy_loc_slug";
   const STORAGE_LAST_SLUG = "digiy_last_slug";
 
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY;
+
+  if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    document.getElementById("subtitle").textContent = "Configuration manquante";
+    document.getElementById("msg").innerHTML = `<span class="bad">❌ Configuration Supabase absente.</span>`;
+    document.getElementById("go").disabled = true;
+    return;
+  }
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth:{
+      persistSession:false,
+      autoRefreshToken:false,
+      detectSessionInUrl:false
+    }
+  });
+
   const $ = (id) => document.getElementById(id);
 
   const url = new URL(location.href);
-  const slug = String(url.searchParams.get("slug") || "").trim().toLowerCase();
+  const slug = normalizeSlug(url.searchParams.get("slug") || "");
 
   $("slugBox").textContent = slug || "—";
   $("subtitle").textContent = slug
     ? "Accès sécurisé — PIN requis"
     : "SLUG manquant";
+
+  function normalizeSlug(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, "");
+  }
+
+  function normalizePin(value) {
+    return String(value || "").replace(/\s+/g, "");
+  }
 
   function msg(html) {
     $("msg").innerHTML = html;
@@ -133,17 +263,22 @@
     return Date.now();
   }
 
-  function lsSet(k, v) {
-    try { localStorage.setItem(k, String(v ?? "")); } catch {}
+  function storageSet(key, value) {
+    try { localStorage.setItem(key, String(value ?? "")); } catch {}
+    try { sessionStorage.setItem(key, String(value ?? "")); } catch {}
   }
 
-  function lsRemove(k) {
-    try { localStorage.removeItem(k); } catch {}
+  function storageRemove(key) {
+    try { localStorage.removeItem(key); } catch {}
+    try { sessionStorage.removeItem(key); } catch {}
   }
 
-  function safeJsonParse(x) {
-    try { return typeof x === "string" ? JSON.parse(x) : x; }
-    catch { return null; }
+  function safeJsonParse(value) {
+    try {
+      return typeof value === "string" ? JSON.parse(value) : value;
+    } catch {
+      return null;
+    }
   }
 
   function normalizeResult(raw) {
@@ -156,10 +291,31 @@
       title: r.title || r.business_name || r.name || "",
       business_name: r.business_name || r.title || r.name || "",
       business_code: r.business_code || r.code || "TEST",
-      slug: r.slug || slug || "",
-      module: (r.module || MODULE || "").toUpperCase(),
+      slug: normalizeSlug(r.slug || slug || ""),
+      module: String(r.module || MODULE || "").toUpperCase(),
       error: r.error || r.reason || ""
     };
+  }
+
+  function clearOldSessionKeys() {
+    [
+      SESSION_KEY,
+      STORAGE_SLUG_KEY,
+      STORAGE_LAST_SLUG,
+      "DIGIY_SLUG",
+      "DIGIY_LOC_OWNER_ID",
+      "digiy_loc_owner_id",
+      "DIGIY_OWNER_ID",
+      "owner_id",
+      "DIGIY_LOC_BUSINESS_CODE",
+      "DIGIY_BUSINESS_CODE",
+      "DIGIY_LOC_BUSINESS_NAME",
+      "DIGIY_BUSINESS_NAME",
+      "DIGIY_TITLE",
+      "DIGIY_PHONE",
+      "DIGIY_LOC_PHONE",
+      "DIGIY_PRO_ID"
+    ].forEach(storageRemove);
   }
 
   function saveSession(raw) {
@@ -178,40 +334,40 @@
       expires_at: now() + SESSION_TTL_MS
     };
 
-    lsSet(SESSION_KEY, JSON.stringify(session));
+    clearOldSessionKeys();
 
-    lsSet(STORAGE_SLUG_KEY, session.slug);
-    lsSet(STORAGE_LAST_SLUG, session.slug);
-    lsSet("DIGIY_SLUG", session.slug);
+    storageSet(SESSION_KEY, JSON.stringify(session));
 
-    lsSet("DIGIY_LOC_OWNER_ID", session.owner_id);
-    lsSet("digiy_loc_owner_id", session.owner_id);
-    lsSet("DIGIY_OWNER_ID", session.owner_id);
-    lsSet("owner_id", session.owner_id);
+    storageSet(STORAGE_SLUG_KEY, session.slug);
+    storageSet(STORAGE_LAST_SLUG, session.slug);
+    storageSet("DIGIY_SLUG", session.slug);
 
-    lsSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
-    lsSet("DIGIY_BUSINESS_CODE", session.business_code);
+    storageSet("DIGIY_LOC_OWNER_ID", session.owner_id);
+    storageSet("digiy_loc_owner_id", session.owner_id);
+    storageSet("DIGIY_OWNER_ID", session.owner_id);
+    storageSet("owner_id", session.owner_id);
+
+    storageSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
+    storageSet("DIGIY_BUSINESS_CODE", session.business_code);
 
     if (session.business_name) {
-      lsSet("DIGIY_LOC_BUSINESS_NAME", session.business_name);
-      lsSet("DIGIY_BUSINESS_NAME", session.business_name);
-      lsSet("DIGIY_TITLE", session.business_name);
-    } else {
-      lsRemove("DIGIY_LOC_BUSINESS_NAME");
+      storageSet("DIGIY_LOC_BUSINESS_NAME", session.business_name);
+      storageSet("DIGIY_BUSINESS_NAME", session.business_name);
+      storageSet("DIGIY_TITLE", session.business_name);
     }
 
     if (session.phone) {
-      lsSet("DIGIY_PHONE", session.phone);
-      lsSet("DIGIY_LOC_PHONE", session.phone);
+      storageSet("DIGIY_PHONE", session.phone);
+      storageSet("DIGIY_LOC_PHONE", session.phone);
     }
 
-    lsSet("DIGIY_PRO_ID", session.owner_id);
+    storageSet("DIGIY_PRO_ID", session.owner_id);
 
     return session;
   }
 
   if (!slug) {
-    msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton lien GO PIN (avec ?slug=...).`);
+    msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton lien GO PIN avec <b>?slug=...</b>.`);
     $("go").disabled = true;
     return;
   }
@@ -219,7 +375,7 @@
   setTimeout(() => $("pin").focus(), 150);
 
   async function enter() {
-    const pin = $("pin").value.trim();
+    const pin = normalizePin($("pin").value);
 
     if (pin.length < 3) {
       msg(`<span class="bad">❌ PIN invalide.</span>`);
@@ -255,7 +411,7 @@
           rpcError = fallback.error || null;
         }
       } catch (_) {
-        // fallback absent ou erreur silencieuse
+        // fallback silencieux
       }
     }
 
@@ -269,7 +425,7 @@
 
     if (!result.ok || !result.owner_id) {
       $("go").disabled = false;
-      msg(`<span class="bad">❌ Accès refusé.</span><br>${result.error || "PIN incorrect ou owner_id manquant"}`);
+      msg(`<span class="bad">❌ Accès refusé.</span><br>${result.error || "PIN incorrect ou owner_id manquant."}`);
       return;
     }
 
