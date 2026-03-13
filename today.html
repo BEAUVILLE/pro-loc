@@ -6,13 +6,16 @@
   <title>DIGIY LOC PRO — Vue du jour</title>
   <meta name="theme-color" content="#0b1020"/>
 
+  <!-- ✅ CONFIG SUPABASE -->
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
   </script>
 
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ✅ GUARD -->
   <script src="./guard.js?v=locpro-today-clean-v4"></script>
 
   <style>
@@ -48,8 +51,6 @@
     }
     h1{margin:0;font-size:1.05rem}
     .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:4px;line-height:1.2}
-    .muted{color:var(--muted);font-weight:850;line-height:1.35}
-
     .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .pill{
       border:1px solid rgba(148,163,184,.35);
@@ -59,7 +60,6 @@
     .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
     .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
-
     .btn{
       border:0; cursor:pointer; border-radius:14px;
       padding:11px 12px; font-weight:1000;
@@ -79,7 +79,6 @@
     .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
     .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
     .btn.ghost{background:rgba(255,255,255,.02)}
-
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:14px}
     .card{
       border:1px solid var(--line);
@@ -98,7 +97,6 @@
     .head small{color:var(--muted);font-weight:800}
     .body{padding:14px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
     .note{
       margin-top:10px; padding:10px 12px; border-radius:14px;
       border:1px solid rgba(148,163,184,.25);
@@ -131,7 +129,6 @@
     .tag.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .tag.warn{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);color:#fde68a}
     .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
-
     .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
     .stat{
       border:1px solid rgba(148,163,184,.22);
@@ -142,21 +139,49 @@
     }
     .stat .num{font-size:1.7rem;font-weight:1100;color:var(--gold)}
     .stat .lbl{color:var(--muted);font-weight:850;font-size:.82rem;margin-top:4px}
-
-    #accessGate{
-      border-color:rgba(250,204,21,.22);
-      background:rgba(250,204,21,.06);
-    }
-
     @media(min-width:980px){
       .col6{grid-column:span 6}
       .col4{grid-column:span 4}
     }
+
+    #accessGate{
+      display:block;
+      margin-bottom:14px;
+      border-color:rgba(250,204,21,.22);
+      background:rgba(250,204,21,.06);
+    }
+
+    #mainGrid{
+      display:none;
+    }
   </style>
 </head>
 <body>
-
 <div class="wrap">
+
+  <div class="card" id="accessGate">
+    <div class="body">
+      <div class="row">
+        <div>
+          <div style="font-weight:1100;font-size:1rem">🔐 Accès DIGIY LOC PRO</div>
+          <div class="muted" id="accessGateText" style="margin-top:6px">
+            Vérification accès…
+          </div>
+        </div>
+
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <a class="btn gold" id="btnGatePin" href="#">🔑 Ouvrir PIN</a>
+          <a class="btn primary" id="btnGatePay" href="#">💳 Activer mon module</a>
+          <a class="btn ghost" id="btnGateDashboard" href="#">🏠 Retour cockpit</a>
+        </div>
+      </div>
+
+      <div class="note warn" id="accessGateNote" style="display:block;margin-top:12px">
+        Le contenu métier reste masqué tant que l’accès réel n’est pas confirmé.
+      </div>
+    </div>
+  </div>
+
   <div class="top">
     <div class="brand">
       <div class="logo"></div>
@@ -169,35 +194,14 @@
     <div class="pills">
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
       <div class="pill warn" id="pillState">🔒 Déconnecté</div>
+
       <a class="btn ghost" data-go="__back__" href="#">⬅️ Retour</a>
       <button class="btn gold" data-action="refresh" type="button">↻ Rafraîchir</button>
     </div>
   </div>
 
-  <div class="card" id="accessGate" style="display:none; margin-top:14px;">
-    <div class="body">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div style="font-weight:1100;font-size:1rem">🔐 Accès DIGIY LOC PRO</div>
-          <div class="muted" id="accessGateText" style="margin-top:6px">
-            Passe par PIN ou active ton module pour ouvrir la vraie vue du jour.
-          </div>
-        </div>
+  <div class="grid" id="mainGrid">
 
-        <div class="row" style="gap:8px;flex-wrap:wrap">
-          <a class="btn gold" id="btnGatePin" href="#">🔑 Ouvrir PIN</a>
-          <a class="btn primary" id="btnGatePay" href="#">💳 Activer mon module</a>
-          <a class="btn ghost" id="btnGateDashboard" href="#">🏠 Retour cockpit</a>
-        </div>
-      </div>
-
-      <div class="note warn" id="accessGateNote" style="display:block;margin-top:12px">
-        Le cockpit reste visible en aperçu, mais l’accès réel n’est pas encore confirmé.
-      </div>
-    </div>
-  </div>
-
-  <div class="grid">
     <section class="card col4">
       <div class="head">
         <div>
@@ -267,6 +271,7 @@
         <div class="note" id="notePending"></div>
       </div>
     </section>
+
   </div>
 </div>
 
@@ -464,34 +469,37 @@
 
   function setAccessGate(show, reason=""){
     const box = $("accessGate");
+    const grid = $("mainGrid");
     const txt = $("accessGateText");
     const note = $("accessGateNote");
     const btnPin = $("btnGatePin");
     const btnPay = $("btnGatePay");
     const btnDash = $("btnGateDashboard");
 
-    if(!box || !txt || !note || !btnPin || !btnPay || !btnDash) return;
+    if(!box || !grid || !txt || !note || !btnPin || !btnPay || !btnDash) return;
 
     btnPin.href = pinUrl();
     btnPay.href = payUrl();
     btnDash.href = withSlug("./app.html");
 
-    if(!show){
+    if(show){
+      box.style.display = "block";
+      grid.style.display = "none";
+    }else{
       box.style.display = "none";
+      grid.style.display = "grid";
       return;
     }
-
-    box.style.display = "block";
 
     if(reason === "slug_missing"){
       txt.textContent = "Aucun slug détecté. Ouvre la page depuis ton cockpit ou ton lien GO PIN.";
       note.textContent = "Ajoute un slug valide pour que la vue du jour charge le bon logement.";
     } else if(reason === "has_access_false"){
       txt.textContent = "Slug détecté mais accès non actif. Passe par PIN ou active ton module.";
-      note.textContent = "La page reste visible en aperçu, mais les vraies données restent protégées.";
+      note.textContent = "La vraie vue du jour reste verrouillée tant que l’accès n’est pas confirmé.";
     } else {
       txt.textContent = "Passe par PIN ou active ton module pour ouvrir la vraie vue du jour.";
-      note.textContent = "Le cockpit reste visible en aperçu, mais l’accès réel n’est pas encore confirmé.";
+      note.textContent = "Le contenu métier reste masqué tant que l’accès réel n’est pas confirmé.";
     }
   }
 
@@ -984,6 +992,23 @@
     }
   }
 
+  async function tryGetBusinessAndLoad(slug, day){
+    const businessCode = await tryGetBusinessCode(slug);
+
+    const dayRes = await loadDayListing(slug, day);
+
+    await Promise.allSettled([
+      loadPulse(businessCode),
+      loadPayments(businessCode),
+      loadPending(businessCode),
+    ]);
+
+    if(!dayRes.ok){
+      setNote("noteArrDep","RPC digiy_loc_day_listing indisponible :\n" + (dayRes.error || "—"),"warn");
+      await fallbackStatsAndArrDep(businessCode, day);
+    }
+  }
+
   function goBackSmart(){
     if (history.length > 1) {
       history.back();
@@ -1017,14 +1042,14 @@
     clearAllNotes();
 
     if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
-      setDisconnected("Guard absent ou non chargé.", "preview");
+      setDisconnected("Guard absent ou non chargé.", "guard_missing");
       return;
     }
 
     try{
       await waitGuardReady();
     }catch(_){
-      setDisconnected("Guard non prêt. Recharge la page ou repasse par PIN.", "preview");
+      setDisconnected("Guard non prêt. Recharge la page ou repasse par PIN.", "guard_not_ready");
       return;
     }
 
@@ -1045,24 +1070,11 @@
     }
 
     pillUserFromState(st);
-
-    const businessCode = await tryGetBusinessCode(slug);
-
-    const dayRes = await loadDayListing(slug, day);
-
-    await Promise.allSettled([
-      loadPulse(businessCode),
-      loadPayments(businessCode),
-      loadPending(businessCode),
-    ]);
-
-    if(!dayRes.ok){
-      setNote("noteArrDep","RPC digiy_loc_day_listing indisponible :\n" + (dayRes.error || "—"),"warn");
-      await fallbackStatsAndArrDep(businessCode, day);
-    }
+    await tryGetBusinessAndLoad(slug, day);
   }
 
   bindActions();
+  renderStats();
   refreshAll();
 })();
 </script>
