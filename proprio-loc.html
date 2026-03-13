@@ -8,7 +8,7 @@
 
 <!-- Supabase CDN (OK). Important: on ne create PAS de client ici, on utilise celui de guard.js -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra"></script>
+<script src="./guard.js?v=locpro-wave-ultra-v2"></script>
 
 <style>
 :root{
@@ -254,13 +254,38 @@ a{color:inherit}
 (async function(){
   "use strict";
 
-  // Boot guard
-  window.DIGIY_GUARD?.boot({
-    module: "loc",
-    login: "./pin.html",
-    dashboard: "./index.html",
-    requireSlug: true
-  });
+  async function waitGuardReady(){
+    if (!window.DIGIY_GUARD) throw new Error("guard_missing");
+
+    const ready = window.DIGIY_GUARD.ready;
+    if (ready && typeof ready.then === "function") {
+      await ready;
+      return;
+    }
+
+    if (typeof window.DIGIY_GUARD.boot === "function") {
+      const maybe = window.DIGIY_GUARD.boot({
+        module: "LOC",
+        login: "./pin.html",
+        dashboard: "./app.html",
+        requireSlug: true
+      });
+      if (maybe && typeof maybe.then === "function") {
+        await maybe;
+      }
+    }
+  }
+
+  if (typeof window.DIGIY_GUARD?.boot === "function") {
+    try {
+      window.DIGIY_GUARD.boot({
+        module: "LOC",
+        login: "./pin.html",
+        dashboard: "./app.html",
+        requireSlug: true
+      });
+    } catch (_) {}
+  }
 
   const $ = (id)=>document.getElementById(id);
 
@@ -291,7 +316,6 @@ a{color:inherit}
     return escapeHtml(str).replaceAll("`","&#096;");
   }
 
-  // ---- slug / links
   const slug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
   if($("navPlace")) $("navPlace").textContent = "Lieu : " + (slug || "—");
   if($("kvSlug")) $("kvSlug").textContent = slug || "—";
@@ -301,7 +325,6 @@ a{color:inherit}
   }
 
   const links = [
-    ["btnBack","./index.html"],
     ["goToday","./today.html"],
     ["goPulse","./proprio-loc.html"],
     ["goPlanning","./planning.html"],
@@ -315,27 +338,33 @@ a{color:inherit}
     if(el && el.tagName === "A") el.href = withSlug(path);
   });
 
-  // GO PIN public
   const pub = new URL("./go-pin.html", location.href);
   if(slug) pub.searchParams.set("slug", slug);
   if($("btnPublic")) $("btnPublic").href = pub.toString();
 
-  // APP bouton
   $("goApp")?.addEventListener("click", (e)=>{
     e.preventDefault();
     location.href = withSlug("./app.html");
   });
 
-  // Logout
+  $("btnBack")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    if (history.length > 1) {
+      history.back();
+      return;
+    }
+    location.href = withSlug("./app.html");
+  });
+
   $("btnLogout")?.addEventListener("click", ()=>{
     window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
   });
 
-  // ---- session ui
   function refreshSessionUI(){
     const sess = window.DIGIY_GUARD?.getSession?.();
     const phone = sess?.phone || "—";
-    const exp = sess?.exp ? new Date(Number(sess.exp)).toISOString().slice(0,16).replace("T"," ") : "";
+    const expRaw = sess?.expires_at || sess?.exp || 0;
+    const exp = expRaw ? new Date(Number(expRaw)).toISOString().slice(0,16).replace("T"," ") : "";
 
     if($("kvPhone")) $("kvPhone").textContent = phone;
     if($("kvSess")) $("kvSess").textContent = sess?.ok ? ("OK" + (exp ? " (expire : " + exp + ")" : "")) : "—";
@@ -366,15 +395,15 @@ a{color:inherit}
     await loadWave();
   });
 
-  // ---- Supabase from guard (anti timing)
   async function getSB(){
     for(let i=0;i<60;i++){
-      const s = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.sb || window.sb;
+      const s = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.getSb?.() || window.DIGIY_GUARD?.sb || window.sb;
       if(s?.rpc) return s;
       await new Promise(r=>setTimeout(r, 50));
     }
     return null;
   }
+
   let sb = await getSB();
 
   async function needSB(){
@@ -385,7 +414,6 @@ a{color:inherit}
     return sb;
   }
 
-  // ========== WAVE ==========
   function rowBadge(status){
     status = String(status || "declared").toLowerCase();
     if(status === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
@@ -394,7 +422,6 @@ a{color:inherit}
   }
 
   function getAmountAny(r){
-    // tolérant au schéma
     const v = r?.amount_fcfa ?? r?.amount ?? r?.amount_xof ?? 0;
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
@@ -423,7 +450,6 @@ a{color:inherit}
         : "";
 
       const status = String(r.status || "declared").toLowerCase();
-
       const amt = getAmountAny(r);
       const amtTxt = (amt > 0) ? (amt.toLocaleString("fr-FR") + " F") : "—";
 
@@ -452,7 +478,6 @@ a{color:inherit}
       `;
     }).join("");
 
-    // Bind verify
     box.querySelectorAll(".jsVerify").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         const id = Number(btn.getAttribute("data-id"));
@@ -601,7 +626,13 @@ a{color:inherit}
     }
   });
 
-  // Boot final
+  try{
+    await waitGuardReady();
+  }catch(e){
+    console.error(e);
+    showNote("noteMain", "❌ Guard non prêt. Recharge la page ou reconnecte-toi via PIN.", "bad");
+  }
+
   refreshSessionUI();
   await loadWave();
 
