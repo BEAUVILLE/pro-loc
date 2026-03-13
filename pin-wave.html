@@ -146,88 +146,110 @@
   </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async()=>{
+document.addEventListener("DOMContentLoaded", async () => {
   "use strict";
 
-  const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
   const note = $("note");
   const btnGo = $("go");
   const btnClear = $("clear");
 
-  function show(msg, cls){
+  function show(msg, cls) {
     note.className = "note " + (cls || "warn");
     note.textContent = msg || "";
     note.style.display = msg ? "block" : "none";
   }
 
-  function lock(on){
+  function lock(on) {
     btnGo.disabled = !!on;
     $("phone").disabled = !!on;
     $("pin").disabled = !!on;
     btnClear.disabled = !!on;
   }
 
-  // ----------------------------
-  // Guard presence + helpers
-  // ----------------------------
-  if(!window.DIGIY_GUARD){
+  function cleanSlug(v) {
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9\-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function digitsOnly(v) {
+    return String(v || "").replace(/\D/g, "");
+  }
+
+  function withSlug(url, slug) {
+    if (!slug) return url;
+    try {
+      const u = new URL(url, location.href);
+      if (!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if (u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    } catch {
+      const sep = String(url).includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  if (!window.DIGIY_GUARD) {
     show("❌ Guard absent.\nVérifie que ./guard.js est bien chargé.", "bad");
     lock(true);
     return;
   }
 
-  // slug (depuis URL) + affichage
+  try {
+    if (window.DIGIY_GUARD.ready) {
+      await window.DIGIY_GUARD.ready;
+    }
+  } catch (e) {
+    console.error(e);
+    show("❌ Guard non prêt.\nRecharge la page.", "bad");
+    lock(true);
+    return;
+  }
+
   const rawSlug = new URLSearchParams(location.search).get("slug") || "";
-  const slug = (window.DIGIY_GUARD.cleanSlug ? window.DIGIY_GUARD.cleanSlug(rawSlug) : String(rawSlug).trim());
+  const slug = cleanSlug(rawSlug);
 
   $("slug").value = slug || "";
   $("pillSlug").textContent = "slug: " + (slug || "—");
 
-  if(!slug){
-    show("⚠️ Slug manquant.\nExemple: wave-pin.html?slug=chez-astou-saly", "bad");
-  }else{
-    show("Entre ton téléphone Wave + PIN.", "warn");
+  if (!slug) {
+    show("⚠️ Slug manquant.\nExemple: wave-pin.html?slug=loc-221770000111", "bad");
+  } else {
+    show("Entre ton PIN pour ouvrir le cockpit Wave.", "warn");
   }
 
-  // Prefill phone depuis session si disponible
-  try{
+  try {
     const sess = window.DIGIY_GUARD.getSession?.();
-    const p = sess?.phone || window.DIGIY_GUARD.getPhone?.() || "";
-    if(p) $("phone").value = p;
-  }catch(_){}
+    const p = sess?.phone || window.DIGIY_GUARD.state?.phone || "";
+    if (p) $("phone").value = p;
+  } catch (_) {}
 
-  // Clear
-  btnClear.addEventListener("click", ()=>{
+  btnClear.addEventListener("click", () => {
     $("phone").value = "";
     $("pin").value = "";
     show("🧹 Effacé. Tu peux retaper.", "warn");
     $("phone").focus();
   });
 
-  // Enter key = go
-  $("pin").addEventListener("keydown", (e)=>{ if(e.key==="Enter") btnGo.click(); });
+  $("pin").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") btnGo.click();
+  });
 
-  // ----------------------------
-  // LOGIN WAVE PIN
-  // - utilise openWithPin si dispo
-  // - sinon fallback: loginWithPin(phone,pin,module) + storage slug ok
-  // ----------------------------
-  async function doOpen(){
-    const phoneRaw = ($("phone").value || "").trim();
+  async function doOpen() {
+    const phoneInput = ($("phone").value || "").trim();
     const pin = ($("pin").value || "").trim();
 
-    const phone = window.DIGIY_GUARD.normPhone ? window.DIGIY_GUARD.normPhone(phoneRaw) : phoneRaw;
-
-    if(!slug){
+    if (!slug) {
       show("❌ Slug manquant. Retourne à la galerie et clique “Wave”.", "bad");
       return;
     }
-    if(!phone){
-      show("⚠️ Téléphone requis.\nExemple: +221771234567", "bad");
-      $("phone").focus();
-      return;
-    }
-    if(pin.length < 4){
+
+    if (!pin || pin.length < 4) {
       show("⚠️ PIN invalide (4–8 chiffres).", "bad");
       $("pin").focus();
       return;
@@ -236,33 +258,40 @@ document.addEventListener("DOMContentLoaded", async()=>{
     lock(true);
     show("⏳ Vérification…", "warn");
 
-    try{
-      let res = null;
-
-      // Priorité: openWithPin({phone,pin,module,slug})
-      if(typeof window.DIGIY_GUARD.openWithPin === "function"){
-        res = await window.DIGIY_GUARD.openWithPin({ phone, pin, module:"LOC", slug });
-      }
-      // Fallback: loginWithPin(phone,pin,module)
-      else if(typeof window.DIGIY_GUARD.loginWithPin === "function"){
-        res = await window.DIGIY_GUARD.loginWithPin(phone, pin, "LOC");
-      }
-      else{
-        throw new Error("Guard: aucune méthode openWithPin/loginWithPin disponible");
+    try {
+      if (typeof window.DIGIY_GUARD.loginWithPin !== "function") {
+        throw new Error("Guard: loginWithPin indisponible");
       }
 
-      if(!res || res.ok !== true){
-        show("❌ PIN invalide ou accès refusé.\nRéessaie.", "bad");
+      const res = await window.DIGIY_GUARD.loginWithPin(slug, pin);
+
+      if (!res || res.ok !== true) {
+        show((res && res.error) || "❌ PIN invalide ou accès refusé.", "bad");
         lock(false);
         return;
       }
 
-      // Toujours garder le slug (sécurité)
-      const next = window.DIGIY_GUARD.withSlug ? window.DIGIY_GUARD.withSlug("./wave.html") : "./wave.html";
-      show("✅ Accès autorisé. Redirection…", "ok");
-      setTimeout(()=> location.replace(next), 450);
+      const resolvedPhone = digitsOnly(res.phone || "");
+      const typedPhone = digitsOnly(phoneInput || "");
 
-    }catch(e){
+      if (typedPhone && resolvedPhone && typedPhone !== resolvedPhone) {
+        $("phone").value = res.phone || "";
+        show(
+          "⚠️ Le téléphone saisi ne correspondait pas au logement.\nLe téléphone du compte a été remis automatiquement. Redirection…",
+          "warn"
+        );
+      } else {
+        $("phone").value = res.phone || phoneInput || "";
+        show("✅ Accès autorisé. Redirection…", "ok");
+      }
+
+      const next = window.DIGIY_GUARD.withSlug
+        ? window.DIGIY_GUARD.withSlug("./wave.html")
+        : withSlug("./wave.html", slug);
+
+      setTimeout(() => location.replace(next), 450);
+
+    } catch (e) {
       console.error(e);
       show("❌ Problème technique.\nDétail: " + String(e?.message || e), "bad");
       lock(false);
