@@ -9,14 +9,14 @@
   <!-- ✅ CONFIG SUPABASE -->
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
   </script>
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- ✅ GUARD -->
-  <script src="./guard.js?v=locpro-guard-final-v2"></script>
+  <script src="./guard.js?v=locpro-today-clean-v3"></script>
 
   <style>
     :root{
@@ -104,7 +104,12 @@
       color:var(--muted);
       white-space:pre-wrap;
       display:none;
+      line-height:1.4;
     }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+
     .list{display:flex;flex-direction:column;gap:10px}
     .item{
       border:1px solid rgba(148,163,184,.22);
@@ -241,40 +246,53 @@
   "use strict";
 
   const MODULE = "LOC";
-  const SUPPORT_WA = "+221771342889";
-
   const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
   const SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON;
 
-  const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth:{
-      persistSession:false,
-      autoRefreshToken:false,
-      detectSessionInUrl:false
-    }
-  });
-
   const $ = (id)=>document.getElementById(id);
 
-  function showNote(id, msg){
-    const el = $(id);
-    if(!el) return;
-    el.style.display = "block";
-    el.textContent = msg;
-  }
+  const Summary = {
+    arrivals: 0,
+    departures: 0,
+    occupied: 0,
+    pulseQueued: 0,
+    pulseSent: 0,
+    pulseFailed: 0
+  };
 
-  function hideNote(id){
+  let SB_FALLBACK = null;
+
+  try{
+    window.DIGIY_GUARD?.boot?.({
+      module: "LOC",
+      login: "./pin.html",
+      dashboard: "./today.html",
+      requireSlug: true,
+      checkSubscription: true
+    });
+  }catch{}
+
+  function setNote(id, msg, type){
     const el = $(id);
     if(!el) return;
-    el.style.display = "none";
-    el.textContent = "";
+    if(!msg){
+      el.style.display = "none";
+      el.className = "note";
+      el.textContent = "";
+      return;
+    }
+    el.style.display = "block";
+    el.className = "note " + (type || "warn");
+    el.textContent = msg;
   }
 
   function esc(s){
     return String(s ?? "")
       .replaceAll("&","&amp;")
       .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;");
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
 
   function fmtMoney(x){
@@ -374,9 +392,29 @@
     }
   }
 
-  function pinUrl(){
-    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
-    catch { return withSlug("./pin.html"); }
+  function getSB(){
+    const fromGuard =
+      window.DIGIY_GUARD?.getSb?.() ||
+      window.DIGIY_GUARD?.getSupabase?.() ||
+      window.DIGIY_GUARD?.sb ||
+      window.sb ||
+      null;
+
+    if(fromGuard && typeof fromGuard.rpc === "function"){
+      return fromGuard;
+    }
+
+    if(!SB_FALLBACK){
+      SB_FALLBACK = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth:{
+          persistSession:false,
+          autoRefreshToken:false,
+          detectSessionInUrl:false
+        }
+      });
+    }
+
+    return SB_FALLBACK;
   }
 
   function pillUserFromState(st){
@@ -398,34 +436,70 @@
     $("pillState").classList.remove("ok","bad");
     $("pillState").classList.add("warn");
 
-    showNote("noteStats", msg || "Connecte-toi d’abord (PIN).");
-    showNote("notePulse", "Connecte-toi d’abord.");
-    showNote("notePay", "Connecte-toi d’abord.");
-    showNote("noteArrDep", "Connecte-toi d’abord.");
-    showNote("notePending", "Connecte-toi d’abord.");
+    setNote("noteStats", msg || "Connecte-toi d’abord (PIN).", "warn");
+    setNote("notePulse", "Connecte-toi d’abord.", "warn");
+    setNote("notePay", "Connecte-toi d’abord.", "warn");
+    setNote("noteArrDep", "Connecte-toi d’abord.", "warn");
+    setNote("notePending", "Connecte-toi d’abord.", "warn");
   }
 
   function clearAllNotes(){
-    hideNote("noteStats");
-    hideNote("notePulse");
-    hideNote("notePay");
-    hideNote("noteArrDep");
-    hideNote("notePending");
+    setNote("noteStats", "", "");
+    setNote("notePulse", "", "");
+    setNote("notePay", "", "");
+    setNote("noteArrDep", "", "");
+    setNote("notePending", "", "");
+  }
+
+  function resetSummary(){
+    Summary.arrivals = 0;
+    Summary.departures = 0;
+    Summary.occupied = 0;
+    Summary.pulseQueued = 0;
+    Summary.pulseSent = 0;
+    Summary.pulseFailed = 0;
+  }
+
+  function renderStats(){
+    $("stats").innerHTML = "";
+
+    const cards = [
+      ["Arrivées", Summary.arrivals],
+      ["Départs", Summary.departures],
+      ["Occupés", Summary.occupied],
+      ["Pulse à venir", Summary.pulseQueued],
+      ["Pulse échecs", Summary.pulseFailed],
+      ["Pulse envoyés", Summary.pulseSent],
+    ];
+
+    cards.forEach(([lbl,val])=>{
+      const d = document.createElement("div");
+      d.className = "stat";
+      d.innerHTML = `
+        <div class="num">${esc(val)}</div>
+        <div class="lbl">${esc(lbl)}</div>
+      `;
+      $("stats").appendChild(d);
+    });
   }
 
   function resetUI(){
-    $("stats").innerHTML = "";
+    resetSummary();
+    renderStats();
+
     $("pulseList").innerHTML = "";
     $("payList").innerHTML = "";
     $("arrdepList").innerHTML = "";
     $("pendingList").innerHTML = "";
+
     $("pulseQueued").textContent = "0";
     $("pulseSent").textContent = "0";
     $("pulseFailed").textContent = "0";
   }
 
   async function rpc(fn, args){
-    const { data, error } = await SB.rpc(fn, args || {});
+    const sb = getSB();
+    const { data, error } = await sb.rpc(fn, args || {});
     if(error) throw error;
     if(typeof data === "string"){
       try{ return JSON.parse(data); }catch(_){ return data; }
@@ -450,19 +524,6 @@
     }
   }
 
-  function renderStats(cards){
-    $("stats").innerHTML = "";
-    cards.forEach(([lbl,val])=>{
-      const d = document.createElement("div");
-      d.className = "stat";
-      d.innerHTML = `
-        <div class="num">${esc(val)}</div>
-        <div class="lbl">${esc(lbl)}</div>
-      `;
-      $("stats").appendChild(d);
-    });
-  }
-
   function renderArrDepFromDayListing(payload){
     $("arrdepList").innerHTML = "";
 
@@ -470,49 +531,106 @@
     const dep = payload?.departures || [];
     const occ = payload?.occupied || [];
 
-    const blocks = [];
-    blocks.push({
-      title:"Arrivées",
-      tag:"ok",
-      rows:arr.map(r=>({
-        title: r.guest_name || "Client",
-        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-        right: r.unit_title || ""
-      }))
-    });
-
-    blocks.push({
-      title:"Départs",
-      tag:"warn",
-      rows:dep.map(r=>({
-        title: r.guest_name || "Client",
-        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-        right: r.unit_title || ""
-      }))
-    });
-
-    blocks.push({
-      title:"Occupés",
-      tag:"warn",
-      rows:occ.map(r=>({
-        title: r.guest_name || "Client",
-        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-        right: r.unit_title || ""
-      }))
-    });
-
     const all = [];
-    blocks.forEach(b=>{
-      if(!b.rows.length) return;
-      b.rows.forEach(x=> all.push({ ...x, type:b.title, tag:b.tag }));
+
+    arr.forEach(r=>{
+      all.push({
+        type: "Arrivée",
+        tag: "ok",
+        title: r.guest_name || "Client",
+        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+        right: r.unit_title || ""
+      });
+    });
+
+    dep.forEach(r=>{
+      all.push({
+        type: "Départ",
+        tag: "warn",
+        title: r.guest_name || "Client",
+        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+        right: r.unit_title || ""
+      });
+    });
+
+    occ.forEach(r=>{
+      all.push({
+        type: "Occupé",
+        tag: "warn",
+        title: r.guest_name || "Client",
+        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
+        right: r.unit_title || ""
+      });
     });
 
     if(!all.length){
-      showNote("noteArrDep","Aucune arrivée / départ / occupation pour aujourd’hui.");
+      setNote("noteArrDep","Aucune arrivée / départ / occupation pour aujourd’hui.","warn");
       return;
     }
 
     all.slice(0,40).forEach(r=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="itemTop">
+          <div class="itemTitle">${esc(r.type)} — ${esc(r.title)} <span class="tag ${esc(r.tag)}">${esc(r.type.toUpperCase())}</span></div>
+          <div class="tag">${esc(r.right || "")}</div>
+        </div>
+        <div class="itemMeta">${r.meta}</div>
+      `;
+      $("arrdepList").appendChild(div);
+    });
+  }
+
+  function renderArrDepFallback(rows, day){
+    $("arrdepList").innerHTML = "";
+
+    const active = rows.filter(r => !String(r.status || "").toLowerCase().includes("cancel"));
+    const items = [];
+
+    active.forEach(r=>{
+      const ci = String(r.date_arrivee || "");
+      const co = String(r.date_depart || "");
+      const labelRoom = r.logement_nom || "Logement";
+      const labelClient = r.client_nom || "Client";
+
+      if(ci === day){
+        items.push({
+          type:"Arrivée",
+          tag:"ok",
+          title:labelClient,
+          meta:`📅 ${esc(ci)} → ${esc(co)} • 💰 ${esc(fmtMoney(r.montant_total))}`,
+          right:labelRoom
+        });
+      }
+
+      if(co === day){
+        items.push({
+          type:"Départ",
+          tag:"warn",
+          title:labelClient,
+          meta:`📅 ${esc(ci)} → ${esc(co)} • 💰 ${esc(fmtMoney(r.montant_total))}`,
+          right:labelRoom
+        });
+      }
+
+      if(ci <= day && co > day){
+        items.push({
+          type:"Occupé",
+          tag:"warn",
+          title:labelClient,
+          meta:`📅 ${esc(ci)} → ${esc(co)} • 💰 ${esc(fmtMoney(r.montant_total))}`,
+          right:labelRoom
+        });
+      }
+    });
+
+    if(!items.length){
+      setNote("noteArrDep","Aucune arrivée / départ / occupation pour aujourd’hui.","warn");
+      return;
+    }
+
+    items.slice(0,40).forEach(r=>{
       const div = document.createElement("div");
       div.className = "item";
       div.innerHTML = `
@@ -533,12 +651,17 @@
     const sent = rows.filter(r => r.status === "sent");
     const failed = rows.filter(r => r.status === "failed");
 
+    Summary.pulseQueued = queued.length;
+    Summary.pulseSent = sent.length;
+    Summary.pulseFailed = failed.length;
+    renderStats();
+
     $("pulseQueued").textContent = String(queued.length);
     $("pulseSent").textContent = String(sent.length);
     $("pulseFailed").textContent = String(failed.length);
 
     if(!rows.length){
-      showNote("notePulse","Aucun Pulse visible.");
+      setNote("notePulse","Aucun Pulse visible.","warn");
       return;
     }
 
@@ -567,7 +690,7 @@
     $("payList").innerHTML = "";
 
     if(!rows.length){
-      showNote("notePay","Aucune preuve récente.");
+      setNote("notePay","Aucune preuve récente.","warn");
       return;
     }
 
@@ -596,7 +719,7 @@
     $("pendingList").innerHTML = "";
 
     if(!rows.length){
-      showNote("notePending","Aucune réservation en attente.");
+      setNote("notePending","Aucune réservation en attente.","warn");
       return;
     }
 
@@ -623,14 +746,10 @@
 
       if(payload?.ok){
         const st = payload.stats || {};
-        renderStats([
-          ["Arrivées", st.arr_count ?? (payload.arrivals || []).length],
-          ["Départs", st.dep_count ?? (payload.departures || []).length],
-          ["Occupés", st.occ_count ?? (payload.occupied || []).length],
-          ["Pulse à venir", 0],
-          ["Pulse échecs", 0],
-          ["Pulse envoyés", 0],
-        ]);
+        Summary.arrivals = st.arr_count ?? (payload.arrivals || []).length;
+        Summary.departures = st.dep_count ?? (payload.departures || []).length;
+        Summary.occupied = st.occ_count ?? (payload.occupied || []).length;
+        renderStats();
 
         renderArrDepFromDayListing(payload);
         return { ok:true, payload };
@@ -643,19 +762,20 @@
   }
 
   async function loadPulse(businessCode){
-    hideNote("notePulse");
+    setNote("notePulse", "", "");
     $("pulseList").innerHTML = "";
     $("pulseQueued").textContent = "0";
     $("pulseSent").textContent = "0";
     $("pulseFailed").textContent = "0";
 
     if(!businessCode){
-      showNote("notePulse","business_code introuvable pour Pulse.");
+      setNote("notePulse","business_code introuvable pour Pulse.","warn");
       return;
     }
 
     try{
-      const { data, error } = await SB
+      const sb = getSB();
+      const { data, error } = await sb
         .from("digiy_loc_outbox")
         .select("id, due_at, pulse_kind, status, last_error, sent_at, phone, business_code")
         .eq("business_code", businessCode)
@@ -665,21 +785,22 @@
       if(error) throw error;
       renderPulse(data || []);
     }catch(e){
-      showNote("notePulse","Pulse indisponible :\n" + (e?.message || e));
+      setNote("notePulse","Pulse indisponible :\n" + (e?.message || e),"warn");
     }
   }
 
   async function loadPayments(businessCode){
-    hideNote("notePay");
+    setNote("notePay", "", "");
     $("payList").innerHTML = "";
 
     if(!businessCode){
-      showNote("notePay","business_code introuvable pour les paiements.");
+      setNote("notePay","business_code introuvable pour les paiements.","warn");
       return;
     }
 
     try{
-      const { data, error } = await SB
+      const sb = getSB();
+      const { data, error } = await sb
         .from("loc_payment_intents")
         .select("id, status, amount_expected, currency, client_name, client_phone, wave_tx_ref, created_at, business_code")
         .eq("business_code", businessCode)
@@ -689,88 +810,96 @@
       if(error) throw error;
       renderPayments(data || []);
     }catch(e){
-      showNote("notePay","Paiements indisponibles :\n" + (e?.message || e));
+      setNote("notePay","Paiements indisponibles :\n" + (e?.message || e),"warn");
     }
   }
 
   async function loadPending(businessCode){
-    hideNote("notePending");
+    setNote("notePending", "", "");
     $("pendingList").innerHTML = "";
 
     if(!businessCode){
-      showNote("notePending","business_code introuvable pour les réservations.");
-      return;
+      setNote("notePending","business_code introuvable pour les réservations.","warn");
+      return [];
     }
 
     try{
-      const { data, error } = await SB
+      const sb = getSB();
+      const { data, error } = await sb
         .from("digiy_reservations")
-        .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code")
+        .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code, logement_nom")
         .eq("business_code", businessCode)
         .eq("status", "en_attente")
         .order("created_at", { ascending:false })
         .limit(18);
 
       if(error) throw error;
-      renderPending(data || []);
+      const rows = data || [];
+      renderPending(rows);
+      return rows;
     }catch(e){
-      showNote("notePending","Réservations indisponibles :\n" + (e?.message || e));
+      setNote("notePending","Réservations indisponibles :\n" + (e?.message || e),"warn");
+      return [];
     }
   }
 
-  async function fallbackStats(businessCode){
+  async function fallbackReservations(businessCode){
+    if(!businessCode) return [];
+
+    try{
+      const sb = getSB();
+      const { data, error } = await sb
+        .from("digiy_reservations")
+        .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code, logement_nom")
+        .eq("business_code", businessCode)
+        .order("date_arrivee", { ascending:true })
+        .limit(120);
+
+      if(error) throw error;
+      return data || [];
+    }catch{
+      return [];
+    }
+  }
+
+  async function fallbackStatsAndArrDep(businessCode, day){
     if(!businessCode){
-      renderStats([
-        ["Arrivées", 0],
-        ["Départs", 0],
-        ["En attente", 0],
-        ["Pulse à venir", 0],
-        ["Pulse échecs", 0],
-        ["Pulse envoyés", 0],
-      ]);
+      renderStats();
       return;
     }
 
     try{
-      const t = todayISO();
-
-      const [outboxRes, pendRes] = await Promise.allSettled([
-        SB.from("digiy_loc_outbox")
-          .select("id,status,business_code")
-          .eq("business_code", businessCode)
-          .limit(600),
-        SB.from("digiy_reservations")
-          .select("id,status,date_arrivee,date_depart,business_code")
-          .eq("business_code", businessCode)
-          .limit(600)
+      const [outboxRes, reservations] = await Promise.all([
+        (async ()=>{
+          const sb = getSB();
+          const { data, error } = await sb
+            .from("digiy_loc_outbox")
+            .select("id,status,business_code")
+            .eq("business_code", businessCode)
+            .limit(600);
+          if(error) throw error;
+          return data || [];
+        })(),
+        fallbackReservations(businessCode)
       ]);
 
-      let queued = 0, sent = 0, failed = 0, arr = 0, dep = 0, pend = 0;
+      Summary.pulseQueued = outboxRes.filter(r => r.status === "queued" || r.status === "sending").length;
+      Summary.pulseSent = outboxRes.filter(r => r.status === "sent").length;
+      Summary.pulseFailed = outboxRes.filter(r => r.status === "failed").length;
 
-      if(outboxRes.status === "fulfilled" && !outboxRes.value.error){
-        const rows = outboxRes.value.data || [];
-        queued = rows.filter(r => r.status === "queued" || r.status === "sending").length;
-        sent = rows.filter(r => r.status === "sent").length;
-        failed = rows.filter(r => r.status === "failed").length;
-      }
+      const active = reservations.filter(r => !String(r.status || "").toLowerCase().includes("cancel"));
+      Summary.arrivals = active.filter(r => String(r.date_arrivee) === day).length;
+      Summary.departures = active.filter(r => String(r.date_depart) === day).length;
+      Summary.occupied = active.filter(r => {
+        const ci = String(r.date_arrivee || "");
+        const co = String(r.date_depart || "");
+        return ci <= day && co > day;
+      }).length;
 
-      if(pendRes.status === "fulfilled" && !pendRes.value.error){
-        const rows = pendRes.value.data || [];
-        pend = rows.filter(r => r.status === "en_attente").length;
-        arr = rows.filter(r => r.date_arrivee === t).length;
-        dep = rows.filter(r => r.date_depart === t).length;
-      }
-
-      renderStats([
-        ["Arrivées", arr],
-        ["Départs", dep],
-        ["En attente", pend],
-        ["Pulse à venir", queued],
-        ["Pulse échecs", failed],
-        ["Pulse envoyés", sent],
-      ]);
+      renderStats();
+      renderArrDepFallback(reservations, day);
     }catch(e){
-      showNote("noteStats","Résumé indisponible :\n" + (e?.message || e));
+      setNote("noteStats","Résumé indisponible :\n" + (e?.message || e),"warn");
     }
   }
 
@@ -847,17 +976,12 @@
     ]);
 
     if(!dayRes.ok){
-      showNote("noteArrDep","RPC digiy_loc_day_listing indisponible :\n" + (dayRes.error || "—"));
-      await fallbackStats(businessCode);
+      setNote("noteArrDep","RPC digiy_loc_day_listing indisponible :\n" + (dayRes.error || "—"),"warn");
+      await fallbackStatsAndArrDep(businessCode, day);
     }
   }
 
   bindActions();
-  refreshAll();
-})();
-</script>
-</body>
-</html>
   refreshAll();
 })();
 </script>
