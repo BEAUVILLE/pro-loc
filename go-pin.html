@@ -16,6 +16,7 @@
     --accent:#facc15;
     --ok:#22c55e;
     --danger:#fb7185;
+    --shadow:0 22px 55px rgba(0,0,0,.55);
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto}
   body{
@@ -57,7 +58,7 @@
     background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
     border-radius:18px;
     border:1px solid rgba(250,204,21,.22);
-    box-shadow:0 22px 55px rgba(0,0,0,.55);
+    box-shadow:var(--shadow);
     padding:16px;
     display:flex;
     flex-direction:column;
@@ -109,6 +110,11 @@
     color:#bbf7d0;
     border:1px solid rgba(34,197,94,.55);
   }
+  .btn.gold{
+    background:rgba(250,204,21,.12);
+    color:#fde68a;
+    border:1px solid rgba(250,204,21,.35);
+  }
   footer{
     text-align:center;
     color:var(--muted);
@@ -133,18 +139,19 @@
 
   <div class="card">
     <div class="title" id="ttl">Ouverture du PIN…</div>
-    <div class="sub" id="sub">On vérifie le logement et on te redirige automatiquement.</div>
+    <div class="sub" id="sub">On garde ton slug et on t’envoie vers le vrai accès PIN PRO LOC.</div>
 
     <div class="status">
       <div class="dot" id="dot"></div>
       <div class="statusTxt">
         <div class="statusBig" id="stBig">Chargement</div>
-        <div class="statusSmall" id="stSmall">Merci de patienter 2 secondes…</div>
+        <div class="statusSmall" id="stSmall">Merci de patienter une seconde…</div>
       </div>
     </div>
 
     <div class="actions">
       <a class="btn ghost" id="btnBack" href="#" rel="noopener">⬅️ Retour galerie</a>
+      <a class="btn gold" id="btnPin" href="#">🔑 Ouvrir le PIN</a>
       <button class="btn ok" id="btnWa" type="button">📲 Parler à DIGIY</button>
     </div>
   </div>
@@ -152,35 +159,17 @@
   <footer>GO PIN · DIGIY LOC ♾️</footer>
 </div>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (() => {
   "use strict";
-  console.log("GO-PIN VERSION:", "2026-03-03-go-pin-LOC-STABLE");
 
-  /* =========================
-     CONFIG
-  ========================= */
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  const GALLERY_URL = "https://beauville.github.io/digiy-loc/";
+  const PIN_PAGE = "https://pro-loc.digiylyfe.com/pin.html";
+  const TEAM_WA = "+221771342889";
 
-  // ✅ où tu veux renvoyer l’utilisateur si besoin
-  const GALLERY_URL  = "https://beauville.github.io/digiy-loc/";
-
-  // ✅ PORTE UNIQUE PRO (ton vrai domaine)
-  const PIN_PAGE     = "https://pro-loc.digiylyfe.com/pin.html";
-
-  const TEAM_WA      = "+221771342889";
-
-  // ✅ Clés slug-first (IMPORTANT)
   const LOC_SLUG_KEY = "digiy_loc_slug";
   const LAST_SLUG_KEY = "digiy_last_slug";
 
-  /* =========================
-     UI refs
-  ========================= */
   const ttl = document.getElementById("ttl");
   const sub = document.getElementById("sub");
   const dot = document.getElementById("dot");
@@ -188,14 +177,15 @@
   const stSmall = document.getElementById("stSmall");
   const btnBack = document.getElementById("btnBack");
   const btnWa = document.getElementById("btnWa");
+  const btnPin = document.getElementById("btnPin");
 
-  btnBack.href = GALLERY_URL || "./";
+  btnBack.href = GALLERY_URL;
 
-  /* =========================
-     Helpers
-  ========================= */
-  const sleep = (ms)=> new Promise(r=>setTimeout(r, ms));
-  function digits(v){ return String(v || "").replace(/\D/g,""); }
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  function digits(v){
+    return String(v || "").replace(/\D/g, "");
+  }
 
   function openWa(phone, msg){
     const d = digits(phone);
@@ -207,6 +197,7 @@
   function setStatus(mode, big, small){
     stBig.textContent = big || "";
     stSmall.textContent = small || "";
+
     if (mode === "ok"){
       dot.style.background = "var(--ok)";
       dot.style.boxShadow = "0 0 16px rgba(34,197,94,.35)";
@@ -230,15 +221,31 @@
       .replace(/^_+|_+$/g,"");
   }
 
-  function safeSet(k,v){
-    try{ localStorage.setItem(k, String(v ?? "")); } catch(_){}
+  function safeSet(k, v){
+    try { localStorage.setItem(k, String(v ?? "")); } catch(_){}
+    try { sessionStorage.setItem(k, String(v ?? "")); } catch(_){}
+  }
+
+  function readSlug(){
+    const qs = new URLSearchParams(location.search);
+    return cleanSlug(
+      qs.get("slug") ||
+      sessionStorage.getItem(LOC_SLUG_KEY) ||
+      sessionStorage.getItem(LAST_SLUG_KEY) ||
+      localStorage.getItem(LOC_SLUG_KEY) ||
+      localStorage.getItem(LAST_SLUG_KEY) ||
+      ""
+    );
+  }
+
+  function pinHref(slug){
+    const u = new URL(PIN_PAGE, location.href);
+    if (slug) u.searchParams.set("slug", slug);
+    return u.toString();
   }
 
   function redirectToPin(slug){
-    // ✅ slug obligatoire dans l’URL
-    const u = new URL(PIN_PAGE, location.href);
-    u.searchParams.set("slug", slug);
-    location.replace(u.toString());
+    location.replace(pinHref(slug));
   }
 
   function fatal(title, message){
@@ -247,94 +254,34 @@
     setStatus("err", title || "Erreur", message || "");
   }
 
-  /* =========================
-     OPTIONNEL : Vérif go_pins
-     - si tu veux un “contrôle” avant d’ouvrir le PIN
-     - sinon tu peux supprimer ce bloc et rediriger direct
-  ========================= */
-  async function checkGoPin(sb, slug){
-    try{
-      const { data, error } = await sb
-        .from("go_pins")
-        .select("slug,title,is_active,category")
-        .eq("slug", slug)
-        .maybeSingle();
+  const slug = readSlug();
 
-      if (error) return { ok:false, reason:error.message || "go_pins_error", row:null };
-      if (!data) return { ok:false, reason:"pin_not_found", row:null };
-      if (data.category && String(data.category).toLowerCase() !== "loc") {
-        return { ok:false, reason:"pin_not_loc", row:data };
-      }
-      if (data.is_active === false) return { ok:false, reason:"pin_inactive", row:data };
-      return { ok:true, row:data };
-    }catch(e){
-      return { ok:false, reason:String(e?.message || e), row:null };
-    }
-  }
-
-  /* =========================
-     Main
-  ========================= */
-  const rawSlug = new URLSearchParams(location.search).get("slug");
-  const slug = cleanSlug(rawSlug);
-
-  btnWa.addEventListener("click", ()=>{
+  btnWa.addEventListener("click", () => {
     const msg = slug
       ? `Bonjour DIGIY 👋\nJ’ai un souci pour ouvrir le PIN LOC (${slug}).`
-      : `Bonjour DIGIY 👋\nJe n’arrive pas à ouvrir un PIN LOC (slug manquant).`;
+      : `Bonjour DIGIY 👋\nJe n’arrive pas à ouvrir mon accès PIN LOC.`;
     openWa(TEAM_WA, msg);
   });
 
   window.addEventListener("DOMContentLoaded", async () => {
-    console.log("SLUG", slug);
-
     if (!slug){
+      btnPin.href = pinHref("");
       fatal("Slug manquant", "Lien incomplet. Exemple : go-pin.html?slug=loc-221770000111");
       return;
     }
 
-    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.length < 80){
-      fatal("Config invalide", "Clé ANON Supabase manquante ou tronquée.");
-      return;
-    }
-
-    let sb;
-    try{
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
-      });
-    }catch(e){
-      fatal("Supabase KO", "CDN/clé/JS non chargé.");
-      return;
-    }
-
-    setStatus("warn","Vérification","Contrôle du lien…");
-
-    // ✅ OPTIONNEL : si go_pins est bien RLS-friendly
-    const chk = await checkGoPin(sb, slug);
-    if(!chk.ok){
-      // On peut quand même ouvrir le PIN, mais on affiche un msg clair
-      const reason = chk.reason || "unknown";
-      console.warn("go_pins check fail:", reason);
-
-      // Si tu veux BLOQUER, décommente cette ligne:
-      // return fatal("Lien invalide", "PIN introuvable/inactif (" + reason + ").");
-
-      // Sinon on continue en mode “soft”
-    }
-
-    // ✅ STOCKAGE slug-first (c’est LA clé)
     safeSet(LOC_SLUG_KEY, slug);
     safeSet(LAST_SLUG_KEY, slug);
 
-    // (optionnel) titre
-    if(chk?.row?.title) safeSet("digiy_loc_title", chk.row.title);
+    btnPin.href = pinHref(slug);
 
-    ttl.textContent = (chk?.row?.title || slug);
-    sub.textContent = "Ouverture du PIN propriétaire…";
-    setStatus("ok","OK","Redirection en cours…");
+    ttl.textContent = slug;
+    sub.textContent = "Ouverture du PIN propriétaire LOC…";
+    setStatus("warn", "Vérification", "Slug mémorisé. Redirection en cours…");
 
     await sleep(450);
+
+    setStatus("ok", "OK", "Ouverture du PIN…");
     redirectToPin(slug);
   });
 })();
