@@ -6,8 +6,7 @@
   <title>DIGIY LOC PRO — Photos</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v3=locpro-photos-FINAL-002"></script>
-
+ <script src="./guard.js?v=locpro-photos-final-v3"></script>
   <style>
     :root{
       --bg:#020617;
@@ -275,8 +274,8 @@
   }
 
   function payUrl(){
-    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
-    catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC"); }
+    catch { return withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC"); }
   }
 
   function isLive(){
