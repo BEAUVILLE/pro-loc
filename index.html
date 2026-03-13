@@ -14,14 +14,14 @@
 
   <!-- Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-index-FINAL-005"></script>
+  <script src="./guard.js?v=locpro-index-FINAL-006"></script>
 
   <style>
     :root{
       --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
       --line:rgba(148,163,184,.22);
       --ink:#f9fafb; --muted:#cbd5f5;
-      --gold:#facc15; --green:#22c55e; --red:#ef4444; --blue:#60a5fa;
+      --gold:#facc15; --green:#22c55e; --red:#ef4444;
       --shadow:0 22px 55px rgba(0,0,0,.55);
       --r:18px;
     }
@@ -80,55 +80,71 @@
     .grid{
       margin-top:14px;
       display:grid;
-      grid-template-columns: 1.1fr .9fr;
+      grid-template-columns:1.1fr .9fr;
       gap:14px;
     }
     @media(max-width:900px){ .grid{grid-template-columns:1fr} }
     .card{
       border:1px solid var(--line);
       background:rgba(255,255,255,.03);
-      border-radius:22px;box-shadow:var(--shadow);
+      border-radius:22px;
+      box-shadow:var(--shadow);
       padding:14px;
     }
-    .card h2{font-size:1rem;margin:0 0 10px;color:var(--gold);font-weight:1100}
+    .card h2{
+      font-size:1rem;
+      margin:0 0 10px;
+      color:var(--gold);
+      font-weight:1100;
+    }
     .nav{
       display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
+      grid-template-columns:repeat(2, minmax(0,1fr));
       gap:10px;
     }
     @media(max-width:520px){ .nav{grid-template-columns:1fr} }
     .note{
       margin-top:10px;
-      padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+      white-space:pre-wrap;
       display:none;
     }
     .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
     .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-    .kv{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center}
-    .k{color:rgba(203,213,245,.85);font-weight:900;font-size:.86rem}
-    .v{font-weight:1000;word-break:break-word}
-    .miniActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .sep{height:1px;background:rgba(148,163,184,.18);margin:12px 0}
+    .kv{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:8px;
+      align-items:center;
+    }
+    .k{
+      color:rgba(203,213,245,.85);
+      font-weight:900;
+      font-size:.86rem;
+    }
+    .v{
+      font-weight:1000;
+      word-break:break-word;
+    }
+    .miniActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .sep{
+      height:1px;
+      background:rgba(148,163,184,.18);
+      margin:12px 0;
+    }
 
-    .assistantCard{
-      margin-top:14px;
-      border:1px solid rgba(96,165,250,.25);
-      background:rgba(96,165,250,.06);
-      border-radius:22px;
-      padding:14px;
-      box-shadow:var(--shadow);
-    }
-    .assistantHead{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-    .assistantTitle{
-      font-weight:1100;color:#dbeafe;
-      display:flex;align-items:center;gap:8px;
-    }
-
+    /* ✅ BOUTON FLOTTANT RETOUR SITE */
     .floating-site-btn{
       position:fixed;
       left:16px;
@@ -162,13 +178,10 @@
     }
 
     @media(max-width:700px){
-      .wrap{
-        padding:74px 0 120px;
-      }
+      .wrap{padding:74px 0 120px}
       .floating-site-btn{
         left:12px;
         top:calc(12px + env(safe-area-inset-top, 0px));
-        right:auto;
         min-height:46px;
         padding:12px 14px;
         font-size:12px;
@@ -194,6 +207,7 @@
           <div class="sub">Cockpit propriétaire • sécurisé • 0% commission • paiement direct</div>
         </div>
       </div>
+
       <div class="right">
         <div class="pill" id="pillPhone">👤 —</div>
         <div class="pill" id="pillConn">⏳ …</div>
@@ -223,39 +237,30 @@
         <div class="kv">
           <div class="k">Lieu</div>
           <div class="v" id="vLieu">—</div>
+
           <div class="k">Téléphone</div>
           <div class="v" id="vPhone">—</div>
+
           <div class="k">Session</div>
           <div class="v" id="vSess">—</div>
+
           <div class="k">Supabase</div>
           <div class="v" id="vSb">—</div>
         </div>
+
         <div class="miniActions">
           <a class="btn" data-go="go-pin-public.html" href="#">👁️ GO PIN public</a>
           <a class="btn" data-go="pin.html" href="#">🔑 Ouvrir l'accès (PIN)</a>
           <a class="btn gold" data-go="wave.html" href="#">💳 Cockpit Wave</a>
         </div>
+
         <div class="sep"></div>
+
         <div class="sub" style="margin:0">
           Si tu vois "Supabase pas prêt", c'est juste le guard qui n'a pas fini de booter.
           Clique ↻ Recharger ou repasse par PIN.
         </div>
       </div>
-    </div>
-
-    
-      <div class="assistantFallback" id="assistantFallback">
-        Chargement de l’assistant…
-        <br/>Si ça reste bloqué : vérifie ta connexion, puis ↻ Recharge.
-      </div>
-
-      <div
-        id="digiyWidgetMount"
-        data-digiy-module="LOC"
-        data-digiy-lang="wo"
-        data-digiy-endpoint="https://knowledge.digiylyfe.com/widget/ask"
-        style="margin-top:10px"
-      ></div>
     </div>
   </div>
 
@@ -264,7 +269,6 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-
   const SAVED_KEY = "digiy_loc_slug";
 
   function getUrlSlug(){
@@ -412,30 +416,6 @@
     return ok;
   }
 
-  function buildWidgetContext(){
-    const st = getGuardState();
-    return {
-      module: "LOC",
-      lang: "wo",
-      slug: st.slug || getSlug(),
-      phone: st.phone || getHubPhone() || "",
-      page: location.pathname,
-      href: location.href,
-      title: document.title,
-      ts: Date.now()
-    };
-  }
-
-  function setWidgetDataAttrs(ctx){
-    const mount = $("digiyWidgetMount");
-    if(!mount) return;
-    mount.setAttribute("data-digiy-module", ctx.module || "LOC");
-    mount.setAttribute("data-digiy-lang", ctx.lang || "wo");
-    mount.setAttribute("data-digiy-slug", ctx.slug || "");
-    mount.setAttribute("data-digiy-phone", ctx.phone || "");
-    mount.setAttribute("data-digiy-page", ctx.page || "");
-  }
-
   function bindNav(){
     document.querySelectorAll("[data-go]").forEach((el)=>{
       if(el.__digiy_bound) return;
@@ -525,13 +505,6 @@
     location.replace(pinTarget);
   });
 
-  $("btnOpenAssistant")?.addEventListener("click", ()=>{
-    try{
-      if(window.DIGIY_WIDGET_API?.open) return window.DIGIY_WIDGET_API.open();
-    }catch(_){}
-    $("assistantCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
-  });
-
   $("btnCheckAccess")?.addEventListener("click", async (e)=>{
     e.preventDefault();
 
@@ -578,16 +551,12 @@
       ensureSlugInUrl(initialSlug);
     }
 
-    setWidgetDataAttrs(buildWidgetContext());
-
     if(!initialSlug){
       setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
       $("vSess").textContent = "—";
       $("btnLogout").style.display = "none";
       sbState();
       show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
-      const fb = $("assistantFallback");
-      if (fb) fb.textContent = "Assistant disponible, mais ajoute un slug pour charger le bon contexte.";
       return;
     }
 
@@ -598,8 +567,8 @@
     await waitGuardReady();
 
     const st = getGuardState();
-
     const finalSlug = (st.slug || initialSlug || "").trim();
+
     if(finalSlug){
       saveSlug(finalSlug);
       ensureSlugInUrl(finalSlug);
@@ -609,23 +578,6 @@
       setPreviewUi(st.reason || "preview");
     } else {
       setLiveUi();
-    }
-
-    setWidgetDataAttrs(buildWidgetContext());
-
-    window.DIGIY_WIDGET_PRO = {
-      endpoint: $("digiyWidgetMount")?.getAttribute("data-digiy-endpoint") || "https://knowledge.digiylyfe.com/widget/ask",
-      lang: "wo",
-      module: "LOC",
-      getContext: () => buildWidgetContext(),
-      payloadShape: "query"
-    };
-
-    const fb = $("assistantFallback");
-    if (fb) {
-      fb.textContent = st.access_ok
-        ? "Assistant prêt. Clique “💬 Ouvrir” ou pose ta question."
-        : "Assistant prêt en aperçu. Passe par PIN pour le contexte complet.";
     }
   }
 
@@ -638,12 +590,9 @@
     $("vSess").textContent = "KO";
     $("btnLogout").style.display = "none";
     sbState();
-    setWidgetDataAttrs(buildWidgetContext());
   });
 
 })();
 </script>
-
-  <script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
 </body>
 </html>
