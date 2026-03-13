@@ -143,10 +143,34 @@
       .col6{grid-column:span 6}
       .col4{grid-column:span 4}
     }
+    #accessGate{
+  border-color:rgba(250,204,21,.22);
+  background:rgba(250,204,21,.06);
+}  
   </style>
 </head>
-
 <body>
+<div class="card" id="accessGate" style="display:none">
+  <div class="row">
+    <div>
+      <div style="font-weight:1100;font-size:1rem">🔐 Accès DIGIY LOC PRO</div>
+      <div class="muted" id="accessGateText" style="margin-top:6px">
+        Passe par PIN ou active ton module pour ouvrir la vraie vue du jour.
+      </div>
+    </div>
+
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <a class="btn gold" id="btnGatePin" href="#">🔑 Ouvrir PIN</a>
+      <a class="btn primary" id="btnGatePay" href="#">💳 Activer mon module</a>
+      <a class="btn ghost" id="btnGateDashboard" href="#">🏠 Retour cockpit</a>
+    </div>
+  </div>
+
+  <div class="note warn" id="accessGateNote" style="display:block;margin-top:12px">
+    Le cockpit reste visible en aperçu, mais l’accès réel n’est pas encore confirmé.
+  </div>
+</div>  
+  
 <div class="wrap">
   <div class="top">
     <div class="brand">
@@ -416,6 +440,54 @@
 
     return SB_FALLBACK;
   }
+function payUrl(){
+  try{
+    return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC");
+  }catch{
+    return withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC");
+  }
+}
+
+function pinUrl(){
+  try{
+    return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html");
+  }catch{
+    return withSlug("./pin.html");
+  }
+}
+
+function setAccessGate(show, reason=""){
+  const box = $("accessGate");
+  const txt = $("accessGateText");
+  const note = $("accessGateNote");
+  const btnPin = $("btnGatePin");
+  const btnPay = $("btnGatePay");
+  const btnDash = $("btnGateDashboard");
+
+  if(!box || !txt || !note || !btnPin || !btnPay || !btnDash) return;
+
+  btnPin.href = pinUrl();
+  btnPay.href = payUrl();
+  btnDash.href = withSlug("./app.html");
+
+  if(!show){
+    box.style.display = "none";
+    return;
+  }
+
+  box.style.display = "block";
+
+  if(reason === "slug_missing"){
+    txt.textContent = "Aucun slug détecté. Ouvre la page depuis ton cockpit ou ton lien GO PIN.";
+    note.textContent = "Ajoute un slug valide pour que la vue du jour charge le bon logement.";
+  } else if(reason === "has_access_false"){
+    txt.textContent = "Slug détecté mais accès non actif. Passe par PIN ou active ton module.";
+    note.textContent = "La page reste visible en aperçu, mais les vraies données restent protégées.";
+  } else {
+    txt.textContent = "Passe par PIN ou active ton module pour ouvrir la vraie vue du jour.";
+    note.textContent = "Le cockpit reste visible en aperçu, mais l’accès réel n’est pas encore confirmé.";
+  }
+}  
 
   function pillUserFromState(st){
     const phone =
@@ -428,20 +500,24 @@
     $("pillState").textContent = "✅ Connecté";
     $("pillState").classList.remove("warn","bad");
     $("pillState").classList.add("ok");
+    setAccessGate(false);  
   }
+  
 
-  function setDisconnected(msg){
-    $("pillUser").innerHTML = `👤 <strong>—</strong>`;
-    $("pillState").textContent = "🔒 Déconnecté";
-    $("pillState").classList.remove("ok","bad");
-    $("pillState").classList.add("warn");
+  function setDisconnected(msg, reason="preview"){
+  $("pillUser").innerHTML = `👤 <strong>—</strong>`;
+  $("pillState").textContent = "🔒 Déconnecté";
+  $("pillState").classList.remove("ok","bad");
+  $("pillState").classList.add("warn");
 
-    setNote("noteStats", msg || "Connecte-toi d’abord (PIN).", "warn");
-    setNote("notePulse", "Connecte-toi d’abord.", "warn");
-    setNote("notePay", "Connecte-toi d’abord.", "warn");
-    setNote("noteArrDep", "Connecte-toi d’abord.", "warn");
-    setNote("notePending", "Connecte-toi d’abord.", "warn");
-  }
+  setAccessGate(true, reason);
+
+  showNote("noteStats", msg || "Connecte-toi d’abord (PIN).");
+  showNote("notePulse", "Connecte-toi d’abord.");
+  showNote("notePay", "Connecte-toi d’abord.");
+  showNote("noteArrDep", "Connecte-toi d’abord.");
+  showNote("notePending", "Connecte-toi d’abord.");
+}
 
   function clearAllNotes(){
     setNote("noteStats", "", "");
@@ -953,15 +1029,15 @@
 
     $("lblDay").textContent = "Aujourd’hui • " + prettyDateFR(day);
 
-    if(!slug){
-      setDisconnected("Slug manquant. Ouvre cette page via le cockpit avec ?slug=...");
-      return;
-    }
+  if(!slug){
+  setDisconnected("Slug manquant. Ouvre cette page via le cockpit avec ?slug=...", "slug_missing");
+  return;
+}
 
-    if(!st.access_ok){
-      setDisconnected("Accès non actif. Passe par PIN pour ouvrir la vraie vue du jour.");
-      return;
-    }
+if(!st.access_ok){
+  setDisconnected("Accès non actif. Passe par PIN pour ouvrir la vraie vue du jour.", "has_access_false");
+  return;
+}
 
     pillUserFromState(st);
 
