@@ -1,50 +1,33 @@
-/**
- * DIGIY GUARD — LOC UNIVERSAL PREVIEW-SAFE
- * Stratégie :
- * - sans slug => aperçu élégant
- * - avec slug + accès OK => mode vivant
- * - avec slug + pas d’accès => aperçu propre
- *
- * Contrat exposé :
- *   await window.DIGIY_GUARD.ready
- *   const st = window.DIGIY_GUARD.state
- *
- * API :
- *   window.DIGIY_GUARD.ready
- *   window.DIGIY_GUARD.state
- *   window.DIGIY_GUARD.refresh()
- *   window.DIGIY_GUARD.checkAccess()
- *   window.DIGIY_GUARD.rpc(fn, args)
- *
- * Compatibilité :
- * - slug-first : ?slug=... puis localStorage puis pathname
- * - digiy_subscriptions_public pour slug -> phone
- * - digiy_has_access(phone, module) pour accès réel
- */
-
 (() => {
   "use strict";
 
-  const MODULE = "LOC";
-  const STORAGE_SLUG_KEY = "digiy_loc_slug";
-  const STORAGE_LAST_SLUG = "digiy_last_slug";
+  const DEFAULT_MODULE = "LOC";
+  const DEFAULT_STORAGE_SLUG_KEY = "digiy_loc_slug";
+  const DEFAULT_STORAGE_LAST_SLUG = "digiy_last_slug";
+  const DEFAULT_PIN_URL = "./pin.html";
+  const DEFAULT_PAY_URL = "https://commencer-a-payer.digiylyfe.com/?module=LOC";
+  const DEFAULT_DASHBOARD_URL = "./app.html";
 
-  const FALLBACK_SUPABASE_URL =
-    "https://wesqmwjjtsefyjnluosj.supabase.co";
-
+  const FALLBACK_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const FALLBACK_SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
-  const PAY_URL_DEFAULT =
-    "https://commencer-a-payer.digiylyfe.com/?module=LOC";
-
-  const PIN_URL_DEFAULT = "pin.html";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
   let _sb = null;
   let _bootPromise = null;
 
+  const config = {
+    module: DEFAULT_MODULE,
+    pin: DEFAULT_PIN_URL,
+    pay: DEFAULT_PAY_URL,
+    dashboard: DEFAULT_DASHBOARD_URL,
+    requireSlug: false,
+    checkSubscription: true,
+    storageSlugKey: DEFAULT_STORAGE_SLUG_KEY,
+    storageLastSlugKey: DEFAULT_STORAGE_LAST_SLUG,
+  };
+
   const state = {
-    module: MODULE,
+    module: DEFAULT_MODULE,
     preview: true,
     access_ok: false,
     slug: "",
@@ -53,12 +36,41 @@
     ts: 0,
   };
 
-  function qps() {
+  function upperModule(v) {
+    return String(v || DEFAULT_MODULE).trim().toUpperCase() || DEFAULT_MODULE;
+  }
+
+  function storageGet(key) {
+    if (!key) return "";
     try {
-      return new URLSearchParams(location.search);
-    } catch {
-      return new URLSearchParams();
-    }
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    } catch {}
+    try {
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    } catch {}
+    return "";
+  }
+
+  function storageSet(key, value) {
+    if (!key) return;
+    try {
+      sessionStorage.setItem(key, String(value ?? ""));
+    } catch {}
+    try {
+      localStorage.setItem(key, String(value ?? ""));
+    } catch {}
+  }
+
+  function storageRemove(key) {
+    if (!key) return;
+    try {
+      sessionStorage.removeItem(key);
+    } catch {}
+    try {
+      localStorage.removeItem(key);
+    } catch {}
   }
 
   function normSlug(s) {
@@ -72,7 +84,23 @@
   }
 
   function normPhoneDigits(p) {
-    return String(p || "").trim().replace(/[^\d]/g, "");
+    return String(p || "").replace(/[^\d]/g, "");
+  }
+
+  function safeJsonParse(v) {
+    try {
+      return typeof v === "string" ? JSON.parse(v) : v;
+    } catch {
+      return null;
+    }
+  }
+
+  function qps() {
+    try {
+      return new URLSearchParams(location.search || "");
+    } catch {
+      return new URLSearchParams();
+    }
   }
 
   function getSlugFromPathname() {
@@ -85,52 +113,162 @@
 
       const parts = clean.split("/").filter(Boolean);
       const last = parts[parts.length - 1] || "";
-
-      if (!last || last.includes(".html")) return "";
+      if (!last || /\.html?$/i.test(last)) return "";
 
       const candidate = normSlug(last);
-      if (/^loc-[a-z0-9-]+$/i.test(candidate)) return candidate;
-
-      return "";
+      return candidate || "";
     } catch {
       return "";
     }
   }
 
-  function pickSlug() {
-    const qs = qps();
+  function getModuleSessionKey(moduleName) {
+    const m = upperModule(moduleName).toLowerCase();
+    return `DIGIY_${m.toUpperCase()}_PRO_SESSION`;
+  }
 
-    const fromQs = normSlug(qs.get("slug") || "");
-    if (fromQs) return fromQs;
+  function applyOptions(opts = {}) {
+    if (opts.module) config.module = upperModule(opts.module);
+    if (opts.login || opts.pin) config.pin = String(opts.login || opts.pin).trim() || DEFAULT_PIN_URL;
+    if (opts.pay) config.pay = String(opts.pay).trim() || DEFAULT_PAY_URL;
+    if (opts.dashboard) config.dashboard = String(opts.dashboard).trim() || DEFAULT_DASHBOARD_URL;
+    if (Object.prototype.hasOwnProperty.call(opts, "requireSlug")) config.requireSlug = !!opts.requireSlug;
+    if (Object.prototype.hasOwnProperty.call(opts, "checkSubscription")) config.checkSubscription = !!opts.checkSubscription;
+    if (opts.storageSlugKey) config.storageSlugKey = String(opts.storageSlugKey).trim();
+    if (opts.storageLastSlugKey) config.storageLastSlugKey = String(opts.storageLastSlugKey).trim();
 
-    try {
-      const fromLS = normSlug(localStorage.getItem(STORAGE_SLUG_KEY) || "");
-      if (fromLS) return fromLS;
-    } catch {}
-
-    const fromPath = getSlugFromPathname();
-    if (fromPath) return fromPath;
-
-    return "";
+    state.module = config.module;
   }
 
   function rememberSlug(slug) {
     if (!slug) return;
-    try {
-      localStorage.setItem(STORAGE_SLUG_KEY, slug);
-    } catch {}
-    try {
-      localStorage.setItem(STORAGE_LAST_SLUG, slug);
-    } catch {}
+    storageSet(config.storageSlugKey, slug);
+    storageSet(config.storageLastSlugKey, slug);
+    storageSet("DIGIY_SLUG", slug);
+    storageSet("digiy_slug", slug);
   }
 
-  function clearSlugMemory() {
-    try {
-      localStorage.removeItem(STORAGE_SLUG_KEY);
-    } catch {}
-    try {
-      localStorage.removeItem(STORAGE_LAST_SLUG);
-    } catch {}
+  function rememberPhone(phone) {
+    const digits = normPhoneDigits(phone);
+    if (!digits) return;
+    const lower = config.module.toLowerCase();
+    storageSet("DIGIY_PHONE", digits);
+    storageSet(`DIGIY_${config.module}_PHONE`, digits);
+    storageSet(`digiy_${lower}_phone`, digits);
+  }
+
+  function rememberSessionBits(session) {
+    if (!session || typeof session !== "object") return;
+
+    const slug = normSlug(session.slug || state.slug || "");
+    const phone = normPhoneDigits(session.phone || state.phone || "");
+    const ownerId = String(session.owner_id || session.ownerId || "").trim();
+    const businessCode = String(session.business_code || session.businessCode || session.code || "").trim();
+    const businessName = String(session.business_name || session.businessName || session.name || session.title || "").trim();
+    const moduleUpper = upperModule(session.module || config.module);
+    const moduleLower = moduleUpper.toLowerCase();
+
+    if (slug) rememberSlug(slug);
+    if (phone) rememberPhone(phone);
+
+    if (ownerId) {
+      storageSet(`DIGIY_${moduleUpper}_OWNER_ID`, ownerId);
+      storageSet(`digiy_${moduleLower}_owner_id`, ownerId);
+      storageSet("DIGIY_OWNER_ID", ownerId);
+      storageSet("owner_id", ownerId);
+    }
+
+    if (businessCode) {
+      storageSet(`DIGIY_${moduleUpper}_BUSINESS_CODE`, businessCode);
+      storageSet("DIGIY_BUSINESS_CODE", businessCode);
+    }
+
+    if (businessName) {
+      storageSet(`DIGIY_${moduleUpper}_BUSINESS_NAME`, businessName);
+      storageSet("DIGIY_BUSINESS_NAME", businessName);
+      storageSet("DIGIY_TITLE", businessName);
+    }
+  }
+
+  function buildSyntheticSession() {
+    const moduleUpper = config.module;
+    const moduleLower = moduleUpper.toLowerCase();
+    const slug = state.slug || normSlug(storageGet(config.storageSlugKey) || storageGet(config.storageLastSlugKey) || storageGet("DIGIY_SLUG") || storageGet("digiy_slug"));
+    const phone = state.phone || normPhoneDigits(storageGet("DIGIY_PHONE") || storageGet(`DIGIY_${moduleUpper}_PHONE`) || storageGet(`digiy_${moduleLower}_phone`));
+    const ownerId = storageGet(`DIGIY_${moduleUpper}_OWNER_ID`) || storageGet(`digiy_${moduleLower}_owner_id`) || storageGet("DIGIY_OWNER_ID") || storageGet("owner_id") || "";
+    const businessCode = storageGet(`DIGIY_${moduleUpper}_BUSINESS_CODE`) || storageGet("DIGIY_BUSINESS_CODE") || "";
+    const businessName = storageGet(`DIGIY_${moduleUpper}_BUSINESS_NAME`) || storageGet("DIGIY_BUSINESS_NAME") || "";
+
+    if (!slug && !phone && !ownerId && !businessCode && !businessName) return null;
+
+    return {
+      ok: true,
+      module: moduleUpper,
+      slug,
+      phone,
+      owner_id: ownerId,
+      business_code: businessCode,
+      business_name: businessName,
+    };
+  }
+
+  function getSession() {
+    const keys = [
+      getModuleSessionKey(config.module),
+      "DIGIY_PRO_SESSION",
+      `DIGIY_${config.module}_SESSION`,
+    ];
+
+    for (const key of keys) {
+      const raw = storageGet(key);
+      if (!raw) continue;
+
+      const parsed = safeJsonParse(raw);
+      if (!parsed || typeof parsed !== "object") continue;
+
+      if (parsed.expires_at && Number(parsed.expires_at) > 0 && Date.now() > Number(parsed.expires_at)) {
+        storageRemove(key);
+        continue;
+      }
+
+      const session = {
+        ...parsed,
+        module: upperModule(parsed.module || config.module),
+        slug: normSlug(parsed.slug || state.slug || ""),
+        phone: normPhoneDigits(parsed.phone || state.phone || ""),
+      };
+
+      rememberSessionBits(session);
+      return session;
+    }
+
+    const synthetic = buildSyntheticSession();
+    if (synthetic) {
+      rememberSessionBits(synthetic);
+      return synthetic;
+    }
+
+    return null;
+  }
+
+  function pickSlug() {
+    const qs = qps();
+    const fromQs = normSlug(qs.get("slug") || "");
+    if (fromQs) return fromQs;
+
+    const fromSession = getSession();
+    if (fromSession?.slug) return normSlug(fromSession.slug);
+
+    const fromStorage = normSlug(
+      storageGet(config.storageSlugKey) ||
+      storageGet(config.storageLastSlugKey) ||
+      storageGet("DIGIY_SLUG") ||
+      storageGet("digiy_slug") ||
+      ""
+    );
+    if (fromStorage) return fromStorage;
+
+    return getSlugFromPathname();
   }
 
   function ensureSlugInUrl(slug) {
@@ -144,50 +282,48 @@
     } catch {}
   }
 
-  function getPayUrl(slug = "") {
-    const base =
-      typeof window.PAY_URL === "string" && window.PAY_URL
-        ? window.PAY_URL
-        : PAY_URL_DEFAULT;
+  function withSlug(target = "") {
+    const slug = state.slug || pickSlug();
+    if (!target || !slug) return target;
 
     try {
-      const u = new URL(base, location.href);
-      u.searchParams.set("module", MODULE);
-      if (slug) u.searchParams.set("slug", slug);
-      u.searchParams.set(
-        "return",
-        location.origin +
-          location.pathname +
-          (slug ? `?slug=${encodeURIComponent(slug)}` : "")
-      );
+      const u = new URL(target, location.href);
+      if (!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if (u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     } catch {
-      return base;
+      const sep = String(target).includes("?") ? "&" : "?";
+      return `${target}${sep}slug=${encodeURIComponent(slug)}`;
+    }
+  }
+
+  function getPayUrl(slug = "") {
+    const finalSlug = slug || state.slug || pickSlug();
+    try {
+      const u = new URL(config.pay || DEFAULT_PAY_URL, location.href);
+      u.searchParams.set("module", config.module);
+      if (finalSlug) u.searchParams.set("slug", finalSlug);
+      u.searchParams.set("return", location.origin + location.pathname + (finalSlug ? `?slug=${encodeURIComponent(finalSlug)}` : ""));
+      return u.toString();
+    } catch {
+      return withSlug(config.pay || DEFAULT_PAY_URL);
     }
   }
 
   function getPinUrl(slug = "") {
-    const pin =
-      typeof window.DIGIY_PIN_URL === "string" && window.DIGIY_PIN_URL
-        ? window.DIGIY_PIN_URL
-        : PIN_URL_DEFAULT;
-
+    const finalSlug = slug || state.slug || pickSlug();
     try {
-      const u = new URL(pin, location.href);
-      if (slug) u.searchParams.set("slug", slug);
+      const u = new URL(config.pin || DEFAULT_PIN_URL, location.href);
+      if (finalSlug && !u.searchParams.get("slug")) u.searchParams.set("slug", finalSlug);
       return u.toString();
     } catch {
-      const sep = pin.includes("?") ? "&" : "?";
-      return slug ? `${pin}${sep}slug=${encodeURIComponent(slug)}` : pin;
+      return withSlug(config.pin || DEFAULT_PIN_URL);
     }
   }
 
   function getConfig() {
-    const url =
-      (window.DIGIY_SUPABASE_URL || "").trim() || FALLBACK_SUPABASE_URL;
-    const key =
-      (window.DIGIY_SUPABASE_ANON_KEY || "").trim() ||
-      FALLBACK_SUPABASE_ANON_KEY;
+    const url = String(window.DIGIY_SUPABASE_URL || "").trim() || FALLBACK_SUPABASE_URL;
+    const key = String(window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON || "").trim() || FALLBACK_SUPABASE_ANON_KEY;
     return { url, key };
   }
 
@@ -216,7 +352,7 @@
       },
     });
 
-    window.sb = window.sb || _sb;
+    if (!window.sb) window.sb = _sb;
     return _sb;
   }
 
@@ -233,21 +369,32 @@
       throw e;
     }
 
-    if (!data?.phone) {
-      return null;
+    if (data?.phone) {
+      return {
+        slug: normSlug(data.slug || slug),
+        phone: normPhoneDigits(data.phone),
+        module: upperModule(data.module || config.module),
+      };
     }
 
-    return {
-      slug: data.slug || slug,
-      phone: normPhoneDigits(data.phone),
-      module: String(data.module || "").toUpperCase(),
-    };
+    const session = getSession();
+    if (session?.slug && normSlug(session.slug) === normSlug(slug) && session.phone) {
+      return {
+        slug: normSlug(session.slug),
+        phone: normPhoneDigits(session.phone),
+        module: upperModule(session.module || config.module),
+      };
+    }
+
+    return null;
   }
 
-  async function hasAccessRaw(sb, phoneDigits, module) {
+  async function hasAccessRaw(sb, phoneDigits, moduleName) {
+    if (!phoneDigits) return false;
+
     const { data, error } = await sb.rpc("digiy_has_access", {
       p_phone: phoneDigits,
-      p_module: module,
+      p_module: upperModule(moduleName),
     });
 
     if (error) {
@@ -266,7 +413,7 @@
     state.slug = extra.slug ?? state.slug ?? "";
     state.phone = extra.phone ?? state.phone ?? "";
     state.ts = Date.now();
-    return state;
+    return { ...state, ok: false, sb: _sb, pin_url: getPinUrl(state.slug), pay_url: getPayUrl(state.slug) };
   }
 
   function setAccessOk(reason = "ok", extra = {}) {
@@ -276,10 +423,11 @@
     state.slug = extra.slug ?? state.slug ?? "";
     state.phone = extra.phone ?? state.phone ?? "";
     state.ts = Date.now();
-    return state;
+    return { ...state, ok: true, sb: _sb, pin_url: getPinUrl(state.slug), pay_url: getPayUrl(state.slug) };
   }
 
   function resetState() {
+    state.module = config.module;
     state.preview = true;
     state.access_ok = false;
     state.slug = "";
@@ -288,8 +436,10 @@
     state.ts = Date.now();
   }
 
-  async function bootOnce(force = false) {
+  async function bootOnce(force = false, opts = {}) {
     if (_bootPromise && !force) return _bootPromise;
+
+    applyOptions(opts);
 
     _bootPromise = (async () => {
       resetState();
@@ -297,7 +447,6 @@
       const slug = pickSlug();
       state.slug = slug;
 
-      // 1) Pas de slug => aperçu élégant
       if (!slug) {
         return setPreview("slug_missing", { slug: "" });
       }
@@ -305,24 +454,18 @@
       rememberSlug(slug);
       ensureSlugInUrl(slug);
 
-      // 2) Init Supabase
       let sb;
       try {
         sb = ensureSupabaseClient();
       } catch (e) {
-        return setPreview(String(e?.message || "supabase_init_failed"), {
-          slug,
-        });
+        return setPreview(String(e?.message || "supabase_init_failed"), { slug });
       }
 
-      // 3) slug -> phone
-      let bridged = null;
+      let bridged;
       try {
         bridged = await resolveSlugToPhone(sb, slug);
       } catch (e) {
-        return setPreview(String(e?.message || "slug_resolve_failed"), {
-          slug,
-        });
+        return setPreview(String(e?.message || "slug_resolve_failed"), { slug });
       }
 
       if (!bridged?.phone) {
@@ -331,27 +474,24 @@
 
       state.slug = bridged.slug || slug;
       state.phone = bridged.phone || "";
+      rememberSlug(state.slug);
+      rememberPhone(state.phone);
 
-      // 4) check access
+      if (config.checkSubscription === false) {
+        return setAccessOk("ok_no_subscription_check", {
+          slug: state.slug,
+          phone: state.phone,
+        });
+      }
+
       try {
-        const ok = await hasAccessRaw(sb, state.phone, MODULE);
-
+        const ok = await hasAccessRaw(sb, state.phone, config.module);
         if (ok) {
-          return setAccessOk("ok", {
-            slug: state.slug,
-            phone: state.phone,
-          });
+          return setAccessOk("ok", { slug: state.slug, phone: state.phone });
         }
-
-        return setPreview("has_access_false", {
-          slug: state.slug,
-          phone: state.phone,
-        });
+        return setPreview("has_access_false", { slug: state.slug, phone: state.phone });
       } catch (e) {
-        return setPreview(String(e?.message || "has_access_failed"), {
-          slug: state.slug,
-          phone: state.phone,
-        });
+        return setPreview(String(e?.message || "has_access_failed"), { slug: state.slug, phone: state.phone });
       }
     })();
 
@@ -360,46 +500,36 @@
   }
 
   async function refresh() {
-    return bootOnce(true);
+    return bootOnce(true, {});
+  }
+
+  async function boot(opts = {}) {
+    return bootOnce(true, opts);
   }
 
   async function checkAccess() {
     await DIGIY_GUARD.ready;
 
     if (!_sb || !state.slug || !state.phone) {
-      return { ...state };
+      return { ...state, ok: false, sb: _sb, pin_url: getPinUrl(state.slug), pay_url: getPayUrl(state.slug) };
     }
 
     try {
-      const ok = await hasAccessRaw(_sb, state.phone, MODULE);
-
+      const ok = await hasAccessRaw(_sb, state.phone, config.module);
       if (ok) {
-        setAccessOk("ok", {
-          slug: state.slug,
-          phone: state.phone,
-        });
-      } else {
-        setPreview("has_access_false", {
-          slug: state.slug,
-          phone: state.phone,
-        });
+        return setAccessOk("ok", { slug: state.slug, phone: state.phone });
       }
+      return setPreview("has_access_false", { slug: state.slug, phone: state.phone });
     } catch (e) {
-      setPreview(String(e?.message || "has_access_failed"), {
-        slug: state.slug,
-        phone: state.phone,
-      });
+      return setPreview(String(e?.message || "has_access_failed"), { slug: state.slug, phone: state.phone });
     }
-
-    return { ...state };
   }
 
   async function rpc(fnName, args = {}) {
     const sb = ensureSupabaseClient();
-
     const { data, error } = await sb.rpc(fnName, args);
     if (error) throw error;
-    return data;
+    return typeof data === "string" ? safeJsonParse(data) ?? data : data;
   }
 
   async function digiyRequireAccess(options = {}) {
@@ -410,7 +540,7 @@
         ok: true,
         slug: state.slug,
         phone: state.phone,
-        module: MODULE,
+        module: config.module,
         preview: state.preview,
         access_ok: state.access_ok,
         reason: state.reason,
@@ -418,7 +548,7 @@
       };
     }
 
-    const mode = options.mode || "none"; // none | pin | pay
+    const mode = options.mode || "none";
     const slug = state.slug || pickSlug();
 
     if (mode === "pin") {
@@ -435,7 +565,7 @@
       ok: false,
       slug: state.slug,
       phone: state.phone,
-      module: MODULE,
+      module: config.module,
       preview: state.preview,
       access_ok: state.access_ok,
       reason: state.reason,
@@ -446,36 +576,60 @@
   }
 
   const DIGIY_GUARD = {
-    module: MODULE,
+    module: config.module,
     state,
-
     ready: null,
 
     refresh,
+    boot,
     checkAccess,
     rpc,
 
     getSb: () => _sb,
+    getSupabase: () => _sb,
     getSlug: () => state.slug || pickSlug(),
+    getSession,
     getPayUrl: (slug = "") => getPayUrl(slug || state.slug),
     getPinUrl: (slug = "") => getPinUrl(slug || state.slug),
+    withSlug,
 
     go(target, mode = "assign") {
       try {
-        if (!target) return;
+        let finalTarget = target;
 
-        if (target === "__back__") {
-          if (history.length > 1) return history.back();
-          return location.assign("index.html");
+        if (!finalTarget || finalTarget === "__back__") {
+          finalTarget = config.dashboard || DEFAULT_DASHBOARD_URL;
         }
 
-        if (mode === "replace") location.replace(target);
-        else location.assign(target);
+        finalTarget = withSlug(finalTarget);
+
+        if (mode === "replace") location.replace(finalTarget);
+        else location.assign(finalTarget);
       } catch {}
     },
 
-    logout(redirect = PIN_URL_DEFAULT) {
-      clearSlugMemory();
+    logout(redirect = "") {
+      const moduleUpper = config.module;
+      const moduleLower = moduleUpper.toLowerCase();
+
+      storageRemove(config.storageSlugKey);
+      storageRemove(config.storageLastSlugKey);
+      storageRemove("DIGIY_SLUG");
+      storageRemove("digiy_slug");
+      storageRemove("DIGIY_PHONE");
+      storageRemove(`DIGIY_${moduleUpper}_PHONE`);
+      storageRemove(`digiy_${moduleLower}_phone`);
+      storageRemove(`DIGIY_${moduleUpper}_PRO_SESSION`);
+      storageRemove("DIGIY_PRO_SESSION");
+      storageRemove(`DIGIY_${moduleUpper}_OWNER_ID`);
+      storageRemove(`digiy_${moduleLower}_owner_id`);
+      storageRemove("DIGIY_OWNER_ID");
+      storageRemove("owner_id");
+      storageRemove(`DIGIY_${moduleUpper}_BUSINESS_CODE`);
+      storageRemove("DIGIY_BUSINESS_CODE");
+      storageRemove(`DIGIY_${moduleUpper}_BUSINESS_NAME`);
+      storageRemove("DIGIY_BUSINESS_NAME");
+
       state.preview = true;
       state.access_ok = false;
       state.slug = "";
@@ -483,9 +637,7 @@
       state.reason = "logout";
       state.ts = Date.now();
 
-      const url = redirect
-        ? new URL(redirect, location.href).toString()
-        : getPinUrl("");
+      const url = redirect ? new URL(redirect, location.href).toString() : getPinUrl("");
       location.replace(url);
     },
   };
@@ -493,5 +645,5 @@
   window.DIGIY_GUARD = DIGIY_GUARD;
   window.digiyRequireAccess = digiyRequireAccess;
 
-  DIGIY_GUARD.ready = bootOnce(false);
-})();
+  DIGIY_GUARD.ready = bootOnce(false, {});
+})();;
