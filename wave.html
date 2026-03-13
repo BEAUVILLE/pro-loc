@@ -6,12 +6,6 @@
   <title>DIGIY LOC PRO — Déclarations Wave</title>
   <meta name="theme-color" content="#052e16"/>
 
-  <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-  </script>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=loc-wave-clean-v3"></script>
 
@@ -587,7 +581,7 @@
     }catch(e){
       ROWS = [];
       render();
-      show("❌ Chargement impossible.\n" + String(e?.message || e), "bad");
+     show("⏳ Chargement des déclarations Wave…", "warn");
     }
   }
 
