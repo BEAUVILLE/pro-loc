@@ -129,11 +129,14 @@ code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2
   }
 
   function goBack(){
-    // cockpit = pin.html (guard conserve slug)
-    if (window.DIGIY_GUARD?.withSlug){
-      location.href = window.DIGIY_GUARD.withSlug("./pin.html");
-      return;
-    }
+  if (window.DIGIY_GUARD?.withSlug){
+    location.href = window.DIGIY_GUARD.withSlug("./app.html");
+    return;
+  }
+  const u = new URL("./app.html", location.href);
+  if (slug) u.searchParams.set("slug", slug);
+  location.href = u.toString();
+}
     const u = new URL("./pin.html", location.href);
     if (slug) u.searchParams.set("slug", slug);
     location.href = u.toString();
@@ -234,7 +237,6 @@ code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2
     showAlert(ndimbal ? "✅ NDIMBAL activé." : "✅ NDIMBAL désactivé.", true);
   }
 
-  btn.addEventListener("click", toggle);
 
   async function init(){
     metaEl.textContent = "slug: " + (slug || "—");
@@ -248,14 +250,22 @@ code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2
 
     // ✅ Guard obligatoire (ton monde à toi)
     const boot = await bootGuard();
-    if(!boot.ok){
-      stateEl.textContent = "Accès privé";
-      btn.disabled = false;
-      btn.textContent = "Ouvrir le cockpit (PIN)";
-      btn.onclick = goBack;
-      showAlert("Tu dois être connecté (PIN) pour gérer NDIMBAL.", false);
+   if(!boot.ok){
+  stateEl.textContent = "Accès privé";
+  btn.disabled = false;
+  btn.textContent = "Ouvrir le PIN";
+  btn.onclick = () => {
+    if (window.DIGIY_GUARD?.withSlug){
+      location.href = window.DIGIY_GUARD.withSlug("./pin.html");
       return;
     }
+    const u = new URL("./pin.html", location.href);
+    if (slug) u.searchParams.set("slug", slug);
+    location.href = u.toString();
+  };
+  showAlert("Tu dois être connecté (PIN) pour gérer NDIMBAL.", false);
+  return;
+}
 
     sb = await getSb();
     if(!sb){
@@ -280,6 +290,7 @@ code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2
     paint();
     showAlert("", false);
   }
+  btn.onclick = toggle;  
 
   init();
 })();
