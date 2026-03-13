@@ -8,12 +8,12 @@
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-wave-v2"></script>
+  <script src="./guard.js?v=loc-wave-clean-v3"></script>
 
   <style>
     :root{
@@ -240,12 +240,32 @@
 
   let ROWS = [];
   let UX_MODE = "preview";
+  let SB_FALLBACK = null;
+
+  try{
+    window.DIGIY_GUARD?.boot?.({
+      module: "LOC",
+      login: "./pin.html",
+      dashboard: "./wave.html",
+      requireSlug: true,
+      checkSubscription: true
+    });
+  }catch{}
 
   function show(msg, cls){
     const el = $("note");
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
+  }
+
+  function esc(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
 
   function getGuardState(){
@@ -282,6 +302,18 @@
     }
   }
 
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
+
   function getSlug(){
     const st = getGuardState();
     if(st.slug) return String(st.slug).trim().toLowerCase();
@@ -292,9 +324,9 @@
     }catch{}
 
     return String(
-      localStorage.getItem("digiy_loc_slug") ||
-      localStorage.getItem("digiy_last_slug") ||
-      localStorage.getItem("DIGIY_SLUG") ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
       ""
     ).trim().toLowerCase();
   }
@@ -306,8 +338,8 @@
     return String(
       sess?.phone ||
       st.phone ||
-      localStorage.getItem("DIGIY_PHONE") ||
-      localStorage.getItem("DIGIY_LOC_PHONE") ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
       ""
     ).trim();
   }
@@ -323,11 +355,9 @@
       sess?.pin4 ||
       sess?.owner_pin4 ||
       sess?.pin_4 ||
-      localStorage.getItem("DIGIY_LOC_PIN4") ||
-      localStorage.getItem("digiy_loc_pin4") ||
-      localStorage.getItem("DIGIY_PIN4") ||
-      sessionStorage.getItem("DIGIY_LOC_PIN4") ||
-      sessionStorage.getItem("digiy_loc_pin4") ||
+      storageGet("DIGIY_LOC_PIN4") ||
+      storageGet("digiy_loc_pin4") ||
+      storageGet("DIGIY_PIN4") ||
       "";
 
     const clean = digitsOnly(direct);
@@ -366,18 +396,46 @@
     }
   }
 
+  function normalizeAmount(row){
+    const v =
+      row?.amount ??
+      row?.amount_fcfa ??
+      row?.amount_xof ??
+      row?.montant ??
+      row?.montant_fcfa ??
+      0;
+
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.getSupabase?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || (window.supabase?.createClient
-          ? window.supabase.createClient(
-              window.DIGIY_SUPABASE_URL,
-              window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON,
-              { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } }
-            )
-          : null);
+    const fromGuard =
+      window.DIGIY_GUARD?.getSb?.() ||
+      window.DIGIY_GUARD?.getSupabase?.() ||
+      window.DIGIY_GUARD?.sb ||
+      window.sb ||
+      null;
+
+    if(fromGuard && typeof fromGuard.rpc === "function"){
+      return fromGuard;
+    }
+
+    if(!SB_FALLBACK){
+      SB_FALLBACK = window.supabase.createClient(
+        window.DIGIY_SUPABASE_URL,
+        window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON,
+        {
+          auth:{
+            persistSession:false,
+            autoRefreshToken:false,
+            detectSessionInUrl:false
+          }
+        }
+      );
+    }
+
+    return SB_FALLBACK;
   }
 
   function setMode(mode){
@@ -406,21 +464,22 @@
     }else{
       ROWS.forEach((r)=>{
         const seen = !!r.seen_by_owner;
+        const amount = normalizeAmount(r);
 
         const div = document.createElement("div");
         div.className = "it";
         div.innerHTML = `
           <div class="itL">
-            <div class="itTitle">${fmtMoney(r.amount)} • ${r.client_name || "Client inconnu"}</div>
+            <div class="itTitle">${esc(fmtMoney(amount))} • ${esc(r.client_name || "Client inconnu")}</div>
             <div class="itMeta">
-              📅 ${fmtDate(r.created_at)}<br>
-              📞 ${r.client_phone || "—"}<br>
-              📝 ${r.note || "—"}
+              📅 ${esc(fmtDate(r.created_at))}<br>
+              📞 ${esc(r.client_phone || "—")}<br>
+              📝 ${esc(r.note || "—")}
             </div>
           </div>
           <div class="itR">
             <span class="badge ${seen ? "ok" : "warn"}">${seen ? "Vue" : "Non vue"}</span>
-            ${seen ? "" : `<button class="btn ok" data-seen="${r.id}" type="button">✅ Marquer vu</button>`}
+            ${seen ? "" : `<button class="btn ok" data-seen="${esc(r.id)}" type="button">✅ Marquer vu</button>`}
           </div>
         `;
         list.appendChild(div);
@@ -464,7 +523,7 @@
 
     const total = ROWS.length;
     const unseen = ROWS.filter(x => !x.seen_by_owner).length;
-    const amount = ROWS.reduce((s,x)=> s + Number(x.amount || 0), 0);
+    const amount = ROWS.reduce((s,x)=> s + normalizeAmount(x), 0);
 
     $("kTotal").textContent = String(total);
     $("kUnseen").textContent = String(unseen);
@@ -513,7 +572,7 @@
 
       const sess = getSession();
       const pinSource =
-        sess?.pin4 || sess?.owner_pin4 || sess?.pin_4
+        (sess?.pin4 || sess?.owner_pin4 || sess?.pin_4)
           ? "session"
           : "fallback téléphone";
 
