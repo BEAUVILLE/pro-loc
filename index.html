@@ -8,12 +8,13 @@
 
   <!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
   <script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-</script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  </script>
+
   <!-- Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-index-FINAL-004"></script>
+  <script src="./guard.js?v=locpro-index-FINAL-005"></script>
 
   <style>
     :root{
@@ -137,7 +138,6 @@
       font-weight:900;
     }
 
-    /* ✅ BOUTON FLOTTANT RETOUR SITE — EN HAUT À GAUCHE */
     .floating-site-btn{
       position:fixed;
       left:16px;
@@ -187,7 +187,6 @@
 </head>
 
 <body>
-  <!-- ✅ BOUTON POSÉ ICI -->
   <a
     class="floating-site-btn"
     href="https://digiylyfe.com/"
@@ -208,7 +207,7 @@
         <div class="pill" id="pillPhone">👤 —</div>
         <div class="pill" id="pillConn">⏳ …</div>
         <div class="pill" id="pillLieu">Lieu : —</div>
-        <button class="btn danger" id="btnLogout" type="button">🚪 Déconnexion</button>
+        <button class="btn danger" id="btnLogout" type="button" style="display:none">🚪 Déconnexion</button>
       </div>
     </div>
 
@@ -222,10 +221,7 @@
           <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
           <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
           <a class="btn gold" data-go="manage-links.html" href="#">🔗 Liens / QR</a>
-
-          <!-- ✅ Check Access SAFE (sans redirection) -->
           <a class="btn" id="btnCheckAccess" href="#">🧪 Vérifier mon accès</a>
-
           <button class="btn" id="btnReload" type="button">↻ Recharger</button>
         </div>
         <div class="note warn" id="note"></div>
@@ -256,7 +252,6 @@
       </div>
     </div>
 
-    <!-- ✅ DIGIY KNOWLEDGE — Assistant LOC PRO -->
     <div class="assistantCard" id="assistantCard">
       <div class="assistantHead">
         <div class="assistantTitle">🧠 DIGIY KNOWLEDGE • Assistant LOC PRO</div>
@@ -473,7 +468,7 @@
 
         if(targetRaw === "__back__"){
           if(history.length > 1) return history.back();
-          const t = withSlug("listing.html");
+          const t = withSlug("app.html");
           if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, "replace");
           return location.replace(t);
         }
@@ -500,6 +495,7 @@
     });
 
     $("vSess").textContent = "Aperçu";
+    $("btnLogout").style.display = "none";
 
     show(
       reason === "slug_missing"
@@ -524,6 +520,7 @@
     });
 
     $("vSess").textContent = st.access_ok ? "OK" : "—";
+    $("btnLogout").style.display = "inline-flex";
 
     if(sbState()){
       show("", "warn");
@@ -604,6 +601,7 @@
     if(!initialSlug){
       setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
       $("vSess").textContent = "—";
+      $("btnLogout").style.display = "none";
       sbState();
       show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
       const fb = $("assistantFallback");
@@ -656,14 +654,14 @@
     show("🔴 Crash JS.\n" + (e?.message || e), "bad");
     setPills({ phone, slug, ok:false, preview:false });
     $("vSess").textContent = "KO";
+    $("btnLogout").style.display = "none";
     sbState();
     setWidgetDataAttrs(buildWidgetContext());
   });
 
 })();
 </script>
-  <!-- ✅ Widget externe (Knowledge) -->
-  <script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
 
+  <script defer src="https://knowledge.digiylyfe.com/widget/digiy-widget-pro.js"></script>
 </body>
 </html>
