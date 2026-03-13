@@ -193,13 +193,21 @@
         </div>
 
         <div class="row" style="justify-content:flex-end">
-          <span class="pill mono" id="pillSlug">slug: —</span>
-          <span class="pill">module: <span class="mono" id="pillModule">LOC</span></span>
+  <span class="pill mono" id="pillSlug">slug: —</span>
+  <span class="pill">module: <span class="mono" id="pillModule">LOC</span></span>
+</div>
 
-          <a class="btn gold" id="btnApp" href="./app.html">🏠 Cockpit</a>
-          <a class="btn ok" id="btnListing" href="./listing.html">📋 Listing</a>
-          <button class="btn bad" id="btnLogout" type="button">🚪 Déconnexion</button>
-        </div>
+<div class="row" style="margin-top:10px;justify-content:flex-start">
+  <a class="btn gold" id="btnDashboard" href="./app.html">🏠 Dashboard</a>
+  <a class="btn" id="btnToday" href="./today.html">📍 Aujourd’hui</a>
+  <a class="btn" id="btnReservations" href="./reservations.html">🧾 Réservations</a>
+  <a class="btn" id="btnWave" href="./wave.html">💳 Wave</a>
+  <a class="btn" id="btnTarifs" href="./tarifs.html">🏷️ Tarifs</a>
+  <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
+  <a class="btn ok" id="btnListing" href="./listing.html">📋 Listing</a>
+  <a class="btn ghost" id="btnBackDashboard" href="./app.html">⬅️ Retour dashboard</a>
+  <button class="btn bad" id="btnLogout" type="button">🚪 Déconnexion</button>
+</div>
       </div>
 
       <div class="note warn" id="note"></div>
@@ -705,12 +713,35 @@ Merci. — DIGIY`;
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
     };
 
-    $("btnAdd").addEventListener("click", addItem);
-    $("btnClear").addEventListener("click", clearAll);
-    $("btnReload").addEventListener("click", reload);
-    $("btnSearch").addEventListener("click", render);
-    $("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(); });
-    $("q").addEventListener("input", render);
+  Merci. — DIGIY`;
+
+      location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
+    };
+
+   $("btnAdd").addEventListener("click", addItem);
+$("btnClear").addEventListener("click", clearAll);
+$("btnReload").addEventListener("click", reload);
+$("btnSearch").addEventListener("click", render);
+$("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(); });
+$("q").addEventListener("input", render);
+
+$("btnDashboard")?.addEventListener("click", ()=> location.href = withSlug("./app.html"));
+$("btnToday")?.addEventListener("click", ()=> location.href = withSlug("./today.html"));
+$("btnReservations")?.addEventListener("click", ()=> location.href = withSlug("./reservations.html"));
+$("btnWave")?.addEventListener("click", ()=> location.href = withSlug("./wave.html"));
+$("btnTarifs")?.addEventListener("click", ()=> location.href = withSlug("./tarifs.html"));
+$("btnPhotos")?.addEventListener("click", ()=> location.href = withSlug("./photos.html"));
+$("btnListing")?.addEventListener("click", ()=> location.href = withSlug("./listing.html"));
+$("btnBackDashboard")?.addEventListener("click", ()=> location.href = withSlug("./app.html"));
+
+$("btnLogout")?.addEventListener("click", ()=>{
+  try{
+    window.DIGIY_GUARD?.logout?.(pinUrl());
+  }catch(_){
+    location.replace(pinUrl());
+  }
+});
+    
 
     reload();
 
@@ -720,6 +751,14 @@ Merci. — DIGIY`;
     }
 
     renderLiveHeader();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
+
   }
 
   init();
