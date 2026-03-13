@@ -1,17 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>DIGIY LOC • Tarifs</title>
   <meta name="theme-color" content="#16a34a"/>
+
+  <!-- ✅ CONFIG SUPABASE -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
 
   <!-- ✅ UI -->
   <link rel="stylesheet" href="./ui.css">
 
   <!-- ✅ Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-tarifs-FINAL-001"></script>
+  <script src="./guard.js?v=locpro-tarifs-clean-v1"></script>
 </head>
 
 <body>
@@ -29,19 +36,19 @@
 
     <div class="actions">
       <div class="pill" id="pillSlug">slug: —</div>
-      <div class="pill" onclick="go('./index.html')">← Cockpit</div>
-      <div class="pill" onclick="location.href='https://beauville.github.io/mon-espace-digiy/?choose=1'">🦅 Menu</div>
+      <button class="pill" id="goCockpit" type="button">← Cockpit</button>
+      <button class="pill" id="goMenu" type="button">🦅 Menu</button>
     </div>
   </div>
 
   <!-- NAV -->
   <div class="nav">
-    <a href="./planning.html">📅 Planning</a>
-    <a href="./reservations.html">🧾 Réservations</a>
-    <a href="./encaissements.html">💸 Encaissements</a>
-    <a class="on" href="./tarifs.html">🏷️ Tarifs</a>
-    <a href="./photos.html">📸 Photos</a>
-    <a href="./fiche.html">👤 Fiche</a>
+    <a id="navPlanning" href="./planning.html">📅 Planning</a>
+    <a id="navReservations" href="./reservations.html">🧾 Réservations</a>
+    <a id="navEncaissements" href="./encaissements.html">💸 Encaissements</a>
+    <a class="on" id="navTarifs" href="./tarifs.html">🏷️ Tarifs</a>
+    <a id="navPhotos" href="./photos.html">📸 Photos</a>
+    <a id="navFiche" href="./fiche.html">👤 Fiche</a>
   </div>
 
   <!-- GRID -->
@@ -51,7 +58,7 @@
     <div class="card">
       <h2>Tarifs de base</h2>
       <div class="muted">
-        Ajuste tes prix.  
+        Ajuste tes prix.<br>
         ✅ Stockage offline + futur branchement Supabase.
       </div>
 
@@ -84,11 +91,11 @@
         <input id="pDeposit" type="number" placeholder="ex: 50000">
       </div>
 
-      <button class="btn" id="btnSave">
+      <button class="btn" id="btnSave" type="button">
         💾 Enregistrer (offline)
       </button>
 
-      <button class="btn ghost" id="btnSupabase">
+      <button class="btn ghost" id="btnSupabase" type="button">
         ☁️ Sauvegarder Supabase (phase 2)
       </button>
 
@@ -112,7 +119,7 @@
         <b>Bonus :</b> bouton auto-calcul en bas 👇
       </div>
 
-      <button class="btn" id="btnAuto">
+      <button class="btn" id="btnAuto" type="button">
         ⚡ Calcul automatique (-10% / -20%)
       </button>
 
@@ -128,56 +135,131 @@
 <script>
 /* ============================
    DIGIY LOC PRO — TARIFS
-   Offline first (Afrique) + Guard
+   Offline first + Guard propre
 ============================ */
-
 (function(){
   "use strict";
 
   const $ = (id)=>document.getElementById(id);
   const note = $("note");
 
-  function show(msg,type){
+  const FIELDS = ["pNight","pWeek","pMonth","pClean","pDeposit"];
+  const ACTION_BTNS = ["btnSave","btnSupabase","btnAuto"];
+
+  const State = {
+    slug: "",
+    mode: "preview", // preview | live
+    reason: "booting"
+  };
+
+  function show(msg, type){
     note.style.display = msg ? "block" : "none";
-    note.className = "note " + (type||"");
+    note.className = "note " + (type || "");
     note.textContent = msg || "";
   }
 
-  // ✅ Helper slug safe
-  function go(url){
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      reason: "guard_missing"
+    };
+  }
+
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
+    const ready = window.DIGIY_GUARD.ready;
+
+    if(typeof ready === "function"){
+      const out = ready(8000);
+      if(out && typeof out.then === "function") return await out;
+      return out;
+    }
+
+    if(ready && typeof ready.then === "function"){
+      return await ready;
+    }
+
+    if(ready) return true;
+    throw new Error("guard_not_ready");
+  }
+
+  function withSlug(url){
     if(window.DIGIY_GUARD?.withSlug){
-      location.href = window.DIGIY_GUARD.withSlug(url);
-    }else{
-      location.href = url;
+      return window.DIGIY_GUARD.withSlug(url);
+    }
+
+    const slug = State.slug || "";
+    if(!slug) return url;
+
+    try{
+      const u = new URL(url, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
     }
   }
 
-  // ✅ Boot Guard obligatoire
-  const boot = window.DIGIY_GUARD?.boot({
-    module:"LOC",
-    dashboard:"./tarifs.html",
-    login:"./login.html",
-    requireSlug:true,
-    checkSubscription:true
-  });
-
-  // slug UI
-  const slug = window.DIGIY_GUARD?.getSlug?.() || "";
-  $("pillSlug").textContent = "slug: " + (slug || "—");
-
-  if(!slug){
-    show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
-    return;
+  function go(url){
+    location.href = withSlug(url);
   }
 
-  // ✅ LocalStorage key
-  const LS_KEY = "DIGIY_LOC_TARIFS_V1:" + slug;
+  function setLocked(locked){
+    FIELDS.forEach(id => {
+      const el = $(id);
+      if(el) el.disabled = !!locked;
+    });
 
-  // ✅ Load offline data
-  function load(){
+    ACTION_BTNS.forEach(id => {
+      const el = $(id);
+      if(el) el.disabled = !!locked;
+    });
+  }
+
+  function updateSlugUI(){
+    $("pillSlug").textContent = "slug: " + (State.slug || "—");
+  }
+
+  function bindNav(){
+    $("goCockpit").onclick = () => go("./index.html");
+    $("goMenu").onclick = () => {
+      location.href = "https://beauville.github.io/mon-espace-digiy/?choose=1";
+    };
+
+    $("navPlanning").href = withSlug("./planning.html");
+    $("navReservations").href = withSlug("./reservations.html");
+    $("navEncaissements").href = withSlug("./encaissements.html");
+    $("navTarifs").href = withSlug("./tarifs.html");
+    $("navPhotos").href = withSlug("./photos.html");
+    $("navFiche").href = withSlug("./fiche.html");
+  }
+
+  function getLSKey(){
+    return "DIGIY_LOC_TARIFS_V1:" + (State.slug || "noslug");
+  }
+
+  function loadOffline(){
     try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(!raw) return;
+      const raw = localStorage.getItem(getLSKey());
+      if(!raw) return false;
+
       const t = JSON.parse(raw);
 
       $("pNight").value = t.night || "";
@@ -186,12 +268,13 @@
       $("pClean").value = t.clean || "";
       $("pDeposit").value = t.deposit || "";
 
-      show("✅ Tarifs chargés (offline).", "ok");
-    }catch(_){}
+      return true;
+    }catch{
+      return false;
+    }
   }
 
-  // ✅ Save offline
-  function save(){
+  function saveOffline(){
     const payload = {
       night: $("pNight").value,
       week: $("pWeek").value,
@@ -201,37 +284,126 @@
       ts: Date.now()
     };
 
-    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    localStorage.setItem(getLSKey(), JSON.stringify(payload));
     show("✅ Enregistré (offline).", "ok");
   }
 
-  // ✅ Auto calc
   function autoCalc(){
-    const night = parseInt($("pNight").value || "0",10);
-    if(!night || night<1000){
+    const night = parseInt($("pNight").value || "0", 10);
+    if(!night || night < 1000){
       show("⚠️ Mets un prix nuit valide d’abord.", "warn");
       return;
     }
+
     $("pWeek").value = Math.round(night * 7 * 0.90);
     $("pMonth").value = Math.round(night * 30 * 0.80);
 
     show("⚡ Calcul automatique appliqué (-10% / -20%).", "ok");
   }
 
-  // ✅ Future Supabase hook
   async function saveSupabase(){
     show("☁️ Phase 2… RPC Supabase bientôt branché.", "warn");
-    alert("Supabase tarifs → prochain module RPC digiy_loc_set_tarifs_owner()");
+    alert("Supabase tarifs → prochain rail RPC : digiy_loc_set_tarifs_owner()");
   }
 
-  // Bind
-  $("btnSave").onclick = save;
-  $("btnAuto").onclick = autoCalc;
-  $("btnSupabase").onclick = saveSupabase;
+  function setPreview(reason){
+    State.mode = "preview";
+    State.reason = reason || "preview";
+    setLocked(true);
 
-  // Init
-  load();
+    const msg =
+      reason === "slug_missing"
+        ? "❌ slug manquant. Ouvre la page depuis le cockpit."
+        : reason === "has_access_false"
+        ? "👁️ Accès non actif. Passe par PIN pour modifier les tarifs."
+        : reason === "guard_missing"
+        ? "❌ Guard absent ou non chargé."
+        : reason === "guard_not_ready"
+        ? "❌ Guard non prêt."
+        : "👁️ Mode aperçu. Modification désactivée.";
 
+    show(msg, reason && reason.startsWith("guard") ? "bad" : "warn");
+  }
+
+  function setLive(){
+    State.mode = "live";
+    State.reason = "ok";
+    setLocked(false);
+
+    const ok = loadOffline();
+    if(ok){
+      show("✅ Tarifs chargés (offline).", "ok");
+    }else{
+      show("✅ Accès OK. Tu peux saisir tes tarifs.", "ok");
+    }
+  }
+
+  function bindActions(){
+    $("btnSave").onclick = saveOffline;
+    $("btnAuto").onclick = autoCalc;
+    $("btnSupabase").onclick = saveSupabase;
+  }
+
+  async function init(){
+    bindActions();
+
+    if(!window.DIGIY_GUARD){
+      setPreview("guard_missing");
+      return;
+    }
+
+    try{
+      window.DIGIY_GUARD.boot?.({
+        module: "LOC",
+        dashboard: "./tarifs.html",
+        login: "./pin.html",
+        requireSlug: true,
+        checkSubscription: true
+      });
+    }catch{}
+
+    try{
+      await waitGuardReady();
+    }catch{
+      State.slug =
+        new URL(location.href).searchParams.get("slug") ||
+        storageGet("digiy_loc_slug") ||
+        storageGet("digiy_last_slug") ||
+        storageGet("DIGIY_SLUG") ||
+        "";
+      updateSlugUI();
+      bindNav();
+      setPreview("guard_not_ready");
+      return;
+    }
+
+    const st = getGuardState();
+
+    State.slug =
+      st.slug ||
+      new URL(location.href).searchParams.get("slug") ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      "";
+
+    updateSlugUI();
+    bindNav();
+
+    if(!State.slug){
+      setPreview("slug_missing");
+      return;
+    }
+
+    if(!st.access_ok){
+      setPreview("has_access_false");
+      return;
+    }
+
+    setLive();
+  }
+
+  init();
 })();
 </script>
 
