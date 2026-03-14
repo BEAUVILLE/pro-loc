@@ -9,7 +9,8 @@
   const DEFAULT_DASHBOARD_URL = "./app.html";
 
   const FALLBACK_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+
   let _sb = null;
   let _bootPromise = null;
 
@@ -191,11 +192,31 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
   function buildSyntheticSession() {
     const moduleUpper = config.module;
     const moduleLower = moduleUpper.toLowerCase();
-    const slug = state.slug || normSlug(storageGet(config.storageSlugKey) || storageGet(config.storageLastSlugKey) || storageGet("DIGIY_SLUG") || storageGet("digiy_slug"));
-    const phone = state.phone || normPhoneDigits(storageGet("DIGIY_PHONE") || storageGet(`DIGIY_${moduleUpper}_PHONE`) || storageGet(`digiy_${moduleLower}_phone`));
-    const ownerId = storageGet(`DIGIY_${moduleUpper}_OWNER_ID`) || storageGet(`digiy_${moduleLower}_owner_id`) || storageGet("DIGIY_OWNER_ID") || storageGet("owner_id") || "";
-    const businessCode = storageGet(`DIGIY_${moduleUpper}_BUSINESS_CODE`) || storageGet("DIGIY_BUSINESS_CODE") || "";
-    const businessName = storageGet(`DIGIY_${moduleUpper}_BUSINESS_NAME`) || storageGet("DIGIY_BUSINESS_NAME") || "";
+    const slug = state.slug || normSlug(
+      storageGet(config.storageSlugKey) ||
+      storageGet(config.storageLastSlugKey) ||
+      storageGet("DIGIY_SLUG") ||
+      storageGet("digiy_slug")
+    );
+    const phone = state.phone || normPhoneDigits(
+      storageGet("DIGIY_PHONE") ||
+      storageGet(`DIGIY_${moduleUpper}_PHONE`) ||
+      storageGet(`digiy_${moduleLower}_phone`)
+    );
+    const ownerId =
+      storageGet(`DIGIY_${moduleUpper}_OWNER_ID`) ||
+      storageGet(`digiy_${moduleLower}_owner_id`) ||
+      storageGet("DIGIY_OWNER_ID") ||
+      storageGet("owner_id") ||
+      "";
+    const businessCode =
+      storageGet(`DIGIY_${moduleUpper}_BUSINESS_CODE`) ||
+      storageGet("DIGIY_BUSINESS_CODE") ||
+      "";
+    const businessName =
+      storageGet(`DIGIY_${moduleUpper}_BUSINESS_NAME`) ||
+      storageGet("DIGIY_BUSINESS_NAME") ||
+      "";
 
     if (!slug && !phone && !ownerId && !businessCode && !businessName) return null;
 
@@ -301,7 +322,10 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
       const u = new URL(config.pay || DEFAULT_PAY_URL, location.href);
       u.searchParams.set("module", config.module);
       if (finalSlug) u.searchParams.set("slug", finalSlug);
-      u.searchParams.set("return", location.origin + location.pathname + (finalSlug ? `?slug=${encodeURIComponent(finalSlug)}` : ""));
+      u.searchParams.set(
+        "return",
+        location.origin + location.pathname + (finalSlug ? `?slug=${encodeURIComponent(finalSlug)}` : "")
+      );
       return u.toString();
     } catch {
       return withSlug(config.pay || DEFAULT_PAY_URL);
@@ -321,7 +345,11 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
 
   function getConfig() {
     const url = String(window.DIGIY_SUPABASE_URL || "").trim() || FALLBACK_SUPABASE_URL;
-    const key = String(window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON || "").trim() || FALLBACK_SUPABASE_ANON_KEY;
+    const key = String(
+      window.DIGIY_SUPABASE_ANON_KEY ||
+      window.DIGIY_SUPABASE_ANON ||
+      ""
+    ).trim() || FALLBACK_SUPABASE_ANON_KEY;
     return { url, key };
   }
 
@@ -333,8 +361,16 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
     }
 
     const { url, key } = getConfig();
-    if (!url || !key || key.length < 80) {
+
+    if (!url || !key) {
       throw new Error("supabase_config_missing");
+    }
+
+    const looksLikeJwt = key.startsWith("eyJ");
+    const looksLikePublishable = key.startsWith("sb_publishable_");
+
+    if (!looksLikeJwt && !looksLikePublishable) {
+      throw new Error("supabase_config_invalid");
     }
 
     _sb = window.supabase.createClient(url, key, {
@@ -411,7 +447,14 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
     state.slug = extra.slug ?? state.slug ?? "";
     state.phone = extra.phone ?? state.phone ?? "";
     state.ts = Date.now();
-    return { ...state, ok: false, sb: _sb, pin_url: getPinUrl(state.slug), pay_url: getPayUrl(state.slug) };
+
+    return {
+      ...state,
+      ok: false,
+      sb: _sb,
+      pin_url: getPinUrl(state.slug),
+      pay_url: getPayUrl(state.slug),
+    };
   }
 
   function setAccessOk(reason = "ok", extra = {}) {
@@ -421,7 +464,14 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
     state.slug = extra.slug ?? state.slug ?? "";
     state.phone = extra.phone ?? state.phone ?? "";
     state.ts = Date.now();
-    return { ...state, ok: true, sb: _sb, pin_url: getPinUrl(state.slug), pay_url: getPayUrl(state.slug) };
+
+    return {
+      ...state,
+      ok: true,
+      sb: _sb,
+      pin_url: getPinUrl(state.slug),
+      pay_url: getPayUrl(state.slug),
+    };
   }
 
   function resetState() {
@@ -489,7 +539,10 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
         }
         return setPreview("has_access_false", { slug: state.slug, phone: state.phone });
       } catch (e) {
-        return setPreview(String(e?.message || "has_access_failed"), { slug: state.slug, phone: state.phone });
+        return setPreview(String(e?.message || "has_access_failed"), {
+          slug: state.slug,
+          phone: state.phone,
+        });
       }
     })();
 
@@ -509,7 +562,13 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
     await DIGIY_GUARD.ready;
 
     if (!_sb || !state.slug || !state.phone) {
-      return { ...state, ok: false, sb: _sb, pin_url: getPinUrl(state.slug), pay_url: getPayUrl(state.slug) };
+      return {
+        ...state,
+        ok: false,
+        sb: _sb,
+        pin_url: getPinUrl(state.slug),
+        pay_url: getPayUrl(state.slug),
+      };
     }
 
     try {
@@ -519,7 +578,10 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
       }
       return setPreview("has_access_false", { slug: state.slug, phone: state.phone });
     } catch (e) {
-      return setPreview(String(e?.message || "has_access_failed"), { slug: state.slug, phone: state.phone });
+      return setPreview(String(e?.message || "has_access_failed"), {
+        slug: state.slug,
+        phone: state.phone,
+      });
     }
   }
 
@@ -644,4 +706,4 @@ const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4U
   window.digiyRequireAccess = digiyRequireAccess;
 
   DIGIY_GUARD.ready = bootOnce(false, {});
-})();;
+})();
