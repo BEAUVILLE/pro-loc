@@ -6,17 +6,14 @@
   <title>DIGIY LOC PRO — Vue du jour</title>
   <meta name="theme-color" content="#0b1020"/>
 
-  <!-- ✅ CONFIG SUPABASE -->
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
   </script>
 
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ✅ GUARD -->
-  <script src="./guard.js?v=locpro-today-clean-v5"></script>
+  <script src="./guard.js?v=locpro-today-clean-v6"></script>
 
   <style>
     :root{
@@ -24,7 +21,6 @@
       --line:#1f2937; --ink:#f9fafb; --muted:#cbd5f5;
       --gold:#facc15; --green:#22c55e; --danger:#ef4444; --warn:#f59e0b;
       --shadow:0 22px 50px rgba(0,0,0,.55);
-      --r:18px;
     }
     *{box-sizing:border-box}
     body{
@@ -39,7 +35,7 @@
     .wrap{max-width:1150px;margin:0 auto;padding:14px}
     .top{
       display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-      padding:12px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
       box-shadow:var(--shadow);
     }
     .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -60,6 +56,7 @@
     .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
     .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
     .btn{
       border:0; cursor:pointer; border-radius:14px;
       padding:11px 12px; font-weight:1000;
@@ -79,6 +76,7 @@
     .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
     .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
     .btn.ghost{background:rgba(255,255,255,.02)}
+
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:14px}
     .card{
       border:1px solid var(--line);
@@ -97,6 +95,7 @@
     .head small{color:var(--muted);font-weight:800}
     .body{padding:14px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
     .note{
       margin-top:10px; padding:10px 12px; border-radius:14px;
       border:1px solid rgba(148,163,184,.25);
@@ -129,6 +128,7 @@
     .tag.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .tag.warn{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);color:#fde68a}
     .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
     .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
     .stat{
       border:1px solid rgba(148,163,184,.22);
@@ -139,6 +139,7 @@
     }
     .stat .num{font-size:1.7rem;font-weight:1100;color:var(--gold)}
     .stat .lbl{color:var(--muted);font-weight:850;font-size:.82rem;margin-top:4px}
+
     @media(min-width:980px){
       .col6{grid-column:span 6}
       .col4{grid-column:span 4}
@@ -151,9 +152,7 @@
       background:rgba(250,204,21,.06);
     }
 
-    #mainGrid{
-      display:none;
-    }
+    #mainGrid{display:none}
   </style>
 </head>
 <body>
@@ -164,7 +163,7 @@
       <div class="row">
         <div>
           <div style="font-weight:1100;font-size:1rem">🔐 Accès DIGIY LOC PRO</div>
-          <div class="muted" id="accessGateText" style="margin-top:6px">
+          <div id="accessGateText" style="margin-top:6px;color:var(--muted)">
             Vérification accès…
           </div>
         </div>
@@ -177,7 +176,7 @@
       </div>
 
       <div class="note warn" id="accessGateNote" style="display:block;margin-top:12px">
-        Le contenu métier reste masqué tant que l’accès réel n’est pas confirmé.
+        La vraie vue du jour reste protégée tant que l’accès n’est pas confirmé.
       </div>
     </div>
   </div>
@@ -379,9 +378,7 @@
 
     if(typeof ready === "function"){
       const maybe = ready(8000);
-      if (maybe && typeof maybe.then === "function") {
-        return await maybe;
-      }
+      if (maybe && typeof maybe.then === "function") return await maybe;
       return maybe;
     }
 
@@ -493,7 +490,7 @@
 
     if(reason === "slug_missing"){
       txt.textContent = "Aucun slug détecté. Ouvre la page depuis ton cockpit ou ton lien GO PIN.";
-      note.textContent = "Ajoute un slug valide pour que la vue du jour charge le bon logement.";
+      note.textContent = "Ajoute un slug valide pour brancher la vraie vue du jour.";
     } else if(reason === "has_access_false"){
       txt.textContent = "Slug détecté mais accès non actif. Passe par PIN ou active ton module.";
       note.textContent = "La vraie vue du jour reste verrouillée tant que l’accès n’est pas confirmé.";
@@ -707,7 +704,6 @@
     const arr = payload?.arrivals || [];
     const dep = payload?.departures || [];
     const occ = payload?.occupied || [];
-
     const all = [];
 
     arr.forEach(r=>{
@@ -741,7 +737,7 @@
     });
 
     if(!all.length){
-      setNote("noteArrDep","Aucune arrivée / départ / occupation pour aujourd’hui.","warn");
+      setNote("noteArrDep","Journée calme pour l’instant. Aucun mouvement logement aujourd’hui.","warn");
       return;
     }
 
@@ -803,7 +799,7 @@
     });
 
     if(!items.length){
-      setNote("noteArrDep","Aucune arrivée / départ / occupation pour aujourd’hui.","warn");
+      setNote("noteArrDep","Journée calme pour l’instant. Aucun mouvement logement aujourd’hui.","warn");
       return;
     }
 
@@ -838,7 +834,7 @@
     $("pulseFailed").textContent = String(failed.length);
 
     if(!rows.length){
-      setNote("notePulse","Aucun Pulse visible.","warn");
+      setNote("notePulse","Aucun Pulse visible pour le moment.","warn");
       return;
     }
 
@@ -867,7 +863,7 @@
     $("payList").innerHTML = "";
 
     if(!rows.length){
-      setNote("notePay","Aucune preuve récente.","warn");
+      setNote("notePay","Aucune preuve Wave récente.","warn");
       return;
     }
 
@@ -898,7 +894,7 @@
     $("pendingList").innerHTML = "";
 
     if(!rows.length){
-      setNote("notePending","Aucune réservation en attente.","warn");
+      setNote("notePending","Aucune réservation en attente à confirmer.","warn");
       return;
     }
 
