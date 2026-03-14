@@ -209,58 +209,44 @@
   "use strict";
 
   const MODULE = "LOC";
-  const NEXT_URL = "app.html";
+  const NEXT_URL = "./app.html";
+
   const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
+  const GENERIC_SESSION_KEY = "DIGIY_PRO_SESSION";
   const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
   const STORAGE_SLUG_KEY = "digiy_loc_slug";
   const STORAGE_LAST_SLUG = "digiy_last_slug";
 
-  const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY;
-
-  if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    document.getElementById("subtitle").textContent = "Configuration manquante";
-    document.getElementById("msg").innerHTML = `<span class="bad">❌ Configuration Supabase absente.</span>`;
-    document.getElementById("go").disabled = true;
-    return;
-  }
-
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth:{
-      persistSession:false,
-      autoRefreshToken:false,
-      detectSessionInUrl:false
-    }
-  });
+  const SUPABASE_URL = String(window.DIGIY_SUPABASE_URL || "").trim();
+  const SUPABASE_ANON_KEY = String(window.DIGIY_SUPABASE_ANON_KEY || "").trim();
 
   const $ = (id) => document.getElementById(id);
-
-  const url = new URL(location.href);
-  const slug = normalizeSlug(url.searchParams.get("slug") || "");
-
-  $("slugBox").textContent = slug || "—";
-  $("subtitle").textContent = slug
-    ? "Accès sécurisé — PIN requis"
-    : "SLUG manquant";
 
   function normalizeSlug(value) {
     return String(value || "")
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, "");
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
   }
 
   function normalizePin(value) {
     return String(value || "").replace(/\s+/g, "");
   }
 
-  function msg(html) {
-    $("msg").innerHTML = html;
+  function normalizePhone(value) {
+    return String(value || "").replace(/[^\d]/g, "");
   }
 
   function now() {
     return Date.now();
+  }
+
+  function msg(html) {
+    $("msg").innerHTML = html;
   }
 
   function storageSet(key, value) {
@@ -281,28 +267,29 @@
     }
   }
 
-  function normalizeResult(raw) {
+  function normalizeResult(raw, forced = {}) {
     const r = safeJsonParse(raw) || {};
-
     return {
       ok: !!r.ok,
-      owner_id: r.owner_id || r.ownerId || r.pro_id || r.id || "",
-      phone: r.phone || r.pro_phone || "",
-      title: r.title || r.business_name || r.name || "",
-      business_name: r.business_name || r.title || r.name || "",
-      business_code: r.business_code || r.code || "TEST",
-      slug: normalizeSlug(r.slug || slug || ""),
-      module: String(r.module || MODULE || "").toUpperCase(),
-      error: r.error || r.reason || ""
+      owner_id: String(r.owner_id || r.ownerId || r.pro_id || r.id || forced.owner_id || "").trim(),
+      phone: normalizePhone(r.phone || r.pro_phone || forced.phone || ""),
+      title: String(r.title || r.business_name || r.name || forced.title || "").trim(),
+      business_name: String(r.business_name || r.title || r.name || forced.business_name || "").trim(),
+      business_code: String(r.business_code || r.code || forced.business_code || "").trim(),
+      slug: normalizeSlug(r.slug || forced.slug || ""),
+      module: String(r.module || forced.module || MODULE).trim().toUpperCase(),
+      error: String(r.error || r.reason || forced.error || "").trim()
     };
   }
 
   function clearOldSessionKeys() {
     [
       SESSION_KEY,
+      GENERIC_SESSION_KEY,
       STORAGE_SLUG_KEY,
       STORAGE_LAST_SLUG,
       "DIGIY_SLUG",
+      "digiy_slug",
       "DIGIY_LOC_OWNER_ID",
       "digiy_loc_owner_id",
       "DIGIY_OWNER_ID",
@@ -314,22 +301,26 @@
       "DIGIY_TITLE",
       "DIGIY_PHONE",
       "DIGIY_LOC_PHONE",
+      "digiy_loc_phone",
       "DIGIY_PRO_ID"
     ].forEach(storageRemove);
   }
 
-  function saveSession(raw) {
-    const data = normalizeResult(raw);
+  function saveSession(raw, bridged = {}) {
+    const data = normalizeResult(raw, bridged);
+
+    const finalSlug = normalizeSlug(data.slug || bridged.slug || "");
+    const finalPhone = normalizePhone(data.phone || bridged.phone || "");
 
     const session = {
       ok: true,
       module: MODULE,
-      owner_id: data.owner_id,
-      slug: data.slug || slug,
-      phone: data.phone || "",
-      title: data.title || "",
-      business_name: data.business_name || "",
-      business_code: data.business_code || "TEST",
+      owner_id: data.owner_id || "",
+      slug: finalSlug,
+      phone: finalPhone,
+      title: data.title || data.business_name || "",
+      business_name: data.business_name || data.title || "",
+      business_code: data.business_code || "LOC",
       created_at: now(),
       expires_at: now() + SESSION_TTL_MS
     };
@@ -337,15 +328,20 @@
     clearOldSessionKeys();
 
     storageSet(SESSION_KEY, JSON.stringify(session));
+    storageSet(GENERIC_SESSION_KEY, JSON.stringify(session));
 
     storageSet(STORAGE_SLUG_KEY, session.slug);
     storageSet(STORAGE_LAST_SLUG, session.slug);
     storageSet("DIGIY_SLUG", session.slug);
+    storageSet("digiy_slug", session.slug);
 
-    storageSet("DIGIY_LOC_OWNER_ID", session.owner_id);
-    storageSet("digiy_loc_owner_id", session.owner_id);
-    storageSet("DIGIY_OWNER_ID", session.owner_id);
-    storageSet("owner_id", session.owner_id);
+    if (session.owner_id) {
+      storageSet("DIGIY_LOC_OWNER_ID", session.owner_id);
+      storageSet("digiy_loc_owner_id", session.owner_id);
+      storageSet("DIGIY_OWNER_ID", session.owner_id);
+      storageSet("owner_id", session.owner_id);
+      storageSet("DIGIY_PRO_ID", session.owner_id);
+    }
 
     storageSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
     storageSet("DIGIY_BUSINESS_CODE", session.business_code);
@@ -359,12 +355,39 @@
     if (session.phone) {
       storageSet("DIGIY_PHONE", session.phone);
       storageSet("DIGIY_LOC_PHONE", session.phone);
+      storageSet("digiy_loc_phone", session.phone);
     }
-
-    storageSet("DIGIY_PRO_ID", session.owner_id);
 
     return session;
   }
+
+  if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    $("subtitle").textContent = "Configuration manquante";
+    msg(`<span class="bad">❌ Configuration Supabase absente.</span>`);
+    $("go").disabled = true;
+    return;
+  }
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storage: {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {}
+      }
+    }
+  });
+
+  const url = new URL(location.href);
+  const slug = normalizeSlug(url.searchParams.get("slug") || "");
+
+  $("slugBox").textContent = slug || "—";
+  $("subtitle").textContent = slug
+    ? "Accès sécurisé — PIN requis"
+    : "SLUG manquant";
 
   if (!slug) {
     msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton lien GO PIN avec <b>?slug=...</b>.`);
@@ -372,7 +395,60 @@
     return;
   }
 
-  setTimeout(() => $("pin").focus(), 150);
+  function buildNextUrl(finalSlug) {
+    const next = new URL(NEXT_URL, location.href);
+    if (finalSlug) next.searchParams.set("slug", finalSlug);
+    return next.toString();
+  }
+
+  async function resolveSlugToPhone(currentSlug) {
+    const { data, error } = await sb
+      .from("digiy_subscriptions_public")
+      .select("slug, phone, module")
+      .eq("slug", currentSlug)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data?.phone) return null;
+
+    return {
+      slug: normalizeSlug(data.slug || currentSlug),
+      phone: normalizePhone(data.phone),
+      module: String(data.module || MODULE).trim().toUpperCase()
+    };
+  }
+
+  async function tryRpcDigiyVerifyPin(phone, pin) {
+    const { data, error } = await sb.rpc("digiy_verify_pin", {
+      p_phone: phone,
+      p_module: MODULE,
+      p_pin: pin
+    });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async function tryRpcVerifyAccessPin(currentSlug, pin) {
+    const { data, error } = await sb.rpc("verify_access_pin", {
+      p_slug: currentSlug,
+      p_pin: pin
+    });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async function tryRpcLocPinLogin(currentSlug, pin) {
+    const { data, error } = await sb.rpc("loc_pin_login", {
+      p_slug: currentSlug,
+      p_pin: pin
+    });
+
+    if (error) throw error;
+    return data;
+  }
 
   async function enter() {
     const pin = normalizePin($("pin").value);
@@ -385,58 +461,78 @@
     $("go").disabled = true;
     msg(`Vérification en cours…`);
 
-    let rpcData = null;
-    let rpcError = null;
-
+    let bridge = null;
     try {
-      const res = await sb.rpc("verify_access_pin", {
-        p_slug: slug,
-        p_pin: pin
-      });
-      rpcData = res.data;
-      rpcError = res.error;
+      bridge = await resolveSlugToPhone(slug);
     } catch (e) {
-      rpcError = e;
+      $("go").disabled = false;
+      msg(`<span class="bad">❌ Erreur lecture abonnement.</span><br>${String(e?.message || e)}`);
+      return;
     }
 
-    if (rpcError || !normalizeResult(rpcData)?.ok) {
-      try {
-        const fallback = await sb.rpc("loc_pin_login", {
-          p_slug: slug,
-          p_pin: pin
-        });
+    if (!bridge?.phone) {
+      $("go").disabled = false;
+      msg(`<span class="bad">❌ SLUG inconnu.</span><br>Aucun téléphone actif trouvé pour ce slug.`);
+      return;
+    }
 
-        if (fallback && fallback.data) {
-          rpcData = fallback.data;
-          rpcError = fallback.error || null;
-        }
-      } catch (_) {
-        // fallback silencieux
+    const attempts = [];
+
+    try {
+      const data = await tryRpcDigiyVerifyPin(bridge.phone, pin);
+      attempts.push({ name: "digiy_verify_pin", data, error: null });
+    } catch (e) {
+      attempts.push({ name: "digiy_verify_pin", data: null, error: e });
+    }
+
+    if (!normalizeResult(attempts[0]?.data, bridge).ok) {
+      try {
+        const data = await tryRpcVerifyAccessPin(slug, pin);
+        attempts.push({ name: "verify_access_pin", data, error: null });
+      } catch (e) {
+        attempts.push({ name: "verify_access_pin", data: null, error: e });
       }
     }
 
-    if (rpcError) {
+    const bestSoFar = attempts.find(x => normalizeResult(x.data, bridge).ok);
+
+    if (!bestSoFar) {
+      try {
+        const data = await tryRpcLocPinLogin(slug, pin);
+        attempts.push({ name: "loc_pin_login", data, error: null });
+      } catch (e) {
+        attempts.push({ name: "loc_pin_login", data: null, error: e });
+      }
+    }
+
+    const success = attempts.find(x => normalizeResult(x.data, bridge).ok);
+
+    if (!success) {
       $("go").disabled = false;
-      msg(`<span class="bad">❌ Erreur.</span><br>${String(rpcError.message || rpcError)}`);
+
+      const lastError =
+        attempts.map(x => x.error && String(x.error?.message || x.error)).filter(Boolean).pop() || "";
+
+      msg(
+        `<span class="bad">❌ Accès refusé.</span><br>${
+          lastError || "PIN incorrect ou rail PIN non disponible."
+        }`
+      );
       return;
     }
 
-    const result = normalizeResult(rpcData);
+    const result = normalizeResult(success.data, {
+      slug: bridge.slug,
+      phone: bridge.phone,
+      module: bridge.module
+    });
 
-    if (!result.ok || !result.owner_id) {
-      $("go").disabled = false;
-      msg(`<span class="bad">❌ Accès refusé.</span><br>${result.error || "PIN incorrect ou owner_id manquant."}`);
-      return;
-    }
-
-    saveSession(result);
+    const session = saveSession(result, bridge);
 
     msg(`<span class="ok">✅ Accès validé.</span> Ouverture de ton espace…`);
 
     setTimeout(() => {
-      const next = new URL(NEXT_URL, location.href);
-      next.searchParams.set("slug", slug);
-      location.href = next.toString();
+      location.href = buildNextUrl(session.slug || slug);
     }, 450);
   }
 
@@ -444,6 +540,8 @@
   $("pin").addEventListener("keydown", (e) => {
     if (e.key === "Enter") enter();
   });
+
+  setTimeout(() => $("pin").focus(), 150);
 })();
 </script>
 </body>
