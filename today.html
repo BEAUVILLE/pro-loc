@@ -16,7 +16,7 @@
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- ✅ GUARD -->
-  <script src="./guard.js?v=locpro-today-clean-v4"></script>
+  <script src="./guard.js?v=locpro-today-clean-v5"></script>
 
   <style>
     :root{
@@ -596,6 +596,94 @@
     return data;
   }
 
+  function normalizeOwnerContext(raw){
+    if (!raw || typeof raw !== "object") return null;
+
+    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
+    if (!owner_id) return null;
+
+    return {
+      owner_id,
+      business_code: raw.business_code || raw.businessCode || raw.code || "",
+      business_name: raw.business_name || raw.businessName || raw.name || ""
+    };
+  }
+
+  function ownerContextFromStorage(){
+    const owner_id =
+      storageGet("DIGIY_LOC_OWNER_ID") ||
+      storageGet("digiy_loc_owner_id") ||
+      storageGet("DIGIY_OWNER_ID") ||
+      storageGet("owner_id") ||
+      "";
+
+    if (!owner_id) return null;
+
+    return normalizeOwnerContext({
+      owner_id,
+      business_code:
+        storageGet("DIGIY_LOC_BUSINESS_CODE") ||
+        storageGet("DIGIY_BUSINESS_CODE") ||
+        "",
+      business_name:
+        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+        storageGet("DIGIY_BUSINESS_NAME") ||
+        ""
+    });
+  }
+
+  async function ownerContextFromRpc(slug){
+    const attempts = [
+      "digiy_loc_owner_context",
+      "digiy_loc_get_owner_context",
+      "digiy_loc_resolve_owner_context"
+    ];
+
+    for (const fn of attempts) {
+      try {
+        const data = await rpc(fn, {
+          p_phone: getGuardState().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "",
+          p_slug: slug || getSlug() || "",
+          p_module: MODULE
+        });
+
+        const ctx = normalizeOwnerContext(data);
+        if (ctx?.owner_id) return ctx;
+      } catch (_) {}
+    }
+
+    return null;
+  }
+
+  async function resolveOwnerContext(slug){
+    const fromStorage = ownerContextFromStorage();
+    if (fromStorage?.owner_id) return fromStorage;
+
+    const fromRpc = await ownerContextFromRpc(slug);
+    if (fromRpc?.owner_id) {
+      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+
+      if (fromRpc.business_code) {
+        try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code); } catch {}
+        try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code); } catch {}
+        try { localStorage.setItem("DIGIY_BUSINESS_CODE", fromRpc.business_code); } catch {}
+        try { sessionStorage.setItem("DIGIY_BUSINESS_CODE", fromRpc.business_code); } catch {}
+      }
+
+      if (fromRpc.business_name) {
+        try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name); } catch {}
+        try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name); } catch {}
+        try { localStorage.setItem("DIGIY_BUSINESS_NAME", fromRpc.business_name); } catch {}
+        try { sessionStorage.setItem("DIGIY_BUSINESS_NAME", fromRpc.business_name); } catch {}
+      }
+
+      return fromRpc;
+    }
+
+    return null;
+  }
+
   async function tryGetBusinessCode(slug){
     const fromStorage =
       storageGet("DIGIY_LOC_BUSINESS_CODE") ||
@@ -789,10 +877,12 @@
 
       const st = (p.status || "pending").toLowerCase();
       const tag = st === "confirmed" ? "ok" : (st === "rejected" ? "bad" : "warn");
+      const amount = p.amount ?? p.amount_expected ?? 0;
+      const currency = p.currency || "XOF";
 
       div.innerHTML = `
         <div class="itemTop">
-          <div class="itemTitle">${esc((p.status || "PENDING").toUpperCase())} <span class="tag ${tag}">${fmtMoney(p.amount_expected)}</span></div>
+          <div class="itemTitle">${esc((p.status || "PENDING").toUpperCase())} <span class="tag ${tag}">${fmtMoney(amount)} ${esc(currency)}</span></div>
           <div class="tag">🧾 ${esc(p.wave_tx_ref || "—")}</div>
         </div>
         <div class="itemMeta">
@@ -878,12 +968,12 @@
     }
   }
 
-  async function loadPayments(businessCode){
+  async function loadPayments(ownerId){
     setNote("notePay", "", "");
     $("payList").innerHTML = "";
 
-    if(!businessCode){
-      setNote("notePay","business_code introuvable pour les paiements.","warn");
+    if(!ownerId){
+      setNote("notePay","owner_id introuvable pour les paiements.","warn");
       return;
     }
 
@@ -891,13 +981,35 @@
       const sb = getSB();
       const { data, error } = await sb
         .from("loc_payment_intents")
-        .select("id, status, amount_expected, currency, client_name, client_phone, wave_tx_ref, created_at, business_code")
-        .eq("business_code", businessCode)
+        .select(`
+          id,
+          listing_id,
+          owner_id,
+          client_name,
+          client_phone,
+          date_in,
+          date_out,
+          amount:amount_expected,
+          deposit_percent,
+          payment_method,
+          wave_name,
+          wave_phone,
+          wave_tx_ref,
+          status,
+          created_at
+        `)
+        .eq("owner_id", ownerId)
         .order("created_at", { ascending:false })
         .limit(14);
 
       if(error) throw error;
-      renderPayments(data || []);
+
+      const payments = (data || []).map(row => ({
+        ...row,
+        currency: "XOF"
+      }));
+
+      renderPayments(payments);
     }catch(e){
       setNote("notePay","Paiements indisponibles :\n" + (e?.message || e),"warn");
     }
@@ -993,13 +1105,19 @@
   }
 
   async function tryGetBusinessAndLoad(slug, day){
-    const businessCode = await tryGetBusinessCode(slug);
+    const ownerCtx = await resolveOwnerContext(slug);
+    const ownerId = ownerCtx?.owner_id || "";
+    const businessCode = (
+      ownerCtx?.business_code ||
+      await tryGetBusinessCode(slug) ||
+      ""
+    );
 
     const dayRes = await loadDayListing(slug, day);
 
     await Promise.allSettled([
       loadPulse(businessCode),
-      loadPayments(businessCode),
+      loadPayments(ownerId),
       loadPending(businessCode),
     ]);
 
