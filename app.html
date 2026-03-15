@@ -1,1756 +1,1067 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Gestion Location</title>
-  <meta name="theme-color" content="#0b1020"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>DIGIY LOC — App</title>
+  <meta name="theme-color" content="#07140f" />
+  <meta
+    name="description"
+    content="DIGIY LOC — galerie logements et fiches recousues sur room_slug."
+  />
 
-  <!-- ✅ CONFIG SUPABASE -->
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
-    window.DIGIY_PUBLIC_LOC_BASE = "https://beauville.github.io/digiy-loc/";
   </script>
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- ✅ Guard (nouveau rail PRO) -->
-  <script src="./guard.js?v=locpro-final-v4"></script>
 
   <style>
     :root{
-      --bg:#061b14;
-      --bg2:#0a2820;
-      --card:#052e16;
-      --accent:#facc15;
-      --success:#22c55e;
-      --danger:#ef4444;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --border:rgba(148,163,184,0.2);
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      margin:0;
-      font-family:system-ui,sans-serif;
-      background:linear-gradient(135deg,var(--bg),var(--bg2));
-      color:var(--text);
-      min-height:100vh;
+      --bg:#07140f;
+      --bg2:#0b1f17;
+      --card:#10241b;
+      --card2:#0d1d16;
+      --line:rgba(255,255,255,.10);
+      --text:#ecfff4;
+      --muted:rgba(236,255,244,.74);
+      --soft:rgba(236,255,244,.56);
+      --green:#22c55e;
+      --green2:#16a34a;
+      --gold:#facc15;
+      --red:#f87171;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --radius:24px;
+      --max:1180px;
     }
 
-    /* ✅ LOADING / PROTECTION */
-    #loading{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:2rem;
-      text-align:center;
-      color:var(--text);
-    }
-    #loading .box{
-      width:min(560px, 92vw);
-      background:rgba(255,255,255,0.05);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:1.25rem;
-      backdrop-filter:blur(20px);
-      box-shadow:0 18px 50px rgba(0,0,0,.35);
-    }
-    #loading .t{font-weight:900;font-size:1.1rem}
-    #loading .s{margin-top:.5rem;color:var(--muted);font-weight:700}
-    #loading a{color:var(--accent);font-weight:900;text-decoration:none}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg),#04110c 42%,#020806);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{text-decoration:none;color:inherit}
+    button,input,select{font:inherit}
 
-    /* ✅ APP */
-    #app{display:none}
-    .container{max-width:1400px;margin:0 auto;padding:1rem}
+    .wrap{
+      width:min(100%,var(--max));
+      margin:0 auto;
+      padding:20px 16px 80px;
+    }
 
-    /* HEADER */
-    .header{
-      background:rgba(255,255,255,0.05);
-      backdrop-filter:blur(20px);
-      padding:1.5rem;
-      border-radius:16px;
-      margin-bottom:1.5rem;
-      border:1px solid var(--border);
+    .topbar{
       display:flex;
-      justify-content:space-between;
       align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
       flex-wrap:wrap;
-      gap:1rem;
     }
-    .header h1{
-      font-size:1.8rem;
-      margin:0;
-      background:linear-gradient(135deg,#10b981,#06d6a0);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .header-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
 
-    /* MINI NAV TOP */
-    .miniNav{
+    .brand{
       display:flex;
-      gap:.5rem;
-      flex-wrap:wrap;
-      margin-top:.6rem;
+      align-items:center;
+      gap:12px;
     }
 
-    /* TABS */
-    .tabs{
-      display:flex;
-      gap:0.5rem;
-      margin-bottom:1.5rem;
-      overflow-x:auto;
-      padding-bottom:0.5rem;
-    }
-    .tab{
-      padding:0.75rem 1.5rem;
-      background:rgba(255,255,255,0.05);
-      border:1px solid var(--border);
-      border-radius:12px;
-      cursor:pointer;
-      transition:all 0.2s;
-      white-space:nowrap;
-      font-weight:600;
-      font-size:0.9rem;
-      user-select:none;
-    }
-    .tab:hover{background:rgba(255,255,255,0.1);border-color:var(--accent);}
-    .tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
-
-    /* CONTENT */
-    .content{display:none}
-    .content.active{display:block}
-
-    /* CARDS */
-    .card{
-      background:rgba(255,255,255,0.05);
-      backdrop-filter:blur(20px);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:1.5rem;
-      margin-bottom:1rem;
-    }
-    .card h2{
-      font-size:1.3rem;
-      margin:0 0 1rem;
-      color:var(--accent);
-    }
-
-    /* STATS */
-    .stats-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-      gap:1rem;
-      margin-bottom:1.5rem;
-    }
-    .stat-card{
-      background:rgba(255,255,255,0.05);
-      padding:1.5rem;
-      border-radius:12px;
-      border:1px solid var(--border);
-    }
-    .stat-label{
-      font-size:0.85rem;
-      color:var(--muted);
-      margin-bottom:0.5rem;
-      font-weight:600;
-      text-transform:uppercase;
-    }
-    .stat-value{
-      font-size:2rem;
+    .brand-badge{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,#14532d,#052e16);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
       font-weight:900;
-      color:var(--accent);
     }
 
-    /* BUTTONS */
+    .brand h1{
+      margin:0;
+      font-size:1rem;
+      letter-spacing:.04em;
+    }
+
+    .brand p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:.92rem;
+    }
+
+    .cta-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
     .btn{
-      padding:0.75rem 1.5rem;
-      border:none;
-      border-radius:10px;
-      font-size:0.9rem;
-      font-weight:700;
+      appearance:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:16px;
       cursor:pointer;
-      transition:all 0.2s;
+      transition:.18s ease;
+      font-weight:700;
+    }
+
+    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.07)}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--green),var(--green2));
+      color:#04110c;
+      border-color:transparent;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top right, rgba(34,197,94,.20), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:32px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.25fr .95fr;
+      gap:18px;
+    }
+
+    .hero h2{
+      margin:0 0 10px;
+      font-size:clamp(1.5rem,2.4vw,2.3rem);
+      line-height:1.05;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .rail-note{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
       display:inline-flex;
       align-items:center;
-      gap:0.5rem;
-      background:rgba(255,255,255,0.1);
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
       color:var(--text);
-      border:1px solid var(--border);
-      text-decoration:none;
-      line-height:1;
-      user-select:none;
+      font-size:.92rem;
     }
-    .btn-primary{background:var(--accent);color:#000;border-color:rgba(250,204,21,.35);}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(250,204,21,0.3);}
-    .btn-success{background:var(--success);color:#fff;border-color:rgba(34,197,94,.3);}
-    .btn-danger{background:var(--danger);color:#fff;border-color:rgba(239,68,68,.3);}
-    .btn-secondary{background:rgba(255,255,255,0.08);color:var(--text);border:1px solid var(--border);}
 
-    /* TABLE */
-    table{width:100%;border-collapse:collapse;}
-    th,td{padding:1rem;text-align:left;border-bottom:1px solid var(--border);}
-    th{font-size:0.85rem;color:var(--muted);font-weight:700;text-transform:uppercase;}
-    td{font-size:0.95rem;}
-    tr:hover{background:rgba(255,255,255,0.05);}
+    .pill strong{color:var(--gold)}
 
-    /* BADGE */
-    .badge{
-      display:inline-block;
-      padding:0.25rem 0.75rem;
-      border-radius:6px;
-      font-size:0.75rem;
-      font-weight:700;
+    .panel{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:16px;
     }
-    .badge-success{background:rgba(34,197,94,0.2);color:var(--success);}
-    .badge-warning{background:rgba(250,204,21,0.2);color:var(--accent);}
-    .badge-danger{background:rgba(239,68,68,0.2);color:var(--danger);}
 
-    /* LOGEMENT CARD */
-    .logement-card{
-      background:rgba(255,255,255,0.05);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:1.5rem;
-      margin-bottom:1rem;
+    .stats{
       display:grid;
-      grid-template-columns:200px 1fr auto;
-      gap:1.5rem;
-      align-items:start;
-    }
-    .logement-img{
-      width:200px;
-      height:150px;
-      object-fit:cover;
-      border-radius:8px;
-      background:rgba(0,0,0,.18)
-    }
-    .logement-info h3{
-      margin:0 0 0.5rem;
-      color:var(--accent);
-      font-size:1.2rem;
-    }
-    .logement-info p{
-      margin:0.25rem 0;
-      color:var(--muted);
-      font-size:0.9rem;
-    }
-    .logement-actions{
-      display:flex;
-      flex-direction:column;
-      gap:0.5rem;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:12px;
     }
 
-    /* CALENDAR */
-    .cal-wrap{display:flex;gap:1rem;flex-wrap:wrap}
-    .cal-box{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:1rem;
-      background:rgba(255,255,255,0.04);
-      width:100%;
+    .stat{
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:14px;
     }
-    .cal-head{
+
+    .stat .k{
+      font-size:1.55rem;
+      font-weight:900;
+      line-height:1;
+      margin-bottom:6px;
+    }
+
+    .stat .l{
+      color:var(--muted);
+      font-size:.92rem;
+    }
+
+    .toolbar{
+      display:grid;
+      grid-template-columns:1.2fr .8fr auto;
+      gap:12px;
+      margin:18px 0 14px;
+    }
+
+    .field{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:0.5rem;
-      margin-bottom:0.75rem;
+      gap:10px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:0 14px;
+      min-height:56px;
     }
-    .cal-grid{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:0.5rem;
-    }
-    .cal-dow{
-      font-size:0.75rem;
-      color:var(--muted);
-      text-transform:uppercase;
-      font-weight:700;
-      text-align:center;
-      padding:0.25rem 0;
-    }
-    .cal-day{
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:rgba(0,0,0,0.15);
-      padding:0.6rem 0.5rem;
-      min-height:64px;
-    }
-    .cal-day .n{font-weight:800}
-    .cal-day .mini{font-size:0.75rem;color:var(--muted);margin-top:0.2rem}
-    .cal-day.busy{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.10)}
-    .cal-day.free{border-color:rgba(34,197,94,0.25)}
-    .cal-day.off{opacity:0.35}
 
-    @media(max-width:768px){
-      .container{padding:0.5rem}
-      .header{padding:1rem}
-      .header h1{font-size:1.3rem}
-      .stats-grid{grid-template-columns:1fr}
-      .logement-card{grid-template-columns:1fr;gap:1rem;}
-      .logement-img{width:100%;height:200px}
-      table{font-size:0.85rem}
-      th,td{padding:0.5rem}
+    .field input,.field select{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+    }
+
+    .field input::placeholder{color:rgba(236,255,244,.45)}
+
+    .notice{
+      margin:14px 0 18px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(250,204,21,.25);
+      background:rgba(250,204,21,.08);
+      color:#fff7d1;
+    }
+
+    .error{
+      border-color:rgba(248,113,113,.28);
+      background:rgba(248,113,113,.10);
+      color:#ffe1e1;
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+    }
+
+    .card{
+      min-width:0;
+      background:linear-gradient(180deg,var(--card),var(--card2));
+      border:1px solid var(--line);
+      border-radius:26px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .cover{
+      position:relative;
+      aspect-ratio:16/10;
+      background:
+        radial-gradient(circle at top right, rgba(250,204,21,.15), transparent 25%),
+        linear-gradient(135deg,#173026,#0a1611 58%, #050b08);
+      border-bottom:1px solid var(--line);
+    }
+
+    .cover img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .cover-badges{
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tag{
+      backdrop-filter:blur(8px);
+      background:rgba(0,0,0,.45);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:.84rem;
+      line-height:1;
+    }
+
+    .body{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      flex:1;
+    }
+
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .title{
+      margin:0;
+      font-size:1.08rem;
+      line-height:1.25;
+    }
+
+    .price{
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    .price strong{
+      display:block;
+      font-size:1.08rem;
+      color:var(--gold);
+    }
+
+    .price span{
+      color:var(--soft);
+      font-size:.84rem;
+    }
+
+    .desc{
+      color:var(--muted);
+      line-height:1.55;
+      min-height:48px;
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .meta-box{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:16px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .meta-box .label{
+      color:var(--soft);
+      font-size:.8rem;
+      margin-bottom:6px;
+    }
+
+    .meta-box .value{
+      font-weight:700;
+      word-break:break-word;
+    }
+
+    .slug-box{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:.85rem;
+      color:#d7ffe6;
+      background:rgba(0,0,0,.16);
+      border:1px dashed rgba(255,255,255,.12);
+      padding:10px 12px;
+      border-radius:14px;
+      word-break:break-all;
+    }
+
+    .actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      margin-top:auto;
+    }
+
+    .actions a{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      min-height:46px;
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:800;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+    }
+
+    .actions a.primary{
+      background:linear-gradient(135deg,var(--green),var(--green2));
+      color:#04110c;
+      border-color:transparent;
+    }
+
+    .empty{
+      padding:26px 18px;
+      border-radius:24px;
+      border:1px dashed rgba(255,255,255,.15);
+      background:rgba(255,255,255,.03);
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .footer-note{
+      margin-top:22px;
+      color:var(--soft);
+      font-size:.92rem;
+      text-align:center;
+    }
+
+    @media (max-width:980px){
+      .hero-grid,
+      .toolbar,
+      .grid{
+        grid-template-columns:1fr;
+      }
+      .stats{
+        grid-template-columns:1fr 1fr 1fr;
+      }
+    }
+
+    @media (max-width:640px){
+      .wrap{padding:14px 12px 70px}
+      .hero{padding:18px}
+      .stats{grid-template-columns:1fr}
+      .meta{grid-template-columns:1fr}
+      .actions{grid-template-columns:1fr}
+      .topbar{align-items:flex-start}
     }
   </style>
 </head>
-
 <body>
-
-<!-- ✅ LOADING -->
-<div id="loading">
-  <div class="box">
-    <div class="t">🔒 Vérification accès…</div>
-    <div class="s">DIGIY LOC PRO protège ton cockpit (PIN / abonnement / slug).</div>
-    <div class="s" style="margin-top:.75rem;color:rgba(250,204,21,.9)">
-      Astuce terrain : si tu ne sais pas te placer, ouvre <b>NDIMBAL</b> et partage ton point GPS 📍
-    </div>
-  </div>
-</div>
-
-<!-- ✅ APP (affiché après guard ok) -->
-<div id="app">
-  <div class="container">
-
-    <!-- HEADER -->
-    <div class="header">
-      <div>
-        <h1>🏠 DIGIY LOC PRO</h1>
-        <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
-          <span id="userName">Gestionnaire</span> ·
-          <span id="userPhone">—</span>
-        </p>
-
-        <!-- ✅ MINI NAV TOP -->
-        <div class="miniNav">
-         <a class="btn btn-secondary" data-go="./app.html" data-mode="replace" href="#">🏠 Cockpit</a>
-          <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
-          <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
-          <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
-          <a class="btn btn-secondary" data-go="./wave.html" href="#">💳 Déclarations Wave</a>
-        </div>
-      </div>
-
-      <div class="header-actions">
-        <button class="btn btn-primary" data-go="./fiche-abo.html" type="button">
-  🏗️ FICHE ABONNÉ
-</button>
-
-        <a class="btn btn-secondary" id="btnPublicRoom" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
-          🌍 Voir la fiche publique
-        </a>
-
-        <a class="btn btn-secondary" id="btnPublicIndex" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
-          🌐 Voir la vitrine LOC
-        </a>
-
-        <a class="btn btn-secondary" href="https://digiylyfe.com/" target="_blank" rel="noopener noreferrer">
-          ← Retour au site
-        </a>
-
-        <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
-          🔗 Liens / QR
-        </button>
-
-        <button class="btn btn-secondary" data-go="./photos.html" type="button">
-          🖼️ Photos
-        </button>
-
-        <button class="btn btn-secondary" data-go="./ndimbal.html" id="quickNdimbal" type="button">
-          ♾️ NDIMBAL
-        </button>
-
-        <button class="btn btn-danger" data-action="logout" type="button">
-          🚪 Déconnexion
-        </button>
-      </div>
-    </div>
-
-    <!-- TABS -->
-    <div class="tabs" id="tabs">
-      <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
-      <div class="tab" data-tab="logements">🏠 Mes logements</div>
-      <div class="tab" data-tab="reservations">📅 Réservations</div>
-      <div class="tab" data-tab="calendrier">📆 Calendrier</div>
-      <div class="tab" data-tab="stats">📈 Statistiques</div>
-    </div>
-
-    <!-- CONTENT: DASHBOARD -->
-    <div id="dashboard" class="content active">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Revenus ce mois</div>
-          <div class="stat-value" id="revenusMois">0 F</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Taux d'occupation</div>
-          <div class="stat-value" id="tauxOccupation">0%</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Réservations actives</div>
-          <div class="stat-value" id="resasActives">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Logements actifs</div>
-          <div class="stat-value" id="logementsActifs">0</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>📅 Prochaines arrivées</h2>
-        <div id="prochainesArrivees">
-          <p style="color:var(--muted)">Chargement...</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>⏳ Demandes en attente</h2>
-        <div id="demandesAttente">
-          <p style="color:var(--muted)">Chargement...</p>
-        </div>
-      </div>
-
-      <!-- PULSE TEST -->
-      <div class="card">
-        <h2>📲 Pulse (Test rapide)</h2>
-        <p style="color:var(--muted);margin-bottom:1rem">
-          Test d'envoi via l'API. (Désactive PULSE.enabled si tu veux.)
-        </p>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
-          <span id="pulseMsg" style="color:var(--muted)"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTENT: LOGEMENTS -->
-    <div id="logements" class="content">
-      <div class="card">
-        <h2>🏠 Mes logements</h2>
-        <div id="listeLogements"></div>
-      </div>
-    </div>
-
-    <!-- CONTENT: RÉSERVATIONS -->
-    <div id="reservations" class="content">
-      <div class="card">
-        <h2>📅 Toutes les réservations</h2>
-        <div style="overflow-x:auto">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Logement</th>
-                <th>Dates</th>
-                <th>Montant</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableReservations">
-              <tr>
-                <td colspan="6" style="text-align:center;color:var(--muted)">
-                  Chargement...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTENT: CALENDRIER -->
-    <div id="calendrier" class="content">
-      <div class="card">
-        <h2>📆 Calendrier de disponibilité</h2>
-        <div id="calendarView">
-          <p style="color:var(--muted)">Chargement...</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTENT: STATS -->
-    <div id="stats" class="content">
-      <div class="card">
-        <h2>📈 Statistiques détaillées</h2>
-        <div id="statsDetails">
-          <p>Statistiques à venir...</p>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-(() => {
-  "use strict";
-
-  /* =============================
-     CONFIG
-  ============================= */
-  const MODULE = "LOC";
-  const PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
-
-  const DB = {
-    rooms: "digiy_loc_rooms",
-    reservations: "digiy_loc_reservations",
-
-    roomOwnerId: "owner_id",
-    roomTitle: "nom",
-    roomAddress: "adresse",
-    roomMaxPeople: "personnes_max",
-    roomPriceNight: "prix_nuit",
-    roomPriceWeek: "prix_semaine",
-    roomPriceMonth: "prix_mois",
-    roomDesc: "description",
-    roomPhoto: "photo_url",
-    roomStatus: "status",
-
-    resOwnerId: "owner_id",
-    resRoomId: "room_id",
-    resClientName: "client_name",
-    resPhone: "phone",
-    resCheckin: "checkin",
-    resCheckout: "checkout",
-    resAmount: "amount_total",
-    resStatus: "status",
-    resPayStatus: "payment_status",
-  };
-
-  const PULSE = {
-    enabled: true,
-    base: "https://api.digiylyfe.com",
-    apiKey: "",
-    endpoint: "/loc/pulse/send"
-  };
-
-  const State = {
-    ownerId: null,
-    phone: "",
-    slug: "",
-    business_code: "TEST",
-    business_name: "",
-    rooms: [],
-    reservations: [],
-    _calRoom: null
-  };
-
-  const UX = {
-    mode: "preview", // preview | live
-    reason: "booting"
-  };
-
-  /* =============================
-     HELPERS
-  ============================= */
-  function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  function safeImg(url){
-    const u = String(url || "").trim();
-    if(!u) return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-    if(/^https?:\/\//i.test(u)) return u;
-    return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-  }
-
-  function moneyFCFA(x){
-    const n = Number(x || 0);
-    return n.toLocaleString("fr-FR") + " F";
-  }
-
-  function fmtDate(d){
-    if(!d) return "—";
-    try { return new Date(d).toLocaleDateString("fr-FR"); }
-    catch { return String(d); }
-  }
-
-  function startOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth(), 1); }
-  function endOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth()+1, 0); }
-
-  function ymd(dt){
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth()+1).padStart(2,"0");
-    const d = String(dt.getDate()).padStart(2,"0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function todayYMD(){
-    const t = new Date();
-    return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate()));
-  }
-
-  function setText(id, value){
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
-
-  function setHTML(id, html){
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
-  }
-
-  function storageGet(key){
-    try{
-      const s = sessionStorage.getItem(key);
-      if (s) return s;
-    }catch{}
-    try{
-      const l = localStorage.getItem(key);
-      if (l) return l;
-    }catch{}
-    return "";
-  }
-
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      reason: "guard_missing"
-    };
-  }
-
-  async function waitGuardReady(){
-    const guard = window.DIGIY_GUARD;
-    if (!guard) throw new Error("guard_missing");
-
-    if (guard.ready && typeof guard.ready.then === "function") {
-      await guard.ready;
-      return;
-    }
-
-    if (typeof guard.ready === "function") {
-      const maybe = guard.ready();
-      if (maybe && typeof maybe.then === "function") {
-        await maybe;
-      }
-      return;
-    }
-
-    throw new Error("guard_not_ready");
-  }
-
-  function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || null;
-  }
-
-  function sbReady(){
-    const sb = getSB();
-    return !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-  }
-
-  function isLiveMode(){
-    return UX.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
-  }
-
-  function getCurrentSlug(){
-    const st = getGuardState();
-    if (st?.slug) return String(st.slug).trim();
-
-    try {
-      const u = new URL(location.href);
-      const qsSlug = u.searchParams.get("slug") || "";
-      if (qsSlug) return qsSlug.trim();
-    } catch {}
-
-    return (
-      storageGet("digiy_loc_slug") ||
-      storageGet("digiy_last_slug") ||
-      storageGet("DIGIY_SLUG") ||
-      ""
-    ).trim();
-  }
-
-  function publicIndexUrl(){
-    return String(window.DIGIY_PUBLIC_LOC_BASE || "https://beauville.github.io/digiy-loc/").trim();
-  }
-
-  function publicRoomUrl(){
-    const slug = getCurrentSlug();
-    if (!slug) return publicIndexUrl();
-    const u = new URL("fiche.html", publicIndexUrl());
-    u.searchParams.set("slug", slug);
-    return u.toString();
-  }
-
-  function refreshPublicButtons(){
-    const roomBtn = document.getElementById("btnPublicRoom");
-    const indexBtn = document.getElementById("btnPublicIndex");
-    const slug = getCurrentSlug();
-
-    if (roomBtn) {
-      roomBtn.href = publicRoomUrl();
-      roomBtn.textContent = slug ? "🌍 Voir la fiche publique" : "🌍 Voir le site public";
-    }
-
-    if (indexBtn) {
-      indexBtn.href = publicIndexUrl();
-    }
-  }
-
-  function withSlug(url){
-    const slug = getCurrentSlug();
-    if (!slug) return url;
-
-    try{
-      const u = new URL(url, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(slug);
-    }
-  }
-
-  function go(target, mode = "assign"){
-    const t = withSlug(target);
-    try{
-      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, mode);
-    }catch{}
-    if(mode === "replace") location.replace(t);
-    else location.assign(t);
-  }
-
-  function pinUrl(){
-    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
-    catch { return withSlug("./pin.html"); }
-  }
-
-  function payUrl(){
-    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug(PAY_URL); }
-    catch { return withSlug(PAY_URL); }
-  }
-
-  function badgeForStatus(res){
-    const pay = (res?.[DB.resPayStatus] || "").toLowerCase();
-    const st = (res?.[DB.resStatus] || "").toLowerCase();
-
-    if(pay === "paid" || pay === "succeeded") return `<span class="badge badge-success">Payé</span>`;
-    if(pay === "pending" || pay === "requires_payment" || pay === "unpaid") return `<span class="badge badge-warning">Paiement en attente</span>`;
-
-    if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
-    if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
-    if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
-    return `<span class="badge badge-warning">${esc(res?.[DB.resStatus] || "—")}</span>`;
-  }
-
-  function roomNameById(id) {
-    const r = State.rooms.find(x => String(x.id) === String(id));
-    return r?.[DB.roomTitle] || r?.title || "—";
-  }
-
-  function reservationIsActive(r){
-    const st = String(r?.[DB.resStatus] || "").toLowerCase();
-    if(st.includes("cancel")) return false;
-
-    const t = todayYMD();
-    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-    const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-    return ci && co && t >= ci && t < co;
-  }
-
-  function reservationIsUpcoming(r){
-    const t = todayYMD();
-    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-    return ci && ci >= t;
-  }
-
-  function reservationIsPending(r){
-    const st = String(r?.[DB.resStatus] || "").toLowerCase();
-    const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
-    return st.includes("pending") || pay.includes("pending") || pay.includes("requires");
-  }
-
-  function requireLive(actionLabel = "Cette action"){
-    if (isLiveMode()) return true;
-
-    showAccessBanner(UX.reason || "preview");
-    alert(
-      `${actionLabel} demande le mode vivant.\n\n` +
-      `Pour l’instant tu es en aperçu propre.\n` +
-      `Passe par PIN ou active l’accès pour travailler sur les vraies données.`
-    );
-    return false;
-  }
-
-  /* =============================
-     ACCESS BANNER
-  ============================= */
-  function ensureAccessBanner(){
-    let box = document.getElementById("accessBanner");
-    if (box) return box;
-
-    const header = document.querySelector(".header");
-    if (!header || !header.parentNode) return null;
-
-    box = document.createElement("div");
-    box.id = "accessBanner";
-    box.className = "card";
-    box.style.display = "none";
-    box.style.borderColor = "rgba(250,204,21,.28)";
-    box.style.background = "rgba(250,204,21,.06)";
-    box.style.marginTop = "0";
-    box.style.marginBottom = "1rem";
-
-    header.parentNode.insertBefore(box, header.nextSibling);
-    return box;
-  }
-
-  function showAccessBanner(reason){
-    const box = ensureAccessBanner();
-    if (!box) return;
-
-    const st = getGuardState();
-    const pin = pinUrl();
-    const pay = payUrl();
-    const publicRoom = publicRoomUrl();
-
-    let title = "👁️ Mode aperçu";
-    let text = "Le cockpit reste visible proprement, sans mur brutal.";
-    let tone = "rgba(250,204,21,.06)";
-    let border = "rgba(250,204,21,.28)";
-
-    if (st.access_ok && isLiveMode()) {
-      title = "✅ Mode vivant";
-      text = "Accès confirmé. Le cockpit charge les vraies données.";
-      tone = "rgba(34,197,94,.08)";
-      border = "rgba(34,197,94,.28)";
-    } else if (reason === "slug_missing") {
-      text = "Aucun slug détecté. Tu vois l’aperçu élégant du cockpit.";
-    } else if (reason === "has_access_false") {
-      text = "Slug présent mais accès non actif. On garde un aperçu propre.";
-    } else if (reason === "owner_unresolved") {
-      text = "Accès détecté, mais le contexte propriétaire n’est pas encore résolu. On reste en aperçu propre pour éviter le crash.";
-    } else if (reason && reason !== "preview") {
-      text = "Raison actuelle : " + reason;
-    }
-
-    box.style.display = "block";
-    box.style.background = tone;
-    box.style.borderColor = border;
-
-    box.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">⌂</div>
         <div>
-          <h2 style="margin:0 0 .5rem;color:var(--accent)">${esc(title)}</h2>
-          <div style="color:var(--text);font-weight:700;line-height:1.5">
-            ${esc(text)}
-          </div>
-          <div style="margin-top:.5rem;color:var(--muted);font-size:.9rem">
-            slug: <b>${esc(st.slug || State.slug || "—")}</b> · téléphone: <b>${esc(State.phone || st.phone || "—")}</b>
-          </div>
-        </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-          <a class="btn btn-secondary" href="${esc(pin)}">🔑 Ouvrir PIN</a>
-          <a class="btn btn-primary" href="${esc(pay)}">💳 Activer l’accès</a>
-          <a class="btn btn-secondary" href="${esc(publicRoom)}" target="_blank" rel="noopener noreferrer">🌍 Voir public</a>
+          <h1>DIGIY LOC</h1>
+          <p>App publique recousue sur <strong>room_slug</strong></p>
         </div>
       </div>
-    `;
-  }
 
-  /* =============================
-     HEADER / PREVIEW
-  ============================= */
-  function hydrateHeader() {
-    const st = getGuardState();
-    const phone = State.phone || st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "—";
-    const businessName =
-      State.business_name ||
-      storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-      storageGet("DIGIY_BUSINESS_NAME") ||
-      (isLiveMode() ? "Gestionnaire" : "Aperçu DIGIY LOC");
-
-    setText("userPhone", phone || "—");
-    setText("userName", businessName || "Gestionnaire");
-    refreshPublicButtons();
-  }
-
-  function renderPreviewShell(reason){
-    UX.mode = "preview";
-    UX.reason = reason || "preview";
-
-    setText("revenusMois", "—");
-    setText("tauxOccupation", "—");
-    setText("resasActives", "—");
-    setText("logementsActifs", "—");
-
-    setHTML("prochainesArrivees", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Aperçu du cockpit LOC. Les prochaines arrivées réelles apparaîtront après connexion PIN et accès actif.
+      <div class="cta-row">
+        <a class="btn" href="https://digiylyfe.com/">DIGIYLYFE</a>
+        <a class="btn" href="./index.html">Galerie</a>
+        <a class="btn primary" href="./fiche-abo.html">Fiche abonnement</a>
       </div>
-    `);
+    </div>
 
-    setHTML("demandesAttente", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Aperçu propre des demandes. Passe en mode vivant pour voir les vraies réservations.
-      </div>
-    `);
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <h2>Rail LOC fermé proprement avec <span style="color:var(--gold)">room_slug</span>.</h2>
+          <p>
+            Cette app accepte encore l’ancien <code>slug</code> en entrée pour ne rien casser,
+            mais elle canonise désormais l’URL et tous les liens internes en <code>room_slug</code>.
+          </p>
 
-    setHTML("listeLogements", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Aucun logement affiché en aperçu. Clique sur <b>PIN</b> pour ouvrir le cockpit réel.
-      </div>
-    `);
-
-    setHTML("tableReservations", `
-      <tr>
-        <td colspan="6" style="text-align:center;color:var(--muted)">
-          Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.
-        </td>
-      </tr>
-    `);
-
-    setHTML("calendarView", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Calendrier en aperçu. Le planning réel arrive dès que l’accès est confirmé.
-      </div>
-    `);
-
-    setHTML("statsDetails", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Statistiques détaillées en attente du mode vivant.
-      </div>
-    `);
-
-    showAccessBanner(reason);
-    hydrateHeader();
-  }
-
-  function fail(msg){
-    const loading = document.getElementById("loading");
-    if(!loading) return;
-
-    loading.innerHTML = `
-      <div class="box">
-        <div class="t">❌ Accès impossible</div>
-        <div class="s">${esc(msg || "Erreur inconnue")}</div>
-        <div class="s" style="margin-top:.6rem">
-          <a href="${esc(pinUrl())}">Se connecter</a>
-        </div>
-      </div>
-    `;
-  }
-
-  function activateApp(){
-    const loading = document.getElementById("loading");
-    const app = document.getElementById("app");
-    if (loading) loading.style.display = "none";
-    if (app) app.style.display = "block";
-  }
-
-  /* =============================
-     OWNER CONTEXT
-  ============================= */
-  function normalizeOwnerContext(raw){
-    if (!raw || typeof raw !== "object") return null;
-
-    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
-    if (!owner_id) return null;
-
-    return {
-      owner_id,
-      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
-      business_name: raw.business_name || raw.businessName || raw.name || ""
-    };
-  }
-
-  function ownerContextFromStorage(){
-    const owner_id =
-      storageGet("DIGIY_LOC_OWNER_ID") ||
-      storageGet("digiy_loc_owner_id") ||
-      storageGet("DIGIY_OWNER_ID") ||
-      storageGet("owner_id") ||
-      "";
-
-    if (!owner_id) return null;
-
-    return normalizeOwnerContext({
-      owner_id,
-      business_code:
-        storageGet("DIGIY_LOC_BUSINESS_CODE") ||
-        storageGet("DIGIY_BUSINESS_CODE") ||
-        "TEST",
-      business_name:
-        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-        storageGet("DIGIY_BUSINESS_NAME") ||
-        ""
-    });
-  }
-
-  async function ownerContextFromRpc(){
-    if (!window.DIGIY_GUARD?.rpc) return null;
-
-    const st = getGuardState();
-    const attempts = [
-      "digiy_loc_owner_context",
-      "digiy_loc_get_owner_context",
-      "digiy_loc_resolve_owner_context"
-    ];
-
-    for (const fn of attempts) {
-      try {
-        const data = await window.DIGIY_GUARD.rpc(fn, {
-          p_phone: st.phone || State.phone || "",
-          p_slug: st.slug || State.slug || "",
-          p_module: MODULE
-        });
-
-        const ctx = normalizeOwnerContext(data);
-        if (ctx?.owner_id) return ctx;
-      } catch (_) {}
-    }
-    return null;
-  }
-
-  async function resolveOwnerContext(){
-    const fromStorage = ownerContextFromStorage();
-    if (fromStorage?.owner_id) return fromStorage;
-
-    const fromRpc = await ownerContextFromRpc();
-    if (fromRpc?.owner_id) {
-      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-
-      try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
-
-      try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
-
-      return fromRpc;
-    }
-
-    return null;
-  }
-
-  /* =============================
-     NAV / ACTIONS
-  ============================= */
-  const Actions = {
-    logout: () => logout(),
-    pulseTest: () => pulseTest()
-  };
-
-  function bindNav(){
-    document.querySelectorAll("[data-go]").forEach((el)=>{
-      if(el.__digiy_go_bound) return;
-      el.__digiy_go_bound = true;
-
-      el.addEventListener("click", (e)=>{
-        e.preventDefault();
-        const target = (el.getAttribute("data-go") || "").trim();
-        const mode = (el.getAttribute("data-mode") || "assign").trim();
-        if(!target) return;
-        go(target, mode);
-      });
-    });
-  }
-
-  function bindActions(){
-    document.querySelectorAll("[data-action]").forEach((el)=>{
-      if(el.__digiy_action_bound) return;
-      el.__digiy_action_bound = true;
-
-      el.addEventListener("click", (e)=>{
-        const name = (el.getAttribute("data-action") || "").trim();
-        if(!name || typeof Actions[name] !== "function") return;
-        e.preventDefault();
-        Actions[name](el, e);
-      });
-    });
-  }
-
-  function bindTabs(){
-    const tabs = document.getElementById("tabs");
-    if(!tabs) return;
-    tabs.addEventListener("click", (e)=>{
-      const el = e.target.closest(".tab");
-      if(!el) return;
-      const tab = (el.getAttribute("data-tab") || "").trim();
-      if(tab) switchTab(tab);
-    });
-  }
-
-  function bindNdimbal(){
-    const btn = document.getElementById("quickNdimbal");
-    if(!btn || btn.__digiy_ndimbal_bound) return;
-    btn.__digiy_ndimbal_bound = true;
-
-    btn.addEventListener("click", ()=>{
-      alert(
-        "♾️ Astuce terrain :\n" +
-        "Si toi ou ton client n’êtes pas sûrs du point, ouvre NDIMBAL et partage le point GPS 📍.\n" +
-        "Ensuite reviens ici."
-      );
-    });
-  }
-
-  window.DIGIY_NAV = { go, withSlug, Actions };
-
-  /* =============================
-     UI
-  ============================= */
-  function switchTab(tabName) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
-
-    const t = document.querySelector(`.tab[data-tab="${tabName}"]`);
-    if(t) t.classList.add("active");
-
-    const el = document.getElementById(tabName);
-    if(el) el.classList.add("active");
-
-    if (tabName === "logements") loadLogements();
-    if (tabName === "reservations") loadReservations();
-    if (tabName === "calendrier") loadCalendar();
-  }
-
-  function logout() {
-    if (!confirm("Se déconnecter ?")) return;
-    try {
-      window.DIGIY_GUARD?.logout?.(pinUrl());
-    } catch {
-      location.assign(pinUrl());
-    }
-  }
-
-  /* =============================
-     DB CALLS
-  ============================= */
-  async function fetchRooms() {
-    const sb = getSB();
-    if(!sb || !State.ownerId) return [];
-
-    const { data, error } = await sb
-      .from(DB.rooms)
-      .select("*")
-      .eq(DB.roomOwnerId, State.ownerId)
-      .order("created_at", { ascending: false });
-
-    if(error) throw error;
-    return data || [];
-  }
-
-  async function fetchReservations() {
-    const sb = getSB();
-    if(!sb || !State.ownerId) return [];
-
-    const { data, error } = await sb
-      .from(DB.reservations)
-      .select("*")
-      .eq(DB.resOwnerId, State.ownerId)
-      .order(DB.resCheckin, { ascending: true })
-      .limit(200);
-
-    if(error) throw error;
-    return data || [];
-  }
-
-  /* =============================
-     RENDER: LOGEMENTS
-  ============================= */
-  function renderRooms(list) {
-    const container = document.getElementById("listeLogements");
-    if(!container) return;
-
-    if(!list.length){
-      container.innerHTML = `
-        <p style="color:var(--muted)">
-          ${isLiveMode()
-            ? `Aucun logement. Clique "FICHE ABONNÉ".`
-            : `Aucun logement affiché en aperçu. Passe en mode vivant pour gérer le parc réel.`}
-        </p>`;
-      return;
-    }
-
-    container.innerHTML = list.map(room => {
-      const title = room?.[DB.roomTitle] || room?.title || "Logement";
-      const addr = room?.[DB.roomAddress] || room?.address || "—";
-      const desc = room?.[DB.roomDesc] || "";
-      const pmax = room?.[DB.roomMaxPeople] ?? room?.max_people ?? "—";
-      const pn = room?.[DB.roomPriceNight] ?? room?.price_per_night ?? 0;
-      const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
-      const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
-      const img = safeImg(room?.[DB.roomPhoto] || room?.cover_url);
-      const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
-      const badge = status.includes("act")
-        ? `<span class="badge badge-success">Actif</span>`
-        : `<span class="badge badge-warning">${esc(status)}</span>`;
-
-      const disabled = isLiveMode() ? "" : "opacity:.55;pointer-events:none;";
-      const liveHint = isLiveMode() ? "" : `<div style="color:var(--muted);font-size:.85rem;margin-top:.5rem">Action disponible en mode vivant.</div>`;
-
-      return `
-        <div class="logement-card">
-          <img src="${img}" alt="${esc(title)}" class="logement-img" onerror="this.src='https://via.placeholder.com/600x400?text=DIGIY+LOC'">
-          <div class="logement-info">
-            <h3>${esc(title)}</h3>
-            <p>📍 ${esc(addr)}</p>
-            <p>👥 ${esc(pmax)} personnes max</p>
-            ${desc ? `<p>${esc(desc)}</p>` : `<p style="color:var(--muted)">—</p>`}
-            <p style="margin-top:0.5rem">
-              <strong>Tarifs:</strong><br>
-              Nuit: ${moneyFCFA(pn)}<br>
-              Semaine: ${moneyFCFA(pw)}<br>
-              Mois: ${moneyFCFA(pm)}
-            </p>
-            <p style="margin-top:0.5rem">${badge}</p>
-            ${liveHint}
-          </div>
-          <div class="logement-actions" style="${disabled}">
-            <button class="btn btn-secondary" type="button" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
-            <button class="btn btn-secondary" type="button" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
-            <button class="btn btn-danger" type="button" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
+          <div class="rail-note">
+            <div class="pill">Rail principal : <strong>room_slug</strong></div>
+            <div class="pill">Compatibilité douce : ancien <strong>slug</strong> accepté en lecture</div>
+            <div class="pill">Sortie standard : liens générés en <strong>room_slug</strong></div>
           </div>
         </div>
-      `;
-    }).join("");
-  }
 
-  async function loadLogements() {
-    if(!isLiveMode()){
-      renderRooms([]);
-      return;
-    }
-
-    try{
-      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-      State.rooms = await fetchRooms();
-      renderRooms(State.rooms);
-
-      const actifs = State.rooms.filter(r =>
-        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
-      ).length;
-
-      setText("logementsActifs", String(actifs));
-    }catch(e){
-      console.error(e);
-      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur chargement logements: ${esc(e.message || e)}</p>`);
-    }
-  }
-
-  function openEditLogement(roomId){
-    if(!requireLive("Modifier un logement")) return;
-
-    const room = State.rooms.find(r => String(r.id) === String(roomId));
-    if(!room) return alert("Logement introuvable");
-
-    const slug = room?.slug || getCurrentSlug();
-    if (!slug) {
-      alert("Slug introuvable pour ce logement.");
-      return;
-    }
-
-    go(`./fiche-abo.html?slug=${encodeURIComponent(slug)}`);
-  }
-
-  async function updateLogement(roomId, patch){
-    if(!requireLive("Mettre à jour un logement")) return;
-
-    try{
-      const sb = getSB();
-      if(!sb) throw new Error("supabase_not_ready");
-
-      const { error } = await sb
-        .from(DB.rooms)
-        .update(patch)
-        .eq("id", roomId)
-        .eq(DB.roomOwnerId, State.ownerId);
-
-      if(error) throw error;
-      await loadLogements();
-      alert("✅ Modifié !");
-    }catch(e){
-      console.error(e);
-      alert("❌ " + (e?.message || e));
-    }
-  }
-
-  async function deleteLogement(roomId){
-    if(!requireLive("Supprimer un logement")) return;
-    if(!confirm("Supprimer ce logement ?")) return;
-
-    try{
-      const sb = getSB();
-      if(!sb) throw new Error("supabase_not_ready");
-
-      const { error } = await sb
-        .from(DB.rooms)
-        .delete()
-        .eq("id", roomId)
-        .eq(DB.roomOwnerId, State.ownerId);
-
-      if(error) throw error;
-      await loadLogements();
-      alert("✅ Supprimé !");
-    }catch(e){
-      console.error(e);
-      alert("❌ " + (e?.message || e));
-    }
-  }
-
-  function goCalendarRoom(roomId){
-    switchTab("calendrier");
-    loadCalendar(roomId);
-  }
-
-  /* =============================
-     RENDER: RESERVATIONS
-  ============================= */
-  function renderReservations(list){
-    const tb = document.getElementById("tableReservations");
-    if(!tb) return;
-
-    if(!list.length){
-      tb.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align:center;color:var(--muted)">
-            ${isLiveMode()
-              ? `Aucune réservation`
-              : `Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.`}
-          </td>
-        </tr>`;
-      return;
-    }
-
-    tb.innerHTML = list.map(r => {
-      const client = r?.[DB.resClientName] || "Client";
-      const logement = roomNameById(r?.[DB.resRoomId]);
-      const dates = `${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`;
-      const amount = moneyFCFA(r?.[DB.resAmount]);
-      const status = badgeForStatus(r);
-
-      return `
-        <tr>
-          <td>${esc(client)}<div style="color:var(--muted);font-size:0.85rem">${esc(r?.[DB.resPhone] || "")}</div></td>
-          <td>${esc(logement)}</td>
-          <td>${esc(dates)}</td>
-          <td><strong>${esc(amount)}</strong></td>
-          <td>${status}</td>
-          <td>
-            <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  function viewReservation(resId){
-    if(!requireLive("Ouvrir une réservation")) return;
-
-    const r = State.reservations.find(x => String(x.id) === String(resId));
-    if(!r) return alert("Réservation introuvable");
-
-    const lines = [
-      `Client: ${r?.[DB.resClientName] || "—"}`,
-      `Tel: ${r?.[DB.resPhone] || "—"}`,
-      `Logement: ${roomNameById(r?.[DB.resRoomId])}`,
-      `Dates: ${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`,
-      `Montant: ${moneyFCFA(r?.[DB.resAmount])}`,
-      `Status: ${r?.[DB.resStatus] || "—"}`,
-      `Paiement: ${r?.[DB.resPayStatus] || "—"}`
-    ];
-    alert(lines.join("\n"));
-  }
-
-  async function loadReservations(){
-    if(!isLiveMode()){
-      renderReservations([]);
-      return;
-    }
-
-    try{
-      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-      if(!State.rooms.length) State.rooms = await fetchRooms();
-      State.reservations = await fetchReservations();
-      renderReservations(State.reservations);
-      await loadDashboard();
-    }catch(e){
-      console.error(e);
-      setHTML("tableReservations",
-        `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${esc(e.message || e)}</td></tr>`
-      );
-    }
-  }
-
-  /* =============================
-     DASHBOARD
-  ============================= */
-  async function loadDashboard(){
-    if(!isLiveMode()){
-      renderPreviewShell(UX.reason || "preview");
-      return;
-    }
-
-    try{
-      if(!State.rooms.length) State.rooms = await fetchRooms();
-      if(!State.reservations.length) State.reservations = await fetchReservations();
-
-      const now = new Date();
-      const mStart = startOfMonth(now);
-      const mEnd = endOfMonth(now);
-      const mStartY = ymd(mStart);
-      const mEndY = ymd(mEnd);
-
-      let revenus = 0;
-      let activeCount = 0;
-      let upcoming = [];
-      let pending = [];
-
-      const daysInMonth = mEnd.getDate();
-      const busyDays = new Set();
-
-      for(const r of State.reservations){
-        const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
-        const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-        const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-        const roomId = r?.[DB.resRoomId];
-
-        if(ci >= mStartY && ci <= mEndY && (pay === "paid" || pay === "succeeded")){
-          revenus += Number(r?.[DB.resAmount] || 0);
-        }
-
-        if(reservationIsActive(r)) activeCount++;
-        if(reservationIsUpcoming(r)) upcoming.push(r);
-        if(reservationIsPending(r)) pending.push(r);
-
-        if(roomId && ci && co){
-          let d = new Date(ci + "T00:00:00");
-          const end = new Date(co + "T00:00:00");
-          while(d < end){
-            const dy = ymd(d);
-            if(dy >= mStartY && dy <= mEndY) busyDays.add(`${roomId}|${dy}`);
-            d.setDate(d.getDate()+1);
-          }
-        }
-      }
-
-      setText("revenusMois", moneyFCFA(revenus));
-      setText("resasActives", String(activeCount));
-
-      const actifs = State.rooms.filter(r =>
-        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
-      ).length;
-      setText("logementsActifs", String(actifs));
-
-      const denom = Math.max(1, actifs * daysInMonth);
-      const occ = Math.round((busyDays.size / denom) * 100);
-      setText("tauxOccupation", String(occ) + "%");
-
-      upcoming = upcoming
-        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
-        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
-        .slice(0,5);
-
-      setHTML("prochainesArrivees",
-        !upcoming.length
-          ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
-          : upcoming.map(r => `
-            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
-              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · <strong>${esc(moneyFCFA(r?.[DB.resAmount]))}</strong></div>
+        <div class="panel">
+          <div class="muted">État de l’app</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="k" id="statRooms">—</div>
+              <div class="l">logements affichés</div>
             </div>
-          `).join("")
-      );
-
-      pending = pending
-        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
-        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
-        .slice(0,5);
-
-      setHTML("demandesAttente",
-        !pending.length
-          ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
-          : pending.map(r => `
-            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
-              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · ${badgeForStatus(r)}</div>
+            <div class="stat">
+              <div class="k" id="statCities">—</div>
+              <div class="l">villes détectées</div>
             </div>
-          `).join("")
-      );
-
-      setHTML("statsDetails", `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
-          <div class="stat-card">
-            <div class="stat-label">Téléphone</div>
-            <div class="stat-value" style="font-size:1.15rem">${esc(State.phone || "—")}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Slug</div>
-            <div class="stat-value" style="font-size:1.15rem">${esc(State.slug || "—")}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Business code</div>
-            <div class="stat-value" style="font-size:1.15rem">${esc(State.business_code || "TEST")}</div>
-          </div>
-        </div>
-      `);
-
-      showAccessBanner("live");
-      hydrateHeader();
-
-    }catch(e){
-      console.error(e);
-    }
-  }
-
-  /* =============================
-     CALENDAR
-  ============================= */
-  function buildCalendar(monthDate, reservations, roomIdFilter=null){
-    const view = document.getElementById("calendarView");
-    if(!view) return;
-
-    const monthStart = startOfMonth(monthDate);
-    const monthEnd = endOfMonth(monthDate);
-    const firstDow = (monthStart.getDay() + 6) % 7;
-    const days = monthEnd.getDate();
-
-    const busy = new Set();
-    for(const r of reservations){
-      if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
-      const st = String(r?.[DB.resStatus] || "").toLowerCase();
-      if(st.includes("cancel")) continue;
-
-      const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-      const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-      if(!ci || !co) continue;
-
-      let d = new Date(ci + "T00:00:00");
-      const end = new Date(co + "T00:00:00");
-      while(d < end){
-        const key = ymd(d);
-        if(key.slice(0,7) === ymd(monthStart).slice(0,7)) busy.add(key);
-        d.setDate(d.getDate()+1);
-      }
-    }
-
-    const monthLabel = monthStart.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
-    const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(x=>`<div class="cal-dow">${x}</div>`).join("");
-
-    let cells = "";
-    for(let i=0;i<firstDow;i++) cells += `<div class="cal-day off"></div>`;
-
-    for(let day=1; day<=days; day++){
-      const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
-      const key = ymd(dt);
-      const isBusy = busy.has(key);
-      cells += `
-        <div class="cal-day ${isBusy ? "busy":"free"}">
-          <div class="n">${day}</div>
-          <div class="mini">${isBusy ? "Occupé" : "Libre"}</div>
-        </div>
-      `;
-    }
-
-    let filterLabel = "";
-    if(roomIdFilter){
-      filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${esc(roomNameById(roomIdFilter))}</strong></span>`;
-    }
-
-    view.innerHTML = `
-      <div class="cal-wrap">
-        <div class="cal-box">
-          <div class="cal-head">
-            <div style="font-weight:900;text-transform:capitalize">${esc(monthLabel)}${filterLabel}</div>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
-              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
-              ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="loadCalendar()">Tout voir</button>` : ``}
+            <div class="stat">
+              <div class="k" id="statRoute">OK</div>
+              <div class="l">rail room_slug</div>
             </div>
           </div>
-          <div class="cal-grid">${dows}${cells}</div>
         </div>
       </div>
-    `;
-  }
+    </section>
 
-  let _calCursor = new Date();
+    <div id="routeNotice" class="notice" style="display:none"></div>
+    <div id="errorBox" class="notice error" style="display:none"></div>
 
-  function calPrev(){
-    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()-1, 1);
-    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
-    else renderPreviewShell(UX.reason || "preview");
-  }
+    <div class="toolbar">
+      <label class="field">
+        <span>🔎</span>
+        <input id="searchInput" type="search" placeholder="Ville, titre, quartier, room_slug…" />
+      </label>
 
-  function calNext(){
-    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()+1, 1);
-    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
-    else renderPreviewShell(UX.reason || "preview");
-  }
+      <label class="field">
+        <span>📍</span>
+        <select id="citySelect">
+          <option value="">Toutes les villes</option>
+        </select>
+      </label>
 
-  async function loadCalendar(roomId=null){
-    if(!isLiveMode()){
-      renderPreviewShell(UX.reason || "preview");
-      return;
-    }
+      <button id="resetBtn" class="btn" type="button">Réinitialiser</button>
+    </div>
 
-    try{
-      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-      State._calRoom = roomId || null;
-      if(!State.rooms.length) State.rooms = await fetchRooms();
-      if(!State.reservations.length) State.reservations = await fetchReservations();
-      buildCalendar(_calCursor, State.reservations, roomId);
-    }catch(e){
-      console.error(e);
-      setHTML("calendarView", `<p style="color:var(--danger)">Erreur calendrier: ${esc(e.message || e)}</p>`);
-    }
-  }
+    <div id="cards" class="grid"></div>
 
-  /* =============================
-     PULSE TEST
-  ============================= */
-  async function pulseTest(){
-    if(!requireLive("Envoyer un test Pulse")) return;
+    <div class="footer-note">
+      DIGIY LOC • 0% commission • paiement direct au propriétaire
+    </div>
+  </div>
 
-    const msgEl = document.getElementById("pulseMsg");
-    if(!PULSE.enabled){
-      if(msgEl) msgEl.textContent = "Pulse désactivé.";
-      return;
-    }
+  <script>
+    (function () {
+      "use strict";
 
-    try{
-      if(msgEl) msgEl.textContent = "Envoi en cours…";
+      const SUPABASE_URL =
+        window.DIGIY_SUPABASE_URL ||
+        "https://wesqmwjjtsefyjnluosj.supabase.co";
 
-      const headers = { "Content-Type":"application/json" };
-      if(PULSE.apiKey) headers["x-api-key"] = PULSE.apiKey;
+      const SUPABASE_KEY =
+        window.DIGIY_SUPABASE_ANON_KEY ||
+        window.DIGIY_SUPABASE_ANON ||
+        "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
 
-      const body = {
-        channel: "whatsapp",
-        phone: State.phone,
-        business_code: State.business_code || "TEST",
-        pulse_kind: "TEST",
-        message: "Test DIGIY PULSE ✅"
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const els = {
+        cards: document.getElementById("cards"),
+        errorBox: document.getElementById("errorBox"),
+        routeNotice: document.getElementById("routeNotice"),
+        searchInput: document.getElementById("searchInput"),
+        citySelect: document.getElementById("citySelect"),
+        resetBtn: document.getElementById("resetBtn"),
+        statRooms: document.getElementById("statRooms"),
+        statCities: document.getElementById("statCities")
       };
 
-      if(!body.phone) throw new Error("Téléphone introuvable (session).");
+      const state = {
+        rows: [],
+        filtered: [],
+        requestedRoomSlug: "",
+        requestedLegacySlug: "",
+        selectedCity: "",
+        search: ""
+      };
 
-      const r = await fetch(PULSE.base + PULSE.endpoint, {
-        method:"POST",
-        headers,
-        body: JSON.stringify(body)
-      });
+      function safeText(v) {
+        return String(v == null ? "" : v).trim();
+      }
 
-      const j = await r.json().catch(()=> ({}));
-      if(!r.ok) throw new Error(j?.error || ("HTTP " + r.status));
+      function safeNum(v) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
 
-      if(msgEl) msgEl.textContent = "✅ Test envoyé";
-    }catch(e){
-      console.error(e);
-      if(msgEl) msgEl.textContent = "❌ " + (e.message || e);
-    }
-  }
+      function money(v) {
+        const n = safeNum(v);
+        if (n == null) return "—";
+        try {
+          return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
+        } catch {
+          return String(n) + " FCFA";
+        }
+      }
 
-  /* =============================
-     GLOBALS FOR INLINE BUTTONS
-  ============================= */
-  window.openEditLogement = openEditLogement;
-  window.goCalendarRoom = goCalendarRoom;
-  window.deleteLogement = deleteLogement;
-  window.viewReservation = viewReservation;
-  window.calPrev = calPrev;
-  window.calNext = calNext;
-  window.loadCalendar = loadCalendar;
+      function escapeHtml(str) {
+        return String(str == null ? "" : str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
 
-  /* =============================
-     INIT
-  ============================= */
-  async function init(){
-    bindNav();
-    bindActions();
-    bindTabs();
-    bindNdimbal();
-    refreshPublicButtons();
+      function qs(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
 
-    if(!window.DIGIY_GUARD){
-      fail("Guard absent ou non chargé.");
-      return;
-    }
+      function canonicalizeRoute() {
+        const params = new URLSearchParams(window.location.search);
+        const roomSlug = safeText(params.get("room_slug"));
+        const legacySlug = safeText(params.get("slug"));
 
-    try{
-      await waitGuardReady();
-    }catch(e){
-      fail("Guard non prêt.");
-      return;
-    }
+        state.requestedLegacySlug = legacySlug;
+        state.requestedRoomSlug = roomSlug || legacySlug;
 
-    const st = getGuardState();
-    State.phone = st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
-    State.slug = st.slug || getCurrentSlug() || "";
-    UX.reason = st.reason || "preview";
+        if (!roomSlug && legacySlug) {
+          params.set("room_slug", legacySlug);
+          params.delete("slug");
+          const next = `${location.pathname}?${params.toString()}`;
+          history.replaceState({}, "", next);
+        }
 
-    hydrateHeader();
-    activateApp();
+        if (state.requestedRoomSlug) {
+          els.routeNotice.style.display = "";
+          els.routeNotice.innerHTML =
+            `Rail ciblé : <strong>${escapeHtml(state.requestedRoomSlug)}</strong> ` +
+            `(canonique en <code>room_slug</code>${legacySlug && !roomSlug ? " • ancien slug absorbé proprement" : ""}).`;
+        }
+      }
 
-    // 1) Pas d’accès réel => aperçu propre
-    if(!st.access_ok){
-      renderPreviewShell(UX.reason || "preview");
-      return;
-    }
+      function arrayify(value) {
+        if (Array.isArray(value)) {
+          return value.map(v => safeText(v)).filter(Boolean);
+        }
 
-    // 2) Accès réel OK => on tente de résoudre le contexte owner
-    const ctx = await resolveOwnerContext();
+        if (typeof value === "string") {
+          const s = value.trim();
+          if (!s) return [];
+          try {
+            const parsed = JSON.parse(s);
+            if (Array.isArray(parsed)) {
+              return parsed.map(v => safeText(v)).filter(Boolean);
+            }
+          } catch (_) {}
+          return s
+            .split(",")
+            .map(v => v.trim())
+            .filter(Boolean);
+        }
 
-    if(!ctx?.owner_id){
-      UX.reason = "owner_unresolved";
-      renderPreviewShell("owner_unresolved");
-      return;
-    }
+        return [];
+      }
 
-    State.ownerId = ctx.owner_id;
-    State.business_code = ctx.business_code || "TEST";
-    State.business_name = ctx.business_name || "";
-    UX.mode = "live";
-    UX.reason = "ok";
+      function pickImages(row) {
+        const pool = [
+          row.cover_url,
+          row.cover_image,
+          row.cover_image_url,
+          row.image_url,
+          row.main_image_url,
+          row.hero_image_url,
+          row.photo_url,
+          row.thumbnail_url
+        ]
+        .map(v => safeText(v))
+        .filter(Boolean);
 
-    try { localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
-    try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
-    try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
-    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
-    try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
-    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
-    try { if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
-    try { if (State.business_name) sessionStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
+        const more = [
+          ...arrayify(row.image_urls),
+          ...arrayify(row.images),
+          ...arrayify(row.gallery),
+          ...arrayify(row.gallery_images),
+          ...arrayify(row.photos)
+        ];
 
-    hydrateHeader();
-    refreshPublicButtons();
+        return Array.from(new Set([...pool, ...more].filter(Boolean)));
+      }
 
-    try{
-      State.rooms = await fetchRooms();
-      State.reservations = await fetchReservations();
+      function isPublicish(row) {
+        const explicit = row.is_public;
+        if (explicit === true) return true;
+        if (explicit === false) return false;
 
-      renderRooms(State.rooms);
-      renderReservations(State.reservations);
-      buildCalendar(_calCursor, State.reservations, null);
-      await loadDashboard();
-    }catch(e){
-      console.warn("Init error:", e);
-      showAccessBanner("live");
-      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur initiale logements: ${esc(e.message || e)}</p>`);
-      setHTML("tableReservations", `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur initiale réservations: ${esc(e.message || e)}</td></tr>`);
-      setHTML("calendarView", `<p style="color:var(--danger)">Erreur initiale calendrier: ${esc(e.message || e)}</p>`);
-    }
-  }
+        const published = row.published;
+        if (published === true) return true;
+        if (published === false) return false;
 
-  init();
-})();
-</script>
+        const status = safeText(row.status).toLowerCase();
+        if (!status) return true;
+        if (["published", "public", "active", "online", "live"].includes(status)) return true;
+        if (["draft", "private", "hidden", "archived", "inactive", "disabled"].includes(status)) return false;
 
+        return true;
+      }
+
+      function normalizeRow(row, sourceName) {
+        const roomSlug =
+          safeText(row.room_slug) ||
+          safeText(row.slug) ||
+          safeText(row.workspace_slug) ||
+          safeText(row.public_slug) ||
+          safeText(row.room_code) ||
+          safeText(row.id);
+
+        const title =
+          safeText(row.public_title) ||
+          safeText(row.room_title) ||
+          safeText(row.title) ||
+          safeText(row.name) ||
+          safeText(row.label) ||
+          "Logement DIGIY";
+
+        const city =
+          safeText(row.city) ||
+          safeText(row.location_city) ||
+          safeText(row.town) ||
+          safeText(row.commune) ||
+          safeText(row.area);
+
+        const area =
+          safeText(row.area) ||
+          safeText(row.neighborhood) ||
+          safeText(row.quartier) ||
+          safeText(row.zone) ||
+          safeText(row.address_hint);
+
+        const type =
+          safeText(row.room_type) ||
+          safeText(row.type) ||
+          safeText(row.property_type) ||
+          safeText(row.housing_type);
+
+        const capacity =
+          safeNum(row.capacity) ??
+          safeNum(row.max_guests) ??
+          safeNum(row.guests_count) ??
+          safeNum(row.people_capacity);
+
+        const priceNight =
+          safeNum(row.price_night) ??
+          safeNum(row.night_price) ??
+          safeNum(row.price_per_night) ??
+          safeNum(row.nightly_price);
+
+        const priceWeek =
+          safeNum(row.price_week) ??
+          safeNum(row.week_price) ??
+          safeNum(row.price_per_week) ??
+          safeNum(row.weekly_price);
+
+        const priceMonth =
+          safeNum(row.price_month) ??
+          safeNum(row.month_price) ??
+          safeNum(row.price_per_month) ??
+          safeNum(row.monthly_price);
+
+        const phone =
+          safeText(row.whatsapp) ||
+          safeText(row.owner_whatsapp) ||
+          safeText(row.contact_phone) ||
+          safeText(row.owner_phone) ||
+          safeText(row.phone);
+
+        const description =
+          safeText(row.short_description) ||
+          safeText(row.summary) ||
+          safeText(row.description) ||
+          safeText(row.note_text) ||
+          safeText(row.public_note);
+
+        const images = pickImages(row);
+        const cover = images[0] || "";
+
+        return {
+          sourceName,
+          raw: row,
+          room_slug: roomSlug,
+          legacy_slug: safeText(row.slug),
+          title,
+          city,
+          area,
+          type,
+          capacity,
+          price_night: priceNight,
+          price_week: priceWeek,
+          price_month: priceMonth,
+          phone,
+          description,
+          cover,
+          images,
+          is_public: isPublicish(row)
+        };
+      }
+
+      function mergeRoom(base, next) {
+        if (!base) return next;
+        const merged = { ...base };
+
+        for (const [k, v] of Object.entries(next)) {
+          const isBlank =
+            merged[k] == null ||
+            merged[k] === "" ||
+            (Array.isArray(merged[k]) && merged[k].length === 0);
+
+          if (isBlank && v != null && v !== "") {
+            merged[k] = v;
+          }
+        }
+
+        if ((!merged.images || merged.images.length === 0) && next.images?.length) {
+          merged.images = next.images;
+          merged.cover = next.cover;
+        }
+
+        return merged;
+      }
+
+      async function fetchFromSource(sourceName) {
+        const { data, error } = await supabase
+          .from(sourceName)
+          .select("*")
+          .limit(300);
+
+        return { sourceName, data: Array.isArray(data) ? data : [], error };
+      }
+
+      async function loadRooms() {
+        const sources = [
+          "digiy_loc_public_rooms",
+          "digiy_loc_rooms_public",
+          "digiy_loc_rooms"
+        ];
+
+        const mergedMap = new Map();
+        const errors = [];
+
+        for (const sourceName of sources) {
+          try {
+            const res = await fetchFromSource(sourceName);
+
+            if (res.error) {
+              errors.push(`${sourceName} : ${res.error.message}`);
+              continue;
+            }
+
+            for (const row of res.data) {
+              const normalized = normalizeRow(row, sourceName);
+              if (!normalized.room_slug) continue;
+              const prev = mergedMap.get(normalized.room_slug);
+              mergedMap.set(normalized.room_slug, mergeRoom(prev, normalized));
+            }
+          } catch (err) {
+            errors.push(`${sourceName} : ${err?.message || String(err)}`);
+          }
+        }
+
+        let rooms = Array.from(mergedMap.values()).filter(x => x.is_public !== false);
+
+        rooms.sort((a, b) => {
+          const ap = a.price_night ?? Number.MAX_SAFE_INTEGER;
+          const bp = b.price_night ?? Number.MAX_SAFE_INTEGER;
+          return ap - bp;
+        });
+
+        state.rows = rooms;
+
+        if (!rooms.length && errors.length) {
+          showError(errors.join(" • "));
+        } else {
+          hideError();
+        }
+
+        hydrateCityFilter(rooms);
+        applyFilters();
+      }
+
+      function hydrateCityFilter(rows) {
+        const current = state.selectedCity || "";
+        const cities = Array.from(
+          new Set(
+            rows
+              .map(r => safeText(r.city))
+              .filter(Boolean)
+          )
+        ).sort((a, b) => a.localeCompare(b, "fr"));
+
+        els.citySelect.innerHTML = `<option value="">Toutes les villes</option>` +
+          cities.map(city => `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`).join("");
+
+        els.citySelect.value = current;
+        els.statCities.textContent = String(cities.length);
+      }
+
+      function matchesSearch(room, q) {
+        if (!q) return true;
+        const haystack = [
+          room.title,
+          room.city,
+          room.area,
+          room.type,
+          room.room_slug,
+          room.legacy_slug,
+          room.description
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(q.toLowerCase());
+      }
+
+      function applyFilters() {
+        const q = safeText(els.searchInput.value);
+        const city = safeText(els.citySelect.value);
+        state.search = q;
+        state.selectedCity = city;
+
+        let rows = [...state.rows];
+
+        if (state.requestedRoomSlug) {
+          rows = rows.filter(r =>
+            safeText(r.room_slug) === state.requestedRoomSlug ||
+            safeText(r.legacy_slug) === state.requestedRoomSlug
+          );
+        }
+
+        if (city) {
+          rows = rows.filter(r => safeText(r.city) === city);
+        }
+
+        if (q) {
+          rows = rows.filter(r => matchesSearch(r, q));
+        }
+
+        state.filtered = rows;
+        renderRooms(rows);
+
+        els.statRooms.textContent = String(rows.length);
+
+        if (state.requestedRoomSlug && rows.length === 0) {
+          els.cards.innerHTML = `
+            <div class="empty">
+              <div style="font-weight:900;font-size:1.05rem;margin-bottom:8px">Aucun logement trouvé</div>
+              <div style="margin-bottom:14px">
+                room_slug demandé : <strong>${escapeHtml(state.requestedRoomSlug)}</strong>
+              </div>
+              <div class="muted">
+                Le rail est bien recousu en <code>room_slug</code>, mais aucun logement public ne correspond actuellement à cette valeur.
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      function buildUrl(path, roomSlug) {
+        return `${path}?room_slug=${encodeURIComponent(roomSlug)}`;
+      }
+
+      function buildWhatsAppLink(phone, title, roomSlug) {
+        const clean = safeText(phone).replace(/[^\d]/g, "");
+        if (!clean) return "";
+        const txt = `Bonjour, je vous contacte pour le logement ${title} (${roomSlug}) vu sur DIGIY LOC.`;
+        return `https://wa.me/${clean}?text=${encodeURIComponent(txt)}`;
+      }
+
+      function renderRooms(rows) {
+        if (!rows.length) {
+          els.cards.innerHTML = `
+            <div class="empty">
+              <div style="font-weight:900;font-size:1.05rem;margin-bottom:8px">Aucun logement à afficher</div>
+              <div>Essaie une autre recherche ou remets la galerie à zéro.</div>
+            </div>
+          `;
+          return;
+        }
+
+        els.cards.innerHTML = rows.map(room => {
+          const imageHtml = room.cover
+            ? `<img src="${escapeHtml(room.cover)}" alt="${escapeHtml(room.title)}" loading="lazy" />`
+            : "";
+
+          const wa = buildWhatsAppLink(room.phone, room.title, room.room_slug);
+          const cityLine = [room.city, room.area].filter(Boolean).join(" • ");
+          const priceMain =
+            room.price_night != null ? money(room.price_night) :
+            room.price_week != null ? money(room.price_week) :
+            room.price_month != null ? money(room.price_month) :
+            "—";
+
+          const priceUnit =
+            room.price_night != null ? "par nuit" :
+            room.price_week != null ? "par semaine" :
+            room.price_month != null ? "par mois" :
+            "prix non précisé";
+
+          return `
+            <article class="card">
+              <div class="cover">
+                ${imageHtml}
+                <div class="cover-badges">
+                  ${room.type ? `<span class="tag">${escapeHtml(room.type)}</span>` : ""}
+                  ${room.capacity != null ? `<span class="tag">${escapeHtml(room.capacity)} pers.</span>` : ""}
+                  ${room.city ? `<span class="tag">${escapeHtml(room.city)}</span>` : ""}
+                </div>
+              </div>
+
+              <div class="body">
+                <div class="title-row">
+                  <div>
+                    <h3 class="title">${escapeHtml(room.title)}</h3>
+                    <div class="muted" style="margin-top:6px">${escapeHtml(cityLine || "Ville non précisée")}</div>
+                  </div>
+                  <div class="price">
+                    <strong>${escapeHtml(priceMain)}</strong>
+                    <span>${escapeHtml(priceUnit)}</span>
+                  </div>
+                </div>
+
+                <div class="desc">${escapeHtml(room.description || "Logement DIGIY LOC disponible en contact direct.")}</div>
+
+                <div class="meta">
+                  <div class="meta-box">
+                    <div class="label">Prix / semaine</div>
+                    <div class="value">${escapeHtml(money(room.price_week))}</div>
+                  </div>
+                  <div class="meta-box">
+                    <div class="label">Prix / mois</div>
+                    <div class="value">${escapeHtml(money(room.price_month))}</div>
+                  </div>
+                </div>
+
+                <div class="slug-box">room_slug : ${escapeHtml(room.room_slug)}</div>
+
+                <div class="actions">
+                  <a class="primary" href="${buildUrl("./fiche-abo.html", room.room_slug)}">Fiche abo</a>
+                  <a href="${buildUrl("./fiche.html", room.room_slug)}">Fiche publique</a>
+                  ${
+                    wa
+                      ? `<a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`
+                      : `<a href="${buildUrl("./fiche-abo.html", room.room_slug)}">Ouvrir</a>`
+                  }
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function showError(msg) {
+        els.errorBox.style.display = "";
+        els.errorBox.textContent = msg;
+      }
+
+      function hideError() {
+        els.errorBox.style.display = "none";
+        els.errorBox.textContent = "";
+      }
+
+      function bindEvents() {
+        els.searchInput.addEventListener("input", applyFilters);
+        els.citySelect.addEventListener("change", applyFilters);
+
+        els.resetBtn.addEventListener("click", () => {
+          els.searchInput.value = "";
+          els.citySelect.value = "";
+          state.search = "";
+          state.selectedCity = "";
+
+          const params = new URLSearchParams(window.location.search);
+          params.delete("room_slug");
+          params.delete("slug");
+          const next = params.toString()
+            ? `${location.pathname}?${params.toString()}`
+            : location.pathname;
+          history.replaceState({}, "", next);
+
+          state.requestedRoomSlug = "";
+          els.routeNotice.style.display = "none";
+          applyFilters();
+        });
+      }
+
+      async function init() {
+        canonicalizeRoute();
+        bindEvents();
+        await loadRooms();
+      }
+
+      init();
+    })();
+  </script>
 </body>
 </html>
