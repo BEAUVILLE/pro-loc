@@ -3,701 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>DIGIY LOC PRO — Fiche abonné</title>
-  <meta name="theme-color" content="#07140f" />
-  <meta name="description" content="DIGIY LOC PRO — fiche abonné, infos logement, tarifs, publication et médias." />
+  <title>DIGIY LOC — Fiche logement</title>
+  <meta name="theme-color" content="#020617" />
+  <meta name="description" content="DIGIY LOC — Fiche logement. Direct propriétaire, 0% commission." />
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
-    window.DIGIY_PUBLIC_LOC_BASE = "https://beauville.github.io/digiy-loc/";
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js"></script>
-
-  <style>
-    :root{
-      --bg:#07140f;
-      --card:#10241b;
-      --card2:#0b1b15;
-      --line:rgba(255,255,255,.10);
-      --text:#ecfff4;
-      --muted:rgba(236,255,244,.72);
-      --green:#22c55e;
-      --green2:#16a34a;
-      --gold:#facc15;
-      --gold2:#f59e0b;
-      --red:#ef4444;
-      --shadow:0 18px 48px rgba(0,0,0,.36);
-      --r:24px;
-      --r2:18px;
-      --max:1180px;
-    }
-
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    body{
-      min-height:100vh;
-      background:
-        radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 34%),
-        radial-gradient(circle at top right, rgba(250,204,21,.10), transparent 30%),
-        linear-gradient(180deg, #07140f 0%, #081712 100%);
-    }
-
-    .wrap{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:16px;
-    }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .logo{
-      width:44px;
-      height:44px;
-      border-radius:14px;
-      display:grid;
-      place-items:center;
-      font-size:24px;
-      background:linear-gradient(135deg,var(--gold),var(--gold2));
-      color:#1b1404;
-      box-shadow:0 10px 26px rgba(250,204,21,.28);
-    }
-
-    .brand h1{
-      margin:0;
-      font-size:20px;
-      line-height:1.1;
-      letter-spacing:.02em;
-    }
-
-    .brand p{
-      margin:4px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:700;
-    }
-
-    .top-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .linkbtn,.btn{
-      min-height:44px;
-      border:none;
-      border-radius:999px;
-      padding:11px 14px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      text-decoration:none;
-      font-weight:950;
-      font-size:14px;
-      cursor:pointer;
-      transition:transform .18s ease, filter .18s ease;
-      white-space:nowrap;
-    }
-
-    .linkbtn:hover,.btn:hover{filter:brightness(1.05)}
-    .linkbtn:active,.btn:active{transform:translateY(1px)}
-
-    .linkbtn.soft,.btn.soft{
-      background:rgba(255,255,255,.05);
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-
-    .linkbtn.gold,.btn.gold{
-      background:linear-gradient(135deg,var(--gold),var(--gold2));
-      color:#1b1404;
-      box-shadow:0 10px 24px rgba(250,204,21,.22);
-    }
-
-    .linkbtn.green,.btn.green{
-      background:linear-gradient(135deg,var(--green),var(--green2));
-      color:#04150b;
-      box-shadow:0 10px 24px rgba(34,197,94,.20);
-    }
-
-    .hero{
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      padding:16px;
-      background:
-        radial-gradient(circle at top left, rgba(34,197,94,.14), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
-    }
-
-    .hero-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .hero-title{
-      font-size:28px;
-      font-weight:1000;
-      line-height:1.08;
-      margin:0;
-      color:#f5fff8;
-    }
-
-    .hero-sub{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-      max-width:760px;
-      font-weight:700;
-    }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:12px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:950;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-    }
-
-    .chip.green{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#bbf7d0;
-    }
-
-    .chip.gold{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
-
-    .shell{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:16px;
-    }
-
-    @media (max-width: 980px){
-      .shell{grid-template-columns:1fr}
-    }
-
-    .panel{
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .panel-head{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      background:rgba(255,255,255,.03);
-    }
-
-    .panel-head h2{
-      margin:0;
-      font-size:18px;
-      line-height:1.2;
-    }
-
-    .panel-head p{
-      margin:4px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:700;
-    }
-
-    .panel-body{
-      padding:16px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    @media (max-width: 720px){
-      .grid{grid-template-columns:1fr}
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:7px;
-    }
-
-    .field.full{
-      grid-column:1 / -1;
-    }
-
-    label{
-      font-size:13px;
-      font-weight:950;
-      color:#f4fff8;
-    }
-
-    input,select,textarea{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
-      color:var(--text);
-      padding:12px 13px;
-      outline:none;
-      font-size:14px;
-      font-weight:800;
-    }
-
-    textarea{
-      min-height:120px;
-      resize:vertical;
-    }
-
-    input::placeholder, textarea::placeholder{
-      color:rgba(236,255,244,.42);
-      font-weight:700;
-    }
-
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-      font-weight:700;
-    }
-
-    .switchline{
-      min-height:52px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:rgba(255,255,255,.03);
-      padding:12px 14px;
-    }
-
-    .switchline strong{
-      font-size:14px;
-    }
-
-    .switchline span{
-      display:block;
-      color:var(--muted);
-      font-size:12px;
-      margin-top:4px;
-      font-weight:700;
-      line-height:1.4;
-    }
-
-    .switchline input[type="checkbox"]{
-      width:22px;
-      height:22px;
-      margin:0;
-      accent-color:var(--green);
-      cursor:pointer;
-    }
-
-    .preview-card{
-      border:1px solid var(--line);
-      border-radius:20px;
-      overflow:hidden;
-      background:rgba(255,255,255,.03);
-    }
-
-    .preview-cover{
-      height:240px;
-      background:#0b1b15;
-      border-bottom:1px solid var(--line);
-    }
-
-    .preview-cover img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .preview-body{
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .preview-title{
-      font-size:22px;
-      font-weight:1000;
-      color:#fde68a;
-      line-height:1.08;
-    }
-
-    .preview-sub{
-      color:var(--muted);
-      font-size:14px;
-      font-weight:800;
-    }
-
-    .mini-chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .mini-chip{
-      font-size:12px;
-      font-weight:950;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:5px 9px;
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-    }
-
-    .mini-chip.green{
-      color:#bbf7d0;
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-    }
-
-    .statebox{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .statebox .line{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-      font-size:14px;
-      font-weight:850;
-      color:#f4fff8;
-    }
-
-    .statebox .line small{
-      color:var(--muted);
-      font-size:12px;
-      font-weight:700;
-    }
-
-    .status{
-      margin-top:14px;
-      padding:12px 14px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      white-space:pre-wrap;
-      font-size:13px;
-      line-height:1.5;
-      font-weight:850;
-      display:none;
-    }
-
-    .status.show{display:block}
-    .status.ok{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#bbf7d0;
-    }
-
-    .status.bad{
-      border-color:rgba(239,68,68,.35);
-      background:rgba(239,68,68,.10);
-      color:#fecaca;
-    }
-
-    .status.warn{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
-
-    .actions-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .soft-box{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      padding:14px;
-      font-size:13px;
-      line-height:1.6;
-      color:var(--muted);
-      font-weight:750;
-    }
-
-    .soft-box strong{
-      color:#f4fff8;
-    }
-
-    .divider{
-      height:1px;
-      background:var(--line);
-      margin:14px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">🏠</div>
-        <div>
-          <h1>DIGIY LOC PRO — Fiche abonné</h1>
-          <p>Infos logement • tarifs • publication • médias WordPress</p>
-        </div>
-      </div>
-
-      <div class="top-actions">
-        <a class="linkbtn soft" id="btnPin" href="./pin.html">🔐 PIN</a>
-        <a class="linkbtn soft" id="btnCockpit" href="./cockpit.html">🏠 Cockpit</a>
-        <a class="linkbtn soft" id="btnPublic" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">🌍 Voir public</a>
-        <a class="linkbtn gold" href="https://digiylyfe.com/" target="_blank" rel="noopener noreferrer">← Site</a>
-      </div>
-    </div>
-
-    <section class="hero">
-      <div class="hero-row">
-        <div>
-          <h2 class="hero-title">Ta fiche publique LOC<br>part d’ici.</h2>
-          <p class="hero-sub">
-            Cette page sert à régler ton logement côté PRO. Les visiteurs voient ensuite la fiche publique.
-            Les photos peuvent être envoyées à DIGIY, puis posées proprement dans la bibliothèque WordPress avant publication.
-          </p>
-
-          <div class="chips">
-            <div class="chip green" id="chipAccess">accès : vérification…</div>
-            <div class="chip" id="chipSlug">slug : —</div>
-            <div class="chip gold" id="chipPhone">phone : —</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="shell">
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <h2>Fiche logement</h2>
-            <p>Nom, zone, type, description, téléphone, tarifs et publication.</p>
-          </div>
-        </div>
-
-        <div class="panel-body">
-          <div class="grid">
-            <div class="field full">
-              <label for="nom">Nom du logement</label>
-              <input id="nom" placeholder="Ex : Villa Saly Soleil" />
-            </div>
-
-            <div class="field">
-              <label for="adresse">Ville / zone</label>
-              <input id="adresse" placeholder="Ex : Saly, Ngaparou, Mbour…" />
-            </div>
-
-            <div class="field">
-              <label for="type_logement">Type de logement</label>
-              <select id="type_logement">
-                <option value="">Choisir</option>
-                <option value="Villa">Villa</option>
-                <option value="Appartement">Appartement</option>
-                <option value="Studio">Studio</option>
-                <option value="Chambre">Chambre</option>
-                <option value="Maison">Maison</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="phone">Téléphone WhatsApp</label>
-              <input id="phone" placeholder="22177XXXXXXX" />
-            </div>
-
-            <div class="field">
-              <label for="personnes_max">Capacité max</label>
-              <input id="personnes_max" type="number" min="1" step="1" placeholder="Ex : 4" />
-            </div>
-
-            <div class="field full">
-              <label for="description">Description</label>
-              <textarea id="description" placeholder="Présente ton logement simplement : ambiance, plage, quartier, points forts…"></textarea>
-            </div>
-
-            <div class="field">
-              <label for="prix_nuit">Prix / nuit (FCFA)</label>
-              <input id="prix_nuit" type="number" min="0" step="1000" placeholder="Ex : 25000" />
-            </div>
-
-            <div class="field">
-              <label for="prix_semaine">Prix / semaine (FCFA)</label>
-              <input id="prix_semaine" type="number" min="0" step="1000" placeholder="Ex : 150000" />
-            </div>
-
-            <div class="field">
-              <label for="prix_mois">Prix / mois (FCFA)</label>
-              <input id="prix_mois" type="number" min="0" step="1000" placeholder="Ex : 450000" />
-            </div>
-
-            <div class="field">
-              <label for="status">Statut</label>
-              <select id="status">
-                <option value="active">active</option>
-                <option value="actif">actif</option>
-                <option value="inactive">inactive</option>
-                <option value="draft">draft</option>
-              </select>
-            </div>
-
-            <div class="field full">
-              <div class="switchline">
-                <div>
-                  <strong>Publier la fiche</strong>
-                  <span>Quand c’est activé, la fiche peut apparaître côté public si le statut est actif.</span>
-                </div>
-                <input id="is_public" type="checkbox" />
-              </div>
-            </div>
-
-            <div class="field full">
-              <label for="photo_url">Photo principale (URL WordPress)</label>
-              <input id="photo_url" placeholder="https://ton-site.com/wp-content/uploads/.../cover.webp" />
-              <div class="hint">Tu peux laisser DIGIY gérer les médias pour toi. Si besoin, envoie les photos à l’équipe puis colle l’URL finale ici.</div>
-            </div>
-
-            <div class="field full">
-              <label for="gallery_urls">Galerie photos (1 URL par ligne)</label>
-              <textarea id="gallery_urls" placeholder="https://ton-site.com/wp-content/uploads/.../photo-1.webp&#10;https://ton-site.com/wp-content/uploads/.../photo-2.webp"></textarea>
-              <div class="hint">Best effort : la page tente d’écrire la galerie dans une colonne média compatible si elle existe déjà côté base.</div>
-            </div>
-
-            <div class="field full">
-              <label for="public_url">URL publique manuelle (optionnel)</label>
-              <input id="public_url" placeholder="Sinon la fiche publique sera construite automatiquement avec le slug." />
-            </div>
-          </div>
-
-          <div class="actions-row">
-            <button class="btn green" id="btnSave" type="button">💾 Enregistrer la fiche</button>
-            <button class="btn soft" id="btnReload" type="button">↻ Recharger</button>
-            <button class="btn soft" id="btnCopyPublic" type="button">🔗 Copier lien public</button>
-            <button class="btn soft" id="btnSupport" type="button">💬 Envoyer photos à DIGIY</button>
-          </div>
-
-          <div class="status" id="statusBox"></div>
-        </div>
-      </section>
-
-      <aside class="panel">
-        <div class="panel-head">
-          <div>
-            <h2>Aperçu & état</h2>
-            <p>Vue rapide de ta fiche et de son rail public.</p>
-          </div>
-        </div>
-
-        <div class="panel-body">
-          <div class="preview-card">
-            <div class="preview-cover">
-              <img id="previewImg" alt="Aperçu logement" src="" />
-            </div>
-            <div class="preview-body">
-              <div class="preview-title" id="previewTitle">Nom logement</div>
-              <div class="preview-sub" id="previewSub">Ville • Type</div>
-              <div class="mini-chips">
-                <div class="mini-chip green" id="previewPrice">Prix / nuit : —</div>
-                <div class="mini-chip" id="previewCap">Capacité : —</div>
-                <div class="mini-chip" id="previewPub">Publication : —</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="statebox">
-            <div class="line">
-              <div>
-                Slug<br><small>identifiant public</small>
-              </div>
-              <div id="stateSlug">—</div>
-            </div>
-            <div class="line">
-              <div>
-                Téléphone<br><small>ligne propriétaire</small>
-              </div>
-              <div id="statePhone">—</div>
-            </div>
-            <div class="line">
-              <div>
-                Lien public<br><small>fiche côté visiteur</small>
-              </div>
-              <div><a id="statePublicLink" href="#" target="_blank" rel="noopener noreferrer" style="color:#fde68a;text-decoration:none;font-weight:950">ouvrir</a></div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="soft-box">
-            <strong>Conseil DIGIY</strong><br>
-            Le plus confortable pour l’abonné est d’envoyer ses photos à DIGIY. Ensuite, tu les poses dans WordPress,
-            tu récupères les URLs, puis tu les colles ici. Comme ça tu gardes des visuels propres, légers et homogènes.
-          </div>
-        </div>
-      </aside>
-    </div>
-  </div>
-
   <script>
-    const sb = window.supabase.createClient(
+    const sb = supabase.createClient(
       window.DIGIY_SUPABASE_URL,
       window.DIGIY_SUPABASE_ANON_KEY,
       {
@@ -708,446 +26,1863 @@
         }
       }
     );
-    window.sb = sb;
+  </script>
 
-    const TEAM_WA = "+221771342889";
-    const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
+  <style>
+    :root{
+      --bg:#020617;
+      --bg-soft:#020818;
+      --card:#030712;
+      --accent:#facc15;
+      --accent-soft:#f97316;
+      --accent-green:#22c55e;
+      --ink:#f9fafb;
+      --muted:#cbd5f5;
+      --line:rgba(148,163,184,0.22);
+      --shadow-soft:0 20px 45px rgba(15,23,42,0.9);
+      --glass:rgba(2,6,23,.68);
+    }
 
-    const els = {
-      chipAccess: document.getElementById("chipAccess"),
-      chipSlug: document.getElementById("chipSlug"),
-      chipPhone: document.getElementById("chipPhone"),
+    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
 
-      nom: document.getElementById("nom"),
-      adresse: document.getElementById("adresse"),
-      type_logement: document.getElementById("type_logement"),
-      phone: document.getElementById("phone"),
-      personnes_max: document.getElementById("personnes_max"),
-      description: document.getElementById("description"),
-      prix_nuit: document.getElementById("prix_nuit"),
-      prix_semaine: document.getElementById("prix_semaine"),
-      prix_mois: document.getElementById("prix_mois"),
-      status: document.getElementById("status"),
-      is_public: document.getElementById("is_public"),
-      photo_url: document.getElementById("photo_url"),
-      gallery_urls: document.getElementById("gallery_urls"),
-      public_url: document.getElementById("public_url"),
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top,rgba(250,204,21,0.16),transparent 60%),
+        radial-gradient(circle at bottom,rgba(34,197,94,0.16),transparent 55%),
+        var(--bg);
+      color:var(--ink);
+      display:flex;
+      justify-content:center;
+      padding:10px;
+      font-size:16px;
+    }
 
-      previewImg: document.getElementById("previewImg"),
-      previewTitle: document.getElementById("previewTitle"),
-      previewSub: document.getElementById("previewSub"),
-      previewPrice: document.getElementById("previewPrice"),
-      previewCap: document.getElementById("previewCap"),
-      previewPub: document.getElementById("previewPub"),
+    .app{
+      width:100%;
+      max-width:1100px;
+      min-height:100vh;
+      background:linear-gradient(135deg,#020617 0%,#020818 50%,#020617 100%);
+      border-radius:24px;
+      border:1px solid rgba(148,163,184,0.25);
+      box-shadow:var(--shadow-soft);
+      padding:16px 16px 22px;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+      overflow:hidden;
+    }
 
-      stateSlug: document.getElementById("stateSlug"),
-      statePhone: document.getElementById("statePhone"),
-      statePublicLink: document.getElementById("statePublicLink"),
+    .app::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0% 0%,rgba(250,204,21,0.14),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(34,197,94,0.14),transparent 45%);
+      opacity:0.8;
+      pointer-events:none;
+    }
 
-      btnPin: document.getElementById("btnPin"),
-      btnCockpit: document.getElementById("btnCockpit"),
-      btnPublic: document.getElementById("btnPublic"),
-      btnSave: document.getElementById("btnSave"),
-      btnReload: document.getElementById("btnReload"),
-      btnCopyPublic: document.getElementById("btnCopyPublic"),
-      btnSupport: document.getElementById("btnSupport"),
+    header{
+      position:relative;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
 
-      statusBox: document.getElementById("statusBox")
-    };
+    .brand{display:flex;align-items:center;gap:10px}
 
-    let SESSION = {
+    .brand-logo{
+      width:42px;height:42px;border-radius:14px;
+      background:radial-gradient(circle at 30% 0%,#facc15,#f97316);
+      display:flex;align-items:center;justify-content:center;
+      font-size:24px;
+      box-shadow:0 12px 30px rgba(234,179,8,0.65);
+    }
+
+    .brand-text-title{
+      font-size:20px;font-weight:900;letter-spacing:0.09em;
+      text-transform:uppercase;color:var(--accent-green);
+    }
+
+    .brand-text-sub{font-size:14px;color:var(--muted);font-weight:650}
+
+    .back-link{
+      font-size:13px;color:var(--muted);text-decoration:none;
+      background:rgba(15,23,42,0.9);
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.6);
+      padding:8px 14px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    .back-link:hover{border-color:var(--accent);color:var(--accent)}
+
+    .shell{
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:1.25fr .75fr;
+      gap:16px;
+      margin-top:10px;
+    }
+
+    @media(max-width:980px){
+      .shell{grid-template-columns:1fr}
+    }
+
+    .panel{
+      background:radial-gradient(circle at top,rgba(15,23,42,0.98),#020617);
+      border-radius:24px;
+      border:1px solid rgba(30,64,175,0.7);
+      box-shadow:0 14px 34px rgba(15,23,42,0.95);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .cover{
+      width:100%;
+      height:360px;
+      background:#0b1220;
+      border-bottom:1px solid rgba(148,163,184,0.18);
+      position:relative;
+    }
+
+    @media(max-width:640px){
+      .cover{height:280px}
+    }
+
+    .cover img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .coverFade{
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(180deg, rgba(2,6,23,.08) 0%, rgba(2,6,23,.75) 88%, rgba(2,6,23,.95) 100%);
+      pointer-events:none;
+    }
+
+    .coverTop{
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .title{
+      font-size:28px;
+      font-weight:950;
+      line-height:1.1;
+      color:var(--accent);
+      text-shadow:0 10px 20px rgba(0,0,0,.35);
+    }
+
+    .sub{
+      font-size:15px;
+      color:#e5e7eb;
+      font-weight:750;
+      opacity:.95;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .chip{
+      width:max-content;
+      padding:6px 10px;
+      font-size:12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(2,6,23,.55);
+      color:#e5e7eb;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .chip.green{
+      border-color:rgba(34,197,94,.55);
+      color:#bbf7d0;
+      background:rgba(34,197,94,.10);
+    }
+
+    .chip.blue{
+      border-color:rgba(30,64,175,.60);
+      color:#c7d2fe;
+      background:rgba(30,64,175,.12);
+    }
+
+    .body{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .desc{
+      font-size:15px;
+      line-height:1.7;
+      color:#f3f4f6;
+      font-weight:650;
+      white-space:pre-wrap;
+    }
+
+    .galleryWrap{
+      padding:12px 14px 16px;
+      border-top:1px solid rgba(148,163,184,0.15);
+      background:rgba(2,6,23,.18);
+    }
+
+    .galleryTitle{
+      font-size:13px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#bbf7d0;
+      margin-bottom:10px;
+    }
+
+    .gallery{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom:6px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .gItem{
+      flex:0 0 auto;
+      width:220px;
+      height:150px;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(30,64,175,0.6);
+      background:#0b1220;
+      scroll-snap-align:start;
+      position:relative;
+      cursor:pointer;
+    }
+
+    .gItem img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .gHint{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      margin-top:8px;
+      opacity:.95;
+    }
+
+    .side{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .box{
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(2,6,23,.55);
+      border-radius:18px;
+      padding:12px;
+    }
+
+    .kicker{
+      font-size:12px;
+      font-weight:950;
+      color:#bbf7d0;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      opacity:.95;
+    }
+
+    .big{
+      margin-top:6px;
+      font-size:18px;
+      font-weight:950;
+      line-height:1.2;
+      color:#facc15;
+    }
+
+    .txt{
+      margin-top:8px;
+      font-size:14px;
+      color:#e5e7eb;
+      line-height:1.6;
+      font-weight:650;
+    }
+
+    .infoGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    @media(max-width:560px){
+      .infoGrid{grid-template-columns:1fr}
+    }
+
+    .info{
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(15,23,42,.35);
+      border-radius:16px;
+      padding:10px 12px;
+    }
+
+    .info .k{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .info .v{
+      margin-top:6px;
+      font-size:18px;
+      font-weight:950;
+      color:#fff;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:14px;
+      font-weight:950;
+      cursor:pointer;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      text-decoration:none;
+      transition:transform .18s ease;
+      flex:1;
+      min-height:44px;
+      white-space:nowrap;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
+    }
+
+    .btn:active{transform:scale(.99)}
+
+    .btn-primary{
+      background:linear-gradient(135deg,#facc15,#f97316);
+      color:#111;
+      box-shadow:0 7px 18px rgba(250,204,21,0.55);
+    }
+
+    .btn-wa{
+      background:rgba(22,163,74,0.2);
+      color:#bbf7d0;
+      border:1px solid rgba(34,197,94,0.85);
+    }
+
+    .btn-ghost{
+      background:rgba(15,23,42,0.75);
+      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,0.28);
+      box-shadow:none;
+    }
+
+    .warn{
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(250,204,21,.08);
+      color:#fde68a;
+      border-radius:18px;
+      padding:12px;
+      font-weight:850;
+      line-height:1.55;
+    }
+
+    .err{
+      border:1px solid rgba(248,113,113,.35);
+      background:rgba(248,113,113,.08);
+      color:#fecaca;
+      border-radius:18px;
+      padding:12px;
+      font-weight:900;
+      line-height:1.55;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.72);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:14px;
+      z-index:9999;
+    }
+
+    .overlay.show{display:flex}
+
+    .lightbox{
+      width:100%;
+      max-width:980px;
+      border-radius:22px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(2,6,23,.92);
+      box-shadow:0 30px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .lbTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(148,163,184,.18);
+    }
+
+    .lbTitle{
+      font-weight:950;
+      color:#e5e7eb;
+      font-size:14px;
+    }
+
+    .lbClose{
+      background:rgba(15,23,42,.75);
+      border:1px solid rgba(148,163,184,.28);
+      color:#e5e7eb;
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:950;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .lbImg{
+      width:100%;
+      max-height:74vh;
+      background:#0b1220;
+    }
+
+    .lbImg img{
+      width:100%;
+      height:100%;
+      max-height:74vh;
+      object-fit:contain;
+      display:block;
+    }
+
+    footer{
+      margin-top:18px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:750;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:6px;
+      position:relative;
+      z-index:2;
+    }
+
+    footer span{color:var(--accent);font-weight:950}
+  </style>
+</head>
+
+<body>
+
+<div id="loading">
+  <div class="box">
+    <div class="t">🔒 Vérification accès…</div>
+    <div class="s">DIGIY LOC PRO protège ton cockpit (PIN / abonnement / slug).</div>
+    <div class="s" style="margin-top:.75rem;color:rgba(250,204,21,.9)">
+      Astuce terrain : si tu ne sais pas te placer, ouvre <b>NDIMBAL</b> et partage ton point GPS 📍
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="container">
+
+    <div class="header">
+      <div>
+        <h1>🏠 DIGIY LOC PRO</h1>
+        <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
+          <span id="userName">Gestionnaire</span> ·
+          <span id="userPhone">—</span>
+        </p>
+
+        <div class="miniNav">
+          <a class="btn btn-secondary" data-go="./app.html" data-mode="replace" href="#">🏠 Cockpit</a>
+          <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
+          <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
+          <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
+          <a class="btn btn-secondary" data-go="./wave.html" href="#">💳 Déclarations Wave</a>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-primary" data-go="./fiche-abo.html" type="button">
+          🏗️ FICHE ABONNÉ
+        </button>
+
+        <a class="btn btn-secondary" id="btnPublicRoom" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
+          🌍 Voir la fiche publique
+        </a>
+
+        <a class="btn btn-secondary" id="btnPublicIndex" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
+          🌐 Voir la vitrine LOC
+        </a>
+
+        <a class="btn btn-secondary" href="https://digiylyfe.com/" target="_blank" rel="noopener noreferrer">
+          ← Retour au site
+        </a>
+
+        <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
+          🔗 Liens / QR
+        </button>
+
+        <button class="btn btn-secondary" data-go="./photos.html" type="button">
+          🖼️ Photos
+        </button>
+
+        <button class="btn btn-secondary" data-go="./ndimbal.html" id="quickNdimbal" type="button">
+          ♾️ NDIMBAL
+        </button>
+
+        <button class="btn btn-danger" data-action="logout" type="button">
+          🚪 Déconnexion
+        </button>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
+      <div class="tab" data-tab="logements">🏠 Mes logements</div>
+      <div class="tab" data-tab="reservations">📅 Réservations</div>
+      <div class="tab" data-tab="calendrier">📆 Calendrier</div>
+      <div class="tab" data-tab="stats">📈 Statistiques</div>
+    </div>
+
+    <div id="dashboard" class="content active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Revenus ce mois</div>
+          <div class="stat-value" id="revenusMois">0 F</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Taux d'occupation</div>
+          <div class="stat-value" id="tauxOccupation">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Réservations actives</div>
+          <div class="stat-value" id="resasActives">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Logements actifs</div>
+          <div class="stat-value" id="logementsActifs">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Prochaines arrivées</h2>
+        <div id="prochainesArrivees">
+          <p style="color:var(--muted)">Chargement...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>⏳ Demandes en attente</h2>
+        <div id="demandesAttente">
+          <p style="color:var(--muted)">Chargement...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📲 Pulse (Test rapide)</h2>
+        <p style="color:var(--muted);margin-bottom:1rem">
+          Test d'envoi via l'API. (Désactive PULSE.enabled si tu veux.)
+        </p>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
+          <span id="pulseMsg" style="color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="logements" class="content">
+      <div class="card">
+        <h2>🏠 Mes logements</h2>
+        <div id="listeLogements"></div>
+      </div>
+    </div>
+
+    <div id="reservations" class="content">
+      <div class="card">
+        <h2>📅 Toutes les réservations</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Logement</th>
+                <th>Dates</th>
+                <th>Montant</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableReservations">
+              <tr>
+                <td colspan="6" style="text-align:center;color:var(--muted)">
+                  Chargement...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="calendrier" class="content">
+      <div class="card">
+        <h2>📆 Calendrier de disponibilité</h2>
+        <div id="calendarView">
+          <p style="color:var(--muted)">Chargement...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="stats" class="content">
+      <div class="card">
+        <h2>📈 Statistiques détaillées</h2>
+        <div id="statsDetails">
+          <p>Statistiques à venir...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const MODULE = "LOC";
+  const PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
+
+  const DB = {
+    rooms: "digiy_loc_rooms",
+    reservations: "digiy_loc_reservations",
+
+    roomOwnerId: "owner_id",
+    roomTitle: "nom",
+    roomAddress: "adresse",
+    roomMaxPeople: "personnes_max",
+    roomPriceNight: "prix_nuit",
+    roomPriceWeek: "prix_semaine",
+    roomPriceMonth: "prix_mois",
+    roomDesc: "description",
+    roomPhoto: "photo_url",
+    roomStatus: "status",
+
+    resOwnerId: "owner_id",
+    resRoomId: "room_id",
+    resClientName: "client_name",
+    resPhone: "phone",
+    resCheckin: "checkin",
+    resCheckout: "checkout",
+    resAmount: "amount_total",
+    resStatus: "status",
+    resPayStatus: "payment_status",
+  };
+
+  const PULSE = {
+    enabled: true,
+    base: "https://api.digiylyfe.com",
+    apiKey: "",
+    endpoint: "/loc/pulse/send"
+  };
+
+  const State = {
+    ownerId: null,
+    phone: "",
+    slug: "",
+    business_code: "TEST",
+    business_name: "",
+    rooms: [],
+    reservations: [],
+    _calRoom: null
+  };
+
+  const UX = {
+    mode: "preview",
+    reason: "booting"
+  };
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function safeImg(url){
+    const u = String(url || "").trim();
+    if(!u) return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+    if(/^https?:\/\//i.test(u)) return u;
+    return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
+  }
+
+  function moneyFCFA(x){
+    const n = Number(x || 0);
+    return n.toLocaleString("fr-FR") + " F";
+  }
+
+  function fmtDate(d){
+    if(!d) return "—";
+    try { return new Date(d).toLocaleDateString("fr-FR"); }
+    catch { return String(d); }
+  }
+
+  function startOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth(), 1); }
+  function endOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth()+1, 0); }
+
+  function ymd(dt){
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,"0");
+    const d = String(dt.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function todayYMD(){
+    const t = new Date();
+    return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate()));
+  }
+
+  function setText(id, value){
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function setHTML(id, html){
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
       slug: "",
       phone: "",
-      accessOk: false
+      reason: "guard_missing"
     };
+  }
 
-    function safe(v){ return String(v ?? "").trim(); }
-    function num(v){
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    }
-    function money(v){
-      const n = Number(v);
-      if (!Number.isFinite(n) || n <= 0) return "—";
-      return n.toLocaleString("fr-FR") + " FCFA";
-    }
-    function waDigits(phone){ return String(phone || "").replace(/\D/g, ""); }
-    function safeImg(v){ return safe(v) || FALLBACK_IMG; }
+  async function waitGuardReady(){
+    const guard = window.DIGIY_GUARD;
+    if (!guard) throw new Error("guard_missing");
 
-    function openWa(phone, message){
-      const digits = waDigits(phone);
-      if (!digits) return false;
-      const url = "https://wa.me/" + digits + "?text=" + encodeURIComponent(message || "");
-      window.open(url, "_blank", "noopener,noreferrer");
-      return true;
+    if (guard.ready && typeof guard.ready.then === "function") {
+      await guard.ready;
+      return;
     }
 
-    function showStatus(msg, type){
-      els.statusBox.className = "status show " + (type || "");
-      els.statusBox.textContent = msg || "";
+    if (typeof guard.ready === "function") {
+      const maybe = guard.ready();
+      if (maybe && typeof maybe.then === "function") {
+        await maybe;
+      }
+      return;
     }
 
-    function hideStatus(){
-      els.statusBox.className = "status";
-      els.statusBox.textContent = "";
+    throw new Error("guard_not_ready");
+  }
+
+  function getSB(){
+    return window.DIGIY_GUARD?.getSb?.()
+      || window.DIGIY_GUARD?.sb
+      || window.sb
+      || null;
+  }
+
+  function sbReady(){
+    const sb = getSB();
+    return !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
+  }
+
+  function isLiveMode(){
+    return UX.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
+  }
+
+  function getCurrentSlug(){
+    const st = getGuardState();
+    if (st?.slug) return String(st.slug).trim();
+
+    try {
+      const u = new URL(location.href);
+      const qsSlug = u.searchParams.get("slug") || "";
+      if (qsSlug) return qsSlug.trim();
+    } catch {}
+
+    return (
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      ""
+    ).trim();
+  }
+
+  function publicIndexUrl(){
+    return String(window.DIGIY_PUBLIC_LOC_BASE || "https://beauville.github.io/digiy-loc/").trim();
+  }
+
+  function publicRoomUrl(){
+    const slug = getCurrentSlug();
+    if (!slug) return publicIndexUrl();
+    const u = new URL("fiche.html", publicIndexUrl());
+    u.searchParams.set("slug", slug);
+    return u.toString();
+  }
+
+  function refreshPublicButtons(){
+    const roomBtn = document.getElementById("btnPublicRoom");
+    const indexBtn = document.getElementById("btnPublicIndex");
+    const slug = getCurrentSlug();
+
+    if (roomBtn) {
+      roomBtn.href = publicRoomUrl();
+      roomBtn.textContent = slug ? "🌍 Voir la fiche publique" : "🌍 Voir le site public";
     }
 
-    function getSlugFromAnywhere(){
-      const urlSlug = safe(new URL(location.href).searchParams.get("slug"));
-      const g = window.DIGIY_GUARD || {};
-      const st = g.state || {};
-      return (
-        urlSlug ||
-        safe(st.slug) ||
-        safe(st.sessionSlug) ||
-        safe(localStorage.getItem("digiy_loc_slug")) ||
-        safe(sessionStorage.getItem("digiy_loc_slug"))
+    if (indexBtn) {
+      indexBtn.href = publicIndexUrl();
+    }
+  }
+
+  function withSlug(url){
+    const slug = getCurrentSlug();
+    if (!slug) return url;
+
+    try{
+      const u = new URL(url, location.href);
+      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "slug=" + encodeURIComponent(slug);
+    }
+  }
+
+  function go(target, mode = "assign"){
+    const t = withSlug(target);
+    try{
+      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, mode);
+    }catch{}
+    if(mode === "replace") location.replace(t);
+    else location.assign(t);
+  }
+
+  function pinUrl(){
+    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
+    catch { return withSlug("./pin.html"); }
+  }
+
+  function payUrl(){
+    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug(PAY_URL); }
+    catch { return withSlug(PAY_URL); }
+  }
+
+  function badgeForStatus(res){
+    const pay = (res?.[DB.resPayStatus] || "").toLowerCase();
+    const st = (res?.[DB.resStatus] || "").toLowerCase();
+
+    if(pay === "paid" || pay === "succeeded") return `<span class="badge badge-success">Payé</span>`;
+    if(pay === "pending" || pay === "requires_payment" || pay === "unpaid") return `<span class="badge badge-warning">Paiement en attente</span>`;
+
+    if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
+    if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
+    if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
+    return `<span class="badge badge-warning">${esc(res?.[DB.resStatus] || "—")}</span>`;
+  }
+
+  function roomNameById(id) {
+    const r = State.rooms.find(x => String(x.id) === String(id));
+    return r?.[DB.roomTitle] || r?.title || "—";
+  }
+
+  function reservationIsActive(r){
+    const st = String(r?.[DB.resStatus] || "").toLowerCase();
+    if(st.includes("cancel")) return false;
+
+    const t = todayYMD();
+    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+    const co = String(r?.[DB.resCheckout] || "").slice(0,10);
+    return ci && co && t >= ci && t < co;
+  }
+
+  function reservationIsUpcoming(r){
+    const t = todayYMD();
+    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+    return ci && ci >= t;
+  }
+
+  function reservationIsPending(r){
+    const st = String(r?.[DB.resStatus] || "").toLowerCase();
+    const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
+    return st.includes("pending") || pay.includes("pending") || pay.includes("requires");
+  }
+
+  function requireLive(actionLabel = "Cette action"){
+    if (isLiveMode()) return true;
+
+    showAccessBanner(UX.reason || "preview");
+    alert(
+      `${actionLabel} demande le mode vivant.\n\n` +
+      `Pour l’instant tu es en aperçu propre.\n` +
+      `Passe par PIN ou active l’accès pour travailler sur les vraies données.`
+    );
+    return false;
+  }
+
+  function ensureAccessBanner(){
+    let box = document.getElementById("accessBanner");
+    if (box) return box;
+
+    const header = document.querySelector(".header");
+    if (!header || !header.parentNode) return null;
+
+    box = document.createElement("div");
+    box.id = "accessBanner";
+    box.className = "card";
+    box.style.display = "none";
+    box.style.borderColor = "rgba(250,204,21,.28)";
+    box.style.background = "rgba(250,204,21,.06)";
+    box.style.marginTop = "0";
+    box.style.marginBottom = "1rem";
+
+    header.parentNode.insertBefore(box, header.nextSibling);
+    return box;
+  }
+
+  function showAccessBanner(reason){
+    const box = ensureAccessBanner();
+    if (!box) return;
+
+    const st = getGuardState();
+    const pin = pinUrl();
+    const pay = payUrl();
+    const publicRoom = publicRoomUrl();
+
+    let title = "👁️ Mode aperçu";
+    let text = "Le cockpit reste visible proprement, sans mur brutal.";
+    let tone = "rgba(250,204,21,.06)";
+    let border = "rgba(250,204,21,.28)";
+
+    if (st.access_ok && isLiveMode()) {
+      title = "✅ Mode vivant";
+      text = "Accès confirmé. Le cockpit charge les vraies données.";
+      tone = "rgba(34,197,94,.08)";
+      border = "rgba(34,197,94,.28)";
+    } else if (reason === "slug_missing") {
+      text = "Aucun slug détecté. Tu vois l’aperçu élégant du cockpit.";
+    } else if (reason === "has_access_false") {
+      text = "Slug présent mais accès non actif. On garde un aperçu propre.";
+    } else if (reason === "owner_unresolved") {
+      text = "Accès détecté, mais le contexte propriétaire n’est pas encore résolu. On reste en aperçu propre pour éviter le crash.";
+    } else if (reason && reason !== "preview") {
+      text = "Raison actuelle : " + reason;
+    }
+
+    box.style.display = "block";
+    box.style.background = tone;
+    box.style.borderColor = border;
+
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0 0 .5rem;color:var(--accent)">${esc(title)}</h2>
+          <div style="color:var(--text);font-weight:700;line-height:1.5">
+            ${esc(text)}
+          </div>
+          <div style="margin-top:.5rem;color:var(--muted);font-size:.9rem">
+            slug: <b>${esc(st.slug || State.slug || "—")}</b> · téléphone: <b>${esc(State.phone || st.phone || "—")}</b>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="${esc(pin)}">🔑 Ouvrir PIN</a>
+          <a class="btn btn-primary" href="${esc(pay)}">💳 Activer l’accès</a>
+          <a class="btn btn-secondary" href="${esc(publicRoom)}" target="_blank" rel="noopener noreferrer">🌍 Voir public</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function hydrateHeader() {
+    const st = getGuardState();
+    const phone = State.phone || st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "—";
+    const businessName =
+      State.business_name ||
+      storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+      storageGet("DIGIY_BUSINESS_NAME") ||
+      (isLiveMode() ? "Gestionnaire" : "Aperçu DIGIY LOC");
+
+    setText("userPhone", phone || "—");
+    setText("userName", businessName || "Gestionnaire");
+    refreshPublicButtons();
+  }
+
+  function renderPreviewShell(reason){
+    UX.mode = "preview";
+    UX.reason = reason || "preview";
+
+    setText("revenusMois", "—");
+    setText("tauxOccupation", "—");
+    setText("resasActives", "—");
+    setText("logementsActifs", "—");
+
+    setHTML("prochainesArrivees", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Aperçu du cockpit LOC. Les prochaines arrivées réelles apparaîtront après connexion PIN et accès actif.
+      </div>
+    `);
+
+    setHTML("demandesAttente", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Aperçu propre des demandes. Passe en mode vivant pour voir les vraies réservations.
+      </div>
+    `);
+
+    setHTML("listeLogements", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Aucun logement affiché en aperçu. Clique sur <b>PIN</b> pour ouvrir le cockpit réel.
+      </div>
+    `);
+
+    setHTML("tableReservations", `
+      <tr>
+        <td colspan="6" style="text-align:center;color:var(--muted)">
+          Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.
+        </td>
+      </tr>
+    `);
+
+    setHTML("calendarView", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Calendrier en aperçu. Le planning réel arrive dès que l’accès est confirmé.
+      </div>
+    `);
+
+    setHTML("statsDetails", `
+      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+        Statistiques détaillées en attente du mode vivant.
+      </div>
+    `);
+
+    showAccessBanner(reason);
+    hydrateHeader();
+  }
+
+  function fail(msg){
+    const loading = document.getElementById("loading");
+    if(!loading) return;
+
+    loading.innerHTML = `
+      <div class="box">
+        <div class="t">❌ Accès impossible</div>
+        <div class="s">${esc(msg || "Erreur inconnue")}</div>
+        <div class="s" style="margin-top:.6rem">
+          <a href="${esc(pinUrl())}">Se connecter</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function activateApp(){
+    const loading = document.getElementById("loading");
+    const app = document.getElementById("app");
+    if (loading) loading.style.display = "none";
+    if (app) app.style.display = "block";
+  }
+
+  function normalizeOwnerContext(raw){
+    if (!raw || typeof raw !== "object") return null;
+
+    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
+    if (!owner_id) return null;
+
+    return {
+      owner_id,
+      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
+      business_name: raw.business_name || raw.businessName || raw.name || ""
+    };
+  }
+
+  function ownerContextFromStorage(){
+    const owner_id =
+      storageGet("DIGIY_LOC_OWNER_ID") ||
+      storageGet("digiy_loc_owner_id") ||
+      storageGet("DIGIY_OWNER_ID") ||
+      storageGet("owner_id") ||
+      "";
+
+    if (!owner_id) return null;
+
+    return normalizeOwnerContext({
+      owner_id,
+      business_code:
+        storageGet("DIGIY_LOC_BUSINESS_CODE") ||
+        storageGet("DIGIY_BUSINESS_CODE") ||
+        "TEST",
+      business_name:
+        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+        storageGet("DIGIY_BUSINESS_NAME") ||
+        ""
+    });
+  }
+
+  async function ownerContextFromRpc(){
+    if (!window.DIGIY_GUARD?.rpc) return null;
+
+    const st = getGuardState();
+    const attempts = [
+      "digiy_loc_owner_context",
+      "digiy_loc_get_owner_context",
+      "digiy_loc_resolve_owner_context"
+    ];
+
+    for (const fn of attempts) {
+      try {
+        const data = await window.DIGIY_GUARD.rpc(fn, {
+          p_phone: st.phone || State.phone || "",
+          p_slug: st.slug || State.slug || "",
+          p_module: MODULE
+        });
+
+        const ctx = normalizeOwnerContext(data);
+        if (ctx?.owner_id) return ctx;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  async function resolveOwnerContext(){
+    const fromStorage = ownerContextFromStorage();
+    if (fromStorage?.owner_id) return fromStorage;
+
+    const fromRpc = await ownerContextFromRpc();
+    if (fromRpc?.owner_id) {
+      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
+      try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
+      try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+      return fromRpc;
+    }
+
+    return null;
+  }
+
+  const Actions = {
+    logout: () => logout(),
+    pulseTest: () => pulseTest()
+  };
+
+  function bindNav(){
+    document.querySelectorAll("[data-go]").forEach((el)=>{
+      if(el.__digiy_go_bound) return;
+      el.__digiy_go_bound = true;
+
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        const target = (el.getAttribute("data-go") || "").trim();
+        const mode = (el.getAttribute("data-mode") || "assign").trim();
+        if(!target) return;
+        go(target, mode);
+      });
+    });
+  }
+
+  function bindActions(){
+    document.querySelectorAll("[data-action]").forEach((el)=>{
+      if(el.__digiy_action_bound) return;
+      el.__digiy_action_bound = true;
+
+      el.addEventListener("click", (e)=>{
+        const name = (el.getAttribute("data-action") || "").trim();
+        if(!name || typeof Actions[name] !== "function") return;
+        e.preventDefault();
+        Actions[name](el, e);
+      });
+    });
+  }
+
+  function bindTabs(){
+    const tabs = document.getElementById("tabs");
+    if(!tabs) return;
+    tabs.addEventListener("click", (e)=>{
+      const el = e.target.closest(".tab");
+      if(!el) return;
+      const tab = (el.getAttribute("data-tab") || "").trim();
+      if(tab) switchTab(tab);
+    });
+  }
+
+  function bindNdimbal(){
+    const btn = document.getElementById("quickNdimbal");
+    if(!btn || btn.__digiy_ndimbal_bound) return;
+    btn.__digiy_ndimbal_bound = true;
+
+    btn.addEventListener("click", ()=>{
+      alert(
+        "♾️ Astuce terrain :\n" +
+        "Si toi ou ton client n’êtes pas sûrs du point, ouvre NDIMBAL et partage le point GPS 📍.\n" +
+        "Ensuite reviens ici."
       );
+    });
+  }
+
+  window.DIGIY_NAV = { go, withSlug, Actions };
+
+  function switchTab(tabName) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+
+    const t = document.querySelector(`.tab[data-tab="${tabName}"]`);
+    if(t) t.classList.add("active");
+
+    const el = document.getElementById(tabName);
+    if(el) el.classList.add("active");
+
+    if (tabName === "logements") loadLogements();
+    if (tabName === "reservations") loadReservations();
+    if (tabName === "calendrier") loadCalendar();
+  }
+
+  function logout() {
+    if (!confirm("Se déconnecter ?")) return;
+    try {
+      window.DIGIY_GUARD?.logout?.(pinUrl());
+    } catch {
+      location.assign(pinUrl());
+    }
+  }
+
+  async function fetchRooms() {
+    const sb = getSB();
+    if(!sb || !State.ownerId) return [];
+
+    const { data, error } = await sb
+      .from(DB.rooms)
+      .select("*")
+      .eq(DB.roomOwnerId, State.ownerId)
+      .order("created_at", { ascending: false });
+
+    if(error) throw error;
+    return data || [];
+  }
+
+  async function fetchReservations() {
+    const sb = getSB();
+    if(!sb || !State.ownerId) return [];
+
+    const { data, error } = await sb
+      .from(DB.reservations)
+      .select("*")
+      .eq(DB.resOwnerId, State.ownerId)
+      .order(DB.resCheckin, { ascending: true })
+      .limit(200);
+
+    if(error) throw error;
+    return data || [];
+  }
+
+  function renderRooms(list) {
+    const container = document.getElementById("listeLogements");
+    if(!container) return;
+
+    if(!list.length){
+      container.innerHTML = `
+        <p style="color:var(--muted)">
+          ${isLiveMode()
+            ? `Aucun logement. Clique "FICHE ABONNÉ".`
+            : `Aucun logement affiché en aperçu. Passe en mode vivant pour gérer le parc réel.`}
+        </p>`;
+      return;
     }
 
-    function getPhoneFromAnywhere(){
-      const g = window.DIGIY_GUARD || {};
-      const st = g.state || {};
-      return (
-        safe(st.phone) ||
-        safe(st.sessionPhone) ||
-        safe(localStorage.getItem("digiy_loc_phone")) ||
-        safe(sessionStorage.getItem("digiy_loc_phone"))
-      );
+    container.innerHTML = list.map(room => {
+      const title = room?.[DB.roomTitle] || room?.title || "Logement";
+      const addr = room?.[DB.roomAddress] || room?.address || "—";
+      const desc = room?.[DB.roomDesc] || "";
+      const pmax = room?.[DB.roomMaxPeople] ?? room?.max_people ?? "—";
+      const pn = room?.[DB.roomPriceNight] ?? room?.price_per_night ?? 0;
+      const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
+      const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
+      const img = safeImg(room?.[DB.roomPhoto] || room?.cover_url);
+      const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
+      const badge = status.includes("act")
+        ? `<span class="badge badge-success">Actif</span>`
+        : `<span class="badge badge-warning">${esc(status)}</span>`;
+
+      const disabled = isLiveMode() ? "" : "opacity:.55;pointer-events:none;";
+      const liveHint = isLiveMode() ? "" : `<div style="color:var(--muted);font-size:.85rem;margin-top:.5rem">Action disponible en mode vivant.</div>`;
+
+      return `
+        <div class="logement-card">
+          <img src="${img}" alt="${esc(title)}" class="logement-img" onerror="this.src='https://via.placeholder.com/600x400?text=DIGIY+LOC'">
+          <div class="logement-info">
+            <h3>${esc(title)}</h3>
+            <p>📍 ${esc(addr)}</p>
+            <p>👥 ${esc(pmax)} personnes max</p>
+            ${desc ? `<p>${esc(desc)}</p>` : `<p style="color:var(--muted)">—</p>`}
+            <p style="margin-top:0.5rem">
+              <strong>Tarifs:</strong><br>
+              Nuit: ${moneyFCFA(pn)}<br>
+              Semaine: ${moneyFCFA(pw)}<br>
+              Mois: ${moneyFCFA(pm)}
+            </p>
+            <p style="margin-top:0.5rem">${badge}</p>
+            ${liveHint}
+          </div>
+          <div class="logement-actions" style="${disabled}">
+            <button class="btn btn-secondary" type="button" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
+            <button class="btn btn-secondary" type="button" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
+            <button class="btn btn-danger" type="button" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function loadLogements() {
+    if(!isLiveMode()){
+      renderRooms([]);
+      return;
     }
 
-    async function syncGuard(){
-      const g = window.DIGIY_GUARD || null;
+    try{
+      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
+      State.rooms = await fetchRooms();
+      renderRooms(State.rooms);
 
-      if (g && g.ready) {
-        try {
-          await g.ready;
-        } catch (_) {}
-      }
+      const actifs = State.rooms.filter(r =>
+        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
+      ).length;
 
-      const st = (g && g.state) ? g.state : {};
+      setText("logementsActifs", String(actifs));
+    }catch(e){
+      console.error(e);
+      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur chargement logements: ${esc(e.message || e)}</p>`);
+    }
+  }
 
-      SESSION.slug = getSlugFromAnywhere();
-      SESSION.phone = getPhoneFromAnywhere();
-      SESSION.accessOk = !!(
-        st.accessOk ||
-        st.access_ok ||
-        st.hasAccess ||
-        st.isActive ||
-        false
-      );
+  function openEditLogement(roomId){
+    if(!requireLive("Modifier un logement")) return;
 
-      els.chipSlug.textContent = "slug : " + (SESSION.slug || "—");
-      els.chipPhone.textContent = "phone : " + (SESSION.phone || "—");
-      els.chipAccess.textContent = SESSION.accessOk ? "accès : abonnement OK" : "accès : aperçu / à confirmer";
-      els.chipAccess.className = "chip " + (SESSION.accessOk ? "green" : "gold");
+    const room = State.rooms.find(r => String(r.id) === String(roomId));
+    if(!room) return alert("Logement introuvable");
 
-      const pinUrl = new URL("./pin.html", location.href);
-      const cockpitUrl = new URL("./cockpit.html", location.href);
-      if (SESSION.slug) {
-        pinUrl.searchParams.set("slug", SESSION.slug);
-        cockpitUrl.searchParams.set("slug", SESSION.slug);
-      }
-
-      els.btnPin.href = pinUrl.toString();
-      els.btnCockpit.href = cockpitUrl.toString();
-      updatePublicLinks();
+    const slug = room?.slug || getCurrentSlug();
+    if (!slug) {
+      alert("Slug introuvable pour ce logement.");
+      return;
     }
 
-    function buildPublicUrl(){
-      const base = safe(window.DIGIY_PUBLIC_LOC_BASE) || "https://beauville.github.io/digiy-loc/";
-      const url = new URL("fiche.html", base);
-      if (SESSION.slug) url.searchParams.set("slug", SESSION.slug);
-      return url.toString();
-    }
+    go(`./fiche-abo.html?slug=${encodeURIComponent(slug)}`);
+  }
 
-    function updatePublicLinks(){
-      const url = safe(els.public_url.value) || buildPublicUrl();
-      els.statePublicLink.href = url;
-      els.btnPublic.href = url;
-      els.stateSlug.textContent = SESSION.slug || "—";
-      els.statePhone.textContent = SESSION.phone || safe(els.phone.value) || "—";
-    }
+  async function deleteLogement(roomId){
+    if(!requireLive("Supprimer un logement")) return;
+    if(!confirm("Supprimer ce logement ?")) return;
 
-    function updatePreview(){
-      const nom = safe(els.nom.value) || "Nom logement";
-      const city = safe(els.adresse.value) || "Ville";
-      const kind = safe(els.type_logement.value) || "Type";
-      const price = money(els.prix_nuit.value);
-      const cap = num(els.personnes_max.value);
-      const pub = els.is_public.checked && /^(active|actif)$/i.test(safe(els.status.value)) ? "publique" : "non publiée";
-
-      els.previewTitle.textContent = nom;
-      els.previewSub.textContent = city + " • " + kind;
-      els.previewPrice.textContent = "Prix / nuit : " + price;
-      els.previewCap.textContent = "Capacité : " + (cap ? `${cap} pers.` : "—");
-      els.previewPub.textContent = "Publication : " + pub;
-      els.previewImg.src = safeImg(els.photo_url.value);
-      els.previewImg.onerror = () => {
-        els.previewImg.onerror = null;
-        els.previewImg.src = FALLBACK_IMG;
-      };
-
-      updatePublicLinks();
-    }
-
-    function fillForm(row){
-      els.nom.value = safe(row.nom);
-      els.adresse.value = safe(row.adresse);
-      els.type_logement.value = safe(row.type_logement);
-      els.phone.value = safe(row.phone) || SESSION.phone;
-      els.personnes_max.value = row.personnes_max ?? "";
-      els.description.value = safe(row.description);
-      els.prix_nuit.value = row.prix_nuit ?? "";
-      els.prix_semaine.value = row.prix_semaine ?? "";
-      els.prix_mois.value = row.prix_mois ?? "";
-      els.status.value = safe(row.status) || "active";
-      els.is_public.checked = !!row.is_public;
-      els.photo_url.value = safe(row.photo_url);
-      els.public_url.value = safe(row.public_url);
-
-      updatePreview();
-    }
-
-    async function tryLoadGallery(slug){
-      const candidates = ["photo_urls", "gallery", "photos", "images", "imgs"];
-      for (const col of candidates){
-        try{
-          const { data, error } = await sb
-            .from("digiy_loc_rooms")
-            .select(col)
-            .eq("slug", slug)
-            .maybeSingle();
-
-          if (error){
-            const m = safe(error.message).toLowerCase();
-            if (m.includes("column") || m.includes("schema cache")) continue;
-            return { ok:false, error };
-          }
-
-          const raw = data?.[col];
-          if (!raw) continue;
-
-          let arr = [];
-          if (Array.isArray(raw)) {
-            arr = raw.map(x => safe(x)).filter(Boolean);
-          } else {
-            const s = safe(raw);
-            if (!s) continue;
-            try {
-              const j = JSON.parse(s);
-              if (Array.isArray(j)) arr = j.map(x => safe(x)).filter(Boolean);
-            } catch (_) {
-              arr = s.split("\n").map(x => safe(x)).filter(Boolean);
-              if (!arr.length && s.includes(",")) arr = s.split(",").map(x => safe(x)).filter(Boolean);
-              if (!arr.length && s) arr = [s];
-            }
-          }
-
-          if (arr.length) {
-            return { ok:true, col, urls:arr };
-          }
-        }catch(_){}
-      }
-      return { ok:true, col:null, urls:[] };
-    }
-
-    async function trySaveGallery(slug, urls){
-      const clean = (urls || []).map(x => safe(x)).filter(Boolean);
-      const payloadValue = JSON.stringify(clean);
-      const candidates = ["photo_urls", "gallery", "photos", "images", "imgs"];
-
-      for (const col of candidates){
-        try{
-          const { error } = await sb
-            .from("digiy_loc_rooms")
-            .update({ [col]: payloadValue })
-            .eq("slug", slug);
-
-          if (!error) {
-            return { ok:true, col };
-          }
-
-          const m = safe(error.message).toLowerCase();
-          if (m.includes("column") || m.includes("schema cache")) {
-            continue;
-          }
-          return { ok:false, error };
-        }catch(e){
-          return { ok:false, error:e };
-        }
-      }
-      return { ok:false, error:new Error("Aucune colonne galerie compatible trouvée côté base.") };
-    }
-
-    async function loadRow(){
-      hideStatus();
-      if (!SESSION.slug){
-        showStatus("Slug introuvable.\nPasse par le PIN ou le cockpit puis recharge la page.", "bad");
-        return;
-      }
-
-      updatePublicLinks();
-
-      const { data, error } = await sb
-        .from("digiy_loc_rooms")
-        .select(`
-          nom,
-          adresse,
-          personnes_max,
-          prix_nuit,
-          prix_semaine,
-          prix_mois,
-          description,
-          photo_url,
-          status,
-          phone,
-          slug,
-          is_public,
-          public_url,
-          type_logement
-        `)
-        .eq("slug", SESSION.slug)
-        .maybeSingle();
-
-      if (error){
-        showStatus("Erreur chargement fiche abonné.\n" + (error.message || "Erreur inconnue"), "bad");
-        return;
-      }
-
-      if (!data){
-        showStatus("Aucune fiche LOC trouvée pour ce slug.\nLe rail fiche-abo suppose qu’une ligne existe déjà dans digiy_loc_rooms.", "warn");
-        return;
-      }
-
-      fillForm(data);
-
-      const gal = await tryLoadGallery(SESSION.slug);
-      if (gal.ok && gal.urls?.length){
-        els.gallery_urls.value = gal.urls.join("\n");
-      }
-
-      showStatus("Fiche chargée ✅\nTu peux modifier puis enregistrer.", "ok");
-    }
-
-    async function copyText(text){
-      try{
-        await navigator.clipboard.writeText(text);
-        return true;
-      }catch(_){
-        try{
-          const ta = document.createElement("textarea");
-          ta.value = text;
-          ta.setAttribute("readonly","");
-          ta.style.position = "absolute";
-          ta.style.left = "-9999px";
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
-          return true;
-        }catch(__){
-          return false;
-        }
-      }
-    }
-
-    async function saveRow(){
-      hideStatus();
-
-      if (!SESSION.slug){
-        showStatus("Impossible d’enregistrer : slug introuvable.", "bad");
-        return;
-      }
-
-      const payload = {
-        nom: safe(els.nom.value),
-        adresse: safe(els.adresse.value),
-        type_logement: safe(els.type_logement.value) || null,
-        description: safe(els.description.value),
-        phone: safe(els.phone.value) || SESSION.phone || null,
-        personnes_max: num(els.personnes_max.value),
-        prix_nuit: num(els.prix_nuit.value),
-        prix_semaine: num(els.prix_semaine.value),
-        prix_mois: num(els.prix_mois.value),
-        status: safe(els.status.value) || "active",
-        is_public: !!els.is_public.checked,
-        photo_url: safe(els.photo_url.value) || null,
-        public_url: safe(els.public_url.value) || null
-      };
+    try{
+      const sb = getSB();
+      if(!sb) throw new Error("supabase_not_ready");
 
       const { error } = await sb
-        .from("digiy_loc_rooms")
-        .update(payload)
-        .eq("slug", SESSION.slug);
+        .from(DB.rooms)
+        .delete()
+        .eq("id", roomId)
+        .eq(DB.roomOwnerId, State.ownerId);
 
-      if (error){
-        showStatus("Erreur enregistrement fiche.\n" + (error.message || "Erreur inconnue"), "bad");
-        return;
-      }
+      if(error) throw error;
+      await loadLogements();
+      alert("✅ Supprimé !");
+    }catch(e){
+      console.error(e);
+      alert("❌ " + (e?.message || e));
+    }
+  }
 
-      const galleryUrls = safe(els.gallery_urls.value)
-        .split("\n")
-        .map(x => safe(x))
-        .filter(Boolean);
+  function goCalendarRoom(roomId){
+    switchTab("calendrier");
+    loadCalendar(roomId);
+  }
 
-      let galleryMessage = "Galerie ignorée (vide).";
-      if (galleryUrls.length){
-        const mediaRes = await trySaveGallery(SESSION.slug, galleryUrls);
-        if (mediaRes.ok){
-          galleryMessage = "Galerie enregistrée ✅ dans : " + mediaRes.col;
-        } else {
-          galleryMessage = "Galerie non écrite automatiquement.\n" + (mediaRes.error?.message || "Aucune colonne média compatible.");
+  function renderReservations(list){
+    const tb = document.getElementById("tableReservations");
+    if(!tb) return;
+
+    if(!list.length){
+      tb.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;color:var(--muted)">
+            ${isLiveMode()
+              ? `Aucune réservation`
+              : `Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.`}
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tb.innerHTML = list.map(r => {
+      const client = r?.[DB.resClientName] || "Client";
+      const logement = roomNameById(r?.[DB.resRoomId]);
+      const dates = `${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`;
+      const amount = moneyFCFA(r?.[DB.resAmount]);
+      const status = badgeForStatus(r);
+
+      return `
+        <tr>
+          <td>${esc(client)}<div style="color:var(--muted);font-size:0.85rem">${esc(r?.[DB.resPhone] || "")}</div></td>
+          <td>${esc(logement)}</td>
+          <td>${esc(dates)}</td>
+          <td><strong>${esc(amount)}</strong></td>
+          <td>${status}</td>
+          <td>
+            <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function viewReservation(resId){
+    if(!requireLive("Ouvrir une réservation")) return;
+
+    const r = State.reservations.find(x => String(x.id) === String(resId));
+    if(!r) return alert("Réservation introuvable");
+
+    const lines = [
+      `Client: ${r?.[DB.resClientName] || "—"}`,
+      `Tel: ${r?.[DB.resPhone] || "—"}`,
+      `Logement: ${roomNameById(r?.[DB.resRoomId])}`,
+      `Dates: ${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`,
+      `Montant: ${moneyFCFA(r?.[DB.resAmount])}`,
+      `Status: ${r?.[DB.resStatus] || "—"}`,
+      `Paiement: ${r?.[DB.resPayStatus] || "—"}`
+    ];
+    alert(lines.join("\n"));
+  }
+
+  async function loadReservations(){
+    if(!isLiveMode()){
+      renderReservations([]);
+      return;
+    }
+
+    try{
+      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
+      if(!State.rooms.length) State.rooms = await fetchRooms();
+      State.reservations = await fetchReservations();
+      renderReservations(State.reservations);
+      await loadDashboard();
+    }catch(e){
+      console.error(e);
+      setHTML("tableReservations",
+        `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${esc(e.message || e)}</td></tr>`
+      );
+    }
+  }
+
+  async function loadDashboard(){
+    if(!isLiveMode()){
+      renderPreviewShell(UX.reason || "preview");
+      return;
+    }
+
+    try{
+      if(!State.rooms.length) State.rooms = await fetchRooms();
+      if(!State.reservations.length) State.reservations = await fetchReservations();
+
+      const now = new Date();
+      const mStart = startOfMonth(now);
+      const mEnd = endOfMonth(now);
+      const mStartY = ymd(mStart);
+      const mEndY = ymd(mEnd);
+
+      let revenus = 0;
+      let activeCount = 0;
+      let upcoming = [];
+      let pending = [];
+
+      const daysInMonth = mEnd.getDate();
+      const busyDays = new Set();
+
+      for(const r of State.reservations){
+        const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
+        const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+        const co = String(r?.[DB.resCheckout] || "").slice(0,10);
+        const roomId = r?.[DB.resRoomId];
+
+        if(ci >= mStartY && ci <= mEndY && (pay === "paid" || pay === "succeeded")){
+          revenus += Number(r?.[DB.resAmount] || 0);
+        }
+
+        if(reservationIsActive(r)) activeCount++;
+        if(reservationIsUpcoming(r)) upcoming.push(r);
+        if(reservationIsPending(r)) pending.push(r);
+
+        if(roomId && ci && co){
+          let d = new Date(ci + "T00:00:00");
+          const end = new Date(co + "T00:00:00");
+          while(d < end){
+            const dy = ymd(d);
+            if(dy >= mStartY && dy <= mEndY) busyDays.add(`${roomId}|${dy}`);
+            d.setDate(d.getDate()+1);
+          }
         }
       }
 
-      updatePreview();
-      showStatus("Fiche enregistrée ✅\n" + galleryMessage, "ok");
-    }
+      setText("revenusMois", moneyFCFA(revenus));
+      setText("resasActives", String(activeCount));
 
-    function bindLivePreview(){
-      [
-        els.nom, els.adresse, els.type_logement, els.phone,
-        els.personnes_max, els.description, els.prix_nuit,
-        els.prix_semaine, els.prix_mois, els.status,
-        els.is_public, els.photo_url, els.public_url
-      ].forEach(el => {
-        const evt = el.type === "checkbox" || el.tagName === "SELECT" ? "change" : "input";
-        el.addEventListener(evt, updatePreview);
-      });
-    }
+      const actifs = State.rooms.filter(r =>
+        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
+      ).length;
+      setText("logementsActifs", String(actifs));
 
-    async function init(){
-      await syncGuard();
-      bindLivePreview();
+      const denom = Math.max(1, actifs * daysInMonth);
+      const occ = Math.round((busyDays.size / denom) * 100);
+      setText("tauxOccupation", String(occ) + "%");
 
-      els.btnSave.addEventListener("click", saveRow);
-      els.btnReload.addEventListener("click", loadRow);
+      upcoming = upcoming
+        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
+        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
+        .slice(0,5);
 
-      els.btnCopyPublic.addEventListener("click", async ()=>{
-        const ok = await copyText(safe(els.public_url.value) || buildPublicUrl());
-        showStatus(ok ? "Lien public copié ✅" : "Copie impossible automatiquement.", ok ? "ok" : "bad");
-      });
+      setHTML("prochainesArrivees",
+        !upcoming.length
+          ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
+          : upcoming.map(r => `
+            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
+              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
+              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · <strong>${esc(moneyFCFA(r?.[DB.resAmount]))}</strong></div>
+            </div>
+          `).join("")
+      );
 
-      els.btnSupport.addEventListener("click", ()=>{
-        const msg = [
-          "Bonjour DIGIY 👋",
-          "Je vous envoie mes photos pour ma fiche LOC.",
-          `Slug : ${SESSION.slug || "—"}`,
-          `Nom logement : ${safe(els.nom.value) || "—"}`,
-          `Ville : ${safe(els.adresse.value) || "—"}`
-        ].join("\n");
-        openWa(TEAM_WA, msg);
-      });
+      pending = pending
+        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
+        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
+        .slice(0,5);
 
-      updatePreview();
-      await loadRow();
-    }
+      setHTML("demandesAttente",
+        !pending.length
+          ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
+          : pending.map(r => `
+            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
+              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
+              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · ${badgeForStatus(r)}</div>
+            </div>
+          `).join("")
+      );
 
-    init().catch((e)=>{
+      setHTML("statsDetails", `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+          <div class="stat-card">
+            <div class="stat-label">Téléphone</div>
+            <div class="stat-value" style="font-size:1.15rem">${esc(State.phone || "—")}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Slug</div>
+            <div class="stat-value" style="font-size:1.15rem">${esc(State.slug || "—")}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Business code</div>
+            <div class="stat-value" style="font-size:1.15rem">${esc(State.business_code || "TEST")}</div>
+          </div>
+        </div>
+      `);
+
+      showAccessBanner("live");
+      hydrateHeader();
+
+    }catch(e){
       console.error(e);
-      showStatus("Erreur inattendue fiche-abo.\n" + (e?.message || e), "bad");
-    });
-  </script>
+    }
+  }
+
+  function buildCalendar(monthDate, reservations, roomIdFilter=null){
+    const view = document.getElementById("calendarView");
+    if(!view) return;
+
+    const monthStart = startOfMonth(monthDate);
+    const monthEnd = endOfMonth(monthDate);
+    const firstDow = (monthStart.getDay() + 6) % 7;
+    const days = monthEnd.getDate();
+
+    const busy = new Set();
+    for(const r of reservations){
+      if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
+      const st = String(r?.[DB.resStatus] || "").toLowerCase();
+      if(st.includes("cancel")) continue;
+
+      const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
+      const co = String(r?.[DB.resCheckout] || "").slice(0,10);
+      if(!ci || !co) continue;
+
+      let d = new Date(ci + "T00:00:00");
+      const end = new Date(co + "T00:00:00");
+      while(d < end){
+        const key = ymd(d);
+        if(key.slice(0,7) === ymd(monthStart).slice(0,7)) busy.add(key);
+        d.setDate(d.getDate()+1);
+      }
+    }
+
+    const monthLabel = monthStart.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
+    const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(x=>`<div class="cal-dow">${x}</div>`).join("");
+
+    let cells = "";
+    for(let i=0;i<firstDow;i++) cells += `<div class="cal-day off"></div>`;
+
+    for(let day=1; day<=days; day++){
+      const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
+      const key = ymd(dt);
+      const isBusy = busy.has(key);
+      cells += `
+        <div class="cal-day ${isBusy ? "busy":"free"}">
+          <div class="n">${day}</div>
+          <div class="mini">${isBusy ? "Occupé" : "Libre"}</div>
+        </div>
+      `;
+    }
+
+    let filterLabel = "";
+    if(roomIdFilter){
+      filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${esc(roomNameById(roomIdFilter))}</strong></span>`;
+    }
+
+    view.innerHTML = `
+      <div class="cal-wrap">
+        <div class="cal-box">
+          <div class="cal-head">
+            <div style="font-weight:900;text-transform:capitalize">${esc(monthLabel)}${filterLabel}</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
+              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
+              ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="loadCalendar()">Tout voir</button>` : ``}
+            </div>
+          </div>
+          <div class="cal-grid">${dows}${cells}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let _calCursor = new Date();
+
+  function calPrev(){
+    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()-1, 1);
+    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
+    else renderPreviewShell(UX.reason || "preview");
+  }
+
+  function calNext(){
+    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()+1, 1);
+    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
+    else renderPreviewShell(UX.reason || "preview");
+  }
+
+  async function loadCalendar(roomId=null){
+    if(!isLiveMode()){
+      renderPreviewShell(UX.reason || "preview");
+      return;
+    }
+
+    try{
+      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
+      State._calRoom = roomId || null;
+      if(!State.rooms.length) State.rooms = await fetchRooms();
+      if(!State.reservations.length) State.reservations = await fetchReservations();
+      buildCalendar(_calCursor, State.reservations, roomId);
+    }catch(e){
+      console.error(e);
+      setHTML("calendarView", `<p style="color:var(--danger)">Erreur calendrier: ${esc(e.message || e)}</p>`);
+    }
+  }
+
+  async function pulseTest(){
+    if(!requireLive("Envoyer un test Pulse")) return;
+
+    const msgEl = document.getElementById("pulseMsg");
+    if(!PULSE.enabled){
+      if(msgEl) msgEl.textContent = "Pulse désactivé.";
+      return;
+    }
+
+    try{
+      if(msgEl) msgEl.textContent = "Envoi en cours…";
+
+      const headers = { "Content-Type":"application/json" };
+      if(PULSE.apiKey) headers["x-api-key"] = PULSE.apiKey;
+
+      const body = {
+        channel: "whatsapp",
+        phone: State.phone,
+        business_code: State.business_code || "TEST",
+        pulse_kind: "TEST",
+        message: "Test DIGIY PULSE ✅"
+      };
+
+      if(!body.phone) throw new Error("Téléphone introuvable (session).");
+
+      const r = await fetch(PULSE.base + PULSE.endpoint, {
+        method:"POST",
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const j = await r.json().catch(()=> ({}));
+      if(!r.ok) throw new Error(j?.error || ("HTTP " + r.status));
+
+      if(msgEl) msgEl.textContent = "✅ Test envoyé";
+    }catch(e){
+      console.error(e);
+      if(msgEl) msgEl.textContent = "❌ " + (e.message || e);
+    }
+  }
+
+  window.openEditLogement = openEditLogement;
+  window.goCalendarRoom = goCalendarRoom;
+  window.deleteLogement = deleteLogement;
+  window.viewReservation = viewReservation;
+  window.calPrev = calPrev;
+  window.calNext = calNext;
+  window.loadCalendar = loadCalendar;
+
+  async function init(){
+    bindNav();
+    bindActions();
+    bindTabs();
+    bindNdimbal();
+    refreshPublicButtons();
+
+    if(!window.DIGIY_GUARD){
+      fail("Guard absent ou non chargé.");
+      return;
+    }
+
+    try{
+      await waitGuardReady();
+    }catch(e){
+      fail("Guard non prêt.");
+      return;
+    }
+
+    const st = getGuardState();
+    State.phone = st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+    State.slug = st.slug || getCurrentSlug() || "";
+    UX.reason = st.reason || "preview";
+
+    hydrateHeader();
+    activateApp();
+
+    if(!st.access_ok){
+      renderPreviewShell(UX.reason || "preview");
+      return;
+    }
+
+    const ctx = await resolveOwnerContext();
+
+    if(!ctx?.owner_id){
+      UX.reason = "owner_unresolved";
+      renderPreviewShell("owner_unresolved");
+      return;
+    }
+
+    State.ownerId = ctx.owner_id;
+    State.business_code = ctx.business_code || "TEST";
+    State.business_name = ctx.business_name || "";
+    UX.mode = "live";
+    UX.reason = "ok";
+
+    try { localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
+    try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
+    try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
+    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
+    try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
+    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
+    try { if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
+    try { if (State.business_name) sessionStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
+
+    hydrateHeader();
+    refreshPublicButtons();
+
+    try{
+      State.rooms = await fetchRooms();
+      State.reservations = await fetchReservations();
+
+      renderRooms(State.rooms);
+      renderReservations(State.reservations);
+      buildCalendar(_calCursor, State.reservations, null);
+      await loadDashboard();
+    }catch(e){
+      console.warn("Init error:", e);
+      showAccessBanner("live");
+      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur initiale logements: ${esc(e.message || e)}</p>`);
+      setHTML("tableReservations", `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur initiale réservations: ${esc(e.message || e)}</td></tr>`);
+      setHTML("calendarView", `<p style="color:var(--danger)">Erreur initiale calendrier: ${esc(e.message || e)}</p>`);
+    }
+  }
+
+  init();
+})();
+</script>
+
 </body>
 </html>
