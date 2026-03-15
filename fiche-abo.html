@@ -1,182 +1,402 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>DIGIY LOC — Fiche logement</title>
-  <meta name="theme-color" content="#020617" />
-  <meta name="description" content="DIGIY LOC — Fiche logement. Direct propriétaire, 0% commission." />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DIGIY LOC PRO — Fiche abonné</title>
+  <meta name="theme-color" content="#0b1020"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
+    window.DIGIY_PUBLIC_LOC_BASE = "https://beauville.github.io/digiy-loc/";
   </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const sb = supabase.createClient(
-      window.DIGIY_SUPABASE_URL,
-      window.DIGIY_SUPABASE_ANON_KEY,
-      {
-        auth:{
-          persistSession:false,
-          autoRefreshToken:false,
-          detectSessionInUrl:false
-        }
-      }
-    );
-  </script>
+  <script src="./guard.js?v=loc-fiche-abo-roomslug-v1"></script>
 
   <style>
     :root{
-      --bg:#020617;
-      --bg-soft:#020818;
-      --card:#030712;
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:#052e16;
+      --card2:#0b1220;
       --accent:#facc15;
-      --accent-soft:#f97316;
-      --accent-green:#22c55e;
-      --ink:#f9fafb;
-      --muted:#cbd5f5;
-      --line:rgba(148,163,184,0.22);
-      --shadow-soft:0 20px 45px rgba(15,23,42,0.9);
-      --glass:rgba(2,6,23,.68);
+      --success:#22c55e;
+      --danger:#ef4444;
+      --info:#38bdf8;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:rgba(148,163,184,0.20);
+      --line:rgba(255,255,255,.10);
+      --shadow:0 20px 50px rgba(0,0,0,.35);
+      --radius:18px;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
-
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100%}
     body{
-      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at top,rgba(250,204,21,0.16),transparent 60%),
-        radial-gradient(circle at bottom,rgba(34,197,94,0.16),transparent 55%),
-        var(--bg);
-      color:var(--ink);
-      display:flex;
-      justify-content:center;
-      padding:10px;
-      font-size:16px;
+        radial-gradient(circle at top left, rgba(250,204,21,.09), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(34,197,94,.10), transparent 28%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
     }
 
-    .app{
-      width:100%;
-      max-width:1100px;
+    a{color:inherit}
+    button,input,select,textarea{font:inherit}
+
+    #loading{
       min-height:100vh;
-      background:linear-gradient(135deg,#020617 0%,#020818 50%,#020617 100%);
-      border-radius:24px;
-      border:1px solid rgba(148,163,184,0.25);
-      box-shadow:var(--shadow-soft);
-      padding:16px 16px 22px;
-      display:flex;
-      flex-direction:column;
-      position:relative;
-      overflow:hidden;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    #loading .box{
+      width:min(560px, 94vw);
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      backdrop-filter:blur(16px);
+      box-shadow:var(--shadow);
+      padding:22px;
+      text-align:center;
+    }
+    #loading .t{font-size:1.1rem;font-weight:900}
+    #loading .s{margin-top:8px;color:var(--muted);font-weight:700;line-height:1.6}
+
+    #app{display:none}
+    .container{
+      max-width:1320px;
+      margin:0 auto;
+      padding:16px;
     }
 
-    .app::before{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background:
-        radial-gradient(circle at 0% 0%,rgba(250,204,21,0.14),transparent 55%),
-        radial-gradient(circle at 100% 100%,rgba(34,197,94,0.14),transparent 45%);
-      opacity:0.8;
-      pointer-events:none;
-    }
-
-    header{
-      position:relative;
-      z-index:2;
+    .header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      gap:10px;
-      margin-bottom:12px;
+      gap:14px;
       flex-wrap:wrap;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      margin-bottom:16px;
     }
-
-    .brand{display:flex;align-items:center;gap:10px}
-
-    .brand-logo{
-      width:42px;height:42px;border-radius:14px;
+    .title{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo{
+      width:48px;height:48px;border-radius:16px;
+      display:grid;place-items:center;
       background:radial-gradient(circle at 30% 0%,#facc15,#f97316);
-      display:flex;align-items:center;justify-content:center;
+      color:#111;
       font-size:24px;
-      box-shadow:0 12px 30px rgba(234,179,8,0.65);
+      font-weight:1000;
+      box-shadow:0 12px 30px rgba(250,204,21,.25);
+    }
+    .title h1{
+      font-size:1.35rem;
+      line-height:1.1;
+      margin:0;
+      color:#d1fae5;
+      font-weight:950;
+    }
+    .title p{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:700;
     }
 
-    .brand-text-title{
-      font-size:20px;font-weight:900;letter-spacing:0.09em;
-      text-transform:uppercase;color:var(--accent-green);
+    .head-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
     }
 
-    .brand-text-sub{font-size:14px;color:var(--muted);font-weight:650}
-
-    .back-link{
-      font-size:13px;color:var(--muted);text-decoration:none;
-      background:rgba(15,23,42,0.9);
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.6);
-      padding:8px 14px;
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 14px;
+      min-height:44px;
+      cursor:pointer;
+      font-weight:900;
+      text-decoration:none;
       display:inline-flex;
       align-items:center;
-      gap:6px;
+      justify-content:center;
+      gap:8px;
+      transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      user-select:none;
+      line-height:1;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{
+      background:linear-gradient(135deg,#facc15,#f97316);
+      color:#111;
+      box-shadow:0 10px 24px rgba(250,204,21,.22);
+    }
+    .btn-secondary{
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      border:1px solid var(--border);
+    }
+    .btn-success{
+      background:rgba(34,197,94,.18);
+      color:#dcfce7;
+      border:1px solid rgba(34,197,94,.35);
+    }
+    .btn-danger{
+      background:rgba(239,68,68,.18);
+      color:#fee2e2;
+      border:1px solid rgba(239,68,68,.35);
+    }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .banner{
+      display:none;
+      margin-bottom:16px;
+      border-radius:18px;
+      padding:14px 16px;
+      border:1px solid rgba(250,204,21,.25);
+      background:rgba(250,204,21,.08);
+      color:#fde68a;
       font-weight:800;
-      white-space:nowrap;
+      line-height:1.55;
+      box-shadow:var(--shadow);
+    }
+    .banner.live{
+      display:block;
+      border-color:rgba(34,197,94,.28);
+      background:rgba(34,197,94,.08);
+      color:#dcfce7;
+    }
+    .banner.preview{
+      display:block;
     }
 
-    .back-link:hover{border-color:var(--accent);color:var(--accent)}
-
-    .shell{
-      position:relative;
-      z-index:2;
+    .grid{
       display:grid;
-      grid-template-columns:1.25fr .75fr;
+      grid-template-columns:1.1fr .9fr;
       gap:16px;
-      margin-top:10px;
     }
-
     @media(max-width:980px){
-      .shell{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
     }
 
-    .panel{
-      background:radial-gradient(circle at top,rgba(15,23,42,0.98),#020617);
-      border-radius:24px;
-      border:1px solid rgba(30,64,175,0.7);
-      box-shadow:0 14px 34px rgba(15,23,42,0.95);
+    .card{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow:var(--shadow);
       overflow:hidden;
-      position:relative;
+    }
+    .card .head{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .card .head h2{
+      margin:0;
+      font-size:1.05rem;
+      font-weight:950;
+      color:var(--accent);
+    }
+    .card .head p{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:700;
+      line-height:1.5;
+    }
+    .card .body{
+      padding:18px;
     }
 
-    .cover{
+    .fields{
+      display:grid;
+      gap:14px;
+    }
+    .row2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .row3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:14px;
+    }
+    @media(max-width:760px){
+      .row2,.row3{grid-template-columns:1fr}
+    }
+
+    label{
+      display:grid;
+      gap:7px;
+      font-size:.92rem;
+      font-weight:900;
+      color:#f3f4f6;
+    }
+
+    input,select,textarea{
       width:100%;
-      height:360px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.72);
+      color:#fff;
+      padding:12px 13px;
+      outline:none;
+    }
+    textarea{
+      min-height:120px;
+      resize:vertical;
+    }
+    input:focus,select:focus,textarea:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.10);
+    }
+
+    .mini{
+      font-size:.8rem;
+      color:var(--muted);
+      font-weight:700;
+      line-height:1.5;
+    }
+
+    .switch{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:16px;
+    }
+    .switch .txt1{
+      font-weight:950;
+      color:#fff;
+    }
+    .switch .txt2{
+      margin-top:4px;
+      font-size:.85rem;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .switch input{
+      width:20px;
+      height:20px;
+      accent-color:#22c55e;
+      cursor:pointer;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .status{
+      display:none;
+      margin-top:16px;
+      white-space:pre-line;
+      border-radius:16px;
+      padding:14px;
+      font-weight:850;
+      line-height:1.55;
+    }
+    .status.ok{
+      display:block;
+      border:1px solid rgba(34,197,94,.35);
+      background:rgba(34,197,94,.10);
+      color:#dcfce7;
+    }
+    .status.bad{
+      display:block;
+      border:1px solid rgba(239,68,68,.35);
+      background:rgba(239,68,68,.10);
+      color:#fee2e2;
+    }
+    .status.warn{
+      display:block;
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+    @media(max-width:760px){
+      .meta{grid-template-columns:1fr}
+    }
+    .metaBox{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:16px;
+      padding:12px 14px;
+    }
+    .metaK{
+      font-size:.78rem;
+      color:var(--muted);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+    .metaV{
+      margin-top:6px;
+      font-size:1rem;
+      font-weight:950;
+      color:#fff;
+      word-break:break-word;
+    }
+
+    .preview{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .previewCard{
+      border:1px solid rgba(30,64,175,.50);
+      background:radial-gradient(circle at top,rgba(15,23,42,.98),#020617);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 16px 40px rgba(15,23,42,.85);
+    }
+    .previewCover{
+      height:260px;
       background:#0b1220;
-      border-bottom:1px solid rgba(148,163,184,0.18);
       position:relative;
     }
-
-    @media(max-width:640px){
-      .cover{height:280px}
-    }
-
-    .cover img{
+    .previewCover img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
     }
-
-    .coverFade{
+    .previewFade{
       position:absolute;
       inset:0;
-      background:
-        linear-gradient(180deg, rgba(2,6,23,.08) 0%, rgba(2,6,23,.75) 88%, rgba(2,6,23,.95) 100%);
-      pointer-events:none;
+      background:linear-gradient(180deg, rgba(2,6,23,.04) 0%, rgba(2,6,23,.72) 80%, rgba(2,6,23,.94) 100%);
     }
-
-    .coverTop{
+    .previewTop{
       position:absolute;
       left:14px;
       right:14px;
@@ -185,346 +405,96 @@
       flex-direction:column;
       gap:8px;
     }
-
-    .title{
-      font-size:28px;
-      font-weight:950;
+    .previewName{
+      font-size:1.6rem;
       line-height:1.1;
+      font-weight:950;
       color:var(--accent);
-      text-shadow:0 10px 20px rgba(0,0,0,.35);
+      text-shadow:0 12px 24px rgba(0,0,0,.35);
     }
-
-    .sub{
-      font-size:15px;
-      color:#e5e7eb;
-      font-weight:750;
-      opacity:.95;
+    .chips{
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
-      align-items:center;
+      gap:8px;
     }
-
     .chip{
       width:max-content;
       padding:6px 10px;
-      font-size:12px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,.35);
-      background:rgba(2,6,23,.55);
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(2,6,23,.56);
       color:#e5e7eb;
+      font-size:.78rem;
       font-weight:900;
       white-space:nowrap;
     }
-
     .chip.green{
-      border-color:rgba(34,197,94,.55);
-      color:#bbf7d0;
-      background:rgba(34,197,94,.10);
+      border-color:rgba(34,197,94,.45);
+      background:rgba(34,197,94,.12);
+      color:#dcfce7;
+    }
+    .chip.gold{
+      border-color:rgba(250,204,21,.45);
+      background:rgba(250,204,21,.12);
+      color:#fde68a;
     }
 
-    .chip.blue{
-      border-color:rgba(30,64,175,.60);
-      color:#c7d2fe;
-      background:rgba(30,64,175,.12);
-    }
-
-    .body{
-      padding:14px;
+    .previewBody{
+      padding:16px;
       display:flex;
       flex-direction:column;
-      gap:12px;
+      gap:14px;
     }
 
-    .desc{
-      font-size:15px;
-      line-height:1.7;
-      color:#f3f4f6;
-      font-weight:650;
+    .pbox{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:16px;
+      padding:14px;
+    }
+    .pbox .k{
+      font-size:.78rem;
+      color:#bbf7d0;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+    .pbox .v{
+      margin-top:8px;
+      color:#f8fafc;
+      font-weight:700;
+      line-height:1.65;
       white-space:pre-wrap;
     }
 
-    .galleryWrap{
-      padding:12px 14px 16px;
-      border-top:1px solid rgba(148,163,184,0.15);
-      background:rgba(2,6,23,.18);
-    }
-
-    .galleryTitle{
-      font-size:13px;
-      font-weight:950;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      color:#bbf7d0;
-      margin-bottom:10px;
-    }
-
-    .gallery{
-      display:flex;
-      gap:10px;
-      overflow:auto;
-      padding-bottom:6px;
-      scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;
-    }
-
-    .gItem{
-      flex:0 0 auto;
-      width:220px;
-      height:150px;
-      border-radius:16px;
-      overflow:hidden;
-      border:1px solid rgba(30,64,175,0.6);
-      background:#0b1220;
-      scroll-snap-align:start;
-      position:relative;
-      cursor:pointer;
-    }
-
-    .gItem img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .gHint{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:800;
-      margin-top:8px;
-      opacity:.95;
-    }
-
-    .side{
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .box{
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(2,6,23,.55);
-      border-radius:18px;
-      padding:12px;
-    }
-
-    .kicker{
-      font-size:12px;
-      font-weight:950;
-      color:#bbf7d0;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      opacity:.95;
-    }
-
-    .big{
-      margin-top:6px;
-      font-size:18px;
-      font-weight:950;
-      line-height:1.2;
-      color:#facc15;
-    }
-
-    .txt{
-      margin-top:8px;
-      font-size:14px;
-      color:#e5e7eb;
-      line-height:1.6;
-      font-weight:650;
-    }
-
-    .infoGrid{
+    .pgrid{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:10px;
+      gap:12px;
+    }
+    @media(max-width:760px){
+      .pgrid{grid-template-columns:1fr}
     }
 
-    @media(max-width:560px){
-      .infoGrid{grid-template-columns:1fr}
-    }
-
-    .info{
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(15,23,42,.35);
+    .note{
+      margin-top:16px;
+      border:1px dashed rgba(148,163,184,.30);
       border-radius:16px;
-      padding:10px 12px;
-    }
-
-    .info .k{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-
-    .info .v{
-      margin-top:6px;
-      font-size:18px;
-      font-weight:950;
-      color:#fff;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .btn{
-      border:none;
-      border-radius:999px;
-      padding:10px 14px;
-      font-size:14px;
-      font-weight:950;
-      cursor:pointer;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      text-decoration:none;
-      transition:transform .18s ease;
-      flex:1;
-      min-height:44px;
-      white-space:nowrap;
-      touch-action:manipulation;
-      -webkit-tap-highlight-color:transparent;
-      user-select:none;
-    }
-
-    .btn:active{transform:scale(.99)}
-
-    .btn-primary{
-      background:linear-gradient(135deg,#facc15,#f97316);
-      color:#111;
-      box-shadow:0 7px 18px rgba(250,204,21,0.55);
-    }
-
-    .btn-wa{
-      background:rgba(22,163,74,0.2);
-      color:#bbf7d0;
-      border:1px solid rgba(34,197,94,0.85);
-    }
-
-    .btn-ghost{
-      background:rgba(15,23,42,0.75);
-      color:#e5e7eb;
-      border:1px solid rgba(148,163,184,0.28);
-      box-shadow:none;
-    }
-
-    .warn{
-      border:1px solid rgba(250,204,21,.35);
-      background:rgba(250,204,21,.08);
-      color:#fde68a;
-      border-radius:18px;
-      padding:12px;
-      font-weight:850;
-      line-height:1.55;
-    }
-
-    .err{
-      border:1px solid rgba(248,113,113,.35);
-      background:rgba(248,113,113,.08);
-      color:#fecaca;
-      border-radius:18px;
-      padding:12px;
-      font-weight:900;
-      line-height:1.55;
-    }
-
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.72);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:14px;
-      z-index:9999;
-    }
-
-    .overlay.show{display:flex}
-
-    .lightbox{
-      width:100%;
-      max-width:980px;
-      border-radius:22px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(2,6,23,.92);
-      box-shadow:0 30px 80px rgba(0,0,0,.55);
-      overflow:hidden;
-      position:relative;
-    }
-
-    .lbTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
       padding:12px 14px;
-      border-bottom:1px solid rgba(148,163,184,.18);
-    }
-
-    .lbTitle{
-      font-weight:950;
-      color:#e5e7eb;
-      font-size:14px;
-    }
-
-    .lbClose{
-      background:rgba(15,23,42,.75);
-      border:1px solid rgba(148,163,184,.28);
-      color:#e5e7eb;
-      border-radius:999px;
-      padding:8px 12px;
-      font-weight:950;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-
-    .lbImg{
-      width:100%;
-      max-height:74vh;
-      background:#0b1220;
-    }
-
-    .lbImg img{
-      width:100%;
-      height:100%;
-      max-height:74vh;
-      object-fit:contain;
-      display:block;
-    }
-
-    footer{
-      margin-top:18px;
-      font-size:12px;
       color:var(--muted);
-      font-weight:750;
-      display:flex;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      gap:6px;
-      position:relative;
-      z-index:2;
+      font-size:.88rem;
+      font-weight:700;
+      line-height:1.6;
     }
-
-    footer span{color:var(--accent);font-weight:950}
   </style>
 </head>
-
 <body>
 
 <div id="loading">
   <div class="box">
     <div class="t">🔒 Vérification accès…</div>
-    <div class="s">DIGIY LOC PRO protège ton cockpit (PIN / abonnement / slug).</div>
-    <div class="s" style="margin-top:.75rem;color:rgba(250,204,21,.9)">
-      Astuce terrain : si tu ne sais pas te placer, ouvre <b>NDIMBAL</b> et partage ton point GPS 📍
-    </div>
+    <div class="s">DIGIY LOC PRO prépare la fiche abonné sur le vrai rail logement.</div>
+    <div class="s">Mode recousu : <b>room_slug</b> pour la fiche publique, séparé du slug module.</div>
   </div>
 </div>
 
@@ -532,163 +502,221 @@
   <div class="container">
 
     <div class="header">
-      <div>
-        <h1>🏠 DIGIY LOC PRO</h1>
-        <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem">
-          <span id="userName">Gestionnaire</span> ·
-          <span id="userPhone">—</span>
-        </p>
-
-        <div class="miniNav">
-          <a class="btn btn-secondary" data-go="./app.html" data-mode="replace" href="#">🏠 Cockpit</a>
-          <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
-          <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
-          <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
-          <a class="btn btn-secondary" data-go="./wave.html" href="#">💳 Déclarations Wave</a>
+      <div class="title">
+        <div class="logo">🏠</div>
+        <div>
+          <h1>DIGIY LOC PRO — Fiche abonné</h1>
+          <p id="headIdentity">Chargement identité…</p>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button class="btn btn-primary" data-go="./fiche-abo.html" type="button">
-          🏗️ FICHE ABONNÉ
-        </button>
-
-        <a class="btn btn-secondary" id="btnPublicRoom" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
-          🌍 Voir la fiche publique
-        </a>
-
-        <a class="btn btn-secondary" id="btnPublicIndex" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
-          🌐 Voir la vitrine LOC
-        </a>
-
-        <a class="btn btn-secondary" href="https://digiylyfe.com/" target="_blank" rel="noopener noreferrer">
-          ← Retour au site
-        </a>
-
-        <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
-          🔗 Liens / QR
-        </button>
-
-        <button class="btn btn-secondary" data-go="./photos.html" type="button">
-          🖼️ Photos
-        </button>
-
-        <button class="btn btn-secondary" data-go="./ndimbal.html" id="quickNdimbal" type="button">
-          ♾️ NDIMBAL
-        </button>
-
-        <button class="btn btn-danger" data-action="logout" type="button">
-          🚪 Déconnexion
-        </button>
+      <div class="head-actions">
+        <a class="btn btn-secondary" id="btnBackApp" href="./app.html">← Retour app</a>
+        <a class="btn btn-secondary" id="btnPublic" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">🌍 Voir la fiche publique</a>
+        <button class="btn btn-primary" id="btnSave" type="button">💾 Enregistrer</button>
       </div>
     </div>
 
-    <div class="tabs" id="tabs">
-      <div class="tab active" data-tab="dashboard">📊 Dashboard</div>
-      <div class="tab" data-tab="logements">🏠 Mes logements</div>
-      <div class="tab" data-tab="reservations">📅 Réservations</div>
-      <div class="tab" data-tab="calendrier">📆 Calendrier</div>
-      <div class="tab" data-tab="stats">📈 Statistiques</div>
+    <div class="banner" id="accessBanner"></div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="head">
+          <h2>Réglages fiche logement</h2>
+          <p>Cette page travaille sur la vraie ligne logement. La fiche publique lit ensuite le <b>slug logement</b>, pas le slug module.</p>
+        </div>
+
+        <div class="body">
+          <div class="fields">
+            <div class="row2">
+              <label>
+                Nom du logement
+                <input id="nom" type="text" placeholder="Ex: Résidence Beau Séjour">
+              </label>
+
+              <label>
+                Slug logement public
+                <input id="room_slug" type="text" placeholder="Ex: residence-beau-sejour-saly">
+              </label>
+            </div>
+
+            <div class="row2">
+              <label>
+                Adresse / ville
+                <input id="adresse" type="text" placeholder="Ex: Saly, Sénégal">
+              </label>
+
+              <label>
+                Type de logement
+                <select id="type_logement">
+                  <option value="">Choisir</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Appartement">Appartement</option>
+                  <option value="Studio">Studio</option>
+                  <option value="Chambre">Chambre</option>
+                  <option value="Maison">Maison</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="row3">
+              <label>
+                Téléphone / WhatsApp
+                <input id="phone" type="text" placeholder="Ex: +221771234567">
+              </label>
+
+              <label>
+                Capacité
+                <input id="personnes_max" type="number" min="1" placeholder="Ex: 4">
+              </label>
+
+              <label>
+                Statut
+                <select id="status">
+                  <option value="active">active</option>
+                  <option value="actif">actif</option>
+                  <option value="draft">draft</option>
+                  <option value="inactive">inactive</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="row3">
+              <label>
+                Prix / nuit
+                <input id="prix_nuit" type="number" min="0" step="1" placeholder="Ex: 25000">
+              </label>
+
+              <label>
+                Prix / semaine
+                <input id="prix_semaine" type="number" min="0" step="1" placeholder="Ex: 150000">
+              </label>
+
+              <label>
+                Prix / mois
+                <input id="prix_mois" type="number" min="0" step="1" placeholder="Ex: 450000">
+              </label>
+            </div>
+
+            <label>
+              Description
+              <textarea id="description" placeholder="Décris le logement simplement, clairement, humainement."></textarea>
+            </label>
+
+            <label>
+              Photo principale (URL)
+              <input id="photo_url" type="url" placeholder="https://...">
+            </label>
+
+            <label>
+              URL publique personnalisée (facultatif)
+              <input id="public_url" type="url" placeholder="https://...">
+            </label>
+
+            <div class="switch">
+              <div>
+                <div class="txt1">Rendre public</div>
+                <div class="txt2">La fiche publique affichera ce logement seulement si cette case est active et si le statut est publié/actif.</div>
+              </div>
+              <input id="is_public" type="checkbox">
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn btn-primary" id="btnSave2" type="button">💾 Enregistrer</button>
+            <button class="btn btn-secondary" id="btnReload" type="button">↻ Recharger</button>
+            <button class="btn btn-success" id="btnOpenPublic" type="button">🌍 Ouvrir la fiche publique</button>
+            <button class="btn btn-secondary" id="btnCopyPublic" type="button">🔗 Copier le lien public</button>
+          </div>
+
+          <div class="status" id="statusBox"></div>
+
+          <div class="meta">
+            <div class="metaBox">
+              <div class="metaK">Mode</div>
+              <div class="metaV" id="stateMode">—</div>
+            </div>
+            <div class="metaBox">
+              <div class="metaK">Téléphone session</div>
+              <div class="metaV" id="statePhone">—</div>
+            </div>
+            <div class="metaBox">
+              <div class="metaK">Slug module</div>
+              <div class="metaV" id="stateModuleSlug">—</div>
+            </div>
+            <div class="metaBox">
+              <div class="metaK">Slug logement</div>
+              <div class="metaV" id="stateRoomSlug">—</div>
+            </div>
+            <div class="metaBox">
+              <div class="metaK">ID logement</div>
+              <div class="metaV" id="stateRoomId">—</div>
+            </div>
+            <div class="metaBox">
+              <div class="metaK">Owner ID</div>
+              <div class="metaV" id="stateOwnerId">—</div>
+            </div>
+          </div>
+
+          <div class="note">
+            Terrain propre : pour plusieurs logements, ouvre d’abord le bon logement depuis <b>app.html</b>, puis clique <b>Modifier</b>.  
+            Ici on travaille sur le <b>slug logement réel</b>, pas sur le slug abonnement module.
+          </div>
+        </div>
+      </section>
+
+      <aside class="preview">
+        <div class="previewCard">
+          <div class="previewCover">
+            <img id="pvCover" alt="Photo logement" src="">
+            <div class="previewFade"></div>
+            <div class="previewTop">
+              <div class="previewName" id="pvNom">Nom logement</div>
+              <div class="chips">
+                <div class="chip gold" id="pvType">Type</div>
+                <div class="chip" id="pvVille">Ville</div>
+                <div class="chip green" id="pvPublic">0% commission</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="previewBody">
+            <div class="pbox">
+              <div class="k">Description</div>
+              <div class="v" id="pvDesc">La description apparaîtra ici.</div>
+            </div>
+
+            <div class="pgrid">
+              <div class="pbox">
+                <div class="k">Contact</div>
+                <div class="v" id="pvPhone">—</div>
+              </div>
+              <div class="pbox">
+                <div class="k">Capacité</div>
+                <div class="v" id="pvCap">—</div>
+              </div>
+              <div class="pbox">
+                <div class="k">Prix / Nuit</div>
+                <div class="v" id="pvPn">—</div>
+              </div>
+              <div class="pbox">
+                <div class="k">Prix / Semaine</div>
+                <div class="v" id="pvPs">—</div>
+              </div>
+              <div class="pbox" style="grid-column:1/-1">
+                <div class="k">Prix / Mois</div>
+                <div class="v" id="pvPm">—</div>
+              </div>
+            </div>
+
+            <div class="pbox">
+              <div class="k">Lien public réel</div>
+              <div class="v" id="pvLink">—</div>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
-
-    <div id="dashboard" class="content active">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Revenus ce mois</div>
-          <div class="stat-value" id="revenusMois">0 F</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Taux d'occupation</div>
-          <div class="stat-value" id="tauxOccupation">0%</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Réservations actives</div>
-          <div class="stat-value" id="resasActives">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Logements actifs</div>
-          <div class="stat-value" id="logementsActifs">0</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>📅 Prochaines arrivées</h2>
-        <div id="prochainesArrivees">
-          <p style="color:var(--muted)">Chargement...</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>⏳ Demandes en attente</h2>
-        <div id="demandesAttente">
-          <p style="color:var(--muted)">Chargement...</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>📲 Pulse (Test rapide)</h2>
-        <p style="color:var(--muted);margin-bottom:1rem">
-          Test d'envoi via l'API. (Désactive PULSE.enabled si tu veux.)
-        </p>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-secondary" data-action="pulseTest" type="button">🚀 Envoyer test WhatsApp</button>
-          <span id="pulseMsg" style="color:var(--muted)"></span>
-        </div>
-      </div>
-    </div>
-
-    <div id="logements" class="content">
-      <div class="card">
-        <h2>🏠 Mes logements</h2>
-        <div id="listeLogements"></div>
-      </div>
-    </div>
-
-    <div id="reservations" class="content">
-      <div class="card">
-        <h2>📅 Toutes les réservations</h2>
-        <div style="overflow-x:auto">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Logement</th>
-                <th>Dates</th>
-                <th>Montant</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableReservations">
-              <tr>
-                <td colspan="6" style="text-align:center;color:var(--muted)">
-                  Chargement...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div id="calendrier" class="content">
-      <div class="card">
-        <h2>📆 Calendrier de disponibilité</h2>
-        <div id="calendarView">
-          <p style="color:var(--muted)">Chargement...</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="stats" class="content">
-      <div class="card">
-        <h2>📈 Statistiques détaillées</h2>
-        <div id="statsDetails">
-          <p>Statistiques à venir...</p>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -696,57 +724,80 @@
 (() => {
   "use strict";
 
-  const MODULE = "LOC";
-  const PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
+  const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
 
-  const DB = {
-    rooms: "digiy_loc_rooms",
-    reservations: "digiy_loc_reservations",
-
-    roomOwnerId: "owner_id",
-    roomTitle: "nom",
-    roomAddress: "adresse",
-    roomMaxPeople: "personnes_max",
-    roomPriceNight: "prix_nuit",
-    roomPriceWeek: "prix_semaine",
-    roomPriceMonth: "prix_mois",
-    roomDesc: "description",
-    roomPhoto: "photo_url",
-    roomStatus: "status",
-
-    resOwnerId: "owner_id",
-    resRoomId: "room_id",
-    resClientName: "client_name",
-    resPhone: "phone",
-    resCheckin: "checkin",
-    resCheckout: "checkout",
-    resAmount: "amount_total",
-    resStatus: "status",
-    resPayStatus: "payment_status",
+  const ROOM = {
+    id: "",
+    roomSlug: "",
+    ownerId: "",
+    loaded: false
   };
 
-  const PULSE = {
-    enabled: true,
-    base: "https://api.digiylyfe.com",
-    apiKey: "",
-    endpoint: "/loc/pulse/send"
-  };
-
-  const State = {
-    ownerId: null,
-    phone: "",
-    slug: "",
-    business_code: "TEST",
-    business_name: "",
-    rooms: [],
-    reservations: [],
-    _calRoom: null
-  };
-
-  const UX = {
+  const SESSION = {
     mode: "preview",
-    reason: "booting"
+    reason: "booting",
+    phone: "",
+    moduleSlug: "",
+    ownerId: "",
+    businessCode: "TEST",
+    businessName: ""
   };
+
+  const els = {
+    loading: document.getElementById("loading"),
+    app: document.getElementById("app"),
+    accessBanner: document.getElementById("accessBanner"),
+    headIdentity: document.getElementById("headIdentity"),
+
+    nom: document.getElementById("nom"),
+    room_slug: document.getElementById("room_slug"),
+    adresse: document.getElementById("adresse"),
+    type_logement: document.getElementById("type_logement"),
+    phone: document.getElementById("phone"),
+    personnes_max: document.getElementById("personnes_max"),
+    status: document.getElementById("status"),
+    prix_nuit: document.getElementById("prix_nuit"),
+    prix_semaine: document.getElementById("prix_semaine"),
+    prix_mois: document.getElementById("prix_mois"),
+    description: document.getElementById("description"),
+    photo_url: document.getElementById("photo_url"),
+    public_url: document.getElementById("public_url"),
+    is_public: document.getElementById("is_public"),
+
+    btnBackApp: document.getElementById("btnBackApp"),
+    btnPublic: document.getElementById("btnPublic"),
+    btnSave: document.getElementById("btnSave"),
+    btnSave2: document.getElementById("btnSave2"),
+    btnReload: document.getElementById("btnReload"),
+    btnOpenPublic: document.getElementById("btnOpenPublic"),
+    btnCopyPublic: document.getElementById("btnCopyPublic"),
+
+    statusBox: document.getElementById("statusBox"),
+
+    stateMode: document.getElementById("stateMode"),
+    statePhone: document.getElementById("statePhone"),
+    stateModuleSlug: document.getElementById("stateModuleSlug"),
+    stateRoomSlug: document.getElementById("stateRoomSlug"),
+    stateRoomId: document.getElementById("stateRoomId"),
+    stateOwnerId: document.getElementById("stateOwnerId"),
+
+    pvCover: document.getElementById("pvCover"),
+    pvNom: document.getElementById("pvNom"),
+    pvType: document.getElementById("pvType"),
+    pvVille: document.getElementById("pvVille"),
+    pvPublic: document.getElementById("pvPublic"),
+    pvDesc: document.getElementById("pvDesc"),
+    pvPhone: document.getElementById("pvPhone"),
+    pvCap: document.getElementById("pvCap"),
+    pvPn: document.getElementById("pvPn"),
+    pvPs: document.getElementById("pvPs"),
+    pvPm: document.getElementById("pvPm"),
+    pvLink: document.getElementById("pvLink")
+  };
+
+  function safe(v){
+    return String(v ?? "").trim();
+  }
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, (c)=>({
@@ -754,47 +805,20 @@
     }[c]));
   }
 
+  function num(v){
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function money(v){
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return "—";
+    return n.toLocaleString("fr-FR") + " FCFA";
+  }
+
   function safeImg(url){
-    const u = String(url || "").trim();
-    if(!u) return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-    if(/^https?:\/\//i.test(u)) return u;
-    return "https://via.placeholder.com/600x400?text=DIGIY+LOC";
-  }
-
-  function moneyFCFA(x){
-    const n = Number(x || 0);
-    return n.toLocaleString("fr-FR") + " F";
-  }
-
-  function fmtDate(d){
-    if(!d) return "—";
-    try { return new Date(d).toLocaleDateString("fr-FR"); }
-    catch { return String(d); }
-  }
-
-  function startOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth(), 1); }
-  function endOfMonth(dt){ return new Date(dt.getFullYear(), dt.getMonth()+1, 0); }
-
-  function ymd(dt){
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth()+1).padStart(2,"0");
-    const d = String(dt.getDate()).padStart(2,"0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function todayYMD(){
-    const t = new Date();
-    return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate()));
-  }
-
-  function setText(id, value){
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
-
-  function setHTML(id, html){
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
+    const u = safe(url);
+    return u || FALLBACK_IMG;
   }
 
   function storageGet(key){
@@ -807,6 +831,40 @@
       if (l) return l;
     }catch{}
     return "";
+  }
+
+  function storageSet(key, value){
+    try{ sessionStorage.setItem(key, value); }catch{}
+    try{ localStorage.setItem(key, value); }catch{}
+  }
+
+  function slugify(text){
+    return safe(text)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/--+/g, "-");
+  }
+
+  function phoneDigits(v){
+    return safe(v).replace(/\D/g, "");
+  }
+
+  function buildFallbackRoomSlug(){
+    const fromField = slugify(els.nom.value);
+    if (fromField) return fromField;
+
+    const digits = phoneDigits(els.phone.value || SESSION.phone);
+    if (digits) return "loc-room-" + digits;
+
+    return "loc-room";
+  }
+
+  function getRequestedRoomSlug(){
+    const u = new URL(location.href);
+    return safe(u.searchParams.get("room_slug"));
   }
 
   function getGuardState(){
@@ -846,309 +904,179 @@
       || null;
   }
 
-  function sbReady(){
-    const sb = getSB();
-    return !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-  }
-
-  function isLiveMode(){
-    return UX.mode === "live" && !!State.ownerId && !!getGuardState().access_ok;
-  }
-
-  function getCurrentSlug(){
-    const st = getGuardState();
-    if (st?.slug) return String(st.slug).trim();
-
-    try {
-      const u = new URL(location.href);
-      const qsSlug = u.searchParams.get("slug") || "";
-      if (qsSlug) return qsSlug.trim();
-    } catch {}
-
-    return (
-      storageGet("digiy_loc_slug") ||
-      storageGet("digiy_last_slug") ||
-      storageGet("DIGIY_SLUG") ||
-      ""
-    ).trim();
-  }
-
   function publicIndexUrl(){
     return String(window.DIGIY_PUBLIC_LOC_BASE || "https://beauville.github.io/digiy-loc/").trim();
   }
 
-  function publicRoomUrl(){
-    const slug = getCurrentSlug();
-    if (!slug) return publicIndexUrl();
-    const u = new URL("fiche.html", publicIndexUrl());
+  function currentRoomSlug(){
+    return safe(els.room_slug.value) || ROOM.roomSlug || "";
+  }
+
+  function buildPublicUrlFromRoomSlug(roomSlug){
+    const base = publicIndexUrl();
+    const slug = safe(roomSlug);
+    if (!slug) return base;
+    const u = new URL("fiche.html", base);
     u.searchParams.set("slug", slug);
     return u.toString();
   }
 
-  function refreshPublicButtons(){
-    const roomBtn = document.getElementById("btnPublicRoom");
-    const indexBtn = document.getElementById("btnPublicIndex");
-    const slug = getCurrentSlug();
-
-    if (roomBtn) {
-      roomBtn.href = publicRoomUrl();
-      roomBtn.textContent = slug ? "🌍 Voir la fiche publique" : "🌍 Voir le site public";
-    }
-
-    if (indexBtn) {
-      indexBtn.href = publicIndexUrl();
-    }
+  function effectivePublicUrl(){
+    const custom = safe(els.public_url.value);
+    return custom || buildPublicUrlFromRoomSlug(currentRoomSlug());
   }
 
-  function withSlug(url){
-    const slug = getCurrentSlug();
-    if (!slug) return url;
-
-    try{
-      const u = new URL(url, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(slug);
-    }
+  function setMode(mode, reason){
+    SESSION.mode = mode;
+    SESSION.reason = reason || mode;
+    els.stateMode.textContent = mode === "live" ? "Mode vivant" : "Mode aperçu";
   }
 
-  function go(target, mode = "assign"){
-    const t = withSlug(target);
-    try{
-      if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, mode);
-    }catch{}
-    if(mode === "replace") location.replace(t);
-    else location.assign(t);
+  function updateHeader(){
+    const label = SESSION.businessName || "Gestionnaire LOC";
+    els.headIdentity.textContent = `${label} · ${SESSION.phone || "—"} · module slug: ${SESSION.moduleSlug || "—"}`;
+
+    els.statePhone.textContent = SESSION.phone || "—";
+    els.stateModuleSlug.textContent = SESSION.moduleSlug || "—";
+    els.stateOwnerId.textContent = SESSION.ownerId || "—";
+    els.stateRoomId.textContent = ROOM.id || "—";
+    els.stateRoomSlug.textContent = currentRoomSlug() || "—";
+
+    els.btnBackApp.href = SESSION.moduleSlug
+      ? `./app.html?slug=${encodeURIComponent(SESSION.moduleSlug)}`
+      : "./app.html";
+
+    const url = effectivePublicUrl();
+    els.btnPublic.href = url;
+    els.pvLink.textContent = url;
   }
 
-  function pinUrl(){
-    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
-    catch { return withSlug("./pin.html"); }
+  function showBanner(mode, text){
+    els.accessBanner.className = "banner " + (mode === "live" ? "live" : "preview");
+    els.accessBanner.innerHTML = esc(text || "");
   }
 
-  function payUrl(){
-    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug(PAY_URL); }
-    catch { return withSlug(PAY_URL); }
+  function showStatus(msg, type){
+    els.statusBox.className = "status " + (type || "ok");
+    els.statusBox.textContent = msg || "";
   }
 
-  function badgeForStatus(res){
-    const pay = (res?.[DB.resPayStatus] || "").toLowerCase();
-    const st = (res?.[DB.resStatus] || "").toLowerCase();
-
-    if(pay === "paid" || pay === "succeeded") return `<span class="badge badge-success">Payé</span>`;
-    if(pay === "pending" || pay === "requires_payment" || pay === "unpaid") return `<span class="badge badge-warning">Paiement en attente</span>`;
-
-    if(st.includes("pending")) return `<span class="badge badge-warning">En attente</span>`;
-    if(st.includes("confirm")) return `<span class="badge badge-success">Confirmée</span>`;
-    if(st.includes("cancel")) return `<span class="badge badge-danger">Annulée</span>`;
-    return `<span class="badge badge-warning">${esc(res?.[DB.resStatus] || "—")}</span>`;
+  function hideStatus(){
+    els.statusBox.className = "status";
+    els.statusBox.textContent = "";
   }
 
-  function roomNameById(id) {
-    const r = State.rooms.find(x => String(x.id) === String(id));
-    return r?.[DB.roomTitle] || r?.title || "—";
+  function lockForm(disabled){
+    [
+      els.nom, els.room_slug, els.adresse, els.type_logement, els.phone,
+      els.personnes_max, els.status, els.prix_nuit, els.prix_semaine, els.prix_mois,
+      els.description, els.photo_url, els.public_url, els.is_public,
+      els.btnSave, els.btnSave2
+    ].forEach(el => {
+      if (!el) return;
+      el.disabled = !!disabled;
+    });
   }
 
-  function reservationIsActive(r){
-    const st = String(r?.[DB.resStatus] || "").toLowerCase();
-    if(st.includes("cancel")) return false;
+  function bindLivePreview(){
+    const watched = [
+      els.nom, els.room_slug, els.adresse, els.type_logement, els.phone,
+      els.personnes_max, els.prix_nuit, els.prix_semaine, els.prix_mois,
+      els.description, els.photo_url, els.public_url, els.is_public, els.status
+    ];
 
-    const t = todayYMD();
-    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-    const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-    return ci && co && t >= ci && t < co;
+    watched.forEach(el => {
+      if (!el) return;
+      const evt = el.tagName === "SELECT" || el.type === "checkbox" ? "change" : "input";
+      el.addEventListener(evt, () => {
+        if (!safe(els.room_slug.value)) {
+          els.room_slug.value = ROOM.roomSlug || buildFallbackRoomSlug();
+        }
+        updatePreview();
+        updateHeader();
+      });
+    });
   }
 
-  function reservationIsUpcoming(r){
-    const t = todayYMD();
-    const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-    return ci && ci >= t;
+  function updatePreview(){
+    const nom = safe(els.nom.value) || "Nom logement";
+    const type = safe(els.type_logement.value) || "Type";
+    const ville = safe(els.adresse.value) || "Ville";
+    const phone = safe(els.phone.value) || SESSION.phone || "—";
+    const cap = num(els.personnes_max.value);
+    const pn = money(els.prix_nuit.value);
+    const ps = money(els.prix_semaine.value);
+    const pm = money(els.prix_mois.value);
+    const desc = safe(els.description.value) || "La description apparaîtra ici.";
+    const img = safeImg(els.photo_url.value);
+    const pub = !!els.is_public.checked;
+    const st = safe(els.status.value) || "active";
+
+    els.pvCover.src = img;
+    els.pvCover.onerror = () => {
+      els.pvCover.onerror = null;
+      els.pvCover.src = FALLBACK_IMG;
+    };
+
+    els.pvNom.textContent = nom;
+    els.pvType.textContent = type;
+    els.pvVille.textContent = ville;
+    els.pvDesc.textContent = desc;
+    els.pvPhone.textContent = phone;
+    els.pvCap.textContent = cap ? `${cap} pers.` : "—";
+    els.pvPn.textContent = pn;
+    els.pvPs.textContent = ps;
+    els.pvPm.textContent = pm;
+    els.pvPublic.textContent = pub && (st === "active" || st === "actif") ? "public visible" : "non public / brouillon";
+
+    updateHeader();
   }
 
-  function reservationIsPending(r){
-    const st = String(r?.[DB.resStatus] || "").toLowerCase();
-    const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
-    return st.includes("pending") || pay.includes("pending") || pay.includes("requires");
+  function fillForm(row){
+    els.nom.value = safe(row.nom);
+    els.room_slug.value = safe(row.slug);
+    els.adresse.value = safe(row.adresse);
+    els.type_logement.value = safe(row.type_logement);
+    els.phone.value = safe(row.phone) || SESSION.phone;
+    els.personnes_max.value = row.personnes_max ?? "";
+    els.status.value = safe(row.status) || "active";
+    els.prix_nuit.value = row.prix_nuit ?? "";
+    els.prix_semaine.value = row.prix_semaine ?? "";
+    els.prix_mois.value = row.prix_mois ?? "";
+    els.description.value = safe(row.description);
+    els.photo_url.value = safe(row.photo_url);
+    els.public_url.value = safe(row.public_url);
+    els.is_public.checked = !!row.is_public;
   }
 
-  function requireLive(actionLabel = "Cette action"){
-    if (isLiveMode()) return true;
+  function defaultCreatePayload(){
+    const suggestedSlug = getRequestedRoomSlug() || storageGet("DIGIY_LOC_PUBLIC_ROOM_SLUG") || buildFallbackRoomSlug();
 
-    showAccessBanner(UX.reason || "preview");
-    alert(
-      `${actionLabel} demande le mode vivant.\n\n` +
-      `Pour l’instant tu es en aperçu propre.\n` +
-      `Passe par PIN ou active l’accès pour travailler sur les vraies données.`
-    );
-    return false;
-  }
+    els.nom.value = "";
+    els.room_slug.value = suggestedSlug;
+    els.adresse.value = "";
+    els.type_logement.value = "";
+    els.phone.value = SESSION.phone || "";
+    els.personnes_max.value = "";
+    els.status.value = "active";
+    els.prix_nuit.value = "";
+    els.prix_semaine.value = "";
+    els.prix_mois.value = "";
+    els.description.value = "";
+    els.photo_url.value = "";
+    els.public_url.value = "";
+    els.is_public.checked = false;
 
-  function ensureAccessBanner(){
-    let box = document.getElementById("accessBanner");
-    if (box) return box;
+    ROOM.id = "";
+    ROOM.roomSlug = suggestedSlug;
+    ROOM.loaded = false;
 
-    const header = document.querySelector(".header");
-    if (!header || !header.parentNode) return null;
-
-    box = document.createElement("div");
-    box.id = "accessBanner";
-    box.className = "card";
-    box.style.display = "none";
-    box.style.borderColor = "rgba(250,204,21,.28)";
-    box.style.background = "rgba(250,204,21,.06)";
-    box.style.marginTop = "0";
-    box.style.marginBottom = "1rem";
-
-    header.parentNode.insertBefore(box, header.nextSibling);
-    return box;
-  }
-
-  function showAccessBanner(reason){
-    const box = ensureAccessBanner();
-    if (!box) return;
-
-    const st = getGuardState();
-    const pin = pinUrl();
-    const pay = payUrl();
-    const publicRoom = publicRoomUrl();
-
-    let title = "👁️ Mode aperçu";
-    let text = "Le cockpit reste visible proprement, sans mur brutal.";
-    let tone = "rgba(250,204,21,.06)";
-    let border = "rgba(250,204,21,.28)";
-
-    if (st.access_ok && isLiveMode()) {
-      title = "✅ Mode vivant";
-      text = "Accès confirmé. Le cockpit charge les vraies données.";
-      tone = "rgba(34,197,94,.08)";
-      border = "rgba(34,197,94,.28)";
-    } else if (reason === "slug_missing") {
-      text = "Aucun slug détecté. Tu vois l’aperçu élégant du cockpit.";
-    } else if (reason === "has_access_false") {
-      text = "Slug présent mais accès non actif. On garde un aperçu propre.";
-    } else if (reason === "owner_unresolved") {
-      text = "Accès détecté, mais le contexte propriétaire n’est pas encore résolu. On reste en aperçu propre pour éviter le crash.";
-    } else if (reason && reason !== "preview") {
-      text = "Raison actuelle : " + reason;
-    }
-
-    box.style.display = "block";
-    box.style.background = tone;
-    box.style.borderColor = border;
-
-    box.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap">
-        <div>
-          <h2 style="margin:0 0 .5rem;color:var(--accent)">${esc(title)}</h2>
-          <div style="color:var(--text);font-weight:700;line-height:1.5">
-            ${esc(text)}
-          </div>
-          <div style="margin-top:.5rem;color:var(--muted);font-size:.9rem">
-            slug: <b>${esc(st.slug || State.slug || "—")}</b> · téléphone: <b>${esc(State.phone || st.phone || "—")}</b>
-          </div>
-        </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-          <a class="btn btn-secondary" href="${esc(pin)}">🔑 Ouvrir PIN</a>
-          <a class="btn btn-primary" href="${esc(pay)}">💳 Activer l’accès</a>
-          <a class="btn btn-secondary" href="${esc(publicRoom)}" target="_blank" rel="noopener noreferrer">🌍 Voir public</a>
-        </div>
-      </div>
-    `;
-  }
-
-  function hydrateHeader() {
-    const st = getGuardState();
-    const phone = State.phone || st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "—";
-    const businessName =
-      State.business_name ||
-      storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-      storageGet("DIGIY_BUSINESS_NAME") ||
-      (isLiveMode() ? "Gestionnaire" : "Aperçu DIGIY LOC");
-
-    setText("userPhone", phone || "—");
-    setText("userName", businessName || "Gestionnaire");
-    refreshPublicButtons();
-  }
-
-  function renderPreviewShell(reason){
-    UX.mode = "preview";
-    UX.reason = reason || "preview";
-
-    setText("revenusMois", "—");
-    setText("tauxOccupation", "—");
-    setText("resasActives", "—");
-    setText("logementsActifs", "—");
-
-    setHTML("prochainesArrivees", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Aperçu du cockpit LOC. Les prochaines arrivées réelles apparaîtront après connexion PIN et accès actif.
-      </div>
-    `);
-
-    setHTML("demandesAttente", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Aperçu propre des demandes. Passe en mode vivant pour voir les vraies réservations.
-      </div>
-    `);
-
-    setHTML("listeLogements", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Aucun logement affiché en aperçu. Clique sur <b>PIN</b> pour ouvrir le cockpit réel.
-      </div>
-    `);
-
-    setHTML("tableReservations", `
-      <tr>
-        <td colspan="6" style="text-align:center;color:var(--muted)">
-          Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.
-        </td>
-      </tr>
-    `);
-
-    setHTML("calendarView", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Calendrier en aperçu. Le planning réel arrive dès que l’accès est confirmé.
-      </div>
-    `);
-
-    setHTML("statsDetails", `
-      <div style="padding:1rem;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
-        Statistiques détaillées en attente du mode vivant.
-      </div>
-    `);
-
-    showAccessBanner(reason);
-    hydrateHeader();
-  }
-
-  function fail(msg){
-    const loading = document.getElementById("loading");
-    if(!loading) return;
-
-    loading.innerHTML = `
-      <div class="box">
-        <div class="t">❌ Accès impossible</div>
-        <div class="s">${esc(msg || "Erreur inconnue")}</div>
-        <div class="s" style="margin-top:.6rem">
-          <a href="${esc(pinUrl())}">Se connecter</a>
-        </div>
-      </div>
-    `;
-  }
-
-  function activateApp(){
-    const loading = document.getElementById("loading");
-    const app = document.getElementById("app");
-    if (loading) loading.style.display = "none";
-    if (app) app.style.display = "block";
+    updatePreview();
+    updateHeader();
   }
 
   function normalizeOwnerContext(raw){
     if (!raw || typeof raw !== "object") return null;
-
     const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
     if (!owner_id) return null;
 
@@ -1195,9 +1123,9 @@
     for (const fn of attempts) {
       try {
         const data = await window.DIGIY_GUARD.rpc(fn, {
-          p_phone: st.phone || State.phone || "",
-          p_slug: st.slug || State.slug || "",
-          p_module: MODULE
+          p_phone: st.phone || SESSION.phone || "",
+          p_slug: st.slug || SESSION.moduleSlug || "",
+          p_module: "LOC"
         });
 
         const ctx = normalizeOwnerContext(data);
@@ -1213,674 +1141,357 @@
 
     const fromRpc = await ownerContextFromRpc();
     if (fromRpc?.owner_id) {
-      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-      try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST"); } catch {}
-      try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || ""); } catch {}
+      storageSet("DIGIY_LOC_OWNER_ID", fromRpc.owner_id);
+      storageSet("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST");
+      storageSet("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || "");
       return fromRpc;
     }
 
     return null;
   }
 
-  const Actions = {
-    logout: () => logout(),
-    pulseTest: () => pulseTest()
-  };
-
-  function bindNav(){
-    document.querySelectorAll("[data-go]").forEach((el)=>{
-      if(el.__digiy_go_bound) return;
-      el.__digiy_go_bound = true;
-
-      el.addEventListener("click", (e)=>{
-        e.preventDefault();
-        const target = (el.getAttribute("data-go") || "").trim();
-        const mode = (el.getAttribute("data-mode") || "assign").trim();
-        if(!target) return;
-        go(target, mode);
-      });
-    });
-  }
-
-  function bindActions(){
-    document.querySelectorAll("[data-action]").forEach((el)=>{
-      if(el.__digiy_action_bound) return;
-      el.__digiy_action_bound = true;
-
-      el.addEventListener("click", (e)=>{
-        const name = (el.getAttribute("data-action") || "").trim();
-        if(!name || typeof Actions[name] !== "function") return;
-        e.preventDefault();
-        Actions[name](el, e);
-      });
-    });
-  }
-
-  function bindTabs(){
-    const tabs = document.getElementById("tabs");
-    if(!tabs) return;
-    tabs.addEventListener("click", (e)=>{
-      const el = e.target.closest(".tab");
-      if(!el) return;
-      const tab = (el.getAttribute("data-tab") || "").trim();
-      if(tab) switchTab(tab);
-    });
-  }
-
-  function bindNdimbal(){
-    const btn = document.getElementById("quickNdimbal");
-    if(!btn || btn.__digiy_ndimbal_bound) return;
-    btn.__digiy_ndimbal_bound = true;
-
-    btn.addEventListener("click", ()=>{
-      alert(
-        "♾️ Astuce terrain :\n" +
-        "Si toi ou ton client n’êtes pas sûrs du point, ouvre NDIMBAL et partage le point GPS 📍.\n" +
-        "Ensuite reviens ici."
-      );
-    });
-  }
-
-  window.DIGIY_NAV = { go, withSlug, Actions };
-
-  function switchTab(tabName) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
-
-    const t = document.querySelector(`.tab[data-tab="${tabName}"]`);
-    if(t) t.classList.add("active");
-
-    const el = document.getElementById(tabName);
-    if(el) el.classList.add("active");
-
-    if (tabName === "logements") loadLogements();
-    if (tabName === "reservations") loadReservations();
-    if (tabName === "calendrier") loadCalendar();
-  }
-
-  function logout() {
-    if (!confirm("Se déconnecter ?")) return;
-    try {
-      window.DIGIY_GUARD?.logout?.(pinUrl());
-    } catch {
-      location.assign(pinUrl());
-    }
-  }
-
-  async function fetchRooms() {
+  async function resolveRoomRecord(){
     const sb = getSB();
-    if(!sb || !State.ownerId) return [];
+    if (!sb) throw new Error("supabase_not_ready");
 
-    const { data, error } = await sb
-      .from(DB.rooms)
-      .select("*")
-      .eq(DB.roomOwnerId, State.ownerId)
-      .order("created_at", { ascending: false });
+    const requested = getRequestedRoomSlug();
+    if (requested) {
+      const { data, error } = await sb
+        .from("digiy_loc_rooms")
+        .select(`
+          id,
+          owner_id,
+          business_code,
+          nom,
+          adresse,
+          personnes_max,
+          prix_nuit,
+          prix_semaine,
+          prix_mois,
+          description,
+          photo_url,
+          status,
+          phone,
+          slug,
+          is_public,
+          public_url,
+          type_logement
+        `)
+        .eq("slug", requested)
+        .maybeSingle();
 
-    if(error) throw error;
-    return data || [];
+      if (error) return { data:null, error };
+      if (data) return { data, error:null };
+    }
+
+    const storedRoomSlug = storageGet("DIGIY_LOC_PUBLIC_ROOM_SLUG");
+    if (storedRoomSlug) {
+      const { data, error } = await sb
+        .from("digiy_loc_rooms")
+        .select(`
+          id,
+          owner_id,
+          business_code,
+          nom,
+          adresse,
+          personnes_max,
+          prix_nuit,
+          prix_semaine,
+          prix_mois,
+          description,
+          photo_url,
+          status,
+          phone,
+          slug,
+          is_public,
+          public_url,
+          type_logement
+        `)
+        .eq("slug", storedRoomSlug)
+        .maybeSingle();
+
+      if (error) return { data:null, error };
+      if (data) return { data, error:null };
+    }
+
+    if (SESSION.ownerId) {
+      const { data, error } = await sb
+        .from("digiy_loc_rooms")
+        .select(`
+          id,
+          owner_id,
+          business_code,
+          nom,
+          adresse,
+          personnes_max,
+          prix_nuit,
+          prix_semaine,
+          prix_mois,
+          description,
+          photo_url,
+          status,
+          phone,
+          slug,
+          is_public,
+          public_url,
+          type_logement
+        `)
+        .eq("owner_id", SESSION.ownerId)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) return { data:null, error };
+      if (data) return { data, error:null };
+    }
+
+    if (SESSION.phone) {
+      const { data, error } = await sb
+        .from("digiy_loc_rooms")
+        .select(`
+          id,
+          owner_id,
+          business_code,
+          nom,
+          adresse,
+          personnes_max,
+          prix_nuit,
+          prix_semaine,
+          prix_mois,
+          description,
+          photo_url,
+          status,
+          phone,
+          slug,
+          is_public,
+          public_url,
+          type_logement
+        `)
+        .eq("phone", SESSION.phone)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) return { data:null, error };
+      if (data) return { data, error:null };
+    }
+
+    return { data:null, error:null };
   }
 
-  async function fetchReservations() {
+  async function loadRow(){
+    hideStatus();
+
+    const res = await resolveRoomRecord();
+
+    if (res.error){
+      showStatus("Erreur chargement fiche abonné.\n" + (res.error.message || "Erreur inconnue"), "bad");
+      return;
+    }
+
+    if (!res.data){
+      defaultCreatePayload();
+      showStatus(
+        "Aucune fiche LOC réelle trouvée.\n" +
+        "Tu peux créer la première fiche puis enregistrer.\n" +
+        "Le slug logement proposé est séparé du slug module.",
+        "warn"
+      );
+      return;
+    }
+
+    const row = res.data;
+    ROOM.id = safe(row.id);
+    ROOM.roomSlug = safe(row.slug);
+    ROOM.ownerId = safe(row.owner_id);
+    ROOM.loaded = true;
+
+    fillForm(row);
+    storageSet("DIGIY_LOC_PUBLIC_ROOM_SLUG", ROOM.roomSlug);
+
+    updatePreview();
+    updateHeader();
+
+    showStatus("Fiche chargée ✅\nSlug logement réel : " + (ROOM.roomSlug || "—"), "ok");
+  }
+
+  async function saveRow(){
+    hideStatus();
+
+    if (SESSION.mode !== "live") {
+      showStatus("Impossible d’enregistrer en mode aperçu.\nPasse d’abord par PIN pour ouvrir le vrai rail.", "bad");
+      return;
+    }
+
     const sb = getSB();
-    if(!sb || !State.ownerId) return [];
-
-    const { data, error } = await sb
-      .from(DB.reservations)
-      .select("*")
-      .eq(DB.resOwnerId, State.ownerId)
-      .order(DB.resCheckin, { ascending: true })
-      .limit(200);
-
-    if(error) throw error;
-    return data || [];
-  }
-
-  function renderRooms(list) {
-    const container = document.getElementById("listeLogements");
-    if(!container) return;
-
-    if(!list.length){
-      container.innerHTML = `
-        <p style="color:var(--muted)">
-          ${isLiveMode()
-            ? `Aucun logement. Clique "FICHE ABONNÉ".`
-            : `Aucun logement affiché en aperçu. Passe en mode vivant pour gérer le parc réel.`}
-        </p>`;
+    if (!sb) {
+      showStatus("Supabase non prêt.", "bad");
       return;
     }
 
-    container.innerHTML = list.map(room => {
-      const title = room?.[DB.roomTitle] || room?.title || "Logement";
-      const addr = room?.[DB.roomAddress] || room?.address || "—";
-      const desc = room?.[DB.roomDesc] || "";
-      const pmax = room?.[DB.roomMaxPeople] ?? room?.max_people ?? "—";
-      const pn = room?.[DB.roomPriceNight] ?? room?.price_per_night ?? 0;
-      const pw = room?.[DB.roomPriceWeek] ?? room?.price_per_week ?? 0;
-      const pm = room?.[DB.roomPriceMonth] ?? room?.price_per_month ?? 0;
-      const img = safeImg(room?.[DB.roomPhoto] || room?.cover_url);
-      const status = String(room?.[DB.roomStatus] || room?.status || "actif").toLowerCase();
-      const badge = status.includes("act")
-        ? `<span class="badge badge-success">Actif</span>`
-        : `<span class="badge badge-warning">${esc(status)}</span>`;
+    const finalRoomSlug = slugify(els.room_slug.value) || buildFallbackRoomSlug();
 
-      const disabled = isLiveMode() ? "" : "opacity:.55;pointer-events:none;";
-      const liveHint = isLiveMode() ? "" : `<div style="color:var(--muted);font-size:.85rem;margin-top:.5rem">Action disponible en mode vivant.</div>`;
-
-      return `
-        <div class="logement-card">
-          <img src="${img}" alt="${esc(title)}" class="logement-img" onerror="this.src='https://via.placeholder.com/600x400?text=DIGIY+LOC'">
-          <div class="logement-info">
-            <h3>${esc(title)}</h3>
-            <p>📍 ${esc(addr)}</p>
-            <p>👥 ${esc(pmax)} personnes max</p>
-            ${desc ? `<p>${esc(desc)}</p>` : `<p style="color:var(--muted)">—</p>`}
-            <p style="margin-top:0.5rem">
-              <strong>Tarifs:</strong><br>
-              Nuit: ${moneyFCFA(pn)}<br>
-              Semaine: ${moneyFCFA(pw)}<br>
-              Mois: ${moneyFCFA(pm)}
-            </p>
-            <p style="margin-top:0.5rem">${badge}</p>
-            ${liveHint}
-          </div>
-          <div class="logement-actions" style="${disabled}">
-            <button class="btn btn-secondary" type="button" onclick="openEditLogement('${room.id}')">✏️ Modifier</button>
-            <button class="btn btn-secondary" type="button" onclick="goCalendarRoom('${room.id}')">📅 Calendrier</button>
-            <button class="btn btn-danger" type="button" onclick="deleteLogement('${room.id}')">🗑️ Supprimer</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  async function loadLogements() {
-    if(!isLiveMode()){
-      renderRooms([]);
+    if (!finalRoomSlug) {
+      showStatus("Slug logement invalide.", "bad");
       return;
     }
 
+    els.room_slug.value = finalRoomSlug;
+
+    const payload = {
+      slug: finalRoomSlug,
+      nom: safe(els.nom.value),
+      adresse: safe(els.adresse.value),
+      type_logement: safe(els.type_logement.value) || null,
+      description: safe(els.description.value),
+      phone: safe(els.phone.value) || SESSION.phone || null,
+      personnes_max: num(els.personnes_max.value),
+      prix_nuit: num(els.prix_nuit.value),
+      prix_semaine: num(els.prix_semaine.value),
+      prix_mois: num(els.prix_mois.value),
+      status: safe(els.status.value) || "active",
+      is_public: !!els.is_public.checked,
+      photo_url: safe(els.photo_url.value) || null,
+      public_url: safe(els.public_url.value) || null,
+      owner_id: SESSION.ownerId || null,
+      business_code: SESSION.businessCode || "TEST"
+    };
+
+    if (!payload.nom) {
+      showStatus("Le nom du logement est obligatoire.", "bad");
+      return;
+    }
+
+    let error = null;
+    let data = null;
+
+    if (ROOM.id) {
+      const res = await sb
+        .from("digiy_loc_rooms")
+        .update(payload)
+        .eq("id", ROOM.id)
+        .select("id, slug, owner_id")
+        .maybeSingle();
+
+      error = res.error;
+      data = res.data;
+    } else {
+      const res = await sb
+        .from("digiy_loc_rooms")
+        .insert(payload)
+        .select("id, slug, owner_id")
+        .maybeSingle();
+
+      error = res.error;
+      data = res.data;
+    }
+
+    if (error){
+      showStatus("Erreur enregistrement fiche.\n" + (error.message || "Erreur inconnue"), "bad");
+      return;
+    }
+
+    ROOM.id = safe(data?.id) || ROOM.id;
+    ROOM.roomSlug = safe(data?.slug) || finalRoomSlug;
+    ROOM.ownerId = safe(data?.owner_id) || SESSION.ownerId || ROOM.ownerId;
+    ROOM.loaded = true;
+
+    storageSet("DIGIY_LOC_PUBLIC_ROOM_SLUG", ROOM.roomSlug);
+
+    updatePreview();
+    updateHeader();
+
+    showStatus(
+      "Fiche enregistrée ✅\n" +
+      "Slug logement public : " + (ROOM.roomSlug || "—") + "\n" +
+      "Lien public : " + effectivePublicUrl(),
+      "ok"
+    );
+  }
+
+  async function copyPublicUrl(){
+    const url = effectivePublicUrl();
     try{
-      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-      State.rooms = await fetchRooms();
-      renderRooms(State.rooms);
-
-      const actifs = State.rooms.filter(r =>
-        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
-      ).length;
-
-      setText("logementsActifs", String(actifs));
-    }catch(e){
-      console.error(e);
-      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur chargement logements: ${esc(e.message || e)}</p>`);
+      await navigator.clipboard.writeText(url);
+      showStatus("Lien public copié ✅\n" + url, "ok");
+    }catch{
+      showStatus("Copie automatique impossible.\nLien : " + url, "warn");
     }
   }
 
-  function openEditLogement(roomId){
-    if(!requireLive("Modifier un logement")) return;
-
-    const room = State.rooms.find(r => String(r.id) === String(roomId));
-    if(!room) return alert("Logement introuvable");
-
-    const slug = room?.slug || getCurrentSlug();
-    if (!slug) {
-      alert("Slug introuvable pour ce logement.");
-      return;
-    }
-
-    go(`./fiche-abo.html?slug=${encodeURIComponent(slug)}`);
+  function openPublic(){
+    const url = effectivePublicUrl();
+    window.open(url, "_blank", "noopener,noreferrer");
   }
-
-  async function deleteLogement(roomId){
-    if(!requireLive("Supprimer un logement")) return;
-    if(!confirm("Supprimer ce logement ?")) return;
-
-    try{
-      const sb = getSB();
-      if(!sb) throw new Error("supabase_not_ready");
-
-      const { error } = await sb
-        .from(DB.rooms)
-        .delete()
-        .eq("id", roomId)
-        .eq(DB.roomOwnerId, State.ownerId);
-
-      if(error) throw error;
-      await loadLogements();
-      alert("✅ Supprimé !");
-    }catch(e){
-      console.error(e);
-      alert("❌ " + (e?.message || e));
-    }
-  }
-
-  function goCalendarRoom(roomId){
-    switchTab("calendrier");
-    loadCalendar(roomId);
-  }
-
-  function renderReservations(list){
-    const tb = document.getElementById("tableReservations");
-    if(!tb) return;
-
-    if(!list.length){
-      tb.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align:center;color:var(--muted)">
-            ${isLiveMode()
-              ? `Aucune réservation`
-              : `Aperçu élégant du tableau réservations. Les vraies données s’affichent en mode vivant.`}
-          </td>
-        </tr>`;
-      return;
-    }
-
-    tb.innerHTML = list.map(r => {
-      const client = r?.[DB.resClientName] || "Client";
-      const logement = roomNameById(r?.[DB.resRoomId]);
-      const dates = `${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`;
-      const amount = moneyFCFA(r?.[DB.resAmount]);
-      const status = badgeForStatus(r);
-
-      return `
-        <tr>
-          <td>${esc(client)}<div style="color:var(--muted);font-size:0.85rem">${esc(r?.[DB.resPhone] || "")}</div></td>
-          <td>${esc(logement)}</td>
-          <td>${esc(dates)}</td>
-          <td><strong>${esc(amount)}</strong></td>
-          <td>${status}</td>
-          <td>
-            <button class="btn btn-secondary" type="button" style="padding:0.5rem 0.8rem" onclick="viewReservation('${r.id}')">👁️</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  function viewReservation(resId){
-    if(!requireLive("Ouvrir une réservation")) return;
-
-    const r = State.reservations.find(x => String(x.id) === String(resId));
-    if(!r) return alert("Réservation introuvable");
-
-    const lines = [
-      `Client: ${r?.[DB.resClientName] || "—"}`,
-      `Tel: ${r?.[DB.resPhone] || "—"}`,
-      `Logement: ${roomNameById(r?.[DB.resRoomId])}`,
-      `Dates: ${fmtDate(r?.[DB.resCheckin])} → ${fmtDate(r?.[DB.resCheckout])}`,
-      `Montant: ${moneyFCFA(r?.[DB.resAmount])}`,
-      `Status: ${r?.[DB.resStatus] || "—"}`,
-      `Paiement: ${r?.[DB.resPayStatus] || "—"}`
-    ];
-    alert(lines.join("\n"));
-  }
-
-  async function loadReservations(){
-    if(!isLiveMode()){
-      renderReservations([]);
-      return;
-    }
-
-    try{
-      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-      if(!State.rooms.length) State.rooms = await fetchRooms();
-      State.reservations = await fetchReservations();
-      renderReservations(State.reservations);
-      await loadDashboard();
-    }catch(e){
-      console.error(e);
-      setHTML("tableReservations",
-        `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur: ${esc(e.message || e)}</td></tr>`
-      );
-    }
-  }
-
-  async function loadDashboard(){
-    if(!isLiveMode()){
-      renderPreviewShell(UX.reason || "preview");
-      return;
-    }
-
-    try{
-      if(!State.rooms.length) State.rooms = await fetchRooms();
-      if(!State.reservations.length) State.reservations = await fetchReservations();
-
-      const now = new Date();
-      const mStart = startOfMonth(now);
-      const mEnd = endOfMonth(now);
-      const mStartY = ymd(mStart);
-      const mEndY = ymd(mEnd);
-
-      let revenus = 0;
-      let activeCount = 0;
-      let upcoming = [];
-      let pending = [];
-
-      const daysInMonth = mEnd.getDate();
-      const busyDays = new Set();
-
-      for(const r of State.reservations){
-        const pay = String(r?.[DB.resPayStatus] || "").toLowerCase();
-        const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-        const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-        const roomId = r?.[DB.resRoomId];
-
-        if(ci >= mStartY && ci <= mEndY && (pay === "paid" || pay === "succeeded")){
-          revenus += Number(r?.[DB.resAmount] || 0);
-        }
-
-        if(reservationIsActive(r)) activeCount++;
-        if(reservationIsUpcoming(r)) upcoming.push(r);
-        if(reservationIsPending(r)) pending.push(r);
-
-        if(roomId && ci && co){
-          let d = new Date(ci + "T00:00:00");
-          const end = new Date(co + "T00:00:00");
-          while(d < end){
-            const dy = ymd(d);
-            if(dy >= mStartY && dy <= mEndY) busyDays.add(`${roomId}|${dy}`);
-            d.setDate(d.getDate()+1);
-          }
-        }
-      }
-
-      setText("revenusMois", moneyFCFA(revenus));
-      setText("resasActives", String(activeCount));
-
-      const actifs = State.rooms.filter(r =>
-        String(r?.[DB.roomStatus] || r?.status || "actif").toLowerCase().includes("act")
-      ).length;
-      setText("logementsActifs", String(actifs));
-
-      const denom = Math.max(1, actifs * daysInMonth);
-      const occ = Math.round((busyDays.size / denom) * 100);
-      setText("tauxOccupation", String(occ) + "%");
-
-      upcoming = upcoming
-        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
-        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
-        .slice(0,5);
-
-      setHTML("prochainesArrivees",
-        !upcoming.length
-          ? `<p style="color:var(--muted)">Aucune réservation à venir</p>`
-          : upcoming.map(r => `
-            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
-              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · <strong>${esc(moneyFCFA(r?.[DB.resAmount]))}</strong></div>
-            </div>
-          `).join("")
-      );
-
-      pending = pending
-        .filter(r => !String(r?.[DB.resStatus]||"").toLowerCase().includes("cancel"))
-        .sort((a,b) => String(a?.[DB.resCheckin]).localeCompare(String(b?.[DB.resCheckin])))
-        .slice(0,5);
-
-      setHTML("demandesAttente",
-        !pending.length
-          ? `<p style="color:var(--muted)">Aucune demande en attente</p>`
-          : pending.map(r => `
-            <div style="padding:0.75rem;border-bottom:1px solid var(--border)">
-              <div style="font-weight:800">${esc(r?.[DB.resClientName] || "Client")} — ${esc(roomNameById(r?.[DB.resRoomId]))}</div>
-              <div style="color:var(--muted);margin-top:0.2rem">${esc(fmtDate(r?.[DB.resCheckin]))} → ${esc(fmtDate(r?.[DB.resCheckout]))} · ${badgeForStatus(r)}</div>
-            </div>
-          `).join("")
-      );
-
-      setHTML("statsDetails", `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
-          <div class="stat-card">
-            <div class="stat-label">Téléphone</div>
-            <div class="stat-value" style="font-size:1.15rem">${esc(State.phone || "—")}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Slug</div>
-            <div class="stat-value" style="font-size:1.15rem">${esc(State.slug || "—")}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Business code</div>
-            <div class="stat-value" style="font-size:1.15rem">${esc(State.business_code || "TEST")}</div>
-          </div>
-        </div>
-      `);
-
-      showAccessBanner("live");
-      hydrateHeader();
-
-    }catch(e){
-      console.error(e);
-    }
-  }
-
-  function buildCalendar(monthDate, reservations, roomIdFilter=null){
-    const view = document.getElementById("calendarView");
-    if(!view) return;
-
-    const monthStart = startOfMonth(monthDate);
-    const monthEnd = endOfMonth(monthDate);
-    const firstDow = (monthStart.getDay() + 6) % 7;
-    const days = monthEnd.getDate();
-
-    const busy = new Set();
-    for(const r of reservations){
-      if(roomIdFilter && String(r?.[DB.resRoomId]) !== String(roomIdFilter)) continue;
-      const st = String(r?.[DB.resStatus] || "").toLowerCase();
-      if(st.includes("cancel")) continue;
-
-      const ci = String(r?.[DB.resCheckin] || "").slice(0,10);
-      const co = String(r?.[DB.resCheckout] || "").slice(0,10);
-      if(!ci || !co) continue;
-
-      let d = new Date(ci + "T00:00:00");
-      const end = new Date(co + "T00:00:00");
-      while(d < end){
-        const key = ymd(d);
-        if(key.slice(0,7) === ymd(monthStart).slice(0,7)) busy.add(key);
-        d.setDate(d.getDate()+1);
-      }
-    }
-
-    const monthLabel = monthStart.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
-    const dows = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(x=>`<div class="cal-dow">${x}</div>`).join("");
-
-    let cells = "";
-    for(let i=0;i<firstDow;i++) cells += `<div class="cal-day off"></div>`;
-
-    for(let day=1; day<=days; day++){
-      const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
-      const key = ymd(dt);
-      const isBusy = busy.has(key);
-      cells += `
-        <div class="cal-day ${isBusy ? "busy":"free"}">
-          <div class="n">${day}</div>
-          <div class="mini">${isBusy ? "Occupé" : "Libre"}</div>
-        </div>
-      `;
-    }
-
-    let filterLabel = "";
-    if(roomIdFilter){
-      filterLabel = ` · <span style="color:var(--muted)">Logement: <strong>${esc(roomNameById(roomIdFilter))}</strong></span>`;
-    }
-
-    view.innerHTML = `
-      <div class="cal-wrap">
-        <div class="cal-box">
-          <div class="cal-head">
-            <div style="font-weight:900;text-transform:capitalize">${esc(monthLabel)}${filterLabel}</div>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calPrev()">◀</button>
-              <button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="calNext()">▶</button>
-              ${roomIdFilter ? `<button class="btn btn-secondary" style="padding:0.5rem 0.8rem" type="button" onclick="loadCalendar()">Tout voir</button>` : ``}
-            </div>
-          </div>
-          <div class="cal-grid">${dows}${cells}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  let _calCursor = new Date();
-
-  function calPrev(){
-    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()-1, 1);
-    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
-    else renderPreviewShell(UX.reason || "preview");
-  }
-
-  function calNext(){
-    _calCursor = new Date(_calCursor.getFullYear(), _calCursor.getMonth()+1, 1);
-    if (isLiveMode()) buildCalendar(_calCursor, State.reservations, State._calRoom || null);
-    else renderPreviewShell(UX.reason || "preview");
-  }
-
-  async function loadCalendar(roomId=null){
-    if(!isLiveMode()){
-      renderPreviewShell(UX.reason || "preview");
-      return;
-    }
-
-    try{
-      if(!sbReady()) throw new Error("Supabase pas prêt. Recharge la page.");
-      State._calRoom = roomId || null;
-      if(!State.rooms.length) State.rooms = await fetchRooms();
-      if(!State.reservations.length) State.reservations = await fetchReservations();
-      buildCalendar(_calCursor, State.reservations, roomId);
-    }catch(e){
-      console.error(e);
-      setHTML("calendarView", `<p style="color:var(--danger)">Erreur calendrier: ${esc(e.message || e)}</p>`);
-    }
-  }
-
-  async function pulseTest(){
-    if(!requireLive("Envoyer un test Pulse")) return;
-
-    const msgEl = document.getElementById("pulseMsg");
-    if(!PULSE.enabled){
-      if(msgEl) msgEl.textContent = "Pulse désactivé.";
-      return;
-    }
-
-    try{
-      if(msgEl) msgEl.textContent = "Envoi en cours…";
-
-      const headers = { "Content-Type":"application/json" };
-      if(PULSE.apiKey) headers["x-api-key"] = PULSE.apiKey;
-
-      const body = {
-        channel: "whatsapp",
-        phone: State.phone,
-        business_code: State.business_code || "TEST",
-        pulse_kind: "TEST",
-        message: "Test DIGIY PULSE ✅"
-      };
-
-      if(!body.phone) throw new Error("Téléphone introuvable (session).");
-
-      const r = await fetch(PULSE.base + PULSE.endpoint, {
-        method:"POST",
-        headers,
-        body: JSON.stringify(body)
-      });
-
-      const j = await r.json().catch(()=> ({}));
-      if(!r.ok) throw new Error(j?.error || ("HTTP " + r.status));
-
-      if(msgEl) msgEl.textContent = "✅ Test envoyé";
-    }catch(e){
-      console.error(e);
-      if(msgEl) msgEl.textContent = "❌ " + (e.message || e);
-    }
-  }
-
-  window.openEditLogement = openEditLogement;
-  window.goCalendarRoom = goCalendarRoom;
-  window.deleteLogement = deleteLogement;
-  window.viewReservation = viewReservation;
-  window.calPrev = calPrev;
-  window.calNext = calNext;
-  window.loadCalendar = loadCalendar;
 
   async function init(){
-    bindNav();
-    bindActions();
-    bindTabs();
-    bindNdimbal();
-    refreshPublicButtons();
+    bindLivePreview();
 
-    if(!window.DIGIY_GUARD){
-      fail("Guard absent ou non chargé.");
+    els.btnSave.addEventListener("click", saveRow);
+    els.btnSave2.addEventListener("click", saveRow);
+    els.btnReload.addEventListener("click", loadRow);
+    els.btnOpenPublic.addEventListener("click", openPublic);
+    els.btnCopyPublic.addEventListener("click", copyPublicUrl);
+
+    if (!window.DIGIY_GUARD) {
+      els.loading.innerHTML = `
+        <div class="box">
+          <div class="t">❌ Guard introuvable</div>
+          <div class="s">Le rail PRO n’est pas chargé. Vérifie <b>guard.js</b>.</div>
+        </div>
+      `;
       return;
     }
 
     try{
       await waitGuardReady();
-    }catch(e){
-      fail("Guard non prêt.");
+    }catch{
+      els.loading.innerHTML = `
+        <div class="box">
+          <div class="t">❌ Guard non prêt</div>
+          <div class="s">La page ne peut pas sécuriser correctement l’accès.</div>
+        </div>
+      `;
       return;
     }
 
     const st = getGuardState();
-    State.phone = st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
-    State.slug = st.slug || getCurrentSlug() || "";
-    UX.reason = st.reason || "preview";
-
-    hydrateHeader();
-    activateApp();
-
-    if(!st.access_ok){
-      renderPreviewShell(UX.reason || "preview");
-      return;
-    }
+    SESSION.phone = safe(st.phone) || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE");
+    SESSION.moduleSlug = safe(st.slug);
+    SESSION.reason = safe(st.reason) || "preview";
 
     const ctx = await resolveOwnerContext();
+    SESSION.ownerId = safe(ctx?.owner_id);
+    SESSION.businessCode = safe(ctx?.business_code) || "TEST";
+    SESSION.businessName = safe(ctx?.business_name);
 
-    if(!ctx?.owner_id){
-      UX.reason = "owner_unresolved";
-      renderPreviewShell("owner_unresolved");
-      return;
+    els.loading.style.display = "none";
+    els.app.style.display = "block";
+
+    if (st.access_ok) {
+      setMode("live", "ok");
+      showBanner("live", "Accès confirmé. Tu modifies la vraie ligne logement.");
+      lockForm(false);
+    } else {
+      setMode("preview", SESSION.reason || "preview");
+      showBanner("preview", "Mode aperçu. Tu peux lire et préparer, mais l’enregistrement reste verrouillé tant que le PIN / accès n’est pas confirmé.");
+      lockForm(true);
     }
 
-    State.ownerId = ctx.owner_id;
-    State.business_code = ctx.business_code || "TEST";
-    State.business_name = ctx.business_name || "";
-    UX.mode = "live";
-    UX.reason = "ok";
-
-    try { localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
-    try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); } catch {}
-    try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
-    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", State.business_code); } catch {}
-    try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
-    try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.business_name || ""); } catch {}
-    try { if (State.business_name) localStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
-    try { if (State.business_name) sessionStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
-
-    hydrateHeader();
-    refreshPublicButtons();
-
-    try{
-      State.rooms = await fetchRooms();
-      State.reservations = await fetchReservations();
-
-      renderRooms(State.rooms);
-      renderReservations(State.reservations);
-      buildCalendar(_calCursor, State.reservations, null);
-      await loadDashboard();
-    }catch(e){
-      console.warn("Init error:", e);
-      showAccessBanner("live");
-      setHTML("listeLogements", `<p style="color:var(--danger)">Erreur initiale logements: ${esc(e.message || e)}</p>`);
-      setHTML("tableReservations", `<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erreur initiale réservations: ${esc(e.message || e)}</td></tr>`);
-      setHTML("calendarView", `<p style="color:var(--danger)">Erreur initiale calendrier: ${esc(e.message || e)}</p>`);
-    }
+    updateHeader();
+    defaultCreatePayload();
+    await loadRow();
   }
 
-  init();
+  init().catch((e)=>{
+    console.error(e);
+    els.loading.innerHTML = `
+      <div class="box">
+        <div class="t">❌ Erreur fiche abonné</div>
+        <div class="s">${esc(e?.message || e)}</div>
+      </div>
+    `;
+  });
 })();
 </script>
 
