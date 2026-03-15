@@ -7,17 +7,20 @@
   <meta name="theme-color" content="#0b1020"/>
 
   <!-- ✅ CONFIG SUPABASE -->
-<script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-</script>
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_PUBLIC_LOC_BASE = "https://beauville.github.io/digiy-loc/";
+  </script>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- ✅ Guard (nouveau rail PRO) -->
-<script src="./guard.js?v=locpro-final-v3"></script>
+  <!-- ✅ Guard (nouveau rail PRO) -->
+  <script src="./guard.js?v=locpro-final-v4"></script>
+
   <style>
     :root{
       --bg:#061b14;
@@ -220,10 +223,28 @@
       gap:1.5rem;
       align-items:start;
     }
-    .logement-img{width:200px;height:150px;object-fit:cover;border-radius:8px;background:rgba(0,0,0,.18)}
-    .logement-info h3{margin:0 0 0.5rem;color:var(--accent);font-size:1.2rem;}
-    .logement-info p{margin:0.25rem 0;color:var(--muted);font-size:0.9rem;}
-    .logement-actions{display:flex;flex-direction:column;gap:0.5rem;}
+    .logement-img{
+      width:200px;
+      height:150px;
+      object-fit:cover;
+      border-radius:8px;
+      background:rgba(0,0,0,.18)
+    }
+    .logement-info h3{
+      margin:0 0 0.5rem;
+      color:var(--accent);
+      font-size:1.2rem;
+    }
+    .logement-info p{
+      margin:0.25rem 0;
+      color:var(--muted);
+      font-size:0.9rem;
+    }
+    .logement-actions{
+      display:flex;
+      flex-direction:column;
+      gap:0.5rem;
+    }
 
     /* CALENDAR */
     .cal-wrap{display:flex;gap:1rem;flex-wrap:wrap}
@@ -235,8 +256,11 @@
       width:100%;
     }
     .cal-head{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:0.5rem;margin-bottom:0.75rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:0.5rem;
+      margin-bottom:0.75rem;
     }
     .cal-grid{
       display:grid;
@@ -244,8 +268,10 @@
       gap:0.5rem;
     }
     .cal-dow{
-      font-size:0.75rem;color:var(--muted);
-      text-transform:uppercase;font-weight:700;
+      font-size:0.75rem;
+      color:var(--muted);
+      text-transform:uppercase;
+      font-weight:700;
       text-align:center;
       padding:0.25rem 0;
     }
@@ -303,7 +329,7 @@
 
         <!-- ✅ MINI NAV TOP -->
         <div class="miniNav">
-          <a class="btn btn-secondary" data-go="./app.html" data-mode="replace" href="#">🏠 Cockpit</a>
+          <a class="btn btn-secondary" data-go="./cockpit.html" data-mode="replace" href="#">🏠 Cockpit</a>
           <a class="btn btn-secondary" data-go="./today.html" href="#">📅 Vue du jour</a>
           <a class="btn btn-secondary" data-go="./planning.html" href="#">🗓️ Planning</a>
           <a class="btn btn-secondary" data-go="./reservations-pulse.html" href="#">📲 Pulse</a>
@@ -312,9 +338,21 @@
       </div>
 
       <div class="header-actions">
-        <button class="btn btn-primary" data-go="./generator.html" type="button">
-          🏗️ CRÉER UNE FICHE LOGEMENT
+        <button class="btn btn-primary" data-go="./fiche-abo.html" type="button">
+          🏗️ FICHE ABONNÉ
         </button>
+
+        <a class="btn btn-secondary" id="btnPublicRoom" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
+          🌍 Voir la fiche publique
+        </a>
+
+        <a class="btn btn-secondary" id="btnPublicIndex" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">
+          🌐 Voir la vitrine LOC
+        </a>
+
+        <a class="btn btn-secondary" href="https://digiylyfe.com/" target="_blank" rel="noopener noreferrer">
+          ← Retour au site
+        </a>
 
         <button class="btn btn-secondary" data-go="./manage-links.html" type="button">
           🔗 Liens / QR
@@ -458,7 +496,7 @@
      CONFIG
   ============================= */
   const MODULE = "LOC";
-  const PAY_URL = "https://beauville.github.io/commencer-a-payer/?module=LOC";
+  const PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
 
   const DB = {
     rooms: "digiy_loc_rooms",
@@ -637,6 +675,33 @@
     ).trim();
   }
 
+  function publicIndexUrl(){
+    return String(window.DIGIY_PUBLIC_LOC_BASE || "https://beauville.github.io/digiy-loc/").trim();
+  }
+
+  function publicRoomUrl(){
+    const slug = getCurrentSlug();
+    if (!slug) return publicIndexUrl();
+    const u = new URL("fiche.html", publicIndexUrl());
+    u.searchParams.set("slug", slug);
+    return u.toString();
+  }
+
+  function refreshPublicButtons(){
+    const roomBtn = document.getElementById("btnPublicRoom");
+    const indexBtn = document.getElementById("btnPublicIndex");
+    const slug = getCurrentSlug();
+
+    if (roomBtn) {
+      roomBtn.href = publicRoomUrl();
+      roomBtn.textContent = slug ? "🌍 Voir la fiche publique" : "🌍 Voir le site public";
+    }
+
+    if (indexBtn) {
+      indexBtn.href = publicIndexUrl();
+    }
+  }
+
   function withSlug(url){
     const slug = getCurrentSlug();
     if (!slug) return url;
@@ -753,6 +818,7 @@
     const st = getGuardState();
     const pin = pinUrl();
     const pay = payUrl();
+    const publicRoom = publicRoomUrl();
 
     let title = "👁️ Mode aperçu";
     let text = "Le cockpit reste visible proprement, sans mur brutal.";
@@ -792,6 +858,7 @@
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
           <a class="btn btn-secondary" href="${esc(pin)}">🔑 Ouvrir PIN</a>
           <a class="btn btn-primary" href="${esc(pay)}">💳 Activer l’accès</a>
+          <a class="btn btn-secondary" href="${esc(publicRoom)}" target="_blank" rel="noopener noreferrer">🌍 Voir public</a>
         </div>
       </div>
     `;
@@ -811,6 +878,7 @@
 
     setText("userPhone", phone || "—");
     setText("userName", businessName || "Gestionnaire");
+    refreshPublicButtons();
   }
 
   function renderPreviewShell(reason){
@@ -1105,7 +1173,7 @@
       container.innerHTML = `
         <p style="color:var(--muted)">
           ${isLiveMode()
-            ? `Aucun logement. Clique "CRÉER UNE FICHE LOGEMENT".`
+            ? `Aucun logement. Clique "FICHE ABONNÉ".`
             : `Aucun logement affiché en aperçu. Passe en mode vivant pour gérer le parc réel.`}
         </p>`;
       return;
@@ -1183,16 +1251,13 @@
     const room = State.rooms.find(r => String(r.id) === String(roomId));
     if(!room) return alert("Logement introuvable");
 
-    const newName = prompt("Nom du logement :", room?.[DB.roomTitle] || room?.title || "");
-    if(newName === null) return;
+    const slug = room?.slug || getCurrentSlug();
+    if (!slug) {
+      alert("Slug introuvable pour ce logement.");
+      return;
+    }
 
-    const newAddr = prompt("Adresse :", room?.[DB.roomAddress] || room?.address || "");
-    if(newAddr === null) return;
-
-    updateLogement(roomId, {
-      [DB.roomTitle]: newName.trim(),
-      [DB.roomAddress]: newAddr.trim()
-    });
+    go(`./fiche-abo.html?slug=${encodeURIComponent(slug)}`);
   }
 
   async function updateLogement(roomId, patch){
@@ -1611,6 +1676,7 @@
     bindActions();
     bindTabs();
     bindNdimbal();
+    refreshPublicButtons();
 
     if(!window.DIGIY_GUARD){
       fail("Guard absent ou non chargé.");
@@ -1663,6 +1729,7 @@
     try { if (State.business_name) sessionStorage.setItem("DIGIY_BUSINESS_NAME", State.business_name); } catch {}
 
     hydrateHeader();
+    refreshPublicButtons();
 
     try{
       State.rooms = await fetchRooms();
