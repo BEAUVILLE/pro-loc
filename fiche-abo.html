@@ -3,16 +3,14 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Demande d’accès / abonnement</title>
+  <title>DIGIY LOC PRO — Pré-fiche propriétaire</title>
   <meta name="theme-color" content="#0b1020"/>
-  <meta name="description" content="DIGIY LOC PRO — Demande d’accès et abonnement propriétaire, version légère sans backend."/>
+  <meta name="description" content="DIGIY LOC PRO — Pré-fiche propriétaire en attente du traitement des photos par DIGIY."/>
 
   <style>
     :root{
       --bg:#061b14;
       --bg2:#0a2820;
-      --card:#052e16;
-      --card2:#0b1220;
       --accent:#facc15;
       --success:#22c55e;
       --danger:#ef4444;
@@ -22,13 +20,11 @@
       --border:rgba(148,163,184,0.20);
       --line:rgba(255,255,255,.10);
       --shadow:0 20px 50px rgba(0,0,0,.35);
-      --radius:18px;
-      --wa:#25D366;
-      --mail:#60a5fa;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{min-height:100%}
+
     body{
       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
@@ -127,12 +123,12 @@
       color:var(--text);
       border:1px solid var(--border);
     }
-    .btn-success{
+    .btn-wa{
       background:rgba(34,197,94,.18);
       color:#dcfce7;
       border:1px solid rgba(34,197,94,.35);
     }
-    .btn-info{
+    .btn-mail{
       background:rgba(56,189,248,.16);
       color:#dbeafe;
       border:1px solid rgba(96,165,250,.35);
@@ -142,16 +138,6 @@
       color:#fee2e2;
       border:1px solid rgba(239,68,68,.35);
     }
-    .btn-wa{
-      background:rgba(37,211,102,.16);
-      color:#dcfce7;
-      border:1px solid rgba(37,211,102,.35);
-    }
-    .btn-mail{
-      background:rgba(96,165,250,.16);
-      color:#dbeafe;
-      border:1px solid rgba(96,165,250,.35);
-    }
 
     .banner{
       border-radius:18px;
@@ -160,7 +146,7 @@
       background:rgba(250,204,21,.08);
       color:#fde68a;
       font-weight:800;
-      line-height:1.55;
+      line-height:1.65;
       box-shadow:var(--shadow);
       margin-bottom:16px;
     }
@@ -219,14 +205,8 @@
       gap:14px;
     }
 
-    .row3{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:14px;
-    }
-
     @media(max-width:760px){
-      .row2,.row3{grid-template-columns:1fr}
+      .row2{grid-template-columns:1fr}
     }
 
     label{
@@ -264,6 +244,53 @@
       line-height:1.55;
     }
 
+    .drop{
+      border:1px dashed rgba(148,163,184,.35);
+      border-radius:16px;
+      padding:14px;
+      background:rgba(255,255,255,.03);
+    }
+
+    .dropTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .gallery{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .thumb{
+      border:1px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+      background:rgba(2,6,23,.55);
+    }
+
+    .thumb img{
+      width:100%;
+      height:110px;
+      object-fit:cover;
+      display:block;
+      background:#0b1220;
+    }
+
+    .thumb .cap{
+      padding:8px 10px;
+      font-size:.76rem;
+      color:#cbd5e1;
+      font-weight:800;
+      line-height:1.45;
+      word-break:break-word;
+    }
+
     .toolbar{
       display:flex;
       gap:10px;
@@ -288,18 +315,18 @@
       color:#dcfce7;
     }
 
-    .status.bad{
-      display:block;
-      border:1px solid rgba(239,68,68,.35);
-      background:rgba(239,68,68,.10);
-      color:#fee2e2;
-    }
-
     .status.warn{
       display:block;
       border:1px solid rgba(250,204,21,.35);
       background:rgba(250,204,21,.10);
       color:#fde68a;
+    }
+
+    .status.bad{
+      display:block;
+      border:1px solid rgba(239,68,68,.35);
+      background:rgba(239,68,68,.10);
+      color:#fee2e2;
     }
 
     .meta{
@@ -458,51 +485,15 @@
       .pgrid{grid-template-columns:1fr}
     }
 
-    .drop{
-      border:1px dashed rgba(148,163,184,.35);
-      border-radius:16px;
-      padding:14px;
-      background:rgba(255,255,255,.03);
-    }
-
-    .dropTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .gallery{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-      gap:12px;
-      margin-top:12px;
-    }
-
-    .thumb{
-      border:1px solid var(--border);
-      border-radius:16px;
-      overflow:hidden;
-      background:rgba(2,6,23,.55);
-    }
-
-    .thumb img{
+    .copyBox{
       width:100%;
-      height:110px;
-      object-fit:cover;
-      display:block;
-      background:#0b1220;
-    }
-
-    .thumb .cap{
-      padding:8px 10px;
-      font-size:.76rem;
-      color:#cbd5e1;
-      font-weight:800;
-      line-height:1.45;
-      word-break:break-word;
+      min-height:240px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.72);
+      color:#fff;
+      padding:14px;
+      line-height:1.6;
     }
 
     .note{
@@ -515,17 +506,6 @@
       font-weight:700;
       line-height:1.6;
     }
-
-    .copyBox{
-      width:100%;
-      min-height:240px;
-      border-radius:16px;
-      border:1px solid var(--border);
-      background:rgba(2,6,23,.72);
-      color:#fff;
-      padding:14px;
-      line-height:1.6;
-    }
   </style>
 </head>
 <body>
@@ -536,8 +516,8 @@
     <div class="title">
       <div class="logo">🏠</div>
       <div>
-        <h1>DIGIY LOC PRO — Demande d’accès / abonnement</h1>
-        <p id="headIdentity">Version légère • sans Supabase • sans backend • terrain d’abord</p>
+        <h1>DIGIY LOC PRO — Pré-fiche propriétaire</h1>
+        <p>Pré-fiche en attente du traitement des photos par DIGIY avant publication officielle</p>
       </div>
     </div>
 
@@ -549,15 +529,20 @@
   </div>
 
   <div class="banner">
-    Ici on ne fait pas semblant d’être une grosse machine.  
-    Le propriétaire prépare son dossier, joint ses photos, et DIGIY reçoit une demande propre pour créer l’accès et l’abonnement.
+    ⚠️ <b>Pré-fiche logement DIGIY LOC</b><br><br>
+    Cette fiche est une <b>pré-fiche propriétaire</b>.<br><br>
+    1️⃣ Vous remplissez les informations du logement et ajoutez vos photos.<br>
+    2️⃣ L’équipe DIGIY récupère les photos et les place dans la médiathèque officielle.<br>
+    3️⃣ DIGIY vous renvoie les <b>URLs des photos</b>.<br>
+    4️⃣ Vous collez ces URLs dans la zone prévue ci-dessous.<br><br>
+    ✔ Une fois les URLs ajoutées, la fiche devient <b>fiche officielle publiable</b> sur le site DIGIY LOC.
   </div>
 
   <div class="grid">
     <section class="card">
       <div class="head">
         <h2>Dossier propriétaire</h2>
-        <p>Remplis le logement, ajoute les photos, puis prépare l’envoi vers DIGIY. Les photos sont prévisualisées ici, mais ne sont pas envoyées automatiquement à WhatsApp.</p>
+        <p>Prépare la pré-fiche, ajoute les photos, puis attends le retour DIGIY avec les URLs officielles.</p>
       </div>
 
       <div class="body">
@@ -586,7 +571,7 @@
             </label>
           </div>
 
-          <div class="row3">
+          <div class="row2">
             <label>
               Type de logement
               <select id="type_logement">
@@ -603,20 +588,9 @@
               Capacité
               <input id="personnes_max" type="number" min="1" placeholder="Ex : 4">
             </label>
-
-            <label>
-              Budget abonnement souhaité
-              <select id="plan">
-                <option value="">Choisir</option>
-                <option value="Demande simple">Demande simple</option>
-                <option value="Abonnement mensuel">Abonnement mensuel</option>
-                <option value="Abonnement annuel">Abonnement annuel</option>
-                <option value="À discuter avec DIGIY">À discuter avec DIGIY</option>
-              </select>
-            </label>
           </div>
 
-          <div class="row3">
+          <div class="row2">
             <label>
               Prix / nuit
               <input id="prix_nuit" type="number" min="0" step="1" placeholder="Ex : 25000">
@@ -626,12 +600,12 @@
               Prix / semaine
               <input id="prix_semaine" type="number" min="0" step="1" placeholder="Ex : 150000">
             </label>
-
-            <label>
-              Prix / mois
-              <input id="prix_mois" type="number" min="0" step="1" placeholder="Ex : 450000">
-            </label>
           </div>
+
+          <label>
+            Prix / mois
+            <input id="prix_mois" type="number" min="0" step="1" placeholder="Ex : 450000">
+          </label>
 
           <label>
             Description du logement
@@ -639,30 +613,43 @@
           </label>
 
           <label>
-            Ce que vous demandez à DIGIY
-            <textarea id="need_text" placeholder="Ex : Je veux mon accès, mon abonnement DIGIY LOC, et que vous m’aidiez à poser les photos dans la médiathèque avant l’enregistrement final."></textarea>
+            Message / besoin
+            <textarea id="need_text" placeholder="Ex : Je veux mon accès DIGIY LOC, envoyer mes photos et préparer mon abonnement."></textarea>
           </label>
 
           <div class="drop">
             <div class="dropTop">
               <div>
                 <div style="font-weight:950;color:#fff">Photos du logement</div>
-                <div class="mini">Choisis plusieurs photos. Elles seront visibles ici pour vérification terrain.</div>
+                <div class="mini">Sélectionne plusieurs photos. Elles sont prévisualisées ici avant traitement DIGIY.</div>
               </div>
-              <label class="btn btn-info" style="cursor:pointer">
+              <label class="btn btn-secondary" style="cursor:pointer">
                 📷 Ajouter photos
                 <input id="photos" type="file" accept="image/*" multiple hidden>
               </label>
             </div>
 
             <div class="mini">
-              Important : sans backend, les photos restent sur cet appareil pour prévisualisation.  
-              Pour WhatsApp, il faudra les joindre manuellement après ouverture de la conversation.  
-              Pour email, selon l’appareil, il faudra souvent aussi les joindre manuellement.
+              Les photos servent à constituer la pré-fiche.  
+              DIGIY les traite ensuite et renvoie les URLs officielles.
             </div>
 
             <div class="gallery" id="gallery"></div>
           </div>
+
+          <label>
+            Photos officielles (URLs DIGIY)
+            <textarea id="photos_urls" placeholder="Collez ici les URLs des photos envoyées par DIGIY.
+Une URL par ligne.
+
+Exemple :
+https://digiylyfe.com/media/loc/villa-saly/photo1.jpg
+https://digiylyfe.com/media/loc/villa-saly/photo2.jpg
+https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
+            <div class="mini">
+              Lorsque ces URLs sont ajoutées, la fiche peut devenir officielle et être publiée.
+            </div>
+          </label>
         </div>
 
         <div class="toolbar">
@@ -688,14 +675,13 @@
             <div class="metaV" id="metaPhotos">0</div>
           </div>
           <div class="metaBox">
-            <div class="metaK">Mode</div>
-            <div class="metaV">Léger • manuel • terrain</div>
+            <div class="metaK">Statut dossier</div>
+            <div class="metaV" id="metaState">Pré-fiche en attente</div>
           </div>
         </div>
 
         <div class="note">
-          Doctrine propre : DIGIY reçoit d’abord un dossier simple, puis renvoie les URLs des images si besoin.  
-          On allège le propriétaire. On ne le noie pas dans une usine à gaz.
+          Rail DIGIY LOC : <b>pré-fiche → traitement photos → URLs officielles → fiche officielle publiable</b>.
         </div>
       </div>
     </section>
@@ -710,7 +696,7 @@
             <div class="chips">
               <div class="chip gold" id="pvType">Type</div>
               <div class="chip" id="pvVille">Ville</div>
-              <div class="chip green">Demande abonnement</div>
+              <div class="chip green" id="pvState">Pré-fiche en attente</div>
             </div>
           </div>
         </div>
@@ -735,10 +721,6 @@
               <div class="v" id="pvCap">—</div>
             </div>
             <div class="pbox">
-              <div class="k">Plan souhaité</div>
-              <div class="v" id="pvPlan">—</div>
-            </div>
-            <div class="pbox">
               <div class="k">Prix / Nuit</div>
               <div class="v" id="pvPn">—</div>
             </div>
@@ -746,7 +728,7 @@
               <div class="k">Prix / Semaine</div>
               <div class="v" id="pvPs">—</div>
             </div>
-            <div class="pbox" style="grid-column:1/-1">
+            <div class="pbox">
               <div class="k">Prix / Mois</div>
               <div class="v" id="pvPm">—</div>
             </div>
@@ -755,6 +737,11 @@
           <div class="pbox">
             <div class="k">Besoin exprimé</div>
             <div class="v" id="pvNeed">Le besoin apparaîtra ici.</div>
+          </div>
+
+          <div class="pbox">
+            <div class="k">URLs photos officielles</div>
+            <div class="v" id="pvUrls">En attente des URLs photos DIGIY.</div>
           </div>
 
           <div class="pbox">
@@ -772,10 +759,9 @@
   "use strict";
 
   const TEAM_WA = "221771342889";
-  const TEAM_WA_PRETTY = "+221771342889";
   const TEAM_EMAIL = "digiylyfe@gmail.com";
   const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
-  const STORAGE_KEY = "DIGIY_LOC_PRO_LIGHT_DRAFT_V1";
+  const STORAGE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V2";
 
   const state = {
     photos: []
@@ -788,16 +774,17 @@
     adresse: document.getElementById("adresse"),
     type_logement: document.getElementById("type_logement"),
     personnes_max: document.getElementById("personnes_max"),
-    plan: document.getElementById("plan"),
     prix_nuit: document.getElementById("prix_nuit"),
     prix_semaine: document.getElementById("prix_semaine"),
     prix_mois: document.getElementById("prix_mois"),
     description: document.getElementById("description"),
     need_text: document.getElementById("need_text"),
     photos: document.getElementById("photos"),
+    photos_urls: document.getElementById("photos_urls"),
     gallery: document.getElementById("gallery"),
     statusBox: document.getElementById("statusBox"),
     metaPhotos: document.getElementById("metaPhotos"),
+    metaState: document.getElementById("metaState"),
     btnWhatsApp: document.getElementById("btnWhatsApp"),
     btnEmail: document.getElementById("btnEmail"),
     btnCopyText: document.getElementById("btnCopyText"),
@@ -812,11 +799,12 @@
     pvOwner: document.getElementById("pvOwner"),
     pvPhone: document.getElementById("pvPhone"),
     pvCap: document.getElementById("pvCap"),
-    pvPlan: document.getElementById("pvPlan"),
     pvPn: document.getElementById("pvPn"),
     pvPs: document.getElementById("pvPs"),
     pvPm: document.getElementById("pvPm"),
     pvNeed: document.getElementById("pvNeed"),
+    pvUrls: document.getElementById("pvUrls"),
+    pvState: document.getElementById("pvState"),
     messageBox: document.getElementById("messageBox")
   };
 
@@ -844,15 +832,25 @@
     els.statusBox.textContent = "";
   }
 
-  function buildPhotoNames(){
+  function photoNames(){
     return state.photos.map((p, i) => `${i + 1}. ${p.name}`).join("\n") || "Aucune photo sélectionnée";
+  }
+
+  function hasOfficialUrls(){
+    return safe(els.photos_urls.value).length > 0;
+  }
+
+  function currentStateLabel(){
+    return hasOfficialUrls()
+      ? "Fiche prête pour publication"
+      : "Pré-fiche en attente";
   }
 
   function buildMessage(){
     const lines = [
       "Bonjour DIGIY 👋",
       "",
-      "Je demande mon accès / abonnement DIGIY LOC pour mon logement.",
+      "Je vous envoie ma pré-fiche DIGIY LOC.",
       "",
       "PROPRIÉTAIRE",
       `Nom : ${safe(els.owner_name.value) || "—"}`,
@@ -863,7 +861,6 @@
       `Ville / adresse : ${safe(els.adresse.value) || "—"}`,
       `Type : ${safe(els.type_logement.value) || "—"}`,
       `Capacité : ${safe(els.personnes_max.value) || "—"}`,
-      `Plan souhaité : ${safe(els.plan.value) || "—"}`,
       `Prix / nuit : ${money(els.prix_nuit.value)}`,
       `Prix / semaine : ${money(els.prix_semaine.value)}`,
       `Prix / mois : ${money(els.prix_mois.value)}`,
@@ -874,11 +871,14 @@
       "BESOIN",
       safe(els.need_text.value) || "—",
       "",
-      "PHOTOS SÉLECTIONNÉES SUR L’APPAREIL",
-      buildPhotoNames(),
+      "PHOTOS SÉLECTIONNÉES",
+      photoNames(),
       "",
-      "NOTE",
-      "Je souhaite que DIGIY pose les photos dans la médiathèque puis me retourne les URLs pour alléger mon dossier."
+      "PHOTOS OFFICIELLES (URLS DIGIY)",
+      safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.",
+      "",
+      "STATUT",
+      currentStateLabel()
     ];
 
     return lines.join("\n");
@@ -886,6 +886,7 @@
 
   function updatePreview(){
     const firstPhoto = state.photos[0]?.url || FALLBACK_IMG;
+
     els.pvCover.src = safeImg(firstPhoto);
     els.pvCover.onerror = () => {
       els.pvCover.onerror = null;
@@ -899,11 +900,15 @@
     els.pvOwner.textContent = safe(els.owner_name.value) || "—";
     els.pvPhone.textContent = safe(els.owner_phone.value) || "—";
     els.pvCap.textContent = safe(els.personnes_max.value) ? `${safe(els.personnes_max.value)} pers.` : "—";
-    els.pvPlan.textContent = safe(els.plan.value) || "—";
     els.pvPn.textContent = money(els.prix_nuit.value);
     els.pvPs.textContent = money(els.prix_semaine.value);
     els.pvPm.textContent = money(els.prix_mois.value);
     els.pvNeed.textContent = safe(els.need_text.value) || "Le besoin apparaîtra ici.";
+    els.pvUrls.textContent = safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.";
+
+    const stateLabel = currentStateLabel();
+    els.pvState.textContent = stateLabel;
+    els.metaState.textContent = stateLabel;
     els.messageBox.value = buildMessage();
     els.metaPhotos.textContent = String(state.photos.length);
   }
@@ -964,12 +969,12 @@
       adresse: els.adresse.value,
       type_logement: els.type_logement.value,
       personnes_max: els.personnes_max.value,
-      plan: els.plan.value,
       prix_nuit: els.prix_nuit.value,
       prix_semaine: els.prix_semaine.value,
       prix_mois: els.prix_mois.value,
       description: els.description.value,
-      need_text: els.need_text.value
+      need_text: els.need_text.value,
+      photos_urls: els.photos_urls.value
     };
 
     try{
@@ -995,12 +1000,12 @@
       els.adresse.value = d.adresse || "";
       els.type_logement.value = d.type_logement || "";
       els.personnes_max.value = d.personnes_max || "";
-      els.plan.value = d.plan || "";
       els.prix_nuit.value = d.prix_nuit || "";
       els.prix_semaine.value = d.prix_semaine || "";
       els.prix_mois.value = d.prix_mois || "";
       els.description.value = d.description || "";
       els.need_text.value = d.need_text || "";
+      els.photos_urls.value = d.photos_urls || "";
 
       updatePreview();
       showStatus("Brouillon rechargé ✅", "ok");
@@ -1012,16 +1017,18 @@
   function resetAll(){
     [
       els.owner_name, els.owner_phone, els.nom, els.adresse, els.personnes_max,
-      els.prix_nuit, els.prix_semaine, els.prix_mois, els.description, els.need_text
+      els.prix_nuit, els.prix_semaine, els.prix_mois, els.description,
+      els.need_text, els.photos_urls
     ].forEach(el => el.value = "");
 
     els.type_logement.value = "";
-    els.plan.value = "";
     els.photos.value = "";
+
     state.photos.forEach(p => {
       try { URL.revokeObjectURL(p.url); } catch {}
     });
     state.photos = [];
+
     renderGallery();
     updatePreview();
     hideStatus();
@@ -1030,22 +1037,21 @@
   async function copyText(){
     try{
       await navigator.clipboard.writeText(buildMessage());
-      showStatus("Texte copié ✅ Tu peux maintenant le coller où tu veux.", "ok");
+      showStatus("Texte copié ✅", "ok");
     }catch(e){
-      showStatus("Copie impossible automatiquement. Sélectionne le texte dans la zone de droite.", "warn");
+      showStatus("Copie impossible automatiquement. Sélectionne le texte à droite.", "warn");
     }
   }
 
   function openWhatsApp(){
     if (!validateBeforeSend()) return;
 
-    const text = buildMessage();
-    const url = `https://wa.me/${TEAM_WA}?text=${encodeURIComponent(text)}`;
+    const url = `https://wa.me/${TEAM_WA}?text=${encodeURIComponent(buildMessage())}`;
     window.open(url, "_blank", "noopener,noreferrer");
 
     showStatus(
       "WhatsApp DIGIY ouvert ✅\n" +
-      "Étape suivante : joins manuellement les photos dans la conversation WhatsApp avant d’envoyer.",
+      "Étape suivante : joins les photos si besoin, puis attends le retour DIGIY avec les URLs officielles.",
       "ok"
     );
   }
@@ -1053,14 +1059,14 @@
   function openEmail(){
     if (!validateBeforeSend()) return;
 
-    const subject = `DIGIY LOC — Demande accès / abonnement — ${safe(els.nom.value) || "logement"}`;
+    const subject = `DIGIY LOC — Pré-fiche propriétaire — ${safe(els.nom.value) || "logement"}`;
     const body = buildMessage();
     const mailto = `mailto:${encodeURIComponent(TEAM_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
 
     showStatus(
       "Email DIGIY préparé ✅\n" +
-      "Selon l’appareil, joins ensuite manuellement les photos avant envoi.",
+      "Tu peux y joindre les photos si besoin, puis attendre le retour avec les URLs officielles.",
       "ok"
     );
   }
@@ -1072,8 +1078,6 @@
 
     state.photos = Array.from(files || []).map(file => ({
       name: file.name,
-      size: file.size,
-      type: file.type,
       url: URL.createObjectURL(file)
     }));
 
@@ -1082,7 +1086,7 @@
     if (state.photos.length) {
       showStatus(
         `${state.photos.length} photo(s) chargée(s) dans l’aperçu local ✅\n` +
-        `Rappel : pour WhatsApp ou email, les joindre ensuite manuellement.`,
+        `Pré-fiche prête pour traitement DIGIY.`,
         "ok"
       );
     } else {
@@ -1093,8 +1097,8 @@
   function bind(){
     const watched = [
       els.owner_name, els.owner_phone, els.nom, els.adresse, els.type_logement,
-      els.personnes_max, els.plan, els.prix_nuit, els.prix_semaine, els.prix_mois,
-      els.description, els.need_text
+      els.personnes_max, els.prix_nuit, els.prix_semaine, els.prix_mois,
+      els.description, els.need_text, els.photos_urls
     ];
 
     watched.forEach(el => {
