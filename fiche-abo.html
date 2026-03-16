@@ -3,19 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Fiche abonné</title>
+  <title>DIGIY LOC PRO — Demande d’accès / abonnement</title>
   <meta name="theme-color" content="#0b1020"/>
-
-  <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_MODULE = "LOC";
-    window.DIGIY_PUBLIC_LOC_BASE = "https://beauville.github.io/digiy-loc/";
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-fiche-abo-roomslug-v1"></script>
+  <meta name="description" content="DIGIY LOC PRO — Demande d’accès et abonnement propriétaire, version légère sans backend."/>
 
   <style>
     :root{
@@ -33,6 +23,8 @@
       --line:rgba(255,255,255,.10);
       --shadow:0 20px 50px rgba(0,0,0,.35);
       --radius:18px;
+      --wa:#25D366;
+      --mail:#60a5fa;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -49,26 +41,6 @@
     a{color:inherit}
     button,input,select,textarea{font:inherit}
 
-    #loading{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px;
-    }
-    #loading .box{
-      width:min(560px, 94vw);
-      border:1px solid var(--border);
-      border-radius:20px;
-      background:rgba(255,255,255,.05);
-      backdrop-filter:blur(16px);
-      box-shadow:var(--shadow);
-      padding:22px;
-      text-align:center;
-    }
-    #loading .t{font-size:1.1rem;font-weight:900}
-    #loading .s{margin-top:8px;color:var(--muted);font-weight:700;line-height:1.6}
-
-    #app{display:none}
     .container{
       max-width:1320px;
       margin:0 auto;
@@ -89,11 +61,13 @@
       box-shadow:var(--shadow);
       margin-bottom:16px;
     }
+
     .title{
       display:flex;
       align-items:center;
       gap:12px;
     }
+
     .logo{
       width:48px;height:48px;border-radius:16px;
       display:grid;place-items:center;
@@ -103,6 +77,7 @@
       font-weight:1000;
       box-shadow:0 12px 30px rgba(250,204,21,.25);
     }
+
     .title h1{
       font-size:1.35rem;
       line-height:1.1;
@@ -110,6 +85,7 @@
       color:#d1fae5;
       font-weight:950;
     }
+
     .title p{
       margin-top:4px;
       color:var(--muted);
@@ -139,6 +115,7 @@
       user-select:none;
       line-height:1;
     }
+
     .btn:active{transform:translateY(1px)}
     .btn-primary{
       background:linear-gradient(135deg,#facc15,#f97316);
@@ -155,19 +132,28 @@
       color:#dcfce7;
       border:1px solid rgba(34,197,94,.35);
     }
+    .btn-info{
+      background:rgba(56,189,248,.16);
+      color:#dbeafe;
+      border:1px solid rgba(96,165,250,.35);
+    }
     .btn-danger{
       background:rgba(239,68,68,.18);
       color:#fee2e2;
       border:1px solid rgba(239,68,68,.35);
     }
-    .btn[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
+    .btn-wa{
+      background:rgba(37,211,102,.16);
+      color:#dcfce7;
+      border:1px solid rgba(37,211,102,.35);
+    }
+    .btn-mail{
+      background:rgba(96,165,250,.16);
+      color:#dbeafe;
+      border:1px solid rgba(96,165,250,.35);
     }
 
     .banner{
-      display:none;
-      margin-bottom:16px;
       border-radius:18px;
       padding:14px 16px;
       border:1px solid rgba(250,204,21,.25);
@@ -176,22 +162,15 @@
       font-weight:800;
       line-height:1.55;
       box-shadow:var(--shadow);
-    }
-    .banner.live{
-      display:block;
-      border-color:rgba(34,197,94,.28);
-      background:rgba(34,197,94,.08);
-      color:#dcfce7;
-    }
-    .banner.preview{
-      display:block;
+      margin-bottom:16px;
     }
 
     .grid{
       display:grid;
-      grid-template-columns:1.1fr .9fr;
+      grid-template-columns:1.05fr .95fr;
       gap:16px;
     }
+
     @media(max-width:980px){
       .grid{grid-template-columns:1fr}
     }
@@ -203,17 +182,20 @@
       box-shadow:var(--shadow);
       overflow:hidden;
     }
+
     .card .head{
       padding:16px 18px;
       border-bottom:1px solid var(--line);
       background:rgba(255,255,255,.03);
     }
+
     .card .head h2{
       margin:0;
       font-size:1.05rem;
       font-weight:950;
       color:var(--accent);
     }
+
     .card .head p{
       margin-top:6px;
       color:var(--muted);
@@ -221,6 +203,7 @@
       font-weight:700;
       line-height:1.5;
     }
+
     .card .body{
       padding:18px;
     }
@@ -229,16 +212,19 @@
       display:grid;
       gap:14px;
     }
+
     .row2{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:14px;
     }
+
     .row3{
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
       gap:14px;
     }
+
     @media(max-width:760px){
       .row2,.row3{grid-template-columns:1fr}
     }
@@ -260,47 +246,22 @@
       padding:12px 13px;
       outline:none;
     }
+
     textarea{
       min-height:120px;
       resize:vertical;
     }
+
     input:focus,select:focus,textarea:focus{
       border-color:rgba(250,204,21,.45);
       box-shadow:0 0 0 3px rgba(250,204,21,.10);
     }
 
     .mini{
-      font-size:.8rem;
+      font-size:.82rem;
       color:var(--muted);
       font-weight:700;
-      line-height:1.5;
-    }
-
-    .switch{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:14px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      border-radius:16px;
-    }
-    .switch .txt1{
-      font-weight:950;
-      color:#fff;
-    }
-    .switch .txt2{
-      margin-top:4px;
-      font-size:.85rem;
-      color:var(--muted);
-      font-weight:700;
-    }
-    .switch input{
-      width:20px;
-      height:20px;
-      accent-color:#22c55e;
-      cursor:pointer;
+      line-height:1.55;
     }
 
     .toolbar{
@@ -319,18 +280,21 @@
       font-weight:850;
       line-height:1.55;
     }
+
     .status.ok{
       display:block;
       border:1px solid rgba(34,197,94,.35);
       background:rgba(34,197,94,.10);
       color:#dcfce7;
     }
+
     .status.bad{
       display:block;
       border:1px solid rgba(239,68,68,.35);
       background:rgba(239,68,68,.10);
       color:#fee2e2;
     }
+
     .status.warn{
       display:block;
       border:1px solid rgba(250,204,21,.35);
@@ -344,15 +308,18 @@
       gap:12px;
       margin-top:16px;
     }
+
     @media(max-width:760px){
       .meta{grid-template-columns:1fr}
     }
+
     .metaBox{
       border:1px solid var(--border);
       background:rgba(255,255,255,.03);
       border-radius:16px;
       padding:12px 14px;
     }
+
     .metaK{
       font-size:.78rem;
       color:var(--muted);
@@ -360,6 +327,7 @@
       text-transform:uppercase;
       letter-spacing:.06em;
     }
+
     .metaV{
       margin-top:6px;
       font-size:1rem;
@@ -373,6 +341,7 @@
       flex-direction:column;
       gap:16px;
     }
+
     .previewCard{
       border:1px solid rgba(30,64,175,.50);
       background:radial-gradient(circle at top,rgba(15,23,42,.98),#020617);
@@ -380,22 +349,26 @@
       overflow:hidden;
       box-shadow:0 16px 40px rgba(15,23,42,.85);
     }
+
     .previewCover{
       height:260px;
       background:#0b1220;
       position:relative;
     }
+
     .previewCover img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
     }
+
     .previewFade{
       position:absolute;
       inset:0;
       background:linear-gradient(180deg, rgba(2,6,23,.04) 0%, rgba(2,6,23,.72) 80%, rgba(2,6,23,.94) 100%);
     }
+
     .previewTop{
       position:absolute;
       left:14px;
@@ -405,6 +378,7 @@
       flex-direction:column;
       gap:8px;
     }
+
     .previewName{
       font-size:1.6rem;
       line-height:1.1;
@@ -412,11 +386,13 @@
       color:var(--accent);
       text-shadow:0 12px 24px rgba(0,0,0,.35);
     }
+
     .chips{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
     }
+
     .chip{
       width:max-content;
       padding:6px 10px;
@@ -428,11 +404,13 @@
       font-weight:900;
       white-space:nowrap;
     }
+
     .chip.green{
       border-color:rgba(34,197,94,.45);
       background:rgba(34,197,94,.12);
       color:#dcfce7;
     }
+
     .chip.gold{
       border-color:rgba(250,204,21,.45);
       background:rgba(250,204,21,.12);
@@ -452,6 +430,7 @@
       border-radius:16px;
       padding:14px;
     }
+
     .pbox .k{
       font-size:.78rem;
       color:#bbf7d0;
@@ -459,12 +438,14 @@
       text-transform:uppercase;
       letter-spacing:.06em;
     }
+
     .pbox .v{
       margin-top:8px;
       color:#f8fafc;
       font-weight:700;
       line-height:1.65;
       white-space:pre-wrap;
+      word-break:break-word;
     }
 
     .pgrid{
@@ -472,8 +453,56 @@
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
+
     @media(max-width:760px){
       .pgrid{grid-template-columns:1fr}
+    }
+
+    .drop{
+      border:1px dashed rgba(148,163,184,.35);
+      border-radius:16px;
+      padding:14px;
+      background:rgba(255,255,255,.03);
+    }
+
+    .dropTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .gallery{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .thumb{
+      border:1px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+      background:rgba(2,6,23,.55);
+    }
+
+    .thumb img{
+      width:100%;
+      height:110px;
+      object-fit:cover;
+      display:block;
+      background:#0b1220;
+    }
+
+    .thumb .cap{
+      padding:8px 10px;
+      font-size:.76rem;
+      color:#cbd5e1;
+      font-weight:800;
+      line-height:1.45;
+      word-break:break-word;
     }
 
     .note{
@@ -486,237 +515,255 @@
       font-weight:700;
       line-height:1.6;
     }
+
+    .copyBox{
+      width:100%;
+      min-height:240px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.72);
+      color:#fff;
+      padding:14px;
+      line-height:1.6;
+    }
   </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="box">
-    <div class="t">🔒 Vérification accès…</div>
-    <div class="s">DIGIY LOC PRO prépare la fiche abonné sur le vrai rail logement.</div>
-    <div class="s">Mode recousu : <b>room_slug</b> pour la fiche publique, séparé du slug module.</div>
+<div class="container">
+
+  <div class="header">
+    <div class="title">
+      <div class="logo">🏠</div>
+      <div>
+        <h1>DIGIY LOC PRO — Demande d’accès / abonnement</h1>
+        <p id="headIdentity">Version légère • sans Supabase • sans backend • terrain d’abord</p>
+      </div>
+    </div>
+
+    <div class="head-actions">
+      <a class="btn btn-secondary" href="./index.html">← Retour</a>
+      <button class="btn btn-secondary" id="btnLoadDraft" type="button">↻ Recharger brouillon</button>
+      <button class="btn btn-primary" id="btnSaveDraft" type="button">💾 Sauver brouillon</button>
+    </div>
   </div>
-</div>
 
-<div id="app">
-  <div class="container">
+  <div class="banner">
+    Ici on ne fait pas semblant d’être une grosse machine.  
+    Le propriétaire prépare son dossier, joint ses photos, et DIGIY reçoit une demande propre pour créer l’accès et l’abonnement.
+  </div>
 
-    <div class="header">
-      <div class="title">
-        <div class="logo">🏠</div>
-        <div>
-          <h1>DIGIY LOC PRO — Fiche abonné</h1>
-          <p id="headIdentity">Chargement identité…</p>
-        </div>
+  <div class="grid">
+    <section class="card">
+      <div class="head">
+        <h2>Dossier propriétaire</h2>
+        <p>Remplis le logement, ajoute les photos, puis prépare l’envoi vers DIGIY. Les photos sont prévisualisées ici, mais ne sont pas envoyées automatiquement à WhatsApp.</p>
       </div>
 
-      <div class="head-actions">
-        <a class="btn btn-secondary" id="btnBackApp" href="./app.html">← Retour app</a>
-        <a class="btn btn-secondary" id="btnPublic" href="https://beauville.github.io/digiy-loc/" target="_blank" rel="noopener noreferrer">🌍 Voir la fiche publique</a>
-        <button class="btn btn-primary" id="btnSave" type="button">💾 Enregistrer</button>
-      </div>
-    </div>
-
-    <div class="banner" id="accessBanner"></div>
-
-    <div class="grid">
-      <section class="card">
-        <div class="head">
-          <h2>Réglages fiche logement</h2>
-          <p>Cette page travaille sur la vraie ligne logement. La fiche publique lit ensuite le <b>slug logement</b>, pas le slug module.</p>
-        </div>
-
-        <div class="body">
-          <div class="fields">
-            <div class="row2">
-              <label>
-                Nom du logement
-                <input id="nom" type="text" placeholder="Ex: Résidence Beau Séjour">
-              </label>
-
-              <label>
-                Slug logement public
-                <input id="room_slug" type="text" placeholder="Ex: residence-beau-sejour-saly">
-              </label>
-            </div>
-
-            <div class="row2">
-              <label>
-                Adresse / ville
-                <input id="adresse" type="text" placeholder="Ex: Saly, Sénégal">
-              </label>
-
-              <label>
-                Type de logement
-                <select id="type_logement">
-                  <option value="">Choisir</option>
-                  <option value="Villa">Villa</option>
-                  <option value="Appartement">Appartement</option>
-                  <option value="Studio">Studio</option>
-                  <option value="Chambre">Chambre</option>
-                  <option value="Maison">Maison</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="row3">
-              <label>
-                Téléphone / WhatsApp
-                <input id="phone" type="text" placeholder="Ex: +221771234567">
-              </label>
-
-              <label>
-                Capacité
-                <input id="personnes_max" type="number" min="1" placeholder="Ex: 4">
-              </label>
-
-              <label>
-                Statut
-                <select id="status">
-                  <option value="active">active</option>
-                  <option value="actif">actif</option>
-                  <option value="draft">draft</option>
-                  <option value="inactive">inactive</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="row3">
-              <label>
-                Prix / nuit
-                <input id="prix_nuit" type="number" min="0" step="1" placeholder="Ex: 25000">
-              </label>
-
-              <label>
-                Prix / semaine
-                <input id="prix_semaine" type="number" min="0" step="1" placeholder="Ex: 150000">
-              </label>
-
-              <label>
-                Prix / mois
-                <input id="prix_mois" type="number" min="0" step="1" placeholder="Ex: 450000">
-              </label>
-            </div>
-
+      <div class="body">
+        <div class="fields">
+          <div class="row2">
             <label>
-              Description
-              <textarea id="description" placeholder="Décris le logement simplement, clairement, humainement."></textarea>
+              Nom du propriétaire
+              <input id="owner_name" type="text" placeholder="Ex : Astou Ndiaye">
             </label>
 
             <label>
-              Photo principale (URL)
-              <input id="photo_url" type="url" placeholder="https://...">
+              Téléphone / WhatsApp propriétaire
+              <input id="owner_phone" type="text" placeholder="Ex : +221771234567">
+            </label>
+          </div>
+
+          <div class="row2">
+            <label>
+              Nom du logement
+              <input id="nom" type="text" placeholder="Ex : Résidence Beau Séjour">
             </label>
 
             <label>
-              URL publique personnalisée (facultatif)
-              <input id="public_url" type="url" placeholder="https://...">
+              Ville / adresse
+              <input id="adresse" type="text" placeholder="Ex : Saly, Sénégal">
+            </label>
+          </div>
+
+          <div class="row3">
+            <label>
+              Type de logement
+              <select id="type_logement">
+                <option value="">Choisir</option>
+                <option value="Villa">Villa</option>
+                <option value="Appartement">Appartement</option>
+                <option value="Studio">Studio</option>
+                <option value="Chambre">Chambre</option>
+                <option value="Maison">Maison</option>
+              </select>
             </label>
 
-            <div class="switch">
+            <label>
+              Capacité
+              <input id="personnes_max" type="number" min="1" placeholder="Ex : 4">
+            </label>
+
+            <label>
+              Budget abonnement souhaité
+              <select id="plan">
+                <option value="">Choisir</option>
+                <option value="Demande simple">Demande simple</option>
+                <option value="Abonnement mensuel">Abonnement mensuel</option>
+                <option value="Abonnement annuel">Abonnement annuel</option>
+                <option value="À discuter avec DIGIY">À discuter avec DIGIY</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row3">
+            <label>
+              Prix / nuit
+              <input id="prix_nuit" type="number" min="0" step="1" placeholder="Ex : 25000">
+            </label>
+
+            <label>
+              Prix / semaine
+              <input id="prix_semaine" type="number" min="0" step="1" placeholder="Ex : 150000">
+            </label>
+
+            <label>
+              Prix / mois
+              <input id="prix_mois" type="number" min="0" step="1" placeholder="Ex : 450000">
+            </label>
+          </div>
+
+          <label>
+            Description du logement
+            <textarea id="description" placeholder="Décris le logement simplement, clairement, humainement."></textarea>
+          </label>
+
+          <label>
+            Ce que vous demandez à DIGIY
+            <textarea id="need_text" placeholder="Ex : Je veux mon accès, mon abonnement DIGIY LOC, et que vous m’aidiez à poser les photos dans la médiathèque avant l’enregistrement final."></textarea>
+          </label>
+
+          <div class="drop">
+            <div class="dropTop">
               <div>
-                <div class="txt1">Rendre public</div>
-                <div class="txt2">La fiche publique affichera ce logement seulement si cette case est active et si le statut est publié/actif.</div>
+                <div style="font-weight:950;color:#fff">Photos du logement</div>
+                <div class="mini">Choisis plusieurs photos. Elles seront visibles ici pour vérification terrain.</div>
               </div>
-              <input id="is_public" type="checkbox">
+              <label class="btn btn-info" style="cursor:pointer">
+                📷 Ajouter photos
+                <input id="photos" type="file" accept="image/*" multiple hidden>
+              </label>
             </div>
-          </div>
 
-          <div class="toolbar">
-            <button class="btn btn-primary" id="btnSave2" type="button">💾 Enregistrer</button>
-            <button class="btn btn-secondary" id="btnReload" type="button">↻ Recharger</button>
-            <button class="btn btn-success" id="btnOpenPublic" type="button">🌍 Ouvrir la fiche publique</button>
-            <button class="btn btn-secondary" id="btnCopyPublic" type="button">🔗 Copier le lien public</button>
-          </div>
+            <div class="mini">
+              Important : sans backend, les photos restent sur cet appareil pour prévisualisation.  
+              Pour WhatsApp, il faudra les joindre manuellement après ouverture de la conversation.  
+              Pour email, selon l’appareil, il faudra souvent aussi les joindre manuellement.
+            </div>
 
-          <div class="status" id="statusBox"></div>
-
-          <div class="meta">
-            <div class="metaBox">
-              <div class="metaK">Mode</div>
-              <div class="metaV" id="stateMode">—</div>
-            </div>
-            <div class="metaBox">
-              <div class="metaK">Téléphone session</div>
-              <div class="metaV" id="statePhone">—</div>
-            </div>
-            <div class="metaBox">
-              <div class="metaK">Slug module</div>
-              <div class="metaV" id="stateModuleSlug">—</div>
-            </div>
-            <div class="metaBox">
-              <div class="metaK">Slug logement</div>
-              <div class="metaV" id="stateRoomSlug">—</div>
-            </div>
-            <div class="metaBox">
-              <div class="metaK">ID logement</div>
-              <div class="metaV" id="stateRoomId">—</div>
-            </div>
-            <div class="metaBox">
-              <div class="metaK">Owner ID</div>
-              <div class="metaV" id="stateOwnerId">—</div>
-            </div>
-          </div>
-
-          <div class="note">
-            Terrain propre : pour plusieurs logements, ouvre d’abord le bon logement depuis <b>app.html</b>, puis clique <b>Modifier</b>.  
-            Ici on travaille sur le <b>slug logement réel</b>, pas sur le slug abonnement module.
+            <div class="gallery" id="gallery"></div>
           </div>
         </div>
-      </section>
 
-      <aside class="preview">
-        <div class="previewCard">
-          <div class="previewCover">
-            <img id="pvCover" alt="Photo logement" src="">
-            <div class="previewFade"></div>
-            <div class="previewTop">
-              <div class="previewName" id="pvNom">Nom logement</div>
-              <div class="chips">
-                <div class="chip gold" id="pvType">Type</div>
-                <div class="chip" id="pvVille">Ville</div>
-                <div class="chip green" id="pvPublic">0% commission</div>
-              </div>
-            </div>
+        <div class="toolbar">
+          <button class="btn btn-wa" id="btnWhatsApp" type="button">📲 Préparer WhatsApp DIGIY</button>
+          <button class="btn btn-mail" id="btnEmail" type="button">✉️ Préparer email DIGIY</button>
+          <button class="btn btn-secondary" id="btnCopyText" type="button">📋 Copier le texte</button>
+          <button class="btn btn-danger" id="btnReset" type="button">🗑️ Vider la page</button>
+        </div>
+
+        <div class="status" id="statusBox"></div>
+
+        <div class="meta">
+          <div class="metaBox">
+            <div class="metaK">WhatsApp DIGIY</div>
+            <div class="metaV">+221771342889</div>
           </div>
+          <div class="metaBox">
+            <div class="metaK">Email DIGIY</div>
+            <div class="metaV">digiylyfe@gmail.com</div>
+          </div>
+          <div class="metaBox">
+            <div class="metaK">Photos sélectionnées</div>
+            <div class="metaV" id="metaPhotos">0</div>
+          </div>
+          <div class="metaBox">
+            <div class="metaK">Mode</div>
+            <div class="metaV">Léger • manuel • terrain</div>
+          </div>
+        </div>
 
-          <div class="previewBody">
-            <div class="pbox">
-              <div class="k">Description</div>
-              <div class="v" id="pvDesc">La description apparaîtra ici.</div>
-            </div>
+        <div class="note">
+          Doctrine propre : DIGIY reçoit d’abord un dossier simple, puis renvoie les URLs des images si besoin.  
+          On allège le propriétaire. On ne le noie pas dans une usine à gaz.
+        </div>
+      </div>
+    </section>
 
-            <div class="pgrid">
-              <div class="pbox">
-                <div class="k">Contact</div>
-                <div class="v" id="pvPhone">—</div>
-              </div>
-              <div class="pbox">
-                <div class="k">Capacité</div>
-                <div class="v" id="pvCap">—</div>
-              </div>
-              <div class="pbox">
-                <div class="k">Prix / Nuit</div>
-                <div class="v" id="pvPn">—</div>
-              </div>
-              <div class="pbox">
-                <div class="k">Prix / Semaine</div>
-                <div class="v" id="pvPs">—</div>
-              </div>
-              <div class="pbox" style="grid-column:1/-1">
-                <div class="k">Prix / Mois</div>
-                <div class="v" id="pvPm">—</div>
-              </div>
-            </div>
-
-            <div class="pbox">
-              <div class="k">Lien public réel</div>
-              <div class="v" id="pvLink">—</div>
+    <aside class="preview">
+      <div class="previewCard">
+        <div class="previewCover">
+          <img id="pvCover" alt="Photo logement" src="">
+          <div class="previewFade"></div>
+          <div class="previewTop">
+            <div class="previewName" id="pvNom">Nom logement</div>
+            <div class="chips">
+              <div class="chip gold" id="pvType">Type</div>
+              <div class="chip" id="pvVille">Ville</div>
+              <div class="chip green">Demande abonnement</div>
             </div>
           </div>
         </div>
-      </aside>
-    </div>
+
+        <div class="previewBody">
+          <div class="pbox">
+            <div class="k">Description</div>
+            <div class="v" id="pvDesc">La description apparaîtra ici.</div>
+          </div>
+
+          <div class="pgrid">
+            <div class="pbox">
+              <div class="k">Propriétaire</div>
+              <div class="v" id="pvOwner">—</div>
+            </div>
+            <div class="pbox">
+              <div class="k">Téléphone</div>
+              <div class="v" id="pvPhone">—</div>
+            </div>
+            <div class="pbox">
+              <div class="k">Capacité</div>
+              <div class="v" id="pvCap">—</div>
+            </div>
+            <div class="pbox">
+              <div class="k">Plan souhaité</div>
+              <div class="v" id="pvPlan">—</div>
+            </div>
+            <div class="pbox">
+              <div class="k">Prix / Nuit</div>
+              <div class="v" id="pvPn">—</div>
+            </div>
+            <div class="pbox">
+              <div class="k">Prix / Semaine</div>
+              <div class="v" id="pvPs">—</div>
+            </div>
+            <div class="pbox" style="grid-column:1/-1">
+              <div class="k">Prix / Mois</div>
+              <div class="v" id="pvPm">—</div>
+            </div>
+          </div>
+
+          <div class="pbox">
+            <div class="k">Besoin exprimé</div>
+            <div class="v" id="pvNeed">Le besoin apparaîtra ici.</div>
+          </div>
+
+          <div class="pbox">
+            <div class="k">Texte prêt à envoyer</div>
+            <textarea class="copyBox" id="messageBox" readonly></textarea>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 </div>
 
@@ -724,90 +771,57 @@
 (() => {
   "use strict";
 
+  const TEAM_WA = "221771342889";
+  const TEAM_WA_PRETTY = "+221771342889";
+  const TEAM_EMAIL = "digiylyfe@gmail.com";
   const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
+  const STORAGE_KEY = "DIGIY_LOC_PRO_LIGHT_DRAFT_V1";
 
-  const ROOM = {
-    id: "",
-    roomSlug: "",
-    ownerId: "",
-    loaded: false
-  };
-
-  const SESSION = {
-    mode: "preview",
-    reason: "booting",
-    phone: "",
-    moduleSlug: "",
-    ownerId: "",
-    businessCode: "TEST",
-    businessName: ""
+  const state = {
+    photos: []
   };
 
   const els = {
-    loading: document.getElementById("loading"),
-    app: document.getElementById("app"),
-    accessBanner: document.getElementById("accessBanner"),
-    headIdentity: document.getElementById("headIdentity"),
-
+    owner_name: document.getElementById("owner_name"),
+    owner_phone: document.getElementById("owner_phone"),
     nom: document.getElementById("nom"),
-    room_slug: document.getElementById("room_slug"),
     adresse: document.getElementById("adresse"),
     type_logement: document.getElementById("type_logement"),
-    phone: document.getElementById("phone"),
     personnes_max: document.getElementById("personnes_max"),
-    status: document.getElementById("status"),
+    plan: document.getElementById("plan"),
     prix_nuit: document.getElementById("prix_nuit"),
     prix_semaine: document.getElementById("prix_semaine"),
     prix_mois: document.getElementById("prix_mois"),
     description: document.getElementById("description"),
-    photo_url: document.getElementById("photo_url"),
-    public_url: document.getElementById("public_url"),
-    is_public: document.getElementById("is_public"),
-
-    btnBackApp: document.getElementById("btnBackApp"),
-    btnPublic: document.getElementById("btnPublic"),
-    btnSave: document.getElementById("btnSave"),
-    btnSave2: document.getElementById("btnSave2"),
-    btnReload: document.getElementById("btnReload"),
-    btnOpenPublic: document.getElementById("btnOpenPublic"),
-    btnCopyPublic: document.getElementById("btnCopyPublic"),
-
+    need_text: document.getElementById("need_text"),
+    photos: document.getElementById("photos"),
+    gallery: document.getElementById("gallery"),
     statusBox: document.getElementById("statusBox"),
-
-    stateMode: document.getElementById("stateMode"),
-    statePhone: document.getElementById("statePhone"),
-    stateModuleSlug: document.getElementById("stateModuleSlug"),
-    stateRoomSlug: document.getElementById("stateRoomSlug"),
-    stateRoomId: document.getElementById("stateRoomId"),
-    stateOwnerId: document.getElementById("stateOwnerId"),
-
+    metaPhotos: document.getElementById("metaPhotos"),
+    btnWhatsApp: document.getElementById("btnWhatsApp"),
+    btnEmail: document.getElementById("btnEmail"),
+    btnCopyText: document.getElementById("btnCopyText"),
+    btnSaveDraft: document.getElementById("btnSaveDraft"),
+    btnLoadDraft: document.getElementById("btnLoadDraft"),
+    btnReset: document.getElementById("btnReset"),
     pvCover: document.getElementById("pvCover"),
     pvNom: document.getElementById("pvNom"),
     pvType: document.getElementById("pvType"),
     pvVille: document.getElementById("pvVille"),
-    pvPublic: document.getElementById("pvPublic"),
     pvDesc: document.getElementById("pvDesc"),
+    pvOwner: document.getElementById("pvOwner"),
     pvPhone: document.getElementById("pvPhone"),
     pvCap: document.getElementById("pvCap"),
+    pvPlan: document.getElementById("pvPlan"),
     pvPn: document.getElementById("pvPn"),
     pvPs: document.getElementById("pvPs"),
     pvPm: document.getElementById("pvPm"),
-    pvLink: document.getElementById("pvLink")
+    pvNeed: document.getElementById("pvNeed"),
+    messageBox: document.getElementById("messageBox")
   };
 
   function safe(v){
     return String(v ?? "").trim();
-  }
-
-  function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  function num(v){
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
   }
 
   function money(v){
@@ -816,148 +830,12 @@
     return n.toLocaleString("fr-FR") + " FCFA";
   }
 
-  function safeImg(url){
-    const u = safe(url);
-    return u || FALLBACK_IMG;
+  function safeImg(v){
+    return safe(v) || FALLBACK_IMG;
   }
 
-  function storageGet(key){
-    try{
-      const s = sessionStorage.getItem(key);
-      if (s) return s;
-    }catch{}
-    try{
-      const l = localStorage.getItem(key);
-      if (l) return l;
-    }catch{}
-    return "";
-  }
-
-  function storageSet(key, value){
-    try{ sessionStorage.setItem(key, value); }catch{}
-    try{ localStorage.setItem(key, value); }catch{}
-  }
-
-  function slugify(text){
-    return safe(text)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .replace(/--+/g, "-");
-  }
-
-  function phoneDigits(v){
-    return safe(v).replace(/\D/g, "");
-  }
-
-  function buildFallbackRoomSlug(){
-    const fromField = slugify(els.nom.value);
-    if (fromField) return fromField;
-
-    const digits = phoneDigits(els.phone.value || SESSION.phone);
-    if (digits) return "loc-room-" + digits;
-
-    return "loc-room";
-  }
-
-  function getRequestedRoomSlug(){
-    const u = new URL(location.href);
-    return safe(u.searchParams.get("room_slug"));
-  }
-
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      reason: "guard_missing"
-    };
-  }
-
-  async function waitGuardReady(){
-    const guard = window.DIGIY_GUARD;
-    if (!guard) throw new Error("guard_missing");
-
-    if (guard.ready && typeof guard.ready.then === "function") {
-      await guard.ready;
-      return;
-    }
-
-    if (typeof guard.ready === "function") {
-      const maybe = guard.ready();
-      if (maybe && typeof maybe.then === "function") {
-        await maybe;
-      }
-      return;
-    }
-
-    throw new Error("guard_not_ready");
-  }
-
-  function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || null;
-  }
-
-  function publicIndexUrl(){
-    return String(window.DIGIY_PUBLIC_LOC_BASE || "https://beauville.github.io/digiy-loc/").trim();
-  }
-
-  function currentRoomSlug(){
-    return safe(els.room_slug.value) || ROOM.roomSlug || "";
-  }
-
-  function buildPublicUrlFromRoomSlug(roomSlug){
-    const base = publicIndexUrl();
-    const slug = safe(roomSlug);
-    if (!slug) return base;
-    const u = new URL("fiche.html", base);
-    u.searchParams.set("slug", slug);
-    return u.toString();
-  }
-
-  function effectivePublicUrl(){
-    const custom = safe(els.public_url.value);
-    return custom || buildPublicUrlFromRoomSlug(currentRoomSlug());
-  }
-
-  function setMode(mode, reason){
-    SESSION.mode = mode;
-    SESSION.reason = reason || mode;
-    els.stateMode.textContent = mode === "live" ? "Mode vivant" : "Mode aperçu";
-  }
-
-  function updateHeader(){
-    const label = SESSION.businessName || "Gestionnaire LOC";
-    els.headIdentity.textContent = `${label} · ${SESSION.phone || "—"} · module slug: ${SESSION.moduleSlug || "—"}`;
-
-    els.statePhone.textContent = SESSION.phone || "—";
-    els.stateModuleSlug.textContent = SESSION.moduleSlug || "—";
-    els.stateOwnerId.textContent = SESSION.ownerId || "—";
-    els.stateRoomId.textContent = ROOM.id || "—";
-    els.stateRoomSlug.textContent = currentRoomSlug() || "—";
-
-    els.btnBackApp.href = SESSION.moduleSlug
-      ? `./app.html?slug=${encodeURIComponent(SESSION.moduleSlug)}`
-      : "./app.html";
-
-    const url = effectivePublicUrl();
-    els.btnPublic.href = url;
-    els.pvLink.textContent = url;
-  }
-
-  function showBanner(mode, text){
-    els.accessBanner.className = "banner " + (mode === "live" ? "live" : "preview");
-    els.accessBanner.innerHTML = esc(text || "");
-  }
-
-  function showStatus(msg, type){
-    els.statusBox.className = "status " + (type || "ok");
+  function showStatus(msg, type="ok"){
+    els.statusBox.className = "status " + type;
     els.statusBox.textContent = msg || "";
   }
 
@@ -966,532 +844,281 @@
     els.statusBox.textContent = "";
   }
 
-  function lockForm(disabled){
-    [
-      els.nom, els.room_slug, els.adresse, els.type_logement, els.phone,
-      els.personnes_max, els.status, els.prix_nuit, els.prix_semaine, els.prix_mois,
-      els.description, els.photo_url, els.public_url, els.is_public,
-      els.btnSave, els.btnSave2
-    ].forEach(el => {
-      if (!el) return;
-      el.disabled = !!disabled;
-    });
+  function buildPhotoNames(){
+    return state.photos.map((p, i) => `${i + 1}. ${p.name}`).join("\n") || "Aucune photo sélectionnée";
   }
 
-  function bindLivePreview(){
-    const watched = [
-      els.nom, els.room_slug, els.adresse, els.type_logement, els.phone,
-      els.personnes_max, els.prix_nuit, els.prix_semaine, els.prix_mois,
-      els.description, els.photo_url, els.public_url, els.is_public, els.status
+  function buildMessage(){
+    const lines = [
+      "Bonjour DIGIY 👋",
+      "",
+      "Je demande mon accès / abonnement DIGIY LOC pour mon logement.",
+      "",
+      "PROPRIÉTAIRE",
+      `Nom : ${safe(els.owner_name.value) || "—"}`,
+      `Téléphone : ${safe(els.owner_phone.value) || "—"}`,
+      "",
+      "LOGEMENT",
+      `Nom : ${safe(els.nom.value) || "—"}`,
+      `Ville / adresse : ${safe(els.adresse.value) || "—"}`,
+      `Type : ${safe(els.type_logement.value) || "—"}`,
+      `Capacité : ${safe(els.personnes_max.value) || "—"}`,
+      `Plan souhaité : ${safe(els.plan.value) || "—"}`,
+      `Prix / nuit : ${money(els.prix_nuit.value)}`,
+      `Prix / semaine : ${money(els.prix_semaine.value)}`,
+      `Prix / mois : ${money(els.prix_mois.value)}`,
+      "",
+      "DESCRIPTION",
+      safe(els.description.value) || "—",
+      "",
+      "BESOIN",
+      safe(els.need_text.value) || "—",
+      "",
+      "PHOTOS SÉLECTIONNÉES SUR L’APPAREIL",
+      buildPhotoNames(),
+      "",
+      "NOTE",
+      "Je souhaite que DIGIY pose les photos dans la médiathèque puis me retourne les URLs pour alléger mon dossier."
     ];
 
-    watched.forEach(el => {
-      if (!el) return;
-      const evt = el.tagName === "SELECT" || el.type === "checkbox" ? "change" : "input";
-      el.addEventListener(evt, () => {
-        if (!safe(els.room_slug.value)) {
-          els.room_slug.value = ROOM.roomSlug || buildFallbackRoomSlug();
-        }
-        updatePreview();
-        updateHeader();
-      });
-    });
+    return lines.join("\n");
   }
 
   function updatePreview(){
-    const nom = safe(els.nom.value) || "Nom logement";
-    const type = safe(els.type_logement.value) || "Type";
-    const ville = safe(els.adresse.value) || "Ville";
-    const phone = safe(els.phone.value) || SESSION.phone || "—";
-    const cap = num(els.personnes_max.value);
-    const pn = money(els.prix_nuit.value);
-    const ps = money(els.prix_semaine.value);
-    const pm = money(els.prix_mois.value);
-    const desc = safe(els.description.value) || "La description apparaîtra ici.";
-    const img = safeImg(els.photo_url.value);
-    const pub = !!els.is_public.checked;
-    const st = safe(els.status.value) || "active";
-
-    els.pvCover.src = img;
+    const firstPhoto = state.photos[0]?.url || FALLBACK_IMG;
+    els.pvCover.src = safeImg(firstPhoto);
     els.pvCover.onerror = () => {
       els.pvCover.onerror = null;
       els.pvCover.src = FALLBACK_IMG;
     };
 
-    els.pvNom.textContent = nom;
-    els.pvType.textContent = type;
-    els.pvVille.textContent = ville;
-    els.pvDesc.textContent = desc;
-    els.pvPhone.textContent = phone;
-    els.pvCap.textContent = cap ? `${cap} pers.` : "—";
-    els.pvPn.textContent = pn;
-    els.pvPs.textContent = ps;
-    els.pvPm.textContent = pm;
-    els.pvPublic.textContent = pub && (st === "active" || st === "actif") ? "public visible" : "non public / brouillon";
-
-    updateHeader();
+    els.pvNom.textContent = safe(els.nom.value) || "Nom logement";
+    els.pvType.textContent = safe(els.type_logement.value) || "Type";
+    els.pvVille.textContent = safe(els.adresse.value) || "Ville";
+    els.pvDesc.textContent = safe(els.description.value) || "La description apparaîtra ici.";
+    els.pvOwner.textContent = safe(els.owner_name.value) || "—";
+    els.pvPhone.textContent = safe(els.owner_phone.value) || "—";
+    els.pvCap.textContent = safe(els.personnes_max.value) ? `${safe(els.personnes_max.value)} pers.` : "—";
+    els.pvPlan.textContent = safe(els.plan.value) || "—";
+    els.pvPn.textContent = money(els.prix_nuit.value);
+    els.pvPs.textContent = money(els.prix_semaine.value);
+    els.pvPm.textContent = money(els.prix_mois.value);
+    els.pvNeed.textContent = safe(els.need_text.value) || "Le besoin apparaîtra ici.";
+    els.messageBox.value = buildMessage();
+    els.metaPhotos.textContent = String(state.photos.length);
   }
 
-  function fillForm(row){
-    els.nom.value = safe(row.nom);
-    els.room_slug.value = safe(row.slug);
-    els.adresse.value = safe(row.adresse);
-    els.type_logement.value = safe(row.type_logement);
-    els.phone.value = safe(row.phone) || SESSION.phone;
-    els.personnes_max.value = row.personnes_max ?? "";
-    els.status.value = safe(row.status) || "active";
-    els.prix_nuit.value = row.prix_nuit ?? "";
-    els.prix_semaine.value = row.prix_semaine ?? "";
-    els.prix_mois.value = row.prix_mois ?? "";
-    els.description.value = safe(row.description);
-    els.photo_url.value = safe(row.photo_url);
-    els.public_url.value = safe(row.public_url);
-    els.is_public.checked = !!row.is_public;
-  }
+  function renderGallery(){
+    els.gallery.innerHTML = "";
 
-  function defaultCreatePayload(){
-    const suggestedSlug = getRequestedRoomSlug() || storageGet("DIGIY_LOC_PUBLIC_ROOM_SLUG") || buildFallbackRoomSlug();
+    if (!state.photos.length) {
+      const div = document.createElement("div");
+      div.className = "mini";
+      div.textContent = "Aucune photo sélectionnée pour le moment.";
+      els.gallery.appendChild(div);
+      updatePreview();
+      return;
+    }
 
-    els.nom.value = "";
-    els.room_slug.value = suggestedSlug;
-    els.adresse.value = "";
-    els.type_logement.value = "";
-    els.phone.value = SESSION.phone || "";
-    els.personnes_max.value = "";
-    els.status.value = "active";
-    els.prix_nuit.value = "";
-    els.prix_semaine.value = "";
-    els.prix_mois.value = "";
-    els.description.value = "";
-    els.photo_url.value = "";
-    els.public_url.value = "";
-    els.is_public.checked = false;
-
-    ROOM.id = "";
-    ROOM.roomSlug = suggestedSlug;
-    ROOM.loaded = false;
-
-    updatePreview();
-    updateHeader();
-  }
-
-  function normalizeOwnerContext(raw){
-    if (!raw || typeof raw !== "object") return null;
-    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
-    if (!owner_id) return null;
-
-    return {
-      owner_id,
-      business_code: raw.business_code || raw.businessCode || raw.code || "TEST",
-      business_name: raw.business_name || raw.businessName || raw.name || ""
-    };
-  }
-
-  function ownerContextFromStorage(){
-    const owner_id =
-      storageGet("DIGIY_LOC_OWNER_ID") ||
-      storageGet("digiy_loc_owner_id") ||
-      storageGet("DIGIY_OWNER_ID") ||
-      storageGet("owner_id") ||
-      "";
-
-    if (!owner_id) return null;
-
-    return normalizeOwnerContext({
-      owner_id,
-      business_code:
-        storageGet("DIGIY_LOC_BUSINESS_CODE") ||
-        storageGet("DIGIY_BUSINESS_CODE") ||
-        "TEST",
-      business_name:
-        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-        storageGet("DIGIY_BUSINESS_NAME") ||
-        ""
+    state.photos.forEach((photo, i) => {
+      const item = document.createElement("div");
+      item.className = "thumb";
+      item.innerHTML = `
+        <img src="${photo.url}" alt="Photo ${i + 1}">
+        <div class="cap">${i + 1}. ${photo.name}</div>
+      `;
+      els.gallery.appendChild(item);
     });
-  }
-
-  async function ownerContextFromRpc(){
-    if (!window.DIGIY_GUARD?.rpc) return null;
-
-    const st = getGuardState();
-    const attempts = [
-      "digiy_loc_owner_context",
-      "digiy_loc_get_owner_context",
-      "digiy_loc_resolve_owner_context"
-    ];
-
-    for (const fn of attempts) {
-      try {
-        const data = await window.DIGIY_GUARD.rpc(fn, {
-          p_phone: st.phone || SESSION.phone || "",
-          p_slug: st.slug || SESSION.moduleSlug || "",
-          p_module: "LOC"
-        });
-
-        const ctx = normalizeOwnerContext(data);
-        if (ctx?.owner_id) return ctx;
-      } catch (_) {}
-    }
-    return null;
-  }
-
-  async function resolveOwnerContext(){
-    const fromStorage = ownerContextFromStorage();
-    if (fromStorage?.owner_id) return fromStorage;
-
-    const fromRpc = await ownerContextFromRpc();
-    if (fromRpc?.owner_id) {
-      storageSet("DIGIY_LOC_OWNER_ID", fromRpc.owner_id);
-      storageSet("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code || "TEST");
-      storageSet("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name || "");
-      return fromRpc;
-    }
-
-    return null;
-  }
-
-  async function resolveRoomRecord(){
-    const sb = getSB();
-    if (!sb) throw new Error("supabase_not_ready");
-
-    const requested = getRequestedRoomSlug();
-    if (requested) {
-      const { data, error } = await sb
-        .from("digiy_loc_rooms")
-        .select(`
-          id,
-          owner_id,
-          business_code,
-          nom,
-          adresse,
-          personnes_max,
-          prix_nuit,
-          prix_semaine,
-          prix_mois,
-          description,
-          photo_url,
-          status,
-          phone,
-          slug,
-          is_public,
-          public_url,
-          type_logement
-        `)
-        .eq("slug", requested)
-        .maybeSingle();
-
-      if (error) return { data:null, error };
-      if (data) return { data, error:null };
-    }
-
-    const storedRoomSlug = storageGet("DIGIY_LOC_PUBLIC_ROOM_SLUG");
-    if (storedRoomSlug) {
-      const { data, error } = await sb
-        .from("digiy_loc_rooms")
-        .select(`
-          id,
-          owner_id,
-          business_code,
-          nom,
-          adresse,
-          personnes_max,
-          prix_nuit,
-          prix_semaine,
-          prix_mois,
-          description,
-          photo_url,
-          status,
-          phone,
-          slug,
-          is_public,
-          public_url,
-          type_logement
-        `)
-        .eq("slug", storedRoomSlug)
-        .maybeSingle();
-
-      if (error) return { data:null, error };
-      if (data) return { data, error:null };
-    }
-
-    if (SESSION.ownerId) {
-      const { data, error } = await sb
-        .from("digiy_loc_rooms")
-        .select(`
-          id,
-          owner_id,
-          business_code,
-          nom,
-          adresse,
-          personnes_max,
-          prix_nuit,
-          prix_semaine,
-          prix_mois,
-          description,
-          photo_url,
-          status,
-          phone,
-          slug,
-          is_public,
-          public_url,
-          type_logement
-        `)
-        .eq("owner_id", SESSION.ownerId)
-        .order("created_at", { ascending:false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) return { data:null, error };
-      if (data) return { data, error:null };
-    }
-
-    if (SESSION.phone) {
-      const { data, error } = await sb
-        .from("digiy_loc_rooms")
-        .select(`
-          id,
-          owner_id,
-          business_code,
-          nom,
-          adresse,
-          personnes_max,
-          prix_nuit,
-          prix_semaine,
-          prix_mois,
-          description,
-          photo_url,
-          status,
-          phone,
-          slug,
-          is_public,
-          public_url,
-          type_logement
-        `)
-        .eq("phone", SESSION.phone)
-        .order("created_at", { ascending:false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) return { data:null, error };
-      if (data) return { data, error:null };
-    }
-
-    return { data:null, error:null };
-  }
-
-  async function loadRow(){
-    hideStatus();
-
-    const res = await resolveRoomRecord();
-
-    if (res.error){
-      showStatus("Erreur chargement fiche abonné.\n" + (res.error.message || "Erreur inconnue"), "bad");
-      return;
-    }
-
-    if (!res.data){
-      defaultCreatePayload();
-      showStatus(
-        "Aucune fiche LOC réelle trouvée.\n" +
-        "Tu peux créer la première fiche puis enregistrer.\n" +
-        "Le slug logement proposé est séparé du slug module.",
-        "warn"
-      );
-      return;
-    }
-
-    const row = res.data;
-    ROOM.id = safe(row.id);
-    ROOM.roomSlug = safe(row.slug);
-    ROOM.ownerId = safe(row.owner_id);
-    ROOM.loaded = true;
-
-    fillForm(row);
-    storageSet("DIGIY_LOC_PUBLIC_ROOM_SLUG", ROOM.roomSlug);
 
     updatePreview();
-    updateHeader();
-
-    showStatus("Fiche chargée ✅\nSlug logement réel : " + (ROOM.roomSlug || "—"), "ok");
   }
 
-  async function saveRow(){
+  function validateBeforeSend(){
+    if (!safe(els.owner_name.value)) {
+      showStatus("Ajoute le nom du propriétaire.", "warn");
+      els.owner_name.focus();
+      return false;
+    }
+
+    if (!safe(els.owner_phone.value)) {
+      showStatus("Ajoute le téléphone du propriétaire.", "warn");
+      els.owner_phone.focus();
+      return false;
+    }
+
+    if (!safe(els.nom.value)) {
+      showStatus("Ajoute le nom du logement.", "warn");
+      els.nom.focus();
+      return false;
+    }
+
     hideStatus();
+    return true;
+  }
 
-    if (SESSION.mode !== "live") {
-      showStatus("Impossible d’enregistrer en mode aperçu.\nPasse d’abord par PIN pour ouvrir le vrai rail.", "bad");
-      return;
-    }
-
-    const sb = getSB();
-    if (!sb) {
-      showStatus("Supabase non prêt.", "bad");
-      return;
-    }
-
-    const finalRoomSlug = slugify(els.room_slug.value) || buildFallbackRoomSlug();
-
-    if (!finalRoomSlug) {
-      showStatus("Slug logement invalide.", "bad");
-      return;
-    }
-
-    els.room_slug.value = finalRoomSlug;
-
+  function saveDraft(){
     const payload = {
-      slug: finalRoomSlug,
-      nom: safe(els.nom.value),
-      adresse: safe(els.adresse.value),
-      type_logement: safe(els.type_logement.value) || null,
-      description: safe(els.description.value),
-      phone: safe(els.phone.value) || SESSION.phone || null,
-      personnes_max: num(els.personnes_max.value),
-      prix_nuit: num(els.prix_nuit.value),
-      prix_semaine: num(els.prix_semaine.value),
-      prix_mois: num(els.prix_mois.value),
-      status: safe(els.status.value) || "active",
-      is_public: !!els.is_public.checked,
-      photo_url: safe(els.photo_url.value) || null,
-      public_url: safe(els.public_url.value) || null,
-      owner_id: SESSION.ownerId || null,
-      business_code: SESSION.businessCode || "TEST"
+      owner_name: els.owner_name.value,
+      owner_phone: els.owner_phone.value,
+      nom: els.nom.value,
+      adresse: els.adresse.value,
+      type_logement: els.type_logement.value,
+      personnes_max: els.personnes_max.value,
+      plan: els.plan.value,
+      prix_nuit: els.prix_nuit.value,
+      prix_semaine: els.prix_semaine.value,
+      prix_mois: els.prix_mois.value,
+      description: els.description.value,
+      need_text: els.need_text.value
     };
 
-    if (!payload.nom) {
-      showStatus("Le nom du logement est obligatoire.", "bad");
-      return;
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      showStatus("Brouillon sauvegardé sur cet appareil ✅", "ok");
+    }catch(e){
+      showStatus("Impossible de sauvegarder le brouillon localement.", "bad");
     }
+  }
 
-    let error = null;
-    let data = null;
+  function loadDraft(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        showStatus("Aucun brouillon local trouvé.", "warn");
+        return;
+      }
 
-    if (ROOM.id) {
-      const res = await sb
-        .from("digiy_loc_rooms")
-        .update(payload)
-        .eq("id", ROOM.id)
-        .select("id, slug, owner_id")
-        .maybeSingle();
+      const d = JSON.parse(raw);
+      els.owner_name.value = d.owner_name || "";
+      els.owner_phone.value = d.owner_phone || "";
+      els.nom.value = d.nom || "";
+      els.adresse.value = d.adresse || "";
+      els.type_logement.value = d.type_logement || "";
+      els.personnes_max.value = d.personnes_max || "";
+      els.plan.value = d.plan || "";
+      els.prix_nuit.value = d.prix_nuit || "";
+      els.prix_semaine.value = d.prix_semaine || "";
+      els.prix_mois.value = d.prix_mois || "";
+      els.description.value = d.description || "";
+      els.need_text.value = d.need_text || "";
 
-      error = res.error;
-      data = res.data;
-    } else {
-      const res = await sb
-        .from("digiy_loc_rooms")
-        .insert(payload)
-        .select("id, slug, owner_id")
-        .maybeSingle();
-
-      error = res.error;
-      data = res.data;
+      updatePreview();
+      showStatus("Brouillon rechargé ✅", "ok");
+    }catch(e){
+      showStatus("Impossible de relire le brouillon local.", "bad");
     }
+  }
 
-    if (error){
-      showStatus("Erreur enregistrement fiche.\n" + (error.message || "Erreur inconnue"), "bad");
-      return;
-    }
+  function resetAll(){
+    [
+      els.owner_name, els.owner_phone, els.nom, els.adresse, els.personnes_max,
+      els.prix_nuit, els.prix_semaine, els.prix_mois, els.description, els.need_text
+    ].forEach(el => el.value = "");
 
-    ROOM.id = safe(data?.id) || ROOM.id;
-    ROOM.roomSlug = safe(data?.slug) || finalRoomSlug;
-    ROOM.ownerId = safe(data?.owner_id) || SESSION.ownerId || ROOM.ownerId;
-    ROOM.loaded = true;
-
-    storageSet("DIGIY_LOC_PUBLIC_ROOM_SLUG", ROOM.roomSlug);
-
+    els.type_logement.value = "";
+    els.plan.value = "";
+    els.photos.value = "";
+    state.photos.forEach(p => {
+      try { URL.revokeObjectURL(p.url); } catch {}
+    });
+    state.photos = [];
+    renderGallery();
     updatePreview();
-    updateHeader();
+    hideStatus();
+  }
+
+  async function copyText(){
+    try{
+      await navigator.clipboard.writeText(buildMessage());
+      showStatus("Texte copié ✅ Tu peux maintenant le coller où tu veux.", "ok");
+    }catch(e){
+      showStatus("Copie impossible automatiquement. Sélectionne le texte dans la zone de droite.", "warn");
+    }
+  }
+
+  function openWhatsApp(){
+    if (!validateBeforeSend()) return;
+
+    const text = buildMessage();
+    const url = `https://wa.me/${TEAM_WA}?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
 
     showStatus(
-      "Fiche enregistrée ✅\n" +
-      "Slug logement public : " + (ROOM.roomSlug || "—") + "\n" +
-      "Lien public : " + effectivePublicUrl(),
+      "WhatsApp DIGIY ouvert ✅\n" +
+      "Étape suivante : joins manuellement les photos dans la conversation WhatsApp avant d’envoyer.",
       "ok"
     );
   }
 
-  async function copyPublicUrl(){
-    const url = effectivePublicUrl();
-    try{
-      await navigator.clipboard.writeText(url);
-      showStatus("Lien public copié ✅\n" + url, "ok");
-    }catch{
-      showStatus("Copie automatique impossible.\nLien : " + url, "warn");
-    }
+  function openEmail(){
+    if (!validateBeforeSend()) return;
+
+    const subject = `DIGIY LOC — Demande accès / abonnement — ${safe(els.nom.value) || "logement"}`;
+    const body = buildMessage();
+    const mailto = `mailto:${encodeURIComponent(TEAM_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+
+    showStatus(
+      "Email DIGIY préparé ✅\n" +
+      "Selon l’appareil, joins ensuite manuellement les photos avant envoi.",
+      "ok"
+    );
   }
 
-  function openPublic(){
-    const url = effectivePublicUrl();
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
+  function onPhotosChanged(files){
+    state.photos.forEach(p => {
+      try { URL.revokeObjectURL(p.url); } catch {}
+    });
 
-  async function init(){
-    bindLivePreview();
+    state.photos = Array.from(files || []).map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      url: URL.createObjectURL(file)
+    }));
 
-    els.btnSave.addEventListener("click", saveRow);
-    els.btnSave2.addEventListener("click", saveRow);
-    els.btnReload.addEventListener("click", loadRow);
-    els.btnOpenPublic.addEventListener("click", openPublic);
-    els.btnCopyPublic.addEventListener("click", copyPublicUrl);
+    renderGallery();
 
-    if (!window.DIGIY_GUARD) {
-      els.loading.innerHTML = `
-        <div class="box">
-          <div class="t">❌ Guard introuvable</div>
-          <div class="s">Le rail PRO n’est pas chargé. Vérifie <b>guard.js</b>.</div>
-        </div>
-      `;
-      return;
-    }
-
-    try{
-      await waitGuardReady();
-    }catch{
-      els.loading.innerHTML = `
-        <div class="box">
-          <div class="t">❌ Guard non prêt</div>
-          <div class="s">La page ne peut pas sécuriser correctement l’accès.</div>
-        </div>
-      `;
-      return;
-    }
-
-    const st = getGuardState();
-    SESSION.phone = safe(st.phone) || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE");
-    SESSION.moduleSlug = safe(st.slug);
-    SESSION.reason = safe(st.reason) || "preview";
-
-    const ctx = await resolveOwnerContext();
-    SESSION.ownerId = safe(ctx?.owner_id);
-    SESSION.businessCode = safe(ctx?.business_code) || "TEST";
-    SESSION.businessName = safe(ctx?.business_name);
-
-    els.loading.style.display = "none";
-    els.app.style.display = "block";
-
-    if (st.access_ok) {
-      setMode("live", "ok");
-      showBanner("live", "Accès confirmé. Tu modifies la vraie ligne logement.");
-      lockForm(false);
+    if (state.photos.length) {
+      showStatus(
+        `${state.photos.length} photo(s) chargée(s) dans l’aperçu local ✅\n` +
+        `Rappel : pour WhatsApp ou email, les joindre ensuite manuellement.`,
+        "ok"
+      );
     } else {
-      setMode("preview", SESSION.reason || "preview");
-      showBanner("preview", "Mode aperçu. Tu peux lire et préparer, mais l’enregistrement reste verrouillé tant que le PIN / accès n’est pas confirmé.");
-      lockForm(true);
+      hideStatus();
     }
-
-    updateHeader();
-    defaultCreatePayload();
-    await loadRow();
   }
 
-  init().catch((e)=>{
-    console.error(e);
-    els.loading.innerHTML = `
-      <div class="box">
-        <div class="t">❌ Erreur fiche abonné</div>
-        <div class="s">${esc(e?.message || e)}</div>
-      </div>
-    `;
-  });
+  function bind(){
+    const watched = [
+      els.owner_name, els.owner_phone, els.nom, els.adresse, els.type_logement,
+      els.personnes_max, els.plan, els.prix_nuit, els.prix_semaine, els.prix_mois,
+      els.description, els.need_text
+    ];
+
+    watched.forEach(el => {
+      const evt = el.tagName === "SELECT" ? "change" : "input";
+      el.addEventListener(evt, updatePreview);
+    });
+
+    els.photos.addEventListener("change", (e) => onPhotosChanged(e.target.files));
+    els.btnWhatsApp.addEventListener("click", openWhatsApp);
+    els.btnEmail.addEventListener("click", openEmail);
+    els.btnCopyText.addEventListener("click", copyText);
+    els.btnSaveDraft.addEventListener("click", saveDraft);
+    els.btnLoadDraft.addEventListener("click", loadDraft);
+    els.btnReset.addEventListener("click", resetAll);
+  }
+
+  function init(){
+    bind();
+    renderGallery();
+    updatePreview();
+    loadDraft();
+  }
+
+  init();
 })();
 </script>
 
