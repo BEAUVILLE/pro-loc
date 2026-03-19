@@ -8,14 +8,20 @@
 
   <!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
   <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  </script>
+  window.DIGIY_SUPABASE_URL  = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  window.DIGIY_MODULE = "LOC";
 
-  <!-- Supabase + Guard -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-index-FINAL-006"></script>
+  // IMPORTANT : défini AVANT guard.js
+  window.DIGIY_LOGIN_URL = "./pin.html";
 
+  // Anti-flash contenu
+  document.documentElement.style.visibility = "hidden";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./guard.js"></script>
   <style>
     :root{
       --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
