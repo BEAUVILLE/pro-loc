@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>DIGIY LOC PRO — Pré-fiche propriétaire</title>
   <meta name="theme-color" content="#0b1020"/>
-  <meta name="description" content="DIGIY LOC PRO — Pré-fiche propriétaire en attente du traitement des photos par DIGIY."/>
+  <meta name="description" content="DIGIY LOC PRO — Pré-fiche propriétaire locale, sans upload photo vers Supabase, en attente du traitement des photos par DIGIY."/>
 
   <style>
     :root{
@@ -137,6 +137,11 @@
       background:rgba(239,68,68,.18);
       color:#fee2e2;
       border:1px solid rgba(239,68,68,.35);
+    }
+    .btn-ai{
+      background:rgba(250,204,21,.14);
+      color:#fde68a;
+      border:1px solid rgba(250,204,21,.35);
     }
 
     .banner{
@@ -506,6 +511,63 @@
       font-weight:700;
       line-height:1.6;
     }
+
+    .assistant{
+      border:1px solid rgba(250,204,21,.24);
+      background:rgba(250,204,21,.08);
+      border-radius:18px;
+      padding:14px;
+      margin-top:16px;
+    }
+
+    .assistantTitle{
+      font-size:1rem;
+      font-weight:950;
+      color:#fde68a;
+      margin-bottom:8px;
+    }
+
+    .assistantText{
+      color:#f8f1c9;
+      font-weight:800;
+      line-height:1.6;
+      margin-bottom:10px;
+    }
+
+    .assistantList{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .assistantItem{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:.9rem;
+      line-height:1.55;
+      color:#ecfeff;
+      font-weight:800;
+    }
+
+    .assistantItem.ok{
+      border-color:rgba(34,197,94,.32);
+      background:rgba(34,197,94,.10);
+      color:#dcfce7;
+    }
+
+    .assistantItem.warn{
+      border-color:rgba(250,204,21,.30);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+    }
+
+    .assistantItem.bad{
+      border-color:rgba(239,68,68,.30);
+      background:rgba(239,68,68,.10);
+      color:#fee2e2;
+    }
   </style>
 </head>
 <body>
@@ -517,7 +579,7 @@
       <div class="logo">🏠</div>
       <div>
         <h1>DIGIY LOC PRO — Pré-fiche propriétaire</h1>
-        <p>Pré-fiche en attente du traitement des photos par DIGIY avant publication officielle</p>
+        <p>Pré-fiche locale sans upload photo Supabase — traitement humain DIGIY ensuite</p>
       </div>
     </div>
 
@@ -530,19 +592,19 @@
 
   <div class="banner">
     ⚠️ <b>Pré-fiche logement DIGIY LOC</b><br><br>
-    Cette fiche est une <b>pré-fiche propriétaire</b>.<br><br>
-    1️⃣ Vous remplissez les informations du logement et ajoutez vos photos.<br>
-    2️⃣ L’équipe DIGIY récupère les photos et les place dans la médiathèque officielle.<br>
-    3️⃣ DIGIY vous renvoie les <b>URLs des photos</b>.<br>
-    4️⃣ Vous collez ces URLs dans la zone prévue ci-dessous.<br><br>
-    ✔ Une fois les URLs ajoutées, la fiche devient <b>fiche officielle publiable</b> sur le site DIGIY LOC.
+    Ici, les photos restent <b>sur l’appareil du propriétaire</b> pour éviter les frais de stockage inutiles.<br><br>
+    1️⃣ Le propriétaire remplit la pré-fiche et prépare son dossier.<br>
+    2️⃣ Les photos sont envoyées humainement à DIGIY par WhatsApp / email si besoin.<br>
+    3️⃣ DIGIY traite, héberge et renvoie les <b>URLs officielles</b>.<br>
+    4️⃣ Le propriétaire colle ensuite ces URLs dans la zone prévue.<br><br>
+    ✔ Ce rail protège la marge DIGIY : <b>pas de commission, pas de taxe stockage Supabase inutile</b>.
   </div>
 
   <div class="grid">
     <section class="card">
       <div class="head">
         <h2>Dossier propriétaire</h2>
-        <p>Prépare la pré-fiche, ajoute les photos, puis attends le retour DIGIY avec les URLs officielles.</p>
+        <p>Prépare la pré-fiche, garde les photos en local, puis envoie seulement ce qu’il faut à DIGIY.</p>
       </div>
 
       <div class="body">
@@ -621,7 +683,7 @@
             <div class="dropTop">
               <div>
                 <div style="font-weight:950;color:#fff">Photos du logement</div>
-                <div class="mini">Sélectionne plusieurs photos. Elles sont prévisualisées ici avant traitement DIGIY.</div>
+                <div class="mini">Prévisualisation locale uniquement. Rien n’est envoyé vers Supabase ici.</div>
               </div>
               <label class="btn btn-secondary" style="cursor:pointer">
                 📷 Ajouter photos
@@ -630,8 +692,8 @@
             </div>
 
             <div class="mini">
-              Les photos servent à constituer la pré-fiche.  
-              DIGIY les traite ensuite et renvoie les URLs officielles.
+              Les photos restent sur l’appareil.  
+              DIGIY les récupère ensuite par canal humain si besoin, puis renvoie les URLs officielles.
             </div>
 
             <div class="gallery" id="gallery"></div>
@@ -647,12 +709,13 @@ https://digiylyfe.com/media/loc/villa-saly/photo1.jpg
 https://digiylyfe.com/media/loc/villa-saly/photo2.jpg
 https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
             <div class="mini">
-              Lorsque ces URLs sont ajoutées, la fiche peut devenir officielle et être publiée.
+              Quand ces URLs sont collées, la fiche devient prête pour publication officielle.
             </div>
           </label>
         </div>
 
         <div class="toolbar">
+          <button class="btn btn-ai" id="btnAdvice" type="button">✨ Aide DIGIY</button>
           <button class="btn btn-wa" id="btnWhatsApp" type="button">📲 Préparer WhatsApp DIGIY</button>
           <button class="btn btn-mail" id="btnEmail" type="button">✉️ Préparer email DIGIY</button>
           <button class="btn btn-secondary" id="btnCopyText" type="button">📋 Copier le texte</button>
@@ -660,6 +723,12 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
         </div>
 
         <div class="status" id="statusBox"></div>
+
+        <div class="assistant" id="assistantBox" style="display:none">
+          <div class="assistantTitle">✨ Aide DIGIY Pré-fiche</div>
+          <div class="assistantText" id="assistantIntro"></div>
+          <div class="assistantList" id="assistantList"></div>
+        </div>
 
         <div class="meta">
           <div class="metaBox">
@@ -681,7 +750,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
         </div>
 
         <div class="note">
-          Rail DIGIY LOC : <b>pré-fiche → traitement photos → URLs officielles → fiche officielle publiable</b>.
+          Rail DIGIY LOC : <b>pré-fiche locale → envoi humain DIGIY → traitement photos → URLs officielles → fiche officielle publiable</b>.
         </div>
       </div>
     </section>
@@ -761,7 +830,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
   const TEAM_WA = "221771342889";
   const TEAM_EMAIL = "digiylyfe@gmail.com";
   const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
-  const STORAGE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V2";
+  const STORAGE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V3";
 
   const state = {
     photos: []
@@ -785,12 +854,16 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     statusBox: document.getElementById("statusBox"),
     metaPhotos: document.getElementById("metaPhotos"),
     metaState: document.getElementById("metaState"),
+    btnAdvice: document.getElementById("btnAdvice"),
     btnWhatsApp: document.getElementById("btnWhatsApp"),
     btnEmail: document.getElementById("btnEmail"),
     btnCopyText: document.getElementById("btnCopyText"),
     btnSaveDraft: document.getElementById("btnSaveDraft"),
     btnLoadDraft: document.getElementById("btnLoadDraft"),
     btnReset: document.getElementById("btnReset"),
+    assistantBox: document.getElementById("assistantBox"),
+    assistantIntro: document.getElementById("assistantIntro"),
+    assistantList: document.getElementById("assistantList"),
     pvCover: document.getElementById("pvCover"),
     pvNom: document.getElementById("pvNom"),
     pvType: document.getElementById("pvType"),
@@ -871,14 +944,17 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       "BESOIN",
       safe(els.need_text.value) || "—",
       "",
-      "PHOTOS SÉLECTIONNÉES",
+      "PHOTOS SÉLECTIONNÉES (LOCALES)",
       photoNames(),
       "",
       "PHOTOS OFFICIELLES (URLS DIGIY)",
       safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.",
       "",
       "STATUT",
-      currentStateLabel()
+      currentStateLabel(),
+      "",
+      "NOTE",
+      "Les photos n'ont pas été uploadées dans Supabase depuis cette pré-fiche. Rail local pour protéger les coûts."
     ];
 
     return lines.join("\n");
@@ -979,7 +1055,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
     try{
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      showStatus("Brouillon sauvegardé sur cet appareil ✅", "ok");
+      showStatus("Brouillon sauvegardé localement ✅\nAucune photo n'a été envoyée vers Supabase.", "ok");
     }catch(e){
       showStatus("Impossible de sauvegarder le brouillon localement.", "bad");
     }
@@ -1029,6 +1105,10 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     });
     state.photos = [];
 
+    els.assistantBox.style.display = "none";
+    els.assistantIntro.textContent = "";
+    els.assistantList.innerHTML = "";
+
     renderGallery();
     updatePreview();
     hideStatus();
@@ -1051,7 +1131,8 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
     showStatus(
       "WhatsApp DIGIY ouvert ✅\n" +
-      "Étape suivante : joins les photos si besoin, puis attends le retour DIGIY avec les URLs officielles.",
+      "Étape suivante : joins les photos humainement si besoin.\n" +
+      "Les photos ne passent pas par Supabase depuis cette page.",
       "ok"
     );
   }
@@ -1066,7 +1147,8 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
     showStatus(
       "Email DIGIY préparé ✅\n" +
-      "Tu peux y joindre les photos si besoin, puis attendre le retour avec les URLs officielles.",
+      "Tu peux y joindre les photos si besoin.\n" +
+      "Les URLs officielles seront collées plus tard.",
       "ok"
     );
   }
@@ -1086,12 +1168,96 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     if (state.photos.length) {
       showStatus(
         `${state.photos.length} photo(s) chargée(s) dans l’aperçu local ✅\n` +
-        `Pré-fiche prête pour traitement DIGIY.`,
+        `Aucun upload Supabase effectué.`,
         "ok"
       );
     } else {
       hideStatus();
     }
+  }
+
+  function buildAdvice(){
+    const items = [];
+
+    const ownerName = safe(els.owner_name.value);
+    const ownerPhone = safe(els.owner_phone.value);
+    const nom = safe(els.nom.value);
+    const adresse = safe(els.adresse.value);
+    const type = safe(els.type_logement.value);
+    const cap = Number(els.personnes_max.value || 0);
+    const prixNuit = Number(els.prix_nuit.value || 0);
+    const desc = safe(els.description.value);
+    const need = safe(els.need_text.value);
+    const urls = safe(els.photos_urls.value);
+
+    if (!ownerName) items.push({ cls:"bad", text:"Ajoute le nom du propriétaire pour que DIGIY sache à qui rattacher le dossier." });
+    else items.push({ cls:"ok", text:"Nom propriétaire présent." });
+
+    if (!ownerPhone) items.push({ cls:"bad", text:"Ajoute un téléphone / WhatsApp propriétaire. C’est vital pour le suivi humain." });
+    else items.push({ cls:"ok", text:"Téléphone propriétaire présent." });
+
+    if (!nom) items.push({ cls:"bad", text:"Ajoute un nom logement clair. Un logement sans nom convertit mal." });
+    else items.push({ cls:"ok", text:"Nom logement présent." });
+
+    if (!adresse) items.push({ cls:"warn", text:"Précise mieux la ville / zone. Le terrain doit être lisible tout de suite." });
+    else items.push({ cls:"ok", text:"Adresse / ville présente." });
+
+    if (!type) items.push({ cls:"warn", text:"Choisis le type de logement pour éviter une fiche floue." });
+    else items.push({ cls:"ok", text:"Type de logement renseigné." });
+
+    if (!cap || cap < 1) items.push({ cls:"warn", text:"Ajoute la capacité du logement. C’est une info décisive." });
+    else items.push({ cls:"ok", text:`Capacité renseignée : ${cap} pers.` });
+
+    if (!prixNuit && !safe(els.prix_semaine.value) && !safe(els.prix_mois.value)) {
+      items.push({ cls:"bad", text:"Aucun prix visible. Mets au moins un prix pour éviter une fiche trop floue." });
+    } else {
+      items.push({ cls:"ok", text:"Au moins un prix est renseigné." });
+    }
+
+    if (desc.length < 80) {
+      items.push({ cls:"warn", text:"La description est encore faible. Raconte l’ambiance, le confort, la zone, les atouts." });
+    } else {
+      items.push({ cls:"ok", text:"Description assez solide pour une pré-fiche." });
+    }
+
+    if (state.photos.length < 3 && !urls) {
+      items.push({ cls:"warn", text:"Ajoute au moins 3 photos locales ou attends les URLs officielles DIGIY." });
+    } else if (urls) {
+      items.push({ cls:"ok", text:"URLs officielles présentes : la fiche peut passer vers la publication." });
+    } else {
+      items.push({ cls:"ok", text:`Photos locales présentes : ${state.photos.length}.` });
+    }
+
+    if (!need) {
+      items.push({ cls:"warn", text:"Explique le besoin : accès, publication, accompagnement, abonnement, traitement photo..." });
+    } else {
+      items.push({ cls:"ok", text:"Besoin exprimé clairement." });
+    }
+
+    if (!urls) {
+      items.push({ cls:"warn", text:"Pas encore d’URLs officielles : statut pré-fiche en attente." });
+    } else {
+      items.push({ cls:"ok", text:"URLs officielles collées : statut prêt pour publication." });
+    }
+
+    return items;
+  }
+
+  function openAdvice(){
+    const items = buildAdvice();
+    els.assistantBox.style.display = "block";
+
+    if (hasOfficialUrls()) {
+      els.assistantIntro.textContent = "Lecture DIGIY : la pré-fiche est proche du rail publication. On finalise les détails puis on avance.";
+    } else {
+      els.assistantIntro.textContent = "Lecture DIGIY : dossier local propre, sans coût stockage. On consolide ce qui manque avant publication.";
+    }
+
+    els.assistantList.innerHTML = items.map(item => {
+      return `<div class="assistantItem ${item.cls}">${item.text}</div>`;
+    }).join("");
+
+    showStatus("Aide DIGIY affichée ✅\nConseils locaux sans Supabase, sans upload, sans coût.", "ok");
   }
 
   function bind(){
@@ -1107,6 +1273,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     });
 
     els.photos.addEventListener("change", (e) => onPhotosChanged(e.target.files));
+    els.btnAdvice.addEventListener("click", openAdvice);
     els.btnWhatsApp.addEventListener("click", openWhatsApp);
     els.btnEmail.addEventListener("click", openEmail);
     els.btnCopyText.addEventListener("click", copyText);
