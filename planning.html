@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v4"></script>
+  <script src="./guard.js?v=locpro-planning-final-v5-calendar"></script>
 
   <style>
     :root{
@@ -29,6 +29,7 @@
       --warn:#f59e0b;
       --bad:#ef4444;
       --gold:#facc15;
+      --blue:#38bdf8;
       --radius:18px;
       --shadow:0 22px 55px rgba(0,0,0,.45);
     }
@@ -42,7 +43,7 @@
         linear-gradient(180deg, var(--bg2), var(--bg));
       color:var(--text);
     }
-    .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
+    .wrap{ max-width:1160px; margin:0 auto; padding:16px; }
     .card{
       background:rgba(255,255,255,.03);
       border:1px solid var(--line);
@@ -73,6 +74,7 @@
       text-decoration:none;
       display:inline-flex;
       align-items:center;
+      justify-content:center;
       gap:8px;
       min-height:44px;
       transition:.15s ease;
@@ -85,6 +87,8 @@
     .btn.warn{ border-color:rgba(245,158,11,.6); background:rgba(245,158,11,.08); }
     .btn.bad{ border-color:rgba(239,68,68,.55); background:rgba(239,68,68,.08); }
     .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.08); color:#fde68a; }
+    .btn.blue{ border-color:rgba(56,189,248,.45); background:rgba(56,189,248,.08); color:#bae6fd; }
+    .btn.small{min-height:38px;padding:8px 10px;border-radius:12px}
 
     .pill{
       display:inline-flex;
@@ -110,8 +114,8 @@
       gap:12px;
       margin-top:12px;
     }
-    @media(min-width:920px){
-      .grid{grid-template-columns:1.2fr .8fr;}
+    @media(min-width:980px){
+      .grid{grid-template-columns:1.25fr .75fr;}
     }
 
     .h{ font-weight:1100; font-size:18px; }
@@ -211,6 +215,7 @@
     .badge.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#fed7aa}
     .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
     .badge.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
+    .badge.blue{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.08);color:#bae6fd}
 
     .tools{
       display:flex;
@@ -241,9 +246,134 @@
       margin:12px 0;
     }
 
+    .calendarWrap{
+      border:1px solid rgba(148,163,184,.16);
+      border-radius:16px;
+      background:rgba(0,0,0,.14);
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .calendarTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .calendarTitle{
+      font-weight:1100;
+      font-size:1.02rem;
+    }
+    .calendarNav{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .calendarLegend{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .legendItem{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      font-size:.78rem;
+      font-weight:950;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 auto;
+    }
+    .dot.resa{background:var(--blue)}
+    .dot.bloque{background:var(--bad)}
+    .dot.ferme{background:var(--warn)}
+    .dot.arrivee{background:var(--ok)}
+    .dot.depart{background:#cbd5e1}
+    .dot.info{background:#94a3b8}
+
+    .calendarGrid{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      gap:8px;
+    }
+    .dow{
+      text-align:center;
+      color:var(--muted);
+      font-size:.78rem;
+      font-weight:1000;
+      padding:4px 0;
+    }
+    .day{
+      min-height:82px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.16);
+      background:rgba(255,255,255,.02);
+      padding:8px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      transition:.15s ease;
+    }
+    .day:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .day.mutedDay{
+      opacity:.42;
+      background:rgba(0,0,0,.12);
+    }
+    .day.today{
+      border-color:rgba(250,204,21,.42);
+      box-shadow:0 0 0 1px rgba(250,204,21,.18) inset;
+    }
+    .day.selected{
+      border-color:rgba(56,189,248,.48);
+      background:rgba(56,189,248,.10);
+    }
+    .dayTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:6px;
+    }
+    .dayNum{
+      font-weight:1100;
+      font-size:.92rem;
+    }
+    .dayCount{
+      font-size:.72rem;
+      color:var(--muted);
+      font-weight:950;
+    }
+    .dayDots{
+      display:flex;
+      gap:4px;
+      flex-wrap:wrap;
+      min-height:12px;
+    }
+    .dayText{
+      font-size:.74rem;
+      line-height:1.2;
+      color:var(--muted);
+      font-weight:900;
+    }
+
+    @media(max-width:760px){
+      .calendarGrid{gap:6px}
+      .day{min-height:72px;padding:7px}
+      .dayText{display:none}
+    }
+
     @media(max-width:620px){
       input,select{min-width:100%}
       .btn{width:100%;justify-content:center}
+      .calendarNav .btn{width:auto}
     }
   </style>
 </head>
@@ -266,7 +396,7 @@
 
       <div class="row" style="margin-top:10px;justify-content:flex-start">
         <a class="btn gold" id="btnDashboard" href="./app.html">🏠 App</a>
-        <a class="btn" id="btnReservations" href="./reservations.html">📆 RESA</a>
+        <a class="btn blue" id="btnReservations" href="./reservations.html">📆 RESA</a>
         <a class="btn" id="btnTarifs" href="./tarifs.html">💰 Tarifs</a>
         <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
         <a class="btn" id="btnListing" href="./listing.html">📋 Listing</a>
@@ -301,6 +431,36 @@
           </div>
 
           <div class="panelBody">
+            <div class="calendarWrap">
+              <div class="calendarTop">
+                <div>
+                  <div class="calendarTitle" id="calendarTitle">Mois</div>
+                  <div class="muted" id="calendarSub" style="margin-top:4px">Lecture compacte du terrain.</div>
+                </div>
+
+                <div class="calendarNav">
+                  <button class="btn small" id="btnPrevMonth" type="button">← Mois -1</button>
+                  <button class="btn small gold" id="btnTodayMonth" type="button">Aujourd’hui</button>
+                  <button class="btn small" id="btnNextMonth" type="button">Mois +1 →</button>
+                </div>
+              </div>
+
+              <div class="calendarLegend">
+                <span class="legendItem"><span class="dot resa"></span> RESA</span>
+                <span class="legendItem"><span class="dot bloque"></span> Bloqué</span>
+                <span class="legendItem"><span class="dot ferme"></span> Fermé</span>
+                <span class="legendItem"><span class="dot arrivee"></span> Arrivée</span>
+                <span class="legendItem"><span class="dot depart"></span> Départ</span>
+              </div>
+
+              <div class="row" style="margin-top:10px;justify-content:flex-start">
+                <span class="pill" id="selectedDayPill">Jour sélectionné : tout le mois</span>
+                <button class="btn small" id="btnClearDayFilter" type="button">♻️ Effacer filtre jour</button>
+              </div>
+
+              <div class="calendarGrid" id="calendarGrid"></div>
+            </div>
+
             <div class="tools">
               <input id="q" placeholder="Recherche : nom, date, tel, note…" />
               <select id="filterStatus">
@@ -355,6 +515,14 @@
           </div>
         </div>
 
+        <div class="kpi" style="margin-top:12px">
+          <div class="muted">Lecture compacte</div>
+          <div class="muted" style="margin-top:6px">
+            Clique un jour du calendrier pour filtrer la liste du bas.
+            <br>Le calendrier sert à <b>voir vite</b>, la liste sert à <b>agir</b>.
+          </div>
+        </div>
+
         <div class="note ok" id="noteRight"></div>
       </div>
     </div>
@@ -371,6 +539,15 @@
   let ITEMS = [];
   let UX_MODE = "preview";
   let UX_REASON = "booting";
+
+  const MONTH_STATE = (() => {
+    const d = new Date();
+    return {
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      selectedDate: ""
+    };
+  })();
 
   function setSub(text){
     $("sub").textContent = text;
@@ -492,6 +669,31 @@
     return "locplan_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
   }
 
+  function ymdFromDate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function localDateFromYmd(ymd){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || "").trim())) return null;
+    const [y,m,d] = String(ymd).split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function normalizeDateValue(v){
+    const raw = String(v || "").trim();
+    if(!raw) return "";
+
+    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    const d = new Date(raw);
+    if(Number.isNaN(d.getTime())) return raw;
+    return ymdFromDate(d);
+  }
+
   function normalizeStatus(v){
     const x = String(v || "").trim().toLowerCase();
     if (["resa","reservation","réservation"].includes(x)) return "resa";
@@ -509,7 +711,7 @@
       .map((x) => ({
         id: String(x.id || makeItemId()),
         name: String(x.name || "").trim(),
-        date: String(x.date || "").trim(),
+        date: normalizeDateValue(x.date || ""),
         phone: String(x.phone || "").trim(),
         status: normalizeStatus(x.status || "info"),
         note: String(x.note || "").trim()
@@ -548,7 +750,7 @@
     setSub("✅ Accès OK.");
     $("who").textContent = "✅ Connecté · " + phone;
     $("abo").textContent = "Abo validé par le guard.";
-    show("✅ Planning prêt.\nMini planning local actif tant que le vrai planning SQL n’est pas branché.", "ok");
+    show("✅ Planning prêt.\nCalendrier compact + liste terrain active.", "ok");
   }
 
   function getLSKey(){
@@ -577,11 +779,11 @@
 
   function badgeStatus(st){
     const v = normalizeStatus(st);
-    if(v === "resa") return `<span class="badge gold">📆 RESA</span>`;
+    if(v === "resa") return `<span class="badge blue">📆 RESA</span>`;
     if(v === "bloque") return `<span class="badge bad">⛔ Bloqué</span>`;
     if(v === "ferme") return `<span class="badge warn">🚫 Fermé</span>`;
     if(v === "arrivee") return `<span class="badge ok">✅ Arrivée</span>`;
-    if(v === "depart") return `<span class="badge warn">🚪 Départ</span>`;
+    if(v === "depart") return `<span class="badge gold">🚪 Départ</span>`;
     return `<span class="badge">• Info</span>`;
   }
 
@@ -600,6 +802,10 @@
     const f = normalizeStatus($("filterStatus").value || "");
     let rows = Array.isArray(ITEMS) ? ITEMS.slice() : [];
 
+    if(MONTH_STATE.selectedDate){
+      rows = rows.filter(x => String(x.date || "") === MONTH_STATE.selectedDate);
+    }
+
     if(q){
       rows = rows.filter(x => JSON.stringify(x || {}).toLowerCase().includes(q));
     }
@@ -617,16 +823,137 @@
     return rows;
   }
 
+  function getDayMap(){
+    const map = new Map();
+
+    for(const item of ITEMS){
+      const key = normalizeDateValue(item.date);
+      if(!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+      if(!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+
+    return map;
+  }
+
+  function formatMonthYear(year, month){
+    const d = new Date(year, month, 1);
+    return d.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
+  }
+
+  function getCalendarCells(year, month){
+    const first = new Date(year, month, 1);
+    const firstDay = (first.getDay() + 6) % 7;
+    const start = new Date(year, month, 1 - firstDay);
+    const cells = [];
+
+    for(let i = 0; i < 42; i++){
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      cells.push({
+        date: d,
+        ymd: ymdFromDate(d),
+        inMonth: d.getMonth() === month
+      });
+    }
+    return cells;
+  }
+
+  function describeDay(items){
+    if(!items.length) return "";
+    const statuses = Array.from(new Set(items.map(x => normalizeStatus(x.status))));
+    if(statuses.length === 1){
+      const s = statuses[0];
+      if(s === "resa") return `${items.length} RESA`;
+      if(s === "bloque") return `${items.length} bloqué`;
+      if(s === "ferme") return `${items.length} fermé`;
+      if(s === "arrivee") return `${items.length} arrivée`;
+      if(s === "depart") return `${items.length} départ`;
+    }
+    return `${items.length} action(s)`;
+  }
+
+  function renderCalendar(){
+    const grid = $("calendarGrid");
+    const title = $("calendarTitle");
+    const sub = $("calendarSub");
+    const selectedPill = $("selectedDayPill");
+
+    title.textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
+
+    if(MONTH_STATE.selectedDate){
+      selectedPill.textContent = "Jour sélectionné : " + MONTH_STATE.selectedDate;
+      sub.textContent = "Clique un autre jour pour lire vite, ou efface le filtre jour.";
+    } else {
+      selectedPill.textContent = "Jour sélectionné : tout le mois";
+      sub.textContent = "Lecture compacte du terrain. Clique un jour pour filtrer la liste.";
+    }
+
+    const dayMap = getDayMap();
+    const cells = getCalendarCells(MONTH_STATE.year, MONTH_STATE.month);
+    const todayYmd = ymdFromDate(new Date());
+
+    grid.innerHTML = "";
+
+    ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach(label => {
+      const el = document.createElement("div");
+      el.className = "dow";
+      el.textContent = label;
+      grid.appendChild(el);
+    });
+
+    cells.forEach(cell => {
+      const items = dayMap.get(cell.ymd) || [];
+      const statuses = Array.from(new Set(items.map(x => normalizeStatus(x.status))));
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className =
+        "day" +
+        (cell.inMonth ? "" : " mutedDay") +
+        (cell.ymd === todayYmd ? " today" : "") +
+        (MONTH_STATE.selectedDate && MONTH_STATE.selectedDate === cell.ymd ? " selected" : "");
+
+      const dots = statuses.slice(0, 4).map(st => `<span class="dot ${esc(st)}"></span>`).join("");
+      const extra = statuses.length > 4 ? `<span class="dot info"></span>` : "";
+
+      btn.innerHTML = `
+        <div class="dayTop">
+          <div class="dayNum">${cell.date.getDate()}</div>
+          <div class="dayCount">${items.length ? items.length : ""}</div>
+        </div>
+        <div class="dayDots">${dots}${extra}</div>
+        <div class="dayText">${esc(describeDay(items))}</div>
+      `;
+
+      btn.addEventListener("click", () => {
+        MONTH_STATE.year = cell.date.getFullYear();
+        MONTH_STATE.month = cell.date.getMonth();
+        MONTH_STATE.selectedDate = cell.ymd;
+        render();
+        showRight(`📅 Jour sélectionné : ${cell.ymd}`, "ok");
+      });
+
+      grid.appendChild(btn);
+    });
+  }
+
   function render(){
     const el = $("list");
     const rows = getFilteredSortedRows();
 
+    renderCalendar();
+
     if(!rows.length){
+      const txt = MONTH_STATE.selectedDate
+        ? `Aucune ligne pour le ${MONTH_STATE.selectedDate} avec ce filtre.`
+        : `Ajoute une RESA, une date bloquée, une fermeture, une arrivée ou un départ.`;
+
       el.innerHTML = `
         <div class="it">
           <div class="itL">
             <div class="itTitle">— aucune date —</div>
-            <div class="itMeta">Ajoute une RESA, une date bloquée, une fermeture, une arrivée ou un départ.</div>
+            <div class="itMeta">${esc(txt)}</div>
           </div>
           <div class="itR">
             <span class="badge">🧪 Local</span>
@@ -654,7 +981,7 @@
           </div>
           <div class="itR">
             ${badgeStatus(x.status)}
-            <button class="btn bad" style="min-height:38px;padding:8px 10px" data-del-id="${esc(x.id)}">🗑️</button>
+            <button class="btn bad small" data-del-id="${esc(x.id)}">🗑️</button>
           </div>
         </div>
       `;
@@ -691,8 +1018,11 @@
       return;
     }
 
-    const date = (prompt("Date (YYYY-MM-DD)") || "").trim();
-    if(!date) return;
+    const date = normalizeDateValue(prompt("Date (YYYY-MM-DD)") || "");
+    if(!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
+      showRight("⚠️ Date invalide. Utilise YYYY-MM-DD.", "warn");
+      return;
+    }
 
     const status = askStatus();
     if(!status) return;
@@ -718,6 +1048,13 @@
       note
     });
 
+    const d = localDateFromYmd(date);
+    if(d){
+      MONTH_STATE.year = d.getFullYear();
+      MONTH_STATE.month = d.getMonth();
+      MONTH_STATE.selectedDate = date;
+    }
+
     saveLS();
     render();
     showRight("✅ Date ajoutée (local).", "ok");
@@ -731,6 +1068,7 @@
 
     if(!confirm("Vider le mini planning local ?")) return;
     ITEMS = [];
+    MONTH_STATE.selectedDate = "";
     saveLS();
     render();
     showRight("🧹 Mini planning vidé (local).", "warn");
@@ -742,6 +1080,15 @@
     saveLS();
     render();
     showRight("↻ Rechargé (local).", "ok");
+  }
+
+  function gotoTodayMonth(){
+    const d = new Date();
+    MONTH_STATE.year = d.getFullYear();
+    MONTH_STATE.month = d.getMonth();
+    MONTH_STATE.selectedDate = "";
+    render();
+    showRight("📍 Retour au mois courant.", "ok");
   }
 
   async function init(){
@@ -829,6 +1176,32 @@ Merci. — DIGIY`;
     $("q").addEventListener("keydown", (e)=>{ if(e.key === "Enter") render(); });
     $("q").addEventListener("input", render);
     $("filterStatus").addEventListener("change", render);
+
+    $("btnPrevMonth").addEventListener("click", () => {
+      MONTH_STATE.month -= 1;
+      if(MONTH_STATE.month < 0){
+        MONTH_STATE.month = 11;
+        MONTH_STATE.year -= 1;
+      }
+      render();
+    });
+
+    $("btnNextMonth").addEventListener("click", () => {
+      MONTH_STATE.month += 1;
+      if(MONTH_STATE.month > 11){
+        MONTH_STATE.month = 0;
+        MONTH_STATE.year += 1;
+      }
+      render();
+    });
+
+    $("btnTodayMonth").addEventListener("click", gotoTodayMonth);
+
+    $("btnClearDayFilter").addEventListener("click", () => {
+      MONTH_STATE.selectedDate = "";
+      render();
+      showRight("♻️ Filtre jour effacé.", "ok");
+    });
 
     reload();
 
