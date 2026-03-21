@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-reservations-v3"></script>
+  <script src="./guard.js?v=locpro-reservations-v4"></script>
 
   <style>
     :root{
@@ -369,14 +369,21 @@
   "use strict";
 
   const MODULE = "LOC";
+  const SB_URL =
+    String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
+  const SB_ANON =
+    String(
+      window.DIGIY_SUPABASE_ANON ||
+      window.DIGIY_SUPABASE_ANON_KEY ||
+      "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3"
+    ).trim();
 
   const DB = {
     rooms: "digiy_loc_rooms",
     reservations: "digiy_loc_reservations",
-
-    roomOwnerId: "owner_id",
     roomTitle: "nom",
-
+    roomOwnerId: "owner_id",
+    roomPhone: "phone",
     resOwnerId: "owner_id",
     resRoomId: "room_id",
     resClientName: "client_name",
@@ -402,6 +409,19 @@
     mode: "preview",
     reason: "booting"
   };
+
+  let sb = null;
+
+  function getLocalSupabase(){
+    if (sb?.from && sb?.rpc) return sb;
+
+    if (!window.supabase?.createClient) {
+      throw new Error("supabase_not_ready");
+    }
+
+    sb = window.supabase.createClient(SB_URL, SB_ANON);
+    return sb;
+  }
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, (m)=>({
@@ -435,53 +455,68 @@
     return "";
   }
 
+  async function bootGuard(){
+    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+      throw new Error("guard_missing");
+    }
+    await window.DIGIY_GUARD.ready();
+    return window.DIGIY_GUARD.state || {};
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
       access_ok: false,
       slug: "",
       phone: "",
+      module: MODULE,
       reason: "guard_missing"
     };
   }
 
- async function bootGuard(){
-  if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
-    throw new Error("guard_missing");
-  }
-  await window.DIGIY_GUARD.ready();
-  return window.DIGIY_GUARD.state || {};
-}
+  function getSession(){
+    const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
 
-    if(typeof ready === "function"){
-      const maybe = ready(8000);
-      if (maybe && typeof maybe.then === "function") return await maybe;
-      return maybe;
-    }
-
-    if(ready && typeof ready.then === "function"){
-      return await ready;
-    }
-
-    if(ready) return true;
-    throw new Error("guard_not_ready");
+    return {
+      ok: !!st.access_ok,
+      access_ok: !!st.access_ok,
+      preview: !!st.preview,
+      slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
+      phone: String(st.phone || raw.phone || "").trim(),
+      module: String(st.module || raw.module || MODULE).trim(),
+      reason: String(st.reason || raw.reason || "").trim()
+    };
   }
 
-  function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
-      || window.DIGIY_GUARD?.getSupabase?.()
-      || window.DIGIY_GUARD?.sb
-      || window.sb
-      || null;
+  function getSlug(){
+    const sess = getSession();
+    if (sess.slug) return sess.slug;
+
+    try{
+      return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
+    }catch{
+      return "";
+    }
+  }
+
+  function getPhone(){
+    const sess = getSession();
+    return String(
+      sess.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      ""
+    ).trim();
   }
 
   function withSlug(path){
-    const slug = State.slug || getGuardState().slug || "";
+    const slug = State.slug || getSlug() || "";
     if(!slug) return path;
 
     try{
       const u = new URL(path, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      u.searchParams.set("slug", slug);
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{
@@ -514,9 +549,25 @@
     el.style.display = msg ? "block" : "none";
   }
 
+  function refreshTopUi(){
+    $("pillSlug").textContent = "slug: " + (State.slug || "—");
+
+    const pill = $("pillState");
+    if(State.mode === "live"){
+      pill.textContent = "vivant";
+      pill.className = "pill ok";
+    }else{
+      pill.textContent = "aperçu";
+      pill.className = "pill warn";
+    }
+
+    $("btnBack").href = withSlug("./app.html");
+    $("btnPlanning").href = withSlug("./planning.html");
+  }
+
   function roomNameById(id){
     const r = State.rooms.find(x => String(x.id) === String(id));
-    return r?.[DB.roomTitle] || r?.title || "Logement";
+    return r?.[DB.roomTitle] || r?.title || r?.name || "Logement";
   }
 
   function normalizeSource(r){
@@ -720,17 +771,15 @@
   function setPreview(reason){
     State.mode = "preview";
     State.reason = reason || "preview";
-
-    $("pillState").textContent = "aperçu";
-    $("pillState").className = "pill warn";
+    refreshTopUi();
 
     setAccessBox(
       reason === "slug_missing"
         ? "👁️ Aucun slug détecté. Coque protégée affichée."
         : reason === "has_access_false"
         ? "👁️ Slug présent mais accès non actif. Coque protégée affichée."
-        : reason === "owner_unresolved"
-        ? "👁️ Accès détecté mais owner_id non résolu. Coque protégée affichée."
+        : reason === "phone_missing"
+        ? "👁️ Téléphone propriétaire introuvable. Coque protégée affichée."
         : "👁️ Mode aperçu propre."
     );
 
@@ -746,89 +795,81 @@
   function setLive(){
     State.mode = "live";
     State.reason = "ok";
-
-    $("pillState").textContent = "vivant";
-    $("pillState").className = "pill ok";
+    refreshTopUi();
     setAccessBox("");
   }
 
-  function resolveOwnerContext(){
-    const sess = window.DIGIY_GUARD?.getSession?.() || null;
+  async function fetchRooms(sbClient){
+    const attempts = [];
 
-    State.ownerId =
-      sess?.owner_id ||
-      sess?.ownerId ||
-      storageGet("DIGIY_LOC_OWNER_ID") ||
-      storageGet("digiy_loc_owner_id") ||
-      storageGet("DIGIY_OWNER_ID") ||
-      storageGet("owner_id") ||
-      "";
-
-    State.businessName =
-      sess?.business_name ||
-      sess?.businessName ||
-      storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-      storageGet("DIGIY_BUSINESS_NAME") ||
-      "";
-
-    return !!State.ownerId;
-  }
-
-  async function ownerContextFromRpc(){
-    const guardRpc = window.DIGIY_GUARD?.rpc;
-    if(typeof guardRpc !== "function") return false;
-
-    const tries = [
-      "digiy_loc_owner_context",
-      "digiy_loc_get_owner_context",
-      "digiy_loc_resolve_owner_context"
-    ];
-
-    for (const fn of tries){
-      try{
-        const data = await guardRpc(fn, {
-          p_phone: State.phone || "",
-          p_slug: State.slug || "",
-          p_module: MODULE
-        });
-
-        const ownerId = data?.owner_id || data?.ownerId || data?.id || "";
-        if(ownerId){
-          State.ownerId = ownerId;
-          State.businessName = data?.business_name || data?.businessName || data?.name || "";
-
-          try{ localStorage.setItem("DIGIY_LOC_OWNER_ID", State.ownerId); }catch{}
-          try{ localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", State.businessName || ""); }catch{}
-          return true;
-        }
-      }catch{}
+    if (State.phone) {
+      attempts.push(async () => {
+        const { data, error } = await sbClient
+          .from(DB.rooms)
+          .select("id, nom, owner_id, phone")
+          .eq(DB.roomPhone, State.phone)
+          .order("created_at", { ascending:false });
+        if (error) throw error;
+        return data || [];
+      });
     }
 
-    return false;
+    if (State.ownerId) {
+      attempts.push(async () => {
+        const { data, error } = await sbClient
+          .from(DB.rooms)
+          .select("id, nom, owner_id, phone")
+          .eq(DB.roomOwnerId, State.ownerId)
+          .order("created_at", { ascending:false });
+        if (error) throw error;
+        return data || [];
+      });
+    }
+
+    let lastError = null;
+    for (const run of attempts) {
+      try {
+        const rows = await run();
+        if (Array.isArray(rows)) return rows;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (lastError) throw lastError;
+    return [];
   }
 
-  async function fetchRooms(sb){
-    const { data, error } = await sb
-      .from(DB.rooms)
-      .select("id, nom, owner_id")
-      .eq(DB.roomOwnerId, State.ownerId)
-      .order("created_at", { ascending:false });
+  async function fetchReservationsByRoomIds(sbClient, roomIds){
+    if (!roomIds.length) return [];
 
-    if(error) throw error;
+    const { data, error } = await sbClient
+      .from(DB.reservations)
+      .select("*")
+      .in(DB.resRoomId, roomIds)
+      .order(DB.resCheckin, { ascending:false })
+      .limit(500);
+
+    if (error) throw error;
     return data || [];
   }
 
-  async function fetchReservations(sb){
-    const { data, error } = await sb
+  async function fetchReservationsByOwnerId(sbClient){
+    if (!State.ownerId) return [];
+
+    const { data, error } = await sbClient
       .from(DB.reservations)
       .select("*")
       .eq(DB.resOwnerId, State.ownerId)
       .order(DB.resCheckin, { ascending:false })
       .limit(500);
 
-    if(error) throw error;
+    if (error) throw error;
+    return data || [];
+  }
 
-    return (data || []).map(r => ({
+  function decorateReservations(rows){
+    return (rows || []).map(r => ({
       ...r,
       _client: r?.[DB.resClientName] || r.client_nom || r.client_name || "Client",
       _phone: r?.[DB.resPhone] || r.client_phone || r.phone || "",
@@ -844,11 +885,35 @@
   }
 
   async function loadLiveData(){
-    const sb = getSB();
-    if(!sb) throw new Error("supabase_not_ready");
+    const sbClient = getLocalSupabase();
 
-    State.rooms = await fetchRooms(sb);
-    State.reservations = await fetchReservations(sb);
+    State.rooms = await fetchRooms(sbClient);
+
+    if (!State.ownerId && State.rooms.length) {
+      const firstOwner = State.rooms.find(x => x?.owner_id)?.owner_id || "";
+      if (firstOwner) State.ownerId = String(firstOwner);
+    }
+
+    const roomIds = State.rooms.map(x => x?.id).filter(Boolean);
+    let reservations = [];
+
+    try{
+      reservations = await fetchReservationsByRoomIds(sbClient, roomIds);
+    }catch(e){
+      if (State.ownerId) {
+        reservations = await fetchReservationsByOwnerId(sbClient);
+      } else {
+        throw e;
+      }
+    }
+
+    if (!reservations.length && State.ownerId) {
+      try{
+        reservations = await fetchReservationsByOwnerId(sbClient);
+      }catch(_){}
+    }
+
+    State.reservations = decorateReservations(reservations);
     applyFilters();
 
     if(!State.reservations.length){
@@ -863,19 +928,21 @@
     setNoteMain("⏳ Chargement des RESA…", "warn");
 
     try{
-      const st = getGuardState();
-      State.slug = (
-        new URL(location.href).searchParams.get("slug") ||
-        st.slug ||
-        storageGet("digiy_loc_slug") ||
-        storageGet("digiy_last_slug") ||
-        storageGet("DIGIY_SLUG") ||
-        ""
-      ).trim().toLowerCase();
+      const st = getSession();
+      State.slug = getSlug();
+      State.phone = getPhone();
+      State.ownerId =
+        storageGet("DIGIY_LOC_OWNER_ID") ||
+        storageGet("digiy_loc_owner_id") ||
+        storageGet("DIGIY_OWNER_ID") ||
+        storageGet("owner_id") ||
+        "";
+      State.businessName =
+        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
+        storageGet("DIGIY_BUSINESS_NAME") ||
+        "";
 
-      State.phone = st.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
-
-      $("pillSlug").textContent = "slug: " + (State.slug || "—");
+      refreshTopUi();
 
       if(!State.slug){
         setPreview("slug_missing");
@@ -887,12 +954,9 @@
         return;
       }
 
-      if(!resolveOwnerContext()){
-        const ok = await ownerContextFromRpc();
-        if(!ok){
-          setPreview("owner_unresolved");
-          return;
-        }
+      if(!State.phone){
+        setPreview("phone_missing");
+        return;
       }
 
       setLive();
@@ -909,8 +973,7 @@
   }
 
   function bindNav(){
-    $("btnBack").href = withSlug("./app.html");
-    $("btnPlanning").href = withSlug("./planning.html");
+    refreshTopUi();
   }
 
   function bindFilters(){
@@ -968,15 +1031,16 @@ DIGIY LOC PRO`;
     bindFilters();
     bindActions();
 
-    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
       setPreview("guard_missing");
       setNoteMain("❌ Guard absent ou non chargé.", "bad");
       return;
     }
 
     try{
-      await waitGuardReady();
-    }catch{
+      await bootGuard();
+    }catch(e){
+      console.error(e);
       setPreview("guard_not_ready");
       setNoteMain("❌ Guard non prêt.", "bad");
       return;
