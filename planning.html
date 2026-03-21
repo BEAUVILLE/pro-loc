@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v5-calendar"></script>
+  <script src="./guard.js?v=locpro-planning-final-v5-calendar-light"></script>
 
   <style>
     :root{
@@ -24,7 +24,7 @@
       --card:#0b2a1f;
       --line:rgba(255,255,255,.14);
       --text:#eafff1;
-      --muted:rgba(234,255,241,.75);
+      --muted:rgba(234,255,241,.82);
       --ok:#22c55e;
       --warn:#f59e0b;
       --bad:#ef4444;
@@ -32,7 +32,24 @@
       --blue:#38bdf8;
       --radius:18px;
       --shadow:0 22px 55px rgba(0,0,0,.45);
+
+      --cal-wrap-bg:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+      --cal-wrap-line:rgba(255,255,255,.18);
+
+      --cal-day-bg:rgba(255,255,255,.08);
+      --cal-day-bg-hover:rgba(255,255,255,.12);
+      --cal-day-line:rgba(255,255,255,.18);
+
+      --cal-day-muted-bg:rgba(255,255,255,.045);
+      --cal-day-muted-text:rgba(234,255,241,.62);
+
+      --cal-day-today-bg:rgba(250,204,21,.14);
+      --cal-day-today-line:rgba(250,204,21,.52);
+
+      --cal-day-selected-bg:rgba(56,189,248,.16);
+      --cal-day-selected-line:rgba(56,189,248,.52);
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -43,14 +60,18 @@
         linear-gradient(180deg, var(--bg2), var(--bg));
       color:var(--text);
     }
+
     .wrap{ max-width:1160px; margin:0 auto; padding:16px; }
+
     .card{
-      background:rgba(255,255,255,.03);
+      background:rgba(255,255,255,.04);
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:14px;
       box-shadow:var(--shadow);
+      backdrop-filter:blur(3px);
     }
+
     .row{
       display:flex;
       gap:10px;
@@ -58,14 +79,16 @@
       justify-content:space-between;
       flex-wrap:wrap;
     }
+
     .muted{
       color:var(--muted);
       font-weight:850;
       line-height:1.4;
     }
+
     .btn{
       border:1px solid var(--line);
-      background:rgba(255,255,255,.02);
+      background:rgba(255,255,255,.03);
       color:var(--text);
       padding:10px 12px;
       border-radius:14px;
@@ -86,8 +109,8 @@
     .btn.ok{ border-color:rgba(34,197,94,.6); background:rgba(34,197,94,.08); }
     .btn.warn{ border-color:rgba(245,158,11,.6); background:rgba(245,158,11,.08); }
     .btn.bad{ border-color:rgba(239,68,68,.55); background:rgba(239,68,68,.08); }
-    .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.08); color:#fde68a; }
-    .btn.blue{ border-color:rgba(56,189,248,.45); background:rgba(56,189,248,.08); color:#bae6fd; }
+    .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.10); color:#fde68a; }
+    .btn.blue{ border-color:rgba(56,189,248,.45); background:rgba(56,189,248,.10); color:#bae6fd; }
     .btn.small{min-height:38px;padding:8px 10px;border-radius:12px}
 
     .pill{
@@ -97,13 +120,14 @@
       padding:8px 10px;
       border:1px solid rgba(148,163,184,.22);
       border-radius:999px;
-      background:rgba(0,0,0,.16);
+      background:rgba(255,255,255,.05);
       color:var(--muted);
       font-weight:950;
       font-size:.86rem;
       white-space:nowrap;
     }
     .pill strong{color:#fff}
+
     .mono{
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
     }
@@ -124,7 +148,7 @@
       border:1px solid rgba(148,163,184,.22);
       border-radius:16px;
       padding:12px;
-      background:rgba(0,0,0,.12);
+      background:rgba(255,255,255,.04);
     }
     .kpi .big{font-weight:1100;margin-top:6px}
     .kpi .mono{display:block;margin-top:6px;opacity:.95}
@@ -134,7 +158,7 @@
       padding:10px 12px;
       border-radius:14px;
       border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.02);
+      background:rgba(255,255,255,.03);
       color:var(--muted);
       font-weight:950;
       white-space:pre-wrap;
@@ -142,14 +166,14 @@
       line-height:1.35;
     }
     .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
 
     .panel{
       margin-top:12px;
       border:1px solid rgba(148,163,184,.18);
       border-radius:16px;
-      background:rgba(255,255,255,.02);
+      background:rgba(255,255,255,.03);
       overflow:hidden;
     }
     .panelHead{
@@ -160,7 +184,7 @@
       justify-content:space-between;
       gap:10px;
       flex-wrap:wrap;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
     }
     .panelHead b{font-weight:1100}
     .panelBody{padding:12px}
@@ -173,7 +197,7 @@
     }
     .it{
       border:1px solid rgba(148,163,184,.18);
-      background:rgba(0,0,0,.16);
+      background:rgba(255,255,255,.04);
       border-radius:14px;
       padding:10px;
       display:flex;
@@ -205,7 +229,7 @@
       padding:6px 9px;
       border-radius:999px;
       border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.02);
+      background:rgba(255,255,255,.04);
       color:var(--muted);
       font-weight:950;
       font-size:.82rem;
@@ -215,7 +239,7 @@
     .badge.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#fed7aa}
     .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
     .badge.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
-    .badge.blue{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.08);color:#bae6fd}
+    .badge.blue{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.10);color:#bae6fd}
 
     .tools{
       display:flex;
@@ -228,13 +252,14 @@
     input,select{
       border-radius:14px;
       border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.18);
+      background:rgba(255,255,255,.05);
       color:var(--text);
       padding:11px 12px;
       font-weight:950;
       outline:none;
       min-width:220px;
     }
+    input::placeholder{color:rgba(234,255,241,.62)}
     input:focus,select:focus{
       border-color:rgba(250,204,21,.55);
       box-shadow:0 0 0 3px rgba(250,204,21,.14);
@@ -247,11 +272,12 @@
     }
 
     .calendarWrap{
-      border:1px solid rgba(148,163,184,.16);
+      border:1px solid var(--cal-wrap-line);
       border-radius:16px;
-      background:rgba(0,0,0,.14);
+      background:var(--cal-wrap-bg);
       padding:12px;
       margin-bottom:12px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
     }
     .calendarTop{
       display:flex;
@@ -263,6 +289,7 @@
     .calendarTitle{
       font-weight:1100;
       font-size:1.02rem;
+      color:#ffffff;
     }
     .calendarNav{
       display:flex;
@@ -282,12 +309,13 @@
       gap:6px;
       padding:6px 9px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.02);
-      color:var(--muted);
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:#e7fff0;
       font-size:.78rem;
       font-weight:950;
     }
+
     .dot{
       width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 auto;
     }
@@ -295,7 +323,7 @@
     .dot.bloque{background:var(--bad)}
     .dot.ferme{background:var(--warn)}
     .dot.arrivee{background:var(--ok)}
-    .dot.depart{background:#cbd5e1}
+    .dot.depart{background:#e5e7eb}
     .dot.info{background:#94a3b8}
 
     .calendarGrid{
@@ -304,64 +332,84 @@
       grid-template-columns:repeat(7,minmax(0,1fr));
       gap:8px;
     }
+
     .dow{
       text-align:center;
-      color:var(--muted);
-      font-size:.78rem;
+      color:#f3fff8;
+      font-size:.80rem;
       font-weight:1000;
       padding:4px 0;
+      opacity:.92;
     }
+
     .day{
       min-height:82px;
       border-radius:14px;
-      border:1px solid rgba(148,163,184,.16);
-      background:rgba(255,255,255,.02);
+      border:1px solid var(--cal-day-line);
+      background:var(--cal-day-bg);
       padding:8px;
       cursor:pointer;
       display:flex;
       flex-direction:column;
       gap:6px;
       transition:.15s ease;
+      color:#fff;
     }
-    .day:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .day:hover{
+      background:var(--cal-day-bg-hover);
+      filter:brightness(1.05);
+      transform:translateY(-1px);
+    }
+
     .day.mutedDay{
-      opacity:.42;
-      background:rgba(0,0,0,.12);
+      opacity:.82;
+      background:var(--cal-day-muted-bg);
+      color:var(--cal-day-muted-text);
     }
+
     .day.today{
-      border-color:rgba(250,204,21,.42);
+      border-color:var(--cal-day-today-line);
+      background:var(--cal-day-today-bg);
       box-shadow:0 0 0 1px rgba(250,204,21,.18) inset;
     }
+
     .day.selected{
-      border-color:rgba(56,189,248,.48);
-      background:rgba(56,189,248,.10);
+      border-color:var(--cal-day-selected-line);
+      background:var(--cal-day-selected-bg);
+      box-shadow:0 0 0 1px rgba(56,189,248,.18) inset;
     }
+
     .dayTop{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:6px;
     }
+
     .dayNum{
       font-weight:1100;
-      font-size:.92rem;
+      font-size:.95rem;
+      color:#ffffff;
     }
+
     .dayCount{
-      font-size:.72rem;
-      color:var(--muted);
-      font-weight:950;
+      font-size:.74rem;
+      color:#dcfce7;
+      font-weight:1000;
     }
+
     .dayDots{
       display:flex;
       gap:4px;
       flex-wrap:wrap;
       min-height:12px;
     }
+
     .dayText{
-      font-size:.74rem;
-      line-height:1.2;
-      color:var(--muted);
-      font-weight:900;
+      font-size:.76rem;
+      line-height:1.22;
+      color:#f0fff6;
+      font-weight:950;
     }
 
     @media(max-width:760px){
