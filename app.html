@@ -18,18 +18,16 @@
 :root{
   --bg:#020617;
   --bg2:#0b1020;
-  --card:rgba(255,255,255,.04);
+  --card:rgba(255,255,255,.03);
   --line:#1f2937;
   --ink:#f9fafb;
   --muted:#cbd5f5;
   --gold:#facc15;
   --green:#22c55e;
   --danger:#ef4444;
-  --soft:#94a3b8;
   --shadow:0 22px 50px rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100%}
 body{
   min-height:100vh;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
@@ -39,33 +37,29 @@ body{
     radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
     linear-gradient(180deg, var(--bg2), var(--bg));
 }
-a{color:inherit;text-decoration:none}
-button,input,select,textarea{font:inherit}
-
-.wrap{max-width:1040px;margin:0 auto;padding:14px}
-.stack{display:grid;gap:14px}
-
+a{color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
 .top{
   display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-  padding:12px;border:1px solid var(--line);border-radius:20px;background:var(--card);
+  padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
   box-shadow:var(--shadow);
 }
 .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .logo{
-  width:42px;height:42px;border-radius:14px;
+  width:40px;height:40px;border-radius:14px;
   background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
   border:1px solid rgba(250,204,21,.35);
   box-shadow:0 0 22px rgba(250,204,21,.12);
 }
 .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
-.brand .infinity{font-size:1.45rem;font-weight:900;margin-left:4px}
+.brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
 .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:2px}
 
 .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .pill{
   border:1px solid rgba(148,163,184,.35);
   padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
-  color:var(--muted);font-weight:900;font-size:.84rem;
+  color:var(--muted);font-weight:900;font-size:.86rem;
 }
 .pill strong{color:#fff}
 .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
@@ -79,126 +73,55 @@ button,input,select,textarea{font:inherit}
   background:rgba(255,255,255,.03);
   border:1px solid var(--line);
   color:var(--muted);
-  transition:all .18s ease;
+  transition:all 0.2s ease;
+  text-decoration:none;
   display:inline-flex;align-items:center;justify-content:center;
 }
 .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .btn:active:not(:disabled){transform:translateY(0)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
 .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
 .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
 .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
 .btn.ghost{background:rgba(255,255,255,.02)}
-.btn.small{padding:9px 10px;border-radius:12px;min-height:42px}
+.btn.small{padding:9px 10px;border-radius:12px;min-height:44px}
 
-.hero{
-  border:1px solid var(--line);
-  border-radius:24px;
-  background:
-    radial-gradient(circle at top right, rgba(250,204,21,.12), transparent 28%),
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  box-shadow:var(--shadow);
-  padding:18px;
+.navRow{
+  width:100%;
+  display:flex;gap:10px;flex-wrap:wrap;
+  align-items:center;justify-content:space-between;
+  margin-top:10px;
 }
-.hero h2{
-  font-size:clamp(1.45rem,2.7vw,2.1rem);
-  line-height:1.05;
-  margin-bottom:10px;
-}
-.hero p{
+.navLeft,.navRight{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.navLabel{
   color:var(--muted);
-  line-height:1.65;
-  max-width:760px;
-}
-.heroRow{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
-.kpis{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:16px;
-}
-.kpi{
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:18px;
-  background:rgba(255,255,255,.03);
-  padding:12px;
-}
-.kpi .k{
-  color:var(--soft);
   font-weight:900;
-  font-size:.78rem;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
-.kpi .v{
-  margin-top:7px;
-  font-weight:1000;
-  font-size:1rem;
-  word-break:break-word;
-}
-.kpi .sub{
-  margin-top:6px;
-  color:var(--muted);
-  font-size:.82rem;
-  line-height:1.4;
+  font-size:.86rem;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.02);
 }
 
-.section{
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+.card{
   border:1px solid var(--line);
   background:rgba(255,255,255,.03);
-  border-radius:22px;
+  border-radius:20px;
   box-shadow:var(--shadow);
   overflow:hidden;
 }
-.sectionHead{
-  padding:14px 16px;
+.cardHead{
+  padding:12px 14px;
   border-bottom:1px solid var(--line);
   display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
   background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
 }
-.sectionHead h3{font-size:1rem}
-.sectionHead p{color:var(--muted);font-size:.88rem;font-weight:800}
-.sectionBody{padding:16px}
-
-.mainGrid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-.actionCard{
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:18px;
-  background:rgba(255,255,255,.03);
-  padding:14px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.actionCard strong{
-  font-size:1rem;
-  line-height:1.2;
-}
-.actionCard p{
-  color:var(--muted);
-  line-height:1.55;
-  font-size:.9rem;
-  min-height:44px;
-}
-.actionCard .foot{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:auto;
-}
-.big{
-  min-height:54px;
-  font-size:1rem;
-}
+.cardHead h2{margin:0;font-size:1.02rem}
+.cardHead small{color:var(--muted);font-weight:800}
+.cardBody{padding:14px}
 
 .note{
   margin-top:10px;
@@ -213,10 +136,71 @@ button,input,select,textarea{font:inherit}
 .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
 .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
 
-.kv{display:grid;grid-template-columns:150px 1fr;gap:8px}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:8px;margin-top:10px}
 .kv div{padding:8px 10px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(255,255,255,.02)}
 .kv .k{color:var(--muted);font-weight:900}
 .kv .v{font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.quickGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.quickBtn{
+  min-height:56px;
+  font-size:.98rem;
+}
+
+.clawList{
+  display:grid;
+  gap:10px;
+  margin-top:12px;
+}
+.clawItem{
+  border:1px solid rgba(250,204,21,.20);
+  background:rgba(250,204,21,.08);
+  border-radius:16px;
+  padding:12px;
+}
+.clawTitle{
+  font-weight:1000;
+  color:#fff2b0;
+  margin-bottom:6px;
+}
+.clawText{
+  color:#f8f3d8;
+  line-height:1.55;
+  font-size:.92rem;
+}
+.clawMeta{
+  margin-top:8px;
+  color:#d9d4b4;
+  font-size:.8rem;
+  font-weight:800;
+}
+.clawEmpty{
+  border:1px dashed rgba(148,163,184,.25);
+  border-radius:14px;
+  padding:12px;
+  color:var(--muted);
+  background:rgba(255,255,255,.02);
+}
+
+.toolsBox{
+  margin-top:14px;
+  border:1px dashed rgba(148,163,184,.22);
+  border-radius:18px;
+  background:rgba(255,255,255,.02);
+  padding:12px;
+}
+.toolsGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.toolsBox[hidden]{display:none}
 
 .table{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .row{
@@ -238,217 +222,78 @@ button,input,select,textarea{font:inherit}
 .badge.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
 
-details.tools{
-  border:1px dashed rgba(148,163,184,.28);
-  border-radius:18px;
-  background:rgba(255,255,255,.02);
-  padding:12px 14px;
-}
-details.tools summary{
-  cursor:pointer;
-  list-style:none;
-  font-weight:950;
-  color:#e5e7eb;
-}
-details.tools summary::-webkit-details-marker{display:none}
-.toolsGrid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;
-  margin-top:12px;
-}
-.toolsGrid a{
-  min-height:44px;
-}
-
-.footerNote{
-  color:var(--muted);
-  text-align:center;
-  font-size:.9rem;
-  padding:8px 0 2px;
-}
-
-@media (max-width: 920px){
-  .mainGrid,
-  .toolsGrid,
-  .kpis{grid-template-columns:1fr}
-}
 @media (max-width: 720px){
   .wrap{padding:12px}
   .btn{width:100%}
-  .heroRow .btn{width:100%}
+  .navRight .btn{width:100%}
   .kv{grid-template-columns:1fr}
+  .quickGrid{grid-template-columns:1fr}
+  .toolsGrid{grid-template-columns:1fr}
 }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-  <div class="stack">
 
-    <div class="top">
-      <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <h1>DIGIY LOC PRO <span class="infinity">∞</span></h1>
-          <div class="sub">App propriétaire • simple • terrain • 0% commission</div>
-        </div>
-      </div>
-
-      <div class="pills">
-        <div class="pill" id="pillUser">👤 <strong>—</strong></div>
-        <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
-        <div class="pill warn" id="pillState">🔒 Déconnecté</div>
-        <button class="btn danger small" id="btnLogout" style="display:none">🚪 Déconnexion</button>
+  <div class="top">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>DIGIY LOC PRO <span class="infinity">∞</span></h1>
+        <div class="sub">App propriétaire • simple • terrain • RESA au centre</div>
       </div>
     </div>
 
-    <section class="hero">
-      <h2>Le minimum utile pour gérer ton logement.</h2>
-      <p>
-        Ici, on va droit au but : <strong>RESA</strong>, <strong>planning</strong>, <strong>dates à bloquer</strong>,
-        <strong>tarifs</strong> et <strong>paiement</strong>. Le reste reste derrière.
-      </p>
+    <div class="pills">
+      <div class="pill" id="pillUser">👤 <strong>—</strong></div>
+      <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
+      <div class="pill warn" id="pillState">🔒 Déconnecté</div>
+      <button class="btn danger small" id="btnLogout" style="display:none">🚪 Déconnexion</button>
+    </div>
 
-      <div class="heroRow">
-        <a class="btn gold big" id="btnOpenPin" href="#">🔑 Ouvrir l’accès</a>
-        <a class="btn primary big" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
-        <button class="btn big" id="btnRefresh" type="button">↻ Recharger</button>
+    <div class="navRow">
+      <div class="navLeft">
+        <a class="btn ghost small" id="btnBack" href="#">⬅️ Retour</a>
+        <div class="navLabel" id="navPlace">Lieu : —</div>
       </div>
-
-      <div class="kpis">
-        <div class="kpi">
-          <div class="k">Lieu</div>
-          <div class="v" id="kvSlugHero">—</div>
-          <div class="sub">Rail principal de travail.</div>
-        </div>
-        <div class="kpi">
-          <div class="k">Téléphone</div>
-          <div class="v" id="kvPhoneHero">—</div>
-          <div class="sub">Téléphone propriétaire détecté.</div>
-        </div>
-        <div class="kpi">
-          <div class="k">Session</div>
-          <div class="v" id="kvSessHero">—</div>
-          <div class="sub">Accès sécurisé via PIN.</div>
-        </div>
+      <div class="navRight">
+        <a class="btn small" id="goPrefiche" href="#">📝 Mon logement</a>
+        <a class="btn small primary" id="goPlanning" href="#">🗓️ Planning</a>
+        <a class="btn small" id="goReservations" href="#">📆 RESA</a>
+        <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
+        <a class="btn small" id="goPinWave" href="#">🌊 Paiement</a>
       </div>
+    </div>
+  </div>
 
-      <div class="note" id="noteMain"></div>
-    </section>
-
-    <section class="section">
-      <div class="sectionHead">
+  <div class="grid">
+    <section class="card">
+      <div class="cardHead">
         <div>
-          <h3>Le cœur de l’app</h3>
-          <p>5 accès max. Le terrain d’abord.</p>
+          <h2>⚡ Vue terrain</h2>
+          <small>Le minimum utile côté propriétaire.</small>
         </div>
+        <button class="btn" id="btnRefresh" type="button">↻ Recharger</button>
       </div>
-
-      <div class="sectionBody">
-        <div class="mainGrid">
-          <article class="actionCard">
-            <strong>📝 Mon logement</strong>
-            <p>Prépare ou ajuste ta pré-fiche locale, sans upload photo Supabase.</p>
-            <div class="foot">
-              <a class="btn big" id="goPrefiche" href="#">Ouvrir</a>
-            </div>
-          </article>
-
-          <article class="actionCard">
-            <strong>🗓️ Planning</strong>
-            <p>Vois ton calendrier et garde la main sur les dates importantes.</p>
-            <div class="foot">
-              <a class="btn primary big" id="goPlanning" href="#">Ouvrir le planning</a>
-            </div>
-          </article>
-
-          <article class="actionCard">
-            <strong>⛔ Bloquer des dates</strong>
-            <p>Dates déjà prises en RESA, fermeture, indisponibilité : tout part du planning.</p>
-            <div class="foot">
-              <a class="btn gold big" id="goBlockDates" href="#">Bloquer / fermer</a>
-            </div>
-          </article>
-
-          <article class="actionCard">
-            <strong>📆 RESA</strong>
-            <p>Retrouve les réservations et le suivi RESA du logement.</p>
-            <div class="foot">
-              <a class="btn big" id="goReservations" href="#">Voir la RESA</a>
-            </div>
-          </article>
-
-          <article class="actionCard">
-            <strong>💰 Tarifs</strong>
-            <p>Lis ou ajuste les prix du logement simplement.</p>
-            <div class="foot">
-              <a class="btn big" id="goTarifs" href="#">Ouvrir</a>
-            </div>
-          </article>
-
-          <article class="actionCard">
-            <strong>🌊 Paiement</strong>
-            <p>Déclare et vérifie les paiements depuis le cockpit Wave.</p>
-            <div class="foot">
-              <a class="btn big" id="goPinWave" href="#">PIN Wave</a>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="sectionHead">
-        <div>
-          <h3>Vue rapide</h3>
-          <p>Accès + contexte en 10 secondes.</p>
-        </div>
-      </div>
-
-      <div class="sectionBody">
+      <div class="cardBody">
         <div class="kv">
           <div class="k">Lieu</div><div class="v" id="kvSlug">—</div>
           <div class="k">Téléphone</div><div class="v" id="kvPhone">—</div>
           <div class="k">Session</div><div class="v" id="kvSess">—</div>
         </div>
-      </div>
-    </section>
 
-    <section class="section">
-      <div class="sectionHead">
-        <div>
-          <h3>💳 Cockpit Wave</h3>
-          <p>Déclarations → vérification → preuves.</p>
-        </div>
-        <button class="btn gold" id="btnDeclareOwner" type="button">➕ Ajouter un paiement</button>
-      </div>
-
-      <div class="sectionBody">
-        <div class="kv">
-          <div class="k">Total déclarés</div><div class="v" id="stTotal">—</div>
-          <div class="k">Total vérifiés</div><div class="v" id="stVerified">—</div>
-          <div class="k">Somme déclarée</div><div class="v" id="stSumTotal">—</div>
-          <div class="k">Somme vérifiée</div><div class="v" id="stSumVerified">—</div>
+        <div class="quickGrid">
+          <a class="btn quickBtn" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
+          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
+          <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Ouvrir l’accès</a>
+          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Outils avancés</button>
         </div>
 
-        <div class="note" id="noteWave"></div>
-        <div class="table" id="waveList"></div>
-      </div>
-    </section>
+        <div class="note" id="noteMain"></div>
 
-    <section class="section">
-      <div class="sectionHead">
-        <div>
-          <h3>Outils avancés</h3>
-          <p>Secondaire. Le dépôt reste complet, mais la façade reste légère.</p>
-        </div>
-      </div>
-
-      <div class="sectionBody">
-        <details class="tools">
-          <summary>Afficher les outils secondaires</summary>
-
+        <div class="toolsBox" id="toolsBox" hidden>
+          <div class="mini">Le dépôt reste complet, mais ces outils restent derrière.</div>
           <div class="toolsGrid">
             <a class="btn small" id="goListing" href="#">📋 Listing</a>
             <a class="btn small" id="goPhotos" href="#">🖼️ Photos</a>
@@ -460,15 +305,45 @@ details.tools summary::-webkit-details-marker{display:none}
             <a class="btn small" id="goNdimbal" href="#">🤝 Ndimbal</a>
             <a class="btn small" id="goNdimbalLoc" href="#">🏠 Ndimbal LOC</a>
           </div>
-        </details>
+        </div>
       </div>
     </section>
 
-    <div class="footerNote">
-      DIGIY LOC • vocabulaire DIGIY • RESA au centre • planning prioritaire
-    </div>
+    <section class="card">
+      <div class="cardHead">
+        <div>
+          <h2>💳 Cockpit Wave</h2>
+          <small>Déclarations → vérification → preuves.</small>
+        </div>
+        <button class="btn gold" id="btnDeclareOwner" type="button">➕ Ajouter un paiement</button>
+      </div>
+      <div class="cardBody">
+        <div class="kv">
+          <div class="k">Total déclarés</div><div class="v" id="stTotal">—</div>
+          <div class="k">Total vérifiés</div><div class="v" id="stVerified">—</div>
+          <div class="k">Somme déclarée</div><div class="v" id="stSumTotal">—</div>
+          <div class="k">Somme vérifiée</div><div class="v" id="stSumVerified">—</div>
+        </div>
 
+        <div class="note" id="noteWave"></div>
+        <div class="table" id="waveList"></div>
+      </div>
+    </section>
   </div>
+
+  <section class="card" style="margin-top:14px">
+    <div class="cardHead">
+      <div>
+        <h2>✨ Aide DIGIY</h2>
+        <small>Couche légère branchée sur CLAW via SQL existant.</small>
+      </div>
+    </div>
+    <div class="cardBody">
+      <div class="mini" id="clawState">En attente…</div>
+      <div class="clawList" id="clawList"></div>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -515,7 +390,6 @@ details.tools summary::-webkit-details-marker{display:none}
 
   function withSlug(path){
     const currentSlug = getSlug();
-
     if (window.DIGIY_GUARD?.withSlug) {
       return window.DIGIY_GUARD.withSlug(path);
     }
@@ -554,36 +428,34 @@ details.tools summary::-webkit-details-marker{display:none}
     const str = String(expRaw).trim();
     let d = null;
 
-    if (/^\d+$/.test(str)) d = new Date(Number(str));
-    else d = new Date(str);
+    if (/^\d+$/.test(str)) {
+      d = new Date(Number(str));
+    } else {
+      d = new Date(str);
+    }
 
     if (!d || Number.isNaN(d.getTime())) return "";
     return d.toLocaleString("fr-FR");
   }
 
-  function setText(id, value){
-    const el = $(id);
-    if (el) el.textContent = value;
-  }
-
   function refreshRouteUI(){
     const currentSlug = getSlug();
 
-    setText("navPlace", "Lieu : " + (currentSlug || "—"));
-    setText("kvSlug", currentSlug || "—");
-    setText("kvSlugHero", currentSlug || "—");
+    if($("navPlace")) $("navPlace").textContent = "Lieu : " + (currentSlug || "—");
+    if($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
+    if($("pillSlug")) $("pillSlug").innerHTML = `🏷️ <strong>${escapeHtml(currentSlug || "—")}</strong>`;
 
     const links = [
       ["goPrefiche","./fiche-abo.html"],
       ["goPlanning","./planning.html"],
       ["goBlockDates","./planning.html"],
       ["goReservations","./reservations.html"],
-      ["goReservationsPulse","./reservations-pulse.html"],
+      ["goTarifs","./tarifs.html"],
+      ["goPinWave","./pin-wave.html"],
       ["goListing","./listing.html"],
       ["goPhotos","./photos.html"],
-      ["goTarifs","./tarifs.html"],
       ["goLinks","./manage-links.html"],
-      ["goPinWave","./pin-wave.html"],
+      ["goReservationsPulse","./reservations-pulse.html"],
       ["goGenerator","./generator.html"],
       ["goQr","./qr.html"],
       ["goQrFactory","./qr-factory.html"],
@@ -602,22 +474,19 @@ details.tools summary::-webkit-details-marker{display:none}
     const pub = new URL("./go-pin-public.html", location.href);
     if(currentSlug) pub.searchParams.set("slug", currentSlug);
     if($("btnPublic")) $("btnPublic").href = pub.toString();
-
-    if($("pillSlug")){
-      $("pillSlug").innerHTML = `🏷️ <strong>${escapeHtml(currentSlug || "—")}</strong>`;
-    }
   }
 
   function refreshSessionUI(){
     const sess = getSession();
     const phone = sess?.phone || "—";
     const expText = formatExpiry(sess?.expires_at || sess?.exp);
-    const sessText = sess?.ok ? ("OK" + (expText ? " (expire : " + expText + ")" : "")) : "—";
 
-    setText("kvPhone", phone);
-    setText("kvSess", sessText);
-    setText("kvPhoneHero", phone);
-    setText("kvSessHero", sessText);
+    if($("kvPhone")) $("kvPhone").textContent = phone;
+    if($("kvSess")) {
+      $("kvSess").textContent = sess?.ok
+        ? ("OK" + (expText ? " (expire : " + expText + ")" : ""))
+        : "—";
+    }
 
     if(sess?.ok && sess?.phone){
       if($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${escapeHtml(phone)}</strong>`;
@@ -689,6 +558,7 @@ details.tools summary::-webkit-details-marker{display:none}
     box.innerHTML = rows.map(r=>{
       const dt = r.created_at ? new Date(r.created_at).toLocaleString("fr-FR") : "";
       const who = (r.client_name || "Client") + (r.client_phone ? " · " + r.client_phone : "");
+
       const noteTxt = (r.note ?? r.comment ?? r.message ?? "");
       const note = noteTxt
         ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`
@@ -837,14 +707,98 @@ details.tools summary::-webkit-details-marker{display:none}
     }
   }
 
-  $("goApp")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    location.href = withSlug("./app.html");
+  function renderClaw(rows){
+    const box = $("clawList");
+    if(!box) return;
+
+    if(!rows || !rows.length){
+      box.innerHTML = `<div class="clawEmpty">Pas de conseil DIGIY pour le moment.</div>`;
+      return;
+    }
+
+    box.innerHTML = rows.map(r => {
+      const title = r.title || "Conseil DIGIY";
+      const summary = r.summary || r.rationale || "Suggestion disponible.";
+      const rationale = r.rationale ? `<div class="clawText" style="margin-top:8px">${escapeHtml(r.rationale)}</div>` : "";
+      const action = r.proposed_action ? `<div class="clawText" style="margin-top:8px"><strong>Action :</strong> ${escapeHtml(r.proposed_action)}</div>` : "";
+      const meta = [
+        r.recommendation_type || "suggestion",
+        r.confidence_score != null ? `confiance ${r.confidence_score}` : "",
+        r.risk_level ? `risque ${r.risk_level}` : ""
+      ].filter(Boolean).join(" • ");
+
+      return `
+        <div class="clawItem">
+          <div class="clawTitle">${escapeHtml(title)}</div>
+          <div class="clawText">${escapeHtml(summary)}</div>
+          ${rationale}
+          ${action}
+          ${meta ? `<div class="clawMeta">${escapeHtml(meta)}</div>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function loadClaw(){
+    const currentSlug = getSlug();
+    const stateEl = $("clawState");
+    const box = $("clawList");
+
+    if(!stateEl || !box) return;
+
+    if(!currentSlug){
+      stateEl.textContent = "Slug manquant. L’aide DIGIY attend le rail propriétaire.";
+      box.innerHTML = "";
+      return;
+    }
+
+    try{
+      stateEl.textContent = "Chargement de l’aide DIGIY…";
+
+      const S = await needSB();
+      const { data, error } = await S
+        .from("digiy_claw_recommendations")
+        .select(`
+          id,
+          slug,
+          module,
+          recommendation_type,
+          title,
+          summary,
+          rationale,
+          proposed_action,
+          confidence_score,
+          risk_level,
+          status,
+          created_at
+        `)
+        .eq("module", "LOC")
+        .eq("slug", currentSlug)
+        .in("status", ["approved", "published", "ready", "active", "validated"])
+        .order("confidence_score", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if(error) throw error;
+
+      renderClaw(Array.isArray(data) ? data : []);
+      stateEl.textContent = "Aide DIGIY branchée sur CLAW et lue sur le SQL existant.";
+    }catch(e){
+      console.error(e);
+      stateEl.textContent = "Aide DIGIY momentanément indisponible.";
+      box.innerHTML = `<div class="clawEmpty">Le rail CLAW existe, mais la lecture n’a pas abouti pour le moment.</div>`;
+    }
+  }
+
+  $("btnToggleTools")?.addEventListener("click", ()=>{
+    const box = $("toolsBox");
+    if(!box) return;
+    box.hidden = !box.hidden;
   });
 
   $("btnBack")?.addEventListener("click", (e)=>{
     e.preventDefault();
-    if(history.length > 1){
+    if (history.length > 1) {
       history.back();
       return;
     }
@@ -860,9 +814,10 @@ details.tools summary::-webkit-details-marker{display:none}
     refreshSessionUI();
     showNote(
       "noteMain",
-      "✅ App propriétaire active.\nPlanning et RESA au centre.\nLe reste reste en outils avancés.\nWave : déclarations et vérifications ici.",
+      "✅ App propriétaire active.\nFaçade allégée.\nPlanning + blocage de dates + RESA devant.\nCLAW gardé via le SQL déjà posé.",
       "ok"
     );
+    await loadClaw();
     await loadWave();
   });
 
@@ -929,11 +884,12 @@ details.tools summary::-webkit-details-marker{display:none}
     }else{
       showNote(
         "noteMain",
-        "✅ App propriétaire active.\nFace visible simplifiée.\nPlanning + blocage de dates + RESA au centre.\nWave conservé.",
+        "✅ App propriétaire active.\nMinimum visible côté terrain.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAide DIGIY gardée via CLAW.",
         "ok"
       );
     }
 
+    await loadClaw();
     await loadWave();
   }catch(e){
     console.error(e);
@@ -942,6 +898,8 @@ details.tools summary::-webkit-details-marker{display:none}
     showNote("noteMain", "❌ Guard non prêt. Recharge la page ou reconnecte-toi via PIN.", "bad");
     showNote("noteWave", "🔒 Accès Wave indisponible tant que la session propriétaire n’est pas prête.", "warn");
     if($("waveList")) $("waveList").innerHTML = "";
+    const stateEl = $("clawState");
+    if(stateEl) stateEl.textContent = "Aide DIGIY indisponible tant que la session n’est pas prête.";
   }
 
 })();
