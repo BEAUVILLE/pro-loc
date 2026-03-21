@@ -284,10 +284,10 @@ a{color:inherit}
         </div>
 
         <div class="quickGrid">
-          <a class="btn quickBtn" id="goPrefiche" href="#">📝 Mon logement</a>
           <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Ouvrir l’accès</a>
           <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
           <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Outils avancés</button>
+          <button class="btn quickBtn" id="btnGoPlanning" type="button">📍 Aller au planning</button>
         </div>
 
         <div class="note" id="noteMain"></div>
@@ -295,6 +295,7 @@ a{color:inherit}
         <div class="toolsBox" id="toolsBox" hidden>
           <div class="mini">Le dépôt reste complet, mais ces outils restent derrière.</div>
           <div class="toolsGrid">
+            <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche locale</a>
             <a class="btn small" id="goListing" href="#">📋 Listing</a>
             <a class="btn small" id="goPhotos" href="#">🖼️ Photos</a>
             <a class="btn small" id="goLinks" href="#">🔗 Liens / QR</a>
@@ -796,6 +797,10 @@ a{color:inherit}
     box.hidden = !box.hidden;
   });
 
+  $("btnGoPlanning")?.addEventListener("click", ()=>{
+    location.href = withSlug("./planning.html");
+  });
+
   $("btnBack")?.addEventListener("click", (e)=>{
     e.preventDefault();
     if (history.length > 1) {
@@ -814,7 +819,7 @@ a{color:inherit}
     refreshSessionUI();
     showNote(
       "noteMain",
-      "✅ App propriétaire active.\nPlanning au centre.\nBloquer des dates et RESA bien visibles.\nCLAW gardé via le SQL déjà posé.",
+      "✅ App propriétaire active.\nPlanning au centre.\nPré-fiche locale rangée derrière.\nCLAW gardé via le SQL déjà posé.",
       "ok"
     );
     await loadClaw();
@@ -884,7 +889,7 @@ a{color:inherit}
     }else{
       showNote(
         "noteMain",
-        "✅ App propriétaire active.\nFaçade simplifiée.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAide DIGIY gardée via CLAW.",
+        "✅ App propriétaire active.\nPré-fiche locale rangée derrière.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAide DIGIY gardée via CLAW.",
         "ok"
       );
     }
