@@ -3,18 +3,19 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Réservations</title>
+  <title>DIGIY LOC PRO — RESA</title>
   <meta name="theme-color" content="#061b14"/>
 
-  <!-- ✅ CONFIG SUPABASE -->
   <script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-</script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-reservations-v2"></script>
+  <script src="./guard.js?v=locpro-reservations-v3"></script>
 
   <style>
     :root{
@@ -202,8 +203,8 @@
       white-space:nowrap;
     }
     .b-digiy{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .b-booking{border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10);color:#bfdbfe}
-    .b-ota{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.10);color:#ddd6fe}
+    .b-resa{border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10);color:#bfdbfe}
+    .b-autre{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.10);color:#ddd6fe}
     .s-confirmed{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0}
     .s-pending{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12);color:#fde68a}
     .s-cancelled{border-color:rgba(249,115,115,.45);background:rgba(249,115,115,.12);color:#fecaca}
@@ -268,14 +269,14 @@
       <div class="ico">🧾</div>
       <div>
         <div class="title">DIGIY LOC • PRO</div>
-        <div class="sub" id="topSub">Réservations — lecture réelle alignée sur le rail LOC PRO</div>
+        <div class="sub" id="topSub">RESA — lecture alignée sur le rail LOC PRO</div>
       </div>
     </div>
 
     <div class="actions">
       <div class="pill" id="pillSlug">slug: —</div>
       <div class="pill warn" id="pillState">aperçu</div>
-      <a class="btn" id="btnBack" href="#">⬅️ Cockpit</a>
+      <a class="btn" id="btnBack" href="#">⬅️ App</a>
       <a class="btn blue" id="btnPlanning" href="#">📅 Planning</a>
       <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
     </div>
@@ -285,7 +286,7 @@
 
   <div class="card">
     <h2 style="margin:0 0 8px;font-size:18px">Filtres</h2>
-    <div class="muted">Recherche réelle sur les réservations du propriétaire lié au slug actif.</div>
+    <div class="muted">Lecture réelle sur les RESA du propriétaire lié au slug actif.</div>
 
     <div class="filters">
       <div class="f">
@@ -298,8 +299,8 @@
         <select id="source">
           <option value="all">Toutes</option>
           <option value="digiy">DIGIY</option>
-          <option value="booking">Booking</option>
-          <option value="ota">OTA</option>
+          <option value="resa">RESA externe</option>
+          <option value="autre">Autre canal</option>
         </select>
       </div>
 
@@ -326,7 +327,7 @@
     <div class="row" style="margin-top:12px">
       <button class="btn" id="reset" type="button">♻️ Réinitialiser</button>
       <button class="btn green" id="export" type="button">⬇️ Export CSV</button>
-      <span class="pill" id="count">0 réservation</span>
+      <span class="pill" id="count">0 RESA</span>
     </div>
 
     <div class="note" id="noteMain"></div>
@@ -334,27 +335,27 @@
 
   <div class="grid">
     <div class="card">
-      <h2 style="margin:0;font-size:18px">Liste des réservations</h2>
+      <h2 style="margin:0;font-size:18px">Liste des RESA</h2>
       <div class="muted" id="countSub" style="margin-top:6px">—</div>
 
       <div id="list" class="list"></div>
-      <div id="empty" class="empty">Aucune réservation ne correspond aux filtres.</div>
+      <div id="empty" class="empty">Aucune RESA ne correspond aux filtres.</div>
     </div>
 
     <div class="card">
       <h2 style="margin:0;font-size:18px">Vue rapide</h2>
       <div class="muted" style="margin-top:6px">
-        Clique une réservation à gauche pour voir le détail. En mode vivant, le contact ouvre le vrai numéro du client.
+        Clique une RESA à gauche pour voir le détail. En mode vivant, le contact ouvre le vrai numéro du client.
       </div>
 
       <div class="detailBox" id="detail">
-        Sélectionne une réservation à gauche.
+        Sélectionne une RESA à gauche.
       </div>
 
       <div class="row" style="margin-top:12px">
         <button class="btn gold" id="btnPay" disabled>💸 Encaisser</button>
         <button class="btn green" id="btnContact" disabled>📞 Contacter</button>
-        <button class="btn" id="btnClose" disabled>✅ Clôturer (UI)</button>
+        <button class="btn" id="btnClose" disabled>✅ Marquer traité (UI)</button>
       </div>
 
       <div class="note" id="noteSide"></div>
@@ -516,9 +517,9 @@
 
   function normalizeSource(r){
     const raw = String(r.source || r.booking_source || r.channel || "").toLowerCase();
-    if (raw.includes("booking")) return "booking";
-    if (raw.includes("ota")) return "ota";
-    return "digiy";
+    if (raw.includes("digiy")) return "digiy";
+    if (raw.includes("booking") || raw.includes("airbnb") || raw.includes("expedia") || raw.includes("platform") || raw.includes("external") || raw.includes("resa")) return "resa";
+    return "autre";
   }
 
   function normalizeStatus(r){
@@ -537,8 +538,8 @@
 
   function badgeSource(s){
     if(s==="digiy") return ["DIGIY","b-digiy"];
-    if(s==="booking") return ["Booking","b-booking"];
-    return ["OTA","b-ota"];
+    if(s==="resa") return ["RESA externe","b-resa"];
+    return ["Autre canal","b-autre"];
   }
 
   function badgeStatus(s){
@@ -554,7 +555,7 @@
 
   function resetDetail(){
     State.current = null;
-    $("detail").innerHTML = "Sélectionne une réservation à gauche.";
+    $("detail").innerHTML = "Sélectionne une RESA à gauche.";
     $("btnPay").disabled = true;
     $("btnContact").disabled = true;
     $("btnClose").disabled = true;
@@ -582,14 +583,12 @@
       <div class="smallbtns">
         <div class="smallchip">🧍 Client</div>
         <div class="smallchip">🏠 Bien</div>
+        <div class="smallchip">📆 RESA</div>
         <div class="smallchip">💸 Paiement</div>
       </div>
     `;
 
-    $("btnPay").addEventListener("click", ()=>{
-  if(!State.current) return;
-  location.assign(withSlug("./wave.html"));
-});
+    $("btnPay").disabled = State.mode !== "live";
     $("btnContact").disabled = State.mode !== "live";
     $("btnClose").disabled = State.mode !== "live";
   }
@@ -598,7 +597,7 @@
     const list = $("list");
     list.innerHTML = "";
 
-    $("count").textContent = rows.length + " réservation(s)";
+    $("count").textContent = rows.length + " RESA";
     $("countSub").textContent = rows.length
       ? `${rows.length} ligne(s) visibles dans ce filtre`
       : "Aucune ligne visible";
@@ -676,7 +675,7 @@
   function exportCSV(){
     const rows = State.filtered.length ? State.filtered : State.reservations;
     if(!rows.length){
-      setNoteMain("Aucune réservation à exporter.", "warn");
+      setNoteMain("Aucune RESA à exporter.", "warn");
       return;
     }
 
@@ -705,7 +704,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `digiy-loc-reservations-${State.slug || "export"}.csv`;
+    a.download = `digiy-loc-resa-${State.slug || "export"}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -737,7 +736,7 @@
     renderList([]);
     resetDetail();
 
-    setNoteMain("Passe par PIN pour voir les vraies réservations du propriétaire.", "warn");
+    setNoteMain("Passe par PIN pour voir les vraies RESA du propriétaire.", "warn");
   }
 
   function setLive(){
@@ -849,15 +848,15 @@
     applyFilters();
 
     if(!State.reservations.length){
-      setNoteMain("✅ Accès vivant OK. Aucune réservation pour l’instant.", "ok");
+      setNoteMain("✅ Accès vivant OK. Aucune RESA pour l’instant.", "ok");
     }else{
-      setNoteMain(`✅ ${State.reservations.length} réservation(s) chargée(s).`, "ok");
+      setNoteMain(`✅ ${State.reservations.length} RESA chargée(s).`, "ok");
     }
   }
 
   async function reloadAll(){
     $("btnReload").disabled = true;
-    setNoteMain("⏳ Chargement des réservations…", "warn");
+    setNoteMain("⏳ Chargement des RESA…", "warn");
 
     try{
       const st = getGuardState();
@@ -897,7 +896,7 @@
 
     }catch(e){
       console.error(e);
-      setNoteMain("❌ Impossible de charger les réservations.\n" + (e?.message || e), "bad");
+      setNoteMain("❌ Impossible de charger les RESA.\n" + (e?.message || e), "bad");
       renderList([]);
       resetDetail();
     }finally{
@@ -932,7 +931,7 @@
   function bindActions(){
     $("btnPay").addEventListener("click", ()=>{
       if(!State.current) return;
-      location.assign(withSlug("./wave.html"));
+      location.assign(withSlug("./pin-wave.html"));
     });
 
     $("btnContact").addEventListener("click", ()=>{
@@ -945,7 +944,7 @@
       }
 
       const msg = `Bonjour ${State.current._client} 👋
-Réservation ${State.current._ref}
+RESA ${State.current._ref}
 Logement : ${State.current._room}
 Dates : ${fmtDate(State.current._checkin)} → ${fmtDate(State.current._checkout)}
 
