@@ -6,6 +6,11 @@
 <title>DIGIY LOC PRO ♾️ — Cockpit Propriétaire</title>
 <meta name="theme-color" content="#0b1020" />
 
+<script>
+  window.DIGIY_MODULE = "LOC";
+  window.DIGIY_LOGIN_URL = "./pin.html";
+</script>
+
 <!-- Supabase CDN (OK). Important: on ne create PAS de client ici, on utilise celui de guard.js -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./guard.js?v=locpro-wave-ultra-v3"></script>
@@ -34,7 +39,7 @@ body{
     linear-gradient(180deg, var(--bg2), var(--bg));
 }
 a{color:inherit}
-.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.wrap{max-width:1180px;margin:0 auto;padding:14px}
 .top{
   display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
   padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
@@ -189,15 +194,18 @@ a{color:inherit}
         <a class="btn ghost small" id="btnBack" href="#">⬅️ Retour</a>
         <div class="navLabel" id="navPlace">Lieu : —</div>
       </div>
+
       <div class="navRight">
-        <a class="btn small" id="goToday" href="#">📅 Vue du jour</a>
         <button class="btn small navBtn" id="goApp" type="button">🏠 APP</button>
         <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche locale</a>
-        <a class="btn small" id="goPulse" href="#">📲 Pulse</a>
         <a class="btn small" id="goPlanning" href="#">🗓️ Planning</a>
-        <a class="btn small" id="goListing" href="#">📋 Liste du jour</a>
+        <a class="btn small" id="goReservations" href="#">📆 Réservations</a>
+        <a class="btn small" id="goReservationsPulse" href="#">📲 Réservations Pulse</a>
+        <a class="btn small" id="goListing" href="#">📋 Listing</a>
+        <a class="btn small" id="goPhotos" href="#">🖼️ Photos</a>
+        <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
         <a class="btn small" id="goLinks" href="#">🔗 Liens / QR</a>
-        <a class="btn small" id="goHealth" href="#">🧪 Vérifier mon accès</a>
+        <a class="btn small" id="goPinWave" href="#">🌊 PIN Wave</a>
       </div>
     </div>
   </div>
@@ -350,14 +358,16 @@ a{color:inherit}
     if($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
 
     const links = [
-      ["goToday","./today.html"],
-      ["goPulse","./proprio-loc.html"],
+      ["goPrefiche","./fiche-abo.html"],
       ["goPlanning","./planning.html"],
+      ["goReservations","./reservations.html"],
+      ["goReservationsPulse","./reservations-pulse.html"],
       ["goListing","./listing.html"],
+      ["goPhotos","./photos.html"],
+      ["goTarifs","./tarifs.html"],
       ["goLinks","./manage-links.html"],
-      ["goHealth","./health-loc.html"],
-      ["btnOpenPin","./pin.html"],
-      ["goPrefiche","./fiche-abo.html"]
+      ["goPinWave","./pin-wave.html"],
+      ["btnOpenPin","./pin.html"]
     ];
 
     links.forEach(([id, path])=>{
@@ -367,7 +377,7 @@ a{color:inherit}
       }
     });
 
-    const pub = new URL("./go-pin.html", location.href);
+    const pub = new URL("./go-pin-public.html", location.href);
     if(currentSlug) pub.searchParams.set("slug", currentSlug);
     if($("btnPublic")) $("btnPublic").href = pub.toString();
   }
@@ -626,7 +636,7 @@ a{color:inherit}
     refreshSessionUI();
     showNote(
       "noteMain",
-      "✅ Cockpit propriétaire actif.\nPré-fiche locale : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
+      "✅ Cockpit propriétaire actif.\nNavigation recousue sur les fichiers réels du dépôt.\nPré-fiche locale : rail sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
       "ok"
     );
     await loadWave();
@@ -695,7 +705,7 @@ a{color:inherit}
     }else{
       showNote(
         "noteMain",
-        "✅ Cockpit propriétaire actif.\nPré-fiche locale : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
+        "✅ Cockpit propriétaire actif.\nNavigation recousue sur le dépôt réel.\nPré-fiche locale : rail sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
         "ok"
       );
     }
