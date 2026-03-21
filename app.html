@@ -9,10 +9,16 @@
 <script>
   window.DIGIY_MODULE = "LOC";
   window.DIGIY_LOGIN_URL = "./pin.html";
+  window.DIGIY_SUPABASE_URL =
+    window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
+  window.DIGIY_SUPABASE_ANON_KEY =
+    window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  window.DIGIY_SUPABASE_ANON =
+    window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra-v3"></script>
+<script src="./guard.js?v=locpro-wave-ultra-v4"></script>
 
 <style>
 :root{
@@ -353,6 +359,17 @@ a{color:inherit}
 
   const $ = (id)=>document.getElementById(id);
 
+  const SB_URL =
+    String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
+  const SB_ANON =
+    String(
+      window.DIGIY_SUPABASE_ANON ||
+      window.DIGIY_SUPABASE_ANON_KEY ||
+      "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3"
+    ).trim();
+
+  let sb = null;
+
   function showNote(elId, msg, type){
     const el = $(elId);
     if(!el) return;
@@ -381,19 +398,34 @@ a{color:inherit}
     return escapeHtml(str).replaceAll("`","&#096;");
   }
 
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {};
+  }
+
   function getSlug(){
-    return (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+    const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    return String(st.slug || raw.slug || "").trim();
   }
 
   function getSession(){
-    return window.DIGIY_GUARD?.getSession?.() || {};
+    const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+
+    return {
+      ok: !!st.access_ok,
+      access_ok: !!st.access_ok,
+      reason: st.reason || "",
+      module: st.module || raw.module || "LOC",
+      slug: String(st.slug || raw.slug || "").trim(),
+      phone: String(st.phone || raw.phone || "").trim(),
+      exp: raw.exp || "",
+      expires_at: raw.expires_at || ""
+    };
   }
 
   function withSlug(path){
     const currentSlug = getSlug();
-    if (window.DIGIY_GUARD?.withSlug) {
-      return window.DIGIY_GUARD.withSlug(path);
-    }
     if (!currentSlug) return path;
 
     const url = new URL(path, location.href);
@@ -402,26 +434,11 @@ a{color:inherit}
   }
 
   async function bootGuard(){
-    if (!window.DIGIY_GUARD) {
+    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
       throw new Error("guard_missing");
     }
-
-    if (typeof window.DIGIY_GUARD.boot === "function") {
-      const maybe = window.DIGIY_GUARD.boot({
-        module: "LOC",
-        login: "./pin.html",
-        dashboard: "./app.html",
-        requireSlug: true
-      });
-      if (maybe && typeof maybe.then === "function") {
-        await maybe;
-      }
-    }
-
-    const ready = window.DIGIY_GUARD.ready;
-    if (ready && typeof ready.then === "function") {
-      await ready;
-    }
+    await window.DIGIY_GUARD.ready();
+    return window.DIGIY_GUARD.state || {};
   }
 
   function formatExpiry(expRaw){
@@ -510,28 +527,19 @@ a{color:inherit}
     return false;
   }
 
-  async function getSB(){
-    for(let i=0;i<60;i++){
-      const s =
-        window.DIGIY_GUARD?.getSupabase?.() ||
-        window.DIGIY_GUARD?.getSb?.() ||
-        window.DIGIY_GUARD?.sb ||
-        window.sb;
+  function getLocalSupabase(){
+    if (sb?.rpc) return sb;
 
-      if(s?.rpc) return s;
-      await new Promise(r=>setTimeout(r, 50));
+    if (!window.supabase?.createClient) {
+      throw new Error("Supabase JS indisponible.");
     }
-    return null;
+
+    sb = window.supabase.createClient(SB_URL, SB_ANON);
+    return sb;
   }
 
-  let sb = null;
-
   async function needSB(){
-    sb = (sb && sb.rpc) ? sb : await getSB();
-    if(!sb || !sb.rpc){
-      throw new Error("Supabase pas prêt (sb null). Recharge la page ou reconnecte-toi via PIN.");
-    }
-    return sb;
+    return getLocalSupabase();
   }
 
   function rowBadge(status){
@@ -811,17 +819,23 @@ a{color:inherit}
   });
 
   $("btnLogout")?.addEventListener("click", ()=>{
-    window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
+    window.DIGIY_GUARD?.logout?.();
   });
 
   $("btnRefresh")?.addEventListener("click", async ()=>{
     refreshRouteUI();
     refreshSessionUI();
-    showNote(
-      "noteMain",
-      "✅ App propriétaire active.\nPlanning au centre.\nPré-fiche locale rangée derrière.\nCLAW gardé via le SQL déjà posé.",
-      "ok"
-    );
+
+    if(getSession().ok && getSlug()){
+      showNote(
+        "noteMain",
+        "✅ App propriétaire active.\nPlanning au centre.\nPré-fiche locale rangée derrière.\nCLAW gardé via le SQL déjà posé.",
+        "ok"
+      );
+    }else{
+      showNote("noteMain", "⚠️ Session propriétaire absente. Reconnecte-toi via PIN.", "warn");
+    }
+
     await loadClaw();
     await loadWave();
   });
@@ -882,10 +896,12 @@ a{color:inherit}
   try{
     await bootGuard();
     refreshRouteUI();
-    refreshSessionUI();
+    const sessOk = refreshSessionUI();
 
     if(!getSlug()){
       showNote("noteMain", "❌ Slug propriétaire introuvable. Reconnecte-toi via PIN.", "bad");
+    }else if(!sessOk){
+      showNote("noteMain", "⚠️ Slug trouvé mais session propriétaire non validée.", "warn");
     }else{
       showNote(
         "noteMain",
