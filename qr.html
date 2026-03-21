@@ -390,10 +390,20 @@
   syncOwnSlug();
 
   const qrProUrl = new URL(QR_PRO_BASE);
-  qrProUrl.searchParams.set("slug", slug);
-  qrProUrl.searchParams.set("module", "LOC");
-  if(phone) qrProUrl.searchParams.set("tel", phone);
-  url = qrProUrl.toString();
+qrProUrl.searchParams.set("slug", slug);
+qrProUrl.searchParams.set("module", "LOC");
+if (phone) qrProUrl.searchParams.set("tel", phone);
+
+const appUrl = new URL("./app.html", location.href);
+appUrl.searchParams.set("slug", slug);
+
+const publicUrl = new URL("./fiche.html", location.href);
+publicUrl.searchParams.set("slug", slug);
+
+qrProUrl.searchParams.set("return", appUrl.toString());
+qrProUrl.searchParams.set("public", publicUrl.toString());
+
+url = qrProUrl.toString();
 
   urlBox.textContent = "URL: " + url;
   dbgEl.textContent = "slug: " + slug + " | module: LOC | qr-base: " + QR_PRO_BASE + (phone ? " | tel: " + phone : "");
