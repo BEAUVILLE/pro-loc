@@ -255,39 +255,6 @@ a{color:inherit}
 (async function(){
   "use strict";
 
-  async function waitGuardReady(){
-    if (!window.DIGIY_GUARD) throw new Error("guard_missing");
-
-    const ready = window.DIGIY_GUARD.ready;
-    if (ready && typeof ready.then === "function") {
-      await ready;
-      return;
-    }
-
-    if (typeof window.DIGIY_GUARD.boot === "function") {
-      const maybe = window.DIGIY_GUARD.boot({
-        module: "LOC",
-        login: "./pin.html",
-        dashboard: "./app.html",
-        requireSlug: true
-      });
-      if (maybe && typeof maybe.then === "function") {
-        await maybe;
-      }
-    }
-  }
-
-  if (typeof window.DIGIY_GUARD?.boot === "function") {
-    try {
-      window.DIGIY_GUARD.boot({
-        module: "LOC",
-        login: "./pin.html",
-        dashboard: "./app.html",
-        requireSlug: true
-      });
-    } catch (_) {}
-  }
-
   const $ = (id)=>document.getElementById(id);
 
   function showNote(elId, msg, type){
@@ -313,73 +280,112 @@ a{color:inherit}
       .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
+
   function escapeAttr(str){
     return escapeHtml(str).replaceAll("`","&#096;");
   }
 
-  const slug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
-  if($("navPlace")) $("navPlace").textContent = "Lieu : " + (slug || "—");
-  if($("kvSlug")) $("kvSlug").textContent = slug || "—";
-
-  function withSlug(path){
-    return window.DIGIY_GUARD?.withSlug ? window.DIGIY_GUARD.withSlug(path) : path;
+  function getSlug(){
+    return (window.DIGIY_GUARD?.getSlug?.() || "").trim();
   }
 
-  const links = [
-    ["goToday","./today.html"],
-    ["goPulse","./proprio-loc.html"],
-    ["goPlanning","./planning.html"],
-    ["goListing","./listing.html"],
-    ["goLinks","./manage-links.html"],
-    ["goHealth","./health-loc.html"],
-    ["btnOpenPin","./pin.html"],
-  ];
-  links.forEach(([id, path])=>{
-    const el = $(id);
-    if(el && el.tagName === "A") el.href = withSlug(path);
-  });
+  function getSession(){
+    return window.DIGIY_GUARD?.getSession?.() || {};
+  }
 
-  const extraLinks = [
-    ["goPrefiche","./fiche-abo.html"]
-  ];
-  extraLinks.forEach(([id, path])=>{
-    const el = $(id);
-    if(el && el.tagName === "A") el.href = withSlug(path);
-  });
-
-  const pub = new URL("./go-pin.html", location.href);
-  if(slug) pub.searchParams.set("slug", slug);
-  if($("btnPublic")) $("btnPublic").href = pub.toString();
-
-  $("goApp")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    location.href = withSlug("./app.html");
-  });
-
-  $("btnBack")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    if (history.length > 1) {
-      history.back();
-      return;
+  function withSlug(path){
+    const currentSlug = getSlug();
+    if (window.DIGIY_GUARD?.withSlug) {
+      return window.DIGIY_GUARD.withSlug(path);
     }
-    location.href = withSlug("./app.html");
-  });
+    if (!currentSlug) return path;
 
-  $("btnLogout")?.addEventListener("click", ()=>{
-    window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
-  });
+    const url = new URL(path, location.href);
+    url.searchParams.set("slug", currentSlug);
+    return url.toString();
+  }
+
+  async function bootGuard(){
+    if (!window.DIGIY_GUARD) {
+      throw new Error("guard_missing");
+    }
+
+    if (typeof window.DIGIY_GUARD.boot === "function") {
+      const maybe = window.DIGIY_GUARD.boot({
+        module: "LOC",
+        login: "./pin.html",
+        dashboard: "./app.html",
+        requireSlug: true
+      });
+      if (maybe && typeof maybe.then === "function") {
+        await maybe;
+      }
+    }
+
+    const ready = window.DIGIY_GUARD.ready;
+    if (ready && typeof ready.then === "function") {
+      await ready;
+    }
+  }
+
+  function formatExpiry(expRaw){
+    if (!expRaw) return "";
+    const str = String(expRaw).trim();
+    let d = null;
+
+    if (/^\d+$/.test(str)) {
+      d = new Date(Number(str));
+    } else {
+      d = new Date(str);
+    }
+
+    if (!d || Number.isNaN(d.getTime())) return "";
+    return d.toLocaleString("fr-FR");
+  }
+
+  function refreshRouteUI(){
+    const currentSlug = getSlug();
+
+    if($("navPlace")) $("navPlace").textContent = "Lieu : " + (currentSlug || "—");
+    if($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
+
+    const links = [
+      ["goToday","./today.html"],
+      ["goPulse","./proprio-loc.html"],
+      ["goPlanning","./planning.html"],
+      ["goListing","./listing.html"],
+      ["goLinks","./manage-links.html"],
+      ["goHealth","./health-loc.html"],
+      ["btnOpenPin","./pin.html"],
+      ["goPrefiche","./fiche-abo.html"]
+    ];
+
+    links.forEach(([id, path])=>{
+      const el = $(id);
+      if(el && el.tagName === "A"){
+        el.href = withSlug(path);
+      }
+    });
+
+    const pub = new URL("./go-pin.html", location.href);
+    if(currentSlug) pub.searchParams.set("slug", currentSlug);
+    if($("btnPublic")) $("btnPublic").href = pub.toString();
+  }
 
   function refreshSessionUI(){
-    const sess = window.DIGIY_GUARD?.getSession?.();
+    const sess = getSession();
     const phone = sess?.phone || "—";
-    const expRaw = sess?.expires_at || sess?.exp || 0;
-    const exp = expRaw ? new Date(Number(expRaw)).toISOString().slice(0,16).replace("T"," ") : "";
+    const expText = formatExpiry(sess?.expires_at || sess?.exp);
 
     if($("kvPhone")) $("kvPhone").textContent = phone;
-    if($("kvSess")) $("kvSess").textContent = sess?.ok ? ("OK" + (exp ? " (expire : " + exp + ")" : "")) : "—";
+    if($("kvSess")) {
+      $("kvSess").textContent = sess?.ok
+        ? ("OK" + (expText ? " (expire : " + expText + ")" : ""))
+        : "—";
+    }
 
     if(sess?.ok && sess?.phone){
-      if($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${phone}</strong>`;
+      if($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${escapeHtml(phone)}</strong>`;
       if($("pillState")){
         $("pillState").textContent = "✅ Connecté";
         $("pillState").classList.remove("warn");
@@ -399,26 +405,21 @@ a{color:inherit}
     return false;
   }
 
-  $("btnRefresh")?.addEventListener("click", async ()=>{
-    refreshSessionUI();
-    showNote(
-      "noteMain",
-      "✅ Cockpit propriétaire actif.\nPré-fiche logement : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
-      "ok"
-    );
-    await loadWave();
-  });
-
   async function getSB(){
     for(let i=0;i<60;i++){
-      const s = window.DIGIY_GUARD?.getSupabase?.() || window.DIGIY_GUARD?.getSb?.() || window.DIGIY_GUARD?.sb || window.sb;
+      const s =
+        window.DIGIY_GUARD?.getSupabase?.() ||
+        window.DIGIY_GUARD?.getSb?.() ||
+        window.DIGIY_GUARD?.sb ||
+        window.sb;
+
       if(s?.rpc) return s;
       await new Promise(r=>setTimeout(r, 50));
     }
     return null;
   }
 
-  let sb = await getSB();
+  let sb = null;
 
   async function needSB(){
     sb = (sb && sb.rpc) ? sb : await getSB();
@@ -497,9 +498,9 @@ a{color:inherit}
         const id = Number(btn.getAttribute("data-id"));
         if(!id) return;
 
-        const sess = window.DIGIY_GUARD?.getSession?.() || {};
+        const sess = getSession();
         const ownerPhone = sess.phone || "";
-        const placeSlug = (window.DIGIY_GUARD?.getSlug?.() || "").trim();
+        const placeSlug = getSlug();
 
         if(!ownerPhone || !placeSlug){
           showNote("noteWave", "❌ Session / slug manquants. Reconnecte-toi via PIN.", "bad");
@@ -535,27 +536,37 @@ a{color:inherit}
   }
 
   async function loadStats(ownerPhone){
+    const currentSlug = getSlug();
+    if(!currentSlug) throw new Error("slug_missing");
+
     const S = await needSB();
     const { data, error } = await S.rpc("loc_wave_payments_stats_owner", {
-      p_slug: slug,
+      p_slug: currentSlug,
       p_owner_phone: ownerPhone
     });
+
     if(error) throw error;
     if(!data || data.ok !== true) throw new Error(data?.reason || "stats_failed");
     return data;
   }
 
   async function loadList(ownerPhone){
+    const currentSlug = getSlug();
+    if(!currentSlug) throw new Error("slug_missing");
+
     const S = await needSB();
     const { data, error } = await S.rpc("loc_wave_payments_list_owner", {
-      p_slug: slug,
+      p_slug: currentSlug,
       p_owner_phone: ownerPhone
     });
+
     if(error) throw error;
     return Array.isArray(data) ? data : [];
   }
 
   async function loadWave(){
+    refreshRouteUI();
+
     const sessOk = refreshSessionUI();
     if(!sessOk){
       showNote("noteWave", "🔒 Connecte-toi (PIN) pour voir le cockpit Wave.", "warn");
@@ -563,11 +574,13 @@ a{color:inherit}
       return;
     }
 
-    const sess = window.DIGIY_GUARD?.getSession?.() || {};
+    const sess = getSession();
     const ownerPhone = sess.phone || "";
+    const currentSlug = getSlug();
 
-    if(!ownerPhone || !slug){
+    if(!ownerPhone || !currentSlug){
       showNote("noteWave", "⚠️ Téléphone ou slug manquant.", "bad");
+      if($("waveList")) $("waveList").innerHTML = "";
       return;
     }
 
@@ -590,14 +603,46 @@ a{color:inherit}
     }
   }
 
+  $("goApp")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    location.href = withSlug("./app.html");
+  });
+
+  $("btnBack")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    if (history.length > 1) {
+      history.back();
+      return;
+    }
+    location.href = withSlug("./pin.html");
+  });
+
+  $("btnLogout")?.addEventListener("click", ()=>{
+    window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
+  });
+
+  $("btnRefresh")?.addEventListener("click", async ()=>{
+    refreshRouteUI();
+    refreshSessionUI();
+    showNote(
+      "noteMain",
+      "✅ Cockpit propriétaire actif.\nPré-fiche locale : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
+      "ok"
+    );
+    await loadWave();
+  });
+
   $("btnDeclareOwner")?.addEventListener("click", async ()=>{
+    refreshRouteUI();
+
     const sessOk = refreshSessionUI();
     if(!sessOk) return;
 
-    const sess = window.DIGIY_GUARD?.getSession?.() || {};
+    const sess = getSession();
     const ownerPhone = sess.phone || "";
+    const currentSlug = getSlug();
 
-    if(!ownerPhone || !slug){
+    if(!ownerPhone || !currentSlug){
       showNote("noteWave", "⚠️ Téléphone ou slug manquant.", "bad");
       return;
     }
@@ -620,7 +665,7 @@ a{color:inherit}
 
       const S = await needSB();
       const { data, error } = await S.rpc("loc_wave_payment_declare_owner", {
-        p_slug: slug,
+        p_slug: currentSlug,
         p_owner_phone: ownerPhone,
         p_amount_fcfa: amt,
         p_client_name: clientName,
@@ -641,19 +686,29 @@ a{color:inherit}
   });
 
   try{
-    await waitGuardReady();
+    await bootGuard();
+    refreshRouteUI();
+    refreshSessionUI();
+
+    if(!getSlug()){
+      showNote("noteMain", "❌ Slug propriétaire introuvable. Reconnecte-toi via PIN.", "bad");
+    }else{
+      showNote(
+        "noteMain",
+        "✅ Cockpit propriétaire actif.\nPré-fiche locale : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
+        "ok"
+      );
+    }
+
+    await loadWave();
   }catch(e){
     console.error(e);
+    refreshRouteUI();
+    refreshSessionUI();
     showNote("noteMain", "❌ Guard non prêt. Recharge la page ou reconnecte-toi via PIN.", "bad");
+    showNote("noteWave", "🔒 Accès Wave indisponible tant que la session propriétaire n’est pas prête.", "warn");
+    if($("waveList")) $("waveList").innerHTML = "";
   }
-
-  refreshSessionUI();
-  showNote(
-    "noteMain",
-    "✅ Cockpit propriétaire actif.\nPré-fiche logement : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
-    "ok"
-  );
-  await loadWave();
 
 })();
 </script>
