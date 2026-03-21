@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>DIGIY LOC PRO • Planning</title>
-  <meta name="theme-color" content="#16a34a"/>
+  <meta name="theme-color" content="#d6c29a"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -15,38 +15,47 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v5-calendar-light"></script>
+  <script src="./guard.js?v=locpro-planning-final-v6-beige"></script>
 
   <style>
     :root{
-      --bg:#061b14;
-      --bg2:#032219;
-      --card:#0b2a1f;
-      --line:rgba(255,255,255,.14);
-      --text:#eafff1;
-      --muted:rgba(234,255,241,.82);
-      --ok:#22c55e;
-      --warn:#f59e0b;
-      --bad:#ef4444;
+      --bg:#0b1a14;
+      --bg2:#13241c;
+      --card:#10251d;
+      --line:rgba(255,255,255,.12);
+      --text:#f6f8f2;
+      --muted:rgba(246,248,242,.80);
+
+      --ok:#16a34a;
+      --warn:#d97706;
+      --bad:#dc2626;
       --gold:#facc15;
       --blue:#38bdf8;
+
       --radius:18px;
-      --shadow:0 22px 55px rgba(0,0,0,.45);
+      --shadow:0 22px 55px rgba(0,0,0,.34);
 
-      --cal-wrap-bg:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-      --cal-wrap-line:rgba(255,255,255,.18);
+      --sand-1:#f5ecd9;
+      --sand-2:#efe2c5;
+      --sand-3:#e4d2ab;
+      --sand-4:#c8b38a;
+      --sand-ink:#3d2f1d;
+      --sand-muted:#6b5a42;
 
-      --cal-day-bg:rgba(255,255,255,.08);
-      --cal-day-bg-hover:rgba(255,255,255,.12);
-      --cal-day-line:rgba(255,255,255,.18);
+      --cal-wrap-bg:linear-gradient(180deg, #f7efdd, #efdfbf);
+      --cal-wrap-line:rgba(120,95,56,.20);
 
-      --cal-day-muted-bg:rgba(255,255,255,.045);
-      --cal-day-muted-text:rgba(234,255,241,.62);
+      --cal-day-bg:#fffaf0;
+      --cal-day-bg-hover:#fff3dc;
+      --cal-day-line:rgba(120,95,56,.22);
 
-      --cal-day-today-bg:rgba(250,204,21,.14);
-      --cal-day-today-line:rgba(250,204,21,.52);
+      --cal-day-muted-bg:#efe4cb;
+      --cal-day-muted-text:#867054;
 
-      --cal-day-selected-bg:rgba(56,189,248,.16);
+      --cal-day-today-bg:#fff2be;
+      --cal-day-today-line:rgba(202,138,4,.48);
+
+      --cal-day-selected-bg:#e0f2fe;
       --cal-day-selected-line:rgba(56,189,248,.52);
     }
 
@@ -55,8 +64,8 @@
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.10), transparent 60%),
-        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.08), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.08), transparent 60%),
         linear-gradient(180deg, var(--bg2), var(--bg));
       color:var(--text);
     }
@@ -106,11 +115,11 @@
     }
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
-    .btn.ok{ border-color:rgba(34,197,94,.6); background:rgba(34,197,94,.08); }
-    .btn.warn{ border-color:rgba(245,158,11,.6); background:rgba(245,158,11,.08); }
-    .btn.bad{ border-color:rgba(239,68,68,.55); background:rgba(239,68,68,.08); }
-    .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.10); color:#fde68a; }
-    .btn.blue{ border-color:rgba(56,189,248,.45); background:rgba(56,189,248,.10); color:#bae6fd; }
+    .btn.ok{ border-color:rgba(34,197,94,.6); background:rgba(34,197,94,.10); }
+    .btn.warn{ border-color:rgba(217,119,6,.6); background:rgba(217,119,6,.10); }
+    .btn.bad{ border-color:rgba(220,38,38,.55); background:rgba(220,38,38,.10); }
+    .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.12); color:#fde68a; }
+    .btn.blue{ border-color:rgba(56,189,248,.50); background:rgba(56,189,248,.12); color:#d7f2ff; }
     .btn.small{min-height:38px;padding:8px 10px;border-radius:12px}
 
     .pill{
@@ -236,10 +245,11 @@
       white-space:nowrap;
     }
     .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .badge.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#fed7aa}
+    .badge.warn{border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.08);color:#fed7aa}
     .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
     .badge.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
     .badge.blue{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.10);color:#bae6fd}
+    .badge.occupe{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.10);color:#bfdbfe}
 
     .tools{
       display:flex;
@@ -252,14 +262,14 @@
     input,select{
       border-radius:14px;
       border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.05);
+      background:rgba(255,255,255,.06);
       color:var(--text);
       padding:11px 12px;
       font-weight:950;
       outline:none;
       min-width:220px;
     }
-    input::placeholder{color:rgba(234,255,241,.62)}
+    input::placeholder{color:rgba(246,248,242,.62)}
     input:focus,select:focus{
       border-color:rgba(250,204,21,.55);
       box-shadow:0 0 0 3px rgba(250,204,21,.14);
@@ -277,7 +287,9 @@
       background:var(--cal-wrap-bg);
       padding:12px;
       margin-bottom:12px;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.28),
+        0 8px 20px rgba(0,0,0,.08);
     }
     .calendarTop{
       display:flex;
@@ -288,9 +300,17 @@
     }
     .calendarTitle{
       font-weight:1100;
-      font-size:1.02rem;
-      color:#ffffff;
+      font-size:1.05rem;
+      color:var(--sand-ink);
+      text-transform:capitalize;
     }
+    .calendarSubText{
+      color:var(--sand-muted);
+      font-weight:900;
+      margin-top:4px;
+      line-height:1.35;
+    }
+
     .calendarNav{
       display:flex;
       gap:8px;
@@ -309,9 +329,9 @@
       gap:6px;
       padding:6px 9px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      color:#e7fff0;
+      border:1px solid rgba(120,95,56,.15);
+      background:rgba(255,255,255,.45);
+      color:var(--sand-ink);
       font-size:.78rem;
       font-weight:950;
     }
@@ -320,10 +340,11 @@
       width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 auto;
     }
     .dot.resa{background:var(--blue)}
+    .dot.occupe{background:#60a5fa}
     .dot.bloque{background:var(--bad)}
     .dot.ferme{background:var(--warn)}
     .dot.arrivee{background:var(--ok)}
-    .dot.depart{background:#e5e7eb}
+    .dot.depart{background:#d1d5db}
     .dot.info{background:#94a3b8}
 
     .calendarGrid{
@@ -335,7 +356,7 @@
 
     .dow{
       text-align:center;
-      color:#f3fff8;
+      color:var(--sand-ink);
       font-size:.80rem;
       font-weight:1000;
       padding:4px 0;
@@ -343,7 +364,7 @@
     }
 
     .day{
-      min-height:82px;
+      min-height:86px;
       border-radius:14px;
       border:1px solid var(--cal-day-line);
       background:var(--cal-day-bg);
@@ -353,16 +374,16 @@
       flex-direction:column;
       gap:6px;
       transition:.15s ease;
-      color:#fff;
+      color:var(--sand-ink);
+      box-shadow:0 1px 0 rgba(255,255,255,.25) inset;
     }
     .day:hover{
       background:var(--cal-day-bg-hover);
-      filter:brightness(1.05);
       transform:translateY(-1px);
     }
 
     .day.mutedDay{
-      opacity:.82;
+      opacity:.95;
       background:var(--cal-day-muted-bg);
       color:var(--cal-day-muted-text);
     }
@@ -370,13 +391,13 @@
     .day.today{
       border-color:var(--cal-day-today-line);
       background:var(--cal-day-today-bg);
-      box-shadow:0 0 0 1px rgba(250,204,21,.18) inset;
+      box-shadow:0 0 0 1px rgba(202,138,4,.10) inset;
     }
 
     .day.selected{
       border-color:var(--cal-day-selected-line);
       background:var(--cal-day-selected-bg);
-      box-shadow:0 0 0 1px rgba(56,189,248,.18) inset;
+      box-shadow:0 0 0 1px rgba(56,189,248,.12) inset;
     }
 
     .dayTop{
@@ -388,13 +409,13 @@
 
     .dayNum{
       font-weight:1100;
-      font-size:.95rem;
-      color:#ffffff;
+      font-size:.96rem;
+      color:var(--sand-ink);
     }
 
     .dayCount{
       font-size:.74rem;
-      color:#dcfce7;
+      color:#1d4ed8;
       font-weight:1000;
     }
 
@@ -408,13 +429,13 @@
     .dayText{
       font-size:.76rem;
       line-height:1.22;
-      color:#f0fff6;
+      color:var(--sand-muted);
       font-weight:950;
     }
 
     @media(max-width:760px){
       .calendarGrid{gap:6px}
-      .day{min-height:72px;padding:7px}
+      .day{min-height:74px;padding:7px}
       .dayText{display:none}
     }
 
@@ -464,8 +485,8 @@
         </div>
 
         <div class="muted" style="margin-top:6px">
-          Ici tu poses le vrai terrain : <b>RESA</b>, <b>bloqué</b>, <b>fermé</b>, <b>arrivée</b>, <b>départ</b>.
-          Tant que le vrai planning SQL n’est pas branché, on garde un <b>mini planning local</b> pour ne pas bloquer le pro.
+          Ici tu poses le vrai terrain : <b>arrivée</b>, <b>occupé</b>, <b>bloqué</b>, <b>fermé</b>.
+          Le <b>départ</b> reste surtout dans le journal du jour pour ne pas brouiller la lecture du calendrier.
         </div>
 
         <div class="panel">
@@ -483,7 +504,7 @@
               <div class="calendarTop">
                 <div>
                   <div class="calendarTitle" id="calendarTitle">Mois</div>
-                  <div class="muted" id="calendarSub" style="margin-top:4px">Lecture compacte du terrain.</div>
+                  <div class="calendarSubText" id="calendarSub">Lecture compacte du terrain.</div>
                 </div>
 
                 <div class="calendarNav">
@@ -494,15 +515,15 @@
               </div>
 
               <div class="calendarLegend">
-                <span class="legendItem"><span class="dot resa"></span> RESA</span>
+                <span class="legendItem"><span class="dot arrivee"></span> Arrivée</span>
+                <span class="legendItem"><span class="dot occupe"></span> Occupé</span>
                 <span class="legendItem"><span class="dot bloque"></span> Bloqué</span>
                 <span class="legendItem"><span class="dot ferme"></span> Fermé</span>
-                <span class="legendItem"><span class="dot arrivee"></span> Arrivée</span>
-                <span class="legendItem"><span class="dot depart"></span> Départ</span>
               </div>
 
               <div class="row" style="margin-top:10px;justify-content:flex-start">
                 <span class="pill" id="selectedDayPill">Jour sélectionné : tout le mois</span>
+                <button class="btn small blue" id="btnActionDay" type="button">⚙️ Agir sur ce jour</button>
                 <button class="btn small" id="btnClearDayFilter" type="button">♻️ Effacer filtre jour</button>
               </div>
 
@@ -513,11 +534,12 @@
               <input id="q" placeholder="Recherche : nom, date, tel, note…" />
               <select id="filterStatus">
                 <option value="">Tous les états</option>
-                <option value="resa">RESA</option>
+                <option value="arrivee">Arrivée</option>
+                <option value="occupe">Occupé</option>
                 <option value="bloque">Bloqué</option>
                 <option value="ferme">Fermé</option>
-                <option value="arrivee">Arrivée</option>
-                <option value="depart">Départ</option>
+                <option value="resa">RESA</option>
+                <option value="depart">Départ (journal)</option>
               </select>
               <button class="btn ok" id="btnSearch" type="button">🔎 Chercher</button>
             </div>
@@ -556,10 +578,11 @@
         <div class="kpi" style="margin-top:12px">
           <div class="muted">Lecture simple</div>
           <div class="muted" style="margin-top:6px">
-            ✅ <b>RESA</b> = date déjà prise.<br>
-            ✅ <b>Bloqué</b> = date réservée hors circuit ou gardée.<br>
+            ✅ <b>Arrivée</b> = entrée à surveiller.<br>
+            ✅ <b>Occupé</b> = logement pris.<br>
+            ✅ <b>Bloqué</b> = gardé hors circuit.<br>
             ✅ <b>Fermé</b> = indisponible volontairement.<br>
-            ✅ <b>Arrivée / Départ</b> = suivi simple du mouvement.
+            ✅ <b>Départ</b> = journal du jour / suivi.
           </div>
         </div>
 
@@ -745,11 +768,19 @@
   function normalizeStatus(v){
     const x = String(v || "").trim().toLowerCase();
     if (["resa","reservation","réservation"].includes(x)) return "resa";
+    if (["occupe","occupé","occupied"].includes(x)) return "occupe";
     if (["bloque","bloqué","blocked"].includes(x)) return "bloque";
     if (["ferme","fermé","closed"].includes(x)) return "ferme";
     if (["arrivee","arrivée","checkin"].includes(x)) return "arrivee";
     if (["depart","départ","checkout"].includes(x)) return "depart";
     return "info";
+  }
+
+  function calendarStatusForItem(item){
+    const st = normalizeStatus(item?.status);
+    if(st === "depart") return "";
+    if(st === "resa") return "occupe";
+    return st;
   }
 
   function normalizeItems(items){
@@ -802,7 +833,7 @@
   }
 
   function getLSKey(){
-    return "DIGIY_LOC_PLANNING_CACHE_V2:" + (getSlug() || "noslug");
+    return "DIGIY_LOC_PLANNING_CACHE_V3:" + (getSlug() || "noslug");
   }
 
   function saveLS(){
@@ -828,6 +859,7 @@
   function badgeStatus(st){
     const v = normalizeStatus(st);
     if(v === "resa") return `<span class="badge blue">📆 RESA</span>`;
+    if(v === "occupe") return `<span class="badge occupe">🛏️ Occupé</span>`;
     if(v === "bloque") return `<span class="badge bad">⛔ Bloqué</span>`;
     if(v === "ferme") return `<span class="badge warn">🚫 Fermé</span>`;
     if(v === "arrivee") return `<span class="badge ok">✅ Arrivée</span>`;
@@ -838,6 +870,7 @@
   function statusLabel(st){
     const v = normalizeStatus(st);
     if(v === "resa") return "RESA";
+    if(v === "occupe") return "Occupé";
     if(v === "bloque") return "Bloqué";
     if(v === "ferme") return "Fermé";
     if(v === "arrivee") return "Arrivée";
@@ -909,15 +942,21 @@
 
   function describeDay(items){
     if(!items.length) return "";
-    const statuses = Array.from(new Set(items.map(x => normalizeStatus(x.status))));
+
+    const statuses = Array.from(
+      new Set(items.map(calendarStatusForItem).filter(Boolean))
+    );
+
+    if(!statuses.length) return "";
+
     if(statuses.length === 1){
       const s = statuses[0];
-      if(s === "resa") return `${items.length} RESA`;
+      if(s === "occupe") return `${items.length} occupé`;
       if(s === "bloque") return `${items.length} bloqué`;
       if(s === "ferme") return `${items.length} fermé`;
       if(s === "arrivee") return `${items.length} arrivée`;
-      if(s === "depart") return `${items.length} départ`;
     }
+
     return `${items.length} action(s)`;
   }
 
@@ -952,7 +991,9 @@
 
     cells.forEach(cell => {
       const items = dayMap.get(cell.ymd) || [];
-      const statuses = Array.from(new Set(items.map(x => normalizeStatus(x.status))));
+      const statuses = Array.from(
+        new Set(items.map(calendarStatusForItem).filter(Boolean))
+      );
 
       const btn = document.createElement("button");
       btn.type = "button";
@@ -962,13 +1003,16 @@
         (cell.ymd === todayYmd ? " today" : "") +
         (MONTH_STATE.selectedDate && MONTH_STATE.selectedDate === cell.ymd ? " selected" : "");
 
-      const dots = statuses.slice(0, 4).map(st => `<span class="dot ${esc(st)}"></span>`).join("");
+      const dots = statuses.slice(0, 4)
+        .map(st => `<span class="dot ${esc(st)}"></span>`)
+        .join("");
+
       const extra = statuses.length > 4 ? `<span class="dot info"></span>` : "";
 
       btn.innerHTML = `
         <div class="dayTop">
           <div class="dayNum">${cell.date.getDate()}</div>
-          <div class="dayCount">${items.length ? items.length : ""}</div>
+          <div class="dayCount">${statuses.length ? statuses.length : ""}</div>
         </div>
         <div class="dayDots">${dots}${extra}</div>
         <div class="dayText">${esc(describeDay(items))}</div>
@@ -995,7 +1039,7 @@
     if(!rows.length){
       const txt = MONTH_STATE.selectedDate
         ? `Aucune ligne pour le ${MONTH_STATE.selectedDate} avec ce filtre.`
-        : `Ajoute une RESA, une date bloquée, une fermeture, une arrivée ou un départ.`;
+        : `Ajoute une arrivée, un occupé, un bloqué, une fermeture ou un départ.`;
 
       el.innerHTML = `
         <div class="it">
@@ -1048,16 +1092,88 @@
         ITEMS = ITEMS.filter(item => String(item.id) !== id);
         saveLS();
         render();
-        showRight("✅ Date supprimée (local).", "ok");
+        showRight("✅ Ligne supprimée.", "ok");
       });
     });
   }
 
   function askStatus(){
-    const raw = prompt("État : RESA / Bloqué / Fermé / Arrivée / Départ", "RESA");
+    const raw = prompt("État : Arrivée / Occupé / Bloqué / Fermé / Départ / RESA", "Occupé");
     if(raw == null) return null;
     const st = normalizeStatus(raw);
-    return st === "info" ? "resa" : st;
+    return st === "info" ? "occupe" : st;
+  }
+
+  function actionSelectedDay(){
+    if(!isLive()){
+      showRight("👁️ Passe par PIN pour modifier le terrain.", "warn");
+      return;
+    }
+
+    if(!MONTH_STATE.selectedDate){
+      showRight("⚠️ Choisis d’abord un jour dans le calendrier.", "warn");
+      return;
+    }
+
+    const ymd = MONTH_STATE.selectedDate;
+
+    const choice = prompt(
+`Action pour ${ymd}
+
+1 = Arrivée
+2 = Occupé
+3 = Bloqué
+4 = Fermé
+5 = Départ (journal du jour)
+6 = Effacer toutes les lignes de ce jour
+
+Entre 1, 2, 3, 4, 5 ou 6`,
+      "2"
+    );
+
+    if(choice == null) return;
+
+    const c = String(choice).trim();
+
+    if(c === "6"){
+      if(!confirm(`Effacer toutes les lignes du ${ymd} ?`)) return;
+      ITEMS = ITEMS.filter(x => String(x.date || "") !== ymd);
+      saveLS();
+      render();
+      showRight(`🧹 Journée effacée : ${ymd}`, "warn");
+      return;
+    }
+
+    const map = {
+      "1": { status:"arrivee", name:"Arrivée" },
+      "2": { status:"occupe",  name:"Occupé" },
+      "3": { status:"bloque",  name:"Date bloquée" },
+      "4": { status:"ferme",   name:"Fermeture" },
+      "5": { status:"depart",  name:"Départ" }
+    };
+
+    const picked = map[c];
+    if(!picked){
+      showRight("⚠️ Action non reconnue.", "warn");
+      return;
+    }
+
+    const name = (prompt("Libellé", picked.name) || "").trim() || picked.name;
+    const phone = (prompt("Téléphone (optionnel)") || "").trim();
+    const note = (prompt("Note (optionnel)") || "").trim();
+
+    ITEMS.push({
+      id: makeItemId(),
+      name,
+      date: ymd,
+      phone,
+      status: picked.status,
+      note
+    });
+
+    saveLS();
+    render();
+    showRight(`✅ ${picked.name} ajouté le ${ymd}.`, "ok");
   }
 
   function addItem(){
@@ -1066,7 +1182,8 @@
       return;
     }
 
-    const date = normalizeDateValue(prompt("Date (YYYY-MM-DD)") || "");
+    const defaultDate = MONTH_STATE.selectedDate || ymdFromDate(new Date());
+    const date = normalizeDateValue(prompt("Date (YYYY-MM-DD)", defaultDate) || "");
     if(!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
       showRight("⚠️ Date invalide. Utilise YYYY-MM-DD.", "warn");
       return;
@@ -1077,6 +1194,7 @@
 
     const nameDefault =
       status === "resa" ? "RESA" :
+      status === "occupe" ? "Occupé" :
       status === "bloque" ? "Date bloquée" :
       status === "ferme" ? "Fermeture" :
       status === "arrivee" ? "Arrivée" :
@@ -1105,7 +1223,7 @@
 
     saveLS();
     render();
-    showRight("✅ Date ajoutée (local).", "ok");
+    showRight("✅ Date ajoutée.", "ok");
   }
 
   function clearAll(){
@@ -1119,7 +1237,7 @@
     MONTH_STATE.selectedDate = "";
     saveLS();
     render();
-    showRight("🧹 Mini planning vidé (local).", "warn");
+    showRight("🧹 Mini planning vidé.", "warn");
   }
 
   function reload(){
@@ -1127,7 +1245,7 @@
     ITEMS = normalizeItems(cached?.items);
     saveLS();
     render();
-    showRight("↻ Rechargé (local).", "ok");
+    showRight("↻ Rechargé.", "ok");
   }
 
   function gotoTodayMonth(){
@@ -1218,6 +1336,7 @@ Merci. — DIGIY`;
     });
 
     $("btnAdd").addEventListener("click", addItem);
+    $("btnActionDay").addEventListener("click", actionSelectedDay);
     $("btnClear").addEventListener("click", clearAll);
     $("btnReload").addEventListener("click", reload);
     $("btnSearch").addEventListener("click", render);
@@ -1271,5 +1390,4 @@ Merci. — DIGIY`;
 </script>
 </body>
 </html>
-
  
