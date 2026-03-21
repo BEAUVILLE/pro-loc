@@ -290,11 +290,12 @@ a{color:inherit}
         </div>
 
         <div class="quickGrid">
-          <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Ouvrir l’accès</a>
-          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
-          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Outils avancés</button>
-          <button class="btn quickBtn" id="btnGoPlanning" type="button">📍 Aller au planning</button>
-        </div>
+           <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Ouvrir l’accès</a>
+  <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
+  <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Outils avancés</button>
+  <button class="btn quickBtn" id="btnGoPlanning" type="button">📍 Aller au planning</button>
+  <a class="btn quickBtn" id="goNdimbalLocMain" href="#">🏠 NDIMBAL LOC</a>
+</div>
 
         <div class="note" id="noteMain"></div>
 
@@ -463,24 +464,25 @@ a{color:inherit}
     if($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
     if($("pillSlug")) $("pillSlug").innerHTML = `🏷️ <strong>${escapeHtml(currentSlug || "—")}</strong>`;
 
-    const links = [
-      ["goPrefiche","./fiche-abo.html"],
-      ["goPlanning","./planning.html"],
-      ["goBlockDates","./planning.html"],
-      ["goReservations","./reservations.html"],
-      ["goTarifs","./tarifs.html"],
-      ["goPinWave","./pin-wave.html"],
-      ["goListing","./listing.html"],
-      ["goPhotos","./photos.html"],
-      ["goLinks","./manage-links.html"],
-      ["goReservationsPulse","./reservations-pulse.html"],
-      ["goGenerator","./generator.html"],
-      ["goQr","./qr.html"],
-      ["goQrFactory","./qr-factory.html"],
-      ["goNdimbal","./ndimbal.html"],
-      ["goNdimbalLoc","./ndimbal-loc.html"],
-      ["btnOpenPin","./pin.html"]
-    ];
+   const links = [
+  ["goPrefiche","./fiche-abo.html"],
+  ["goPlanning","./planning.html"],
+  ["goBlockDates","./planning.html"],
+  ["goReservations","./reservations.html"],
+  ["goTarifs","./tarifs.html"],
+  ["goPinWave","./pin-wave.html"],
+  ["goListing","./listing.html"],
+  ["goPhotos","./photos.html"],
+  ["goLinks","./manage-links.html"],
+  ["goReservationsPulse","./reservations-pulse.html"],
+  ["goGenerator","./generator.html"],
+  ["goQr","./qr.html"],
+  ["goQrFactory","./qr-factory.html"],
+  ["goNdimbal","./ndimbal.html"],
+  ["goNdimbalLoc","./ndimbal-loc.html"],
+  ["goNdimbalLocMain","./ndimbal-loc.html"],
+  ["btnOpenPin","./pin.html"]
+];
 
     links.forEach(([id, path])=>{
       const el = $(id);
