@@ -6,15 +6,16 @@
   <title>DIGIY LOC PRO • Planning</title>
   <meta name="theme-color" content="#16a34a"/>
 
-  <!-- ✅ CONFIG SUPABASE -->
- <script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-</script>
-  <!-- Supabase + Guard -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v2"></script>
+  <script src="./guard.js?v=locpro-planning-final-v3"></script>
 
   <style>
     :root{
@@ -49,8 +50,18 @@
       padding:14px;
       box-shadow:var(--shadow);
     }
-    .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-    .muted{ color:var(--muted); font-weight:850; line-height:1.35; }
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .muted{
+      color:var(--muted);
+      font-weight:850;
+      line-height:1.4;
+    }
     .btn{
       border:1px solid var(--line);
       background:rgba(255,255,255,.02);
@@ -74,8 +85,11 @@
     .btn.warn{ border-color:rgba(245,158,11,.6); background:rgba(245,158,11,.08); }
     .btn.bad{ border-color:rgba(239,68,68,.55); background:rgba(239,68,68,.08); }
     .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.08); color:#fde68a; }
+
     .pill{
-      display:inline-flex; gap:8px; align-items:center;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
       padding:8px 10px;
       border:1px solid rgba(148,163,184,.22);
       border-radius:999px;
@@ -86,10 +100,22 @@
       white-space:nowrap;
     }
     .pill strong{color:#fff}
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
-    @media(min-width:920px){ .grid{ grid-template-columns:1.2fr .8fr; } }
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    @media(min-width:920px){
+      .grid{grid-template-columns:1.2fr .8fr;}
+    }
+
     .h{ font-weight:1100; font-size:18px; }
+
     .kpi{
       border:1px solid rgba(148,163,184,.22);
       border-radius:16px;
@@ -98,6 +124,7 @@
     }
     .kpi .big{font-weight:1100;margin-top:6px}
     .kpi .mono{display:block;margin-top:6px;opacity:.95}
+
     .note{
       margin-top:12px;
       padding:10px 12px;
@@ -114,7 +141,6 @@
     .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
 
-    /* Mini planning UI */
     .panel{
       margin-top:12px;
       border:1px solid rgba(148,163,184,.18);
@@ -125,11 +151,16 @@
     .panelHead{
       padding:10px 12px;
       border-bottom:1px solid rgba(148,163,184,.14);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
     }
     .panelHead b{font-weight:1100}
     .panelBody{padding:12px}
+
     .list{
       margin-top:10px;
       display:flex;
@@ -140,7 +171,7 @@
       border:1px solid rgba(148,163,184,.18);
       background:rgba(0,0,0,.16);
       border-radius:14px;
-      padding:10px 10px;
+      padding:10px;
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
@@ -149,33 +180,69 @@
     }
     .itL{min-width:220px}
     .itTitle{font-weight:1100}
-    .itMeta{margin-top:4px;color:var(--muted);font-weight:850;font-size:.9rem;line-height:1.35}
-    .itR{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .itMeta{
+      margin-top:4px;
+      color:var(--muted);
+      font-weight:850;
+      font-size:.9rem;
+      line-height:1.35;
+    }
+    .itR{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
     .badge{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:6px 9px;border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 9px;
+      border-radius:999px;
       border:1px solid rgba(148,163,184,.18);
       background:rgba(255,255,255,.02);
       color:var(--muted);
-      font-weight:950;font-size:.82rem;
+      font-weight:950;
+      font-size:.82rem;
       white-space:nowrap;
     }
     .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
     .badge.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#fed7aa}
     .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
+    .badge.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
 
     .tools{
-      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:10px;
     }
-    input{
-      border-radius:14px;border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.18);color:var(--text);
-      padding:11px 12px;font-weight:950;outline:none;min-width:260px;
+
+    input,select{
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      padding:11px 12px;
+      font-weight:950;
+      outline:none;
+      min-width:220px;
     }
-    input:focus{border-color:rgba(250,204,21,.55);box-shadow:0 0 0 3px rgba(250,204,21,.14)}
-    .sep{height:1px;background:rgba(148,163,184,.14);margin:12px 0}
+    input:focus,select:focus{
+      border-color:rgba(250,204,21,.55);
+      box-shadow:0 0 0 3px rgba(250,204,21,.14);
+    }
+
+    .sep{
+      height:1px;
+      background:rgba(148,163,184,.14);
+      margin:12px 0;
+    }
+
     @media(max-width:620px){
-      input{min-width:100%}
+      input,select{min-width:100%}
       .btn{width:100%;justify-content:center}
     }
   </style>
@@ -184,7 +251,6 @@
 <body>
   <div class="wrap">
 
-    <!-- TOP -->
     <div class="card">
       <div class="row">
         <div>
@@ -193,43 +259,40 @@
         </div>
 
         <div class="row" style="justify-content:flex-end">
-  <span class="pill mono" id="pillSlug">slug: —</span>
-  <span class="pill">module: <span class="mono" id="pillModule">LOC</span></span>
-</div>
+          <span class="pill mono" id="pillSlug">slug: —</span>
+          <span class="pill">module: <span class="mono" id="pillModule">LOC</span></span>
+        </div>
+      </div>
 
-<div class="row" style="margin-top:10px;justify-content:flex-start">
-  <a class="btn gold" id="btnDashboard" href="./app.html">🏠 Dashboard</a>
-  <a class="btn" id="btnToday" href="./today.html">📍 Aujourd’hui</a>
-  <a class="btn" id="btnReservations" href="./reservations.html">🧾 Réservations</a>
-  <a class="btn" id="btnWave" href="./wave.html">💳 Wave</a>
-  <a class="btn" id="btnTarifs" href="./tarifs.html">🏷️ Tarifs</a>
-  <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
-  <a class="btn ok" id="btnListing" href="./listing.html">📋 Listing</a>
-  <a class="btn ghost" id="btnBackDashboard" href="./app.html">⬅️ Retour dashboard</a>
-  <button class="btn bad" id="btnLogout" type="button">🚪 Déconnexion</button>
-</div>
+      <div class="row" style="margin-top:10px;justify-content:flex-start">
+        <a class="btn gold" id="btnDashboard" href="./app.html">🏠 App</a>
+        <a class="btn" id="btnReservations" href="./reservations.html">📆 RESA</a>
+        <a class="btn" id="btnTarifs" href="./tarifs.html">💰 Tarifs</a>
+        <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
+        <a class="btn" id="btnListing" href="./listing.html">📋 Listing</a>
+        <a class="btn" id="btnWave" href="./pin-wave.html">🌊 PIN Wave</a>
+        <a class="btn" id="btnPin" href="./pin.html">🔐 PIN</a>
+        <button class="btn bad" id="btnLogout" type="button">🚪 Déconnexion</button>
       </div>
 
       <div class="note warn" id="note"></div>
     </div>
 
-    <!-- CONTENT -->
     <div class="grid">
-      <!-- LEFT: Planning -->
       <div class="card">
-
         <div class="row">
-          <div style="font-weight:1100">📅 Aujourd’hui</div>
+          <div style="font-weight:1100">🗓️ Planning terrain</div>
           <span class="pill" id="pillToday">—</span>
         </div>
+
         <div class="muted" style="margin-top:6px">
-          Ici tu poses ton vrai planning (arrivées / départs / occupé). En attendant, on met un <b>mini planning offline</b>
-          (localStorage) pour ne pas bloquer le terrain.
+          Ici tu poses le vrai terrain : <b>RESA</b>, <b>bloqué</b>, <b>fermé</b>, <b>arrivée</b>, <b>départ</b>.
+          Tant que le vrai planning SQL n’est pas branché, on garde un <b>mini planning local</b> pour ne pas bloquer le pro.
         </div>
 
-        <div class="panel" style="margin-top:12px">
+        <div class="panel">
           <div class="panelHead">
-            <b>🧾 Réservations (démo/offline)</b>
+            <b>📌 Dates & états</b>
             <div class="row" style="justify-content:flex-end">
               <button class="btn" id="btnReload" type="button">↻ Recharger</button>
               <button class="btn ok" id="btnAdd" type="button">➕ Ajouter</button>
@@ -239,7 +302,15 @@
 
           <div class="panelBody">
             <div class="tools">
-              <input id="q" placeholder="Recherche: nom, date, tel…" />
+              <input id="q" placeholder="Recherche : nom, date, tel, note…" />
+              <select id="filterStatus">
+                <option value="">Tous les états</option>
+                <option value="resa">RESA</option>
+                <option value="bloque">Bloqué</option>
+                <option value="ferme">Fermé</option>
+                <option value="arrivee">Arrivée</option>
+                <option value="depart">Départ</option>
+              </select>
               <button class="btn ok" id="btnSearch" type="button">🔎 Chercher</button>
             </div>
 
@@ -248,21 +319,19 @@
             <div class="list" id="list"></div>
 
             <div class="kpi" style="margin-top:12px">
-              <div class="muted">URL officielle (à partager après paiement validé)</div>
-              <div class="big">Toujours garder le slug :</div>
-              <span class="mono" id="officialUrl">/digiy-loc-pro/planning.html?slug=...</span>
+              <div class="muted">URL officielle à garder</div>
+              <div class="big">Toujours avec le slug :</div>
+              <span class="mono" id="officialUrl">/planning.html?slug=...</span>
             </div>
           </div>
         </div>
-
       </div>
 
-      <!-- RIGHT: Access / Support -->
       <div class="card">
-        <div style="font-weight:1100">🧩 Accès & support</div>
+        <div style="font-weight:1100">🧩 Accès & aide terrain</div>
         <div class="muted" style="margin-top:6px">
           Si tu changes de téléphone / propriétaire, déconnecte puis reconnecte avec le bon numéro.
-          Le guard gère : <b>session</b>, <b>slug</b>, et <b>abonnement</b>.
+          Le guard gère la session, le slug et l’abonnement.
         </div>
 
         <div class="kpi" style="margin-top:12px">
@@ -273,23 +342,22 @@
 
         <div class="row" style="margin-top:12px">
           <a class="btn warn" id="btnSupport" href="#" role="button">💬 Support WhatsApp</a>
-          <a class="btn gold" id="btnPin" href="./pin.html">🔐 Revenir au PIN</a>
+          <a class="btn gold" id="btnBackDashboard" href="./app.html">⬅️ Retour app</a>
         </div>
 
         <div class="kpi" style="margin-top:12px">
-          <div class="muted">Sécurité terrain</div>
+          <div class="muted">Lecture simple</div>
           <div class="muted" style="margin-top:6px">
-            ✅ Pas d’email, pas de magic link.<br>
-            ✅ Session courte + PIN.<br>
-            ✅ Paiement direct au pro (0% commission).<br>
-            ✅ Slug collé partout → pas de perte.
+            ✅ <b>RESA</b> = date déjà prise.<br>
+            ✅ <b>Bloqué</b> = date réservée hors circuit ou gardée.<br>
+            ✅ <b>Fermé</b> = indisponible volontairement.<br>
+            ✅ <b>Arrivée / Départ</b> = suivi simple du mouvement.
           </div>
         </div>
 
         <div class="note ok" id="noteRight"></div>
       </div>
     </div>
-
   </div>
 
 <script>
@@ -327,7 +395,7 @@
   }
 
   function esc(s){
-    return String(s||"").replace(/[&<>"']/g, (m)=>({
+    return String(s || "").replace(/[&<>"']/g, (m)=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
@@ -344,36 +412,29 @@
     return "";
   }
 
-  function waitGuardReady(){
-    return new Promise(async (resolve, reject) => {
-      try{
-        if (!window.DIGIY_GUARD) {
-          reject(new Error("guard_missing"));
-          return;
-        }
+  async function waitGuardReady(){
+    if (!window.DIGIY_GUARD) throw new Error("guard_missing");
 
-        const guard = window.DIGIY_GUARD;
+    const ready = window.DIGIY_GUARD.ready;
+    if (ready && typeof ready.then === "function") {
+      await ready;
+      return;
+    }
 
-        if (guard.ready && typeof guard.ready.then === "function") {
-          await guard.ready;
-          resolve();
-          return;
-        }
-
-        if (typeof guard.ready === "function") {
-          const maybe = guard.ready();
-          if (maybe && typeof maybe.then === "function") {
-            await maybe;
-          }
-          resolve();
-          return;
-        }
-
-        reject(new Error("guard_not_ready"));
-      }catch(err){
-        reject(err);
+    if (typeof window.DIGIY_GUARD.boot === "function") {
+      const maybe = window.DIGIY_GUARD.boot({
+        module: "LOC",
+        login: "./pin.html",
+        dashboard: "./planning.html",
+        requireSlug: true
+      });
+      if (maybe && typeof maybe.then === "function") {
+        await maybe;
+        return;
       }
-    });
+    }
+
+    throw new Error("guard_not_ready");
   }
 
   function getGuardState(){
@@ -388,12 +449,12 @@
 
   function getSlug(){
     const st = getGuardState();
-    if (st.slug) return String(st.slug).trim();
+    if (st.slug) return String(st.slug).trim().toLowerCase();
 
-    try {
+    try{
       const qsSlug = new URL(location.href).searchParams.get("slug") || "";
       if (qsSlug) return String(qsSlug).trim().toLowerCase();
-    } catch {}
+    }catch{}
 
     return (
       storageGet("digiy_loc_slug") ||
@@ -423,17 +484,22 @@
     catch { return withSlug("./pin.html"); }
   }
 
-  function payUrl(){
-  try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC"); }
-  catch { return withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC"); }
-}
-
   function isLive(){
     return UX_MODE === "live" && !!getGuardState().access_ok;
   }
 
   function makeItemId(){
     return "locplan_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+  }
+
+  function normalizeStatus(v){
+    const x = String(v || "").trim().toLowerCase();
+    if (["resa","reservation","réservation"].includes(x)) return "resa";
+    if (["bloque","bloqué","blocked"].includes(x)) return "bloque";
+    if (["ferme","fermé","closed"].includes(x)) return "ferme";
+    if (["arrivee","arrivée","checkin"].includes(x)) return "arrivee";
+    if (["depart","départ","checkout"].includes(x)) return "depart";
+    return "info";
   }
 
   function normalizeItems(items){
@@ -445,7 +511,7 @@
         name: String(x.name || "").trim(),
         date: String(x.date || "").trim(),
         phone: String(x.phone || "").trim(),
-        status: String(x.status || "info").trim(),
+        status: normalizeStatus(x.status || "info"),
         note: String(x.note || "").trim()
       }));
   }
@@ -460,8 +526,6 @@
         ? "👁️ Aucun slug détecté.\n➡️ Tu vois un aperçu propre du planning."
         : reason === "has_access_false"
         ? "👁️ Slug présent mais accès non actif.\n➡️ Aperçu propre, sans mur brutal."
-        : reason === "owner_unresolved"
-        ? "👁️ Accès détecté mais contexte propriétaire incomplet.\n➡️ On reste en aperçu pour éviter le crash."
         : "👁️ Planning en aperçu.\n➡️ Passe par PIN pour ouvrir le mode vivant.",
       "warn"
     );
@@ -483,12 +547,12 @@
 
     setSub("✅ Accès OK.");
     $("who").textContent = "✅ Connecté · " + phone;
-    $("abo").textContent = "Abo validé par le nouveau guard.";
-    show("✅ Planning prêt. (Le mini planning reste offline tant qu’on n’a pas branché le vrai planning Supabase.)", "ok");
+    $("abo").textContent = "Abo validé par le guard.";
+    show("✅ Planning prêt.\nMini planning local actif tant que le vrai planning SQL n’est pas branché.", "ok");
   }
 
   function getLSKey(){
-    return "DIGIY_LOC_PLANNING_CACHE_V1:" + (getSlug() || "noslug");
+    return "DIGIY_LOC_PLANNING_CACHE_V2:" + (getSlug() || "noslug");
   }
 
   function saveLS(){
@@ -512,19 +576,36 @@
   }
 
   function badgeStatus(st){
-    const v = String(st||"").toLowerCase();
-    if(v==="occupé" || v==="occupe" || v==="occupied") return `<span class="badge bad">⛔ Occupé</span>`;
-    if(v==="arrivée" || v==="arrivee" || v==="checkin") return `<span class="badge ok">✅ Arrivée</span>`;
-    if(v==="départ" || v==="depart" || v==="checkout") return `<span class="badge warn">🚪 Départ</span>`;
-    return `<span class="badge">• ${esc(st||"info")}</span>`;
+    const v = normalizeStatus(st);
+    if(v === "resa") return `<span class="badge gold">📆 RESA</span>`;
+    if(v === "bloque") return `<span class="badge bad">⛔ Bloqué</span>`;
+    if(v === "ferme") return `<span class="badge warn">🚫 Fermé</span>`;
+    if(v === "arrivee") return `<span class="badge ok">✅ Arrivée</span>`;
+    if(v === "depart") return `<span class="badge warn">🚪 Départ</span>`;
+    return `<span class="badge">• Info</span>`;
+  }
+
+  function statusLabel(st){
+    const v = normalizeStatus(st);
+    if(v === "resa") return "RESA";
+    if(v === "bloque") return "Bloqué";
+    if(v === "ferme") return "Fermé";
+    if(v === "arrivee") return "Arrivée";
+    if(v === "depart") return "Départ";
+    return "Info";
   }
 
   function getFilteredSortedRows(){
     const q = ($("q").value || "").trim().toLowerCase();
+    const f = normalizeStatus($("filterStatus").value || "");
     let rows = Array.isArray(ITEMS) ? ITEMS.slice() : [];
 
     if(q){
       rows = rows.filter(x => JSON.stringify(x || {}).toLowerCase().includes(q));
+    }
+
+    if(f && f !== "info"){
+      rows = rows.filter(x => normalizeStatus(x.status) === f);
     }
 
     rows.sort((a,b)=>{
@@ -544,8 +625,8 @@
       el.innerHTML = `
         <div class="it">
           <div class="itL">
-            <div class="itTitle">— aucun élément —</div>
-            <div class="itMeta">Ajoute une arrivée / départ / occupé.\n(Mode offline pour le terrain.)</div>
+            <div class="itTitle">— aucune date —</div>
+            <div class="itMeta">Ajoute une RESA, une date bloquée, une fermeture, une arrivée ou un départ.</div>
           </div>
           <div class="itR">
             <span class="badge">🧪 Offline</span>
@@ -557,10 +638,10 @@
 
     el.innerHTML = rows.map((x)=>{
       const date = esc(x.date || "");
-      const name = esc(x.name || "Client");
+      const name = esc(x.name || "Sans nom");
       const tel = esc(x.phone || "");
       const note = esc(x.note || "");
-      const st = x.status || "info";
+      const label = statusLabel(x.status);
 
       return `
         <div class="it">
@@ -568,11 +649,11 @@
             <div class="itTitle">${name}</div>
             <div class="itMeta">
               📅 ${date || "—"}<br>
-              📞 ${tel || "—"}${note ? "<br>📝 " + note : ""}
+              🏷️ ${esc(label)}${tel ? "<br>📞 " + tel : ""}${note ? "<br>📝 " + note : ""}
             </div>
           </div>
           <div class="itR">
-            ${badgeStatus(st)}
+            ${badgeStatus(x.status)}
             <button class="btn bad" style="min-height:38px;padding:8px 10px" data-del-id="${esc(x.id)}">🗑️</button>
           </div>
         </div>
@@ -592,37 +673,54 @@
         ITEMS = ITEMS.filter(item => String(item.id) !== id);
         saveLS();
         render();
-        showRight("✅ Supprimé (offline).", "ok");
+        showRight("✅ Date supprimée (local).", "ok");
       });
     });
   }
 
+  function askStatus(){
+    const raw = prompt("État : RESA / Bloqué / Fermé / Arrivée / Départ", "RESA");
+    if(raw == null) return null;
+    const st = normalizeStatus(raw);
+    return st === "info" ? "resa" : st;
+  }
+
   function addItem(){
     if(!isLive()){
-      showRight("👁️ Passe par PIN pour entrer en mode vivant avant d’ajouter un élément.", "warn");
+      showRight("👁️ Passe par PIN pour entrer en mode vivant avant d’ajouter une date.", "warn");
       return;
     }
 
-    const name = prompt("Nom client (ex: Mamadou)") || "";
-    if(!name.trim()) return;
+    const date = (prompt("Date (YYYY-MM-DD)") || "").trim();
+    if(!date) return;
 
-    const date = prompt("Date (YYYY-MM-DD)") || "";
-    const phone = prompt("Téléphone (optionnel)") || "";
-    const status = prompt("Statut (arrivée / départ / occupé)") || "info";
-    const note = prompt("Note (optionnel)") || "";
+    const status = askStatus();
+    if(!status) return;
+
+    const nameDefault =
+      status === "resa" ? "RESA" :
+      status === "bloque" ? "Date bloquée" :
+      status === "ferme" ? "Fermeture" :
+      status === "arrivee" ? "Arrivée" :
+      status === "depart" ? "Départ" :
+      "Info";
+
+    const name = (prompt("Nom / libellé", nameDefault) || "").trim() || nameDefault;
+    const phone = (prompt("Téléphone (optionnel)") || "").trim();
+    const note = (prompt("Note (optionnel)") || "").trim();
 
     ITEMS.push({
       id: makeItemId(),
-      name: name.trim(),
-      date: date.trim(),
-      phone: phone.trim(),
-      status: status.trim(),
-      note: note.trim()
+      name,
+      date,
+      phone,
+      status,
+      note
     });
 
     saveLS();
     render();
-    showRight("✅ Ajouté (offline).", "ok");
+    showRight("✅ Date ajoutée (local).", "ok");
   }
 
   function clearAll(){
@@ -631,11 +729,11 @@
       return;
     }
 
-    if(!confirm("Vider le mini planning offline ?")) return;
+    if(!confirm("Vider le mini planning local ?")) return;
     ITEMS = [];
     saveLS();
     render();
-    showRight("🧹 Mini planning vidé (offline).", "warn");
+    showRight("🧹 Mini planning vidé (local).", "warn");
   }
 
   function reload(){
@@ -643,7 +741,7 @@
     ITEMS = normalizeItems(cached?.items);
     saveLS();
     render();
-    showRight("↻ Rechargé (offline).", "ok");
+    showRight("↻ Rechargé (local).", "ok");
   }
 
   async function init(){
@@ -656,6 +754,7 @@
     try{
       await waitGuardReady();
     }catch(e){
+      console.error(e);
       setSub("❌ Guard non prêt.");
       show("❌ Le guard n’a pas pu s’initialiser.", "bad");
       return;
@@ -680,20 +779,26 @@
     if(slug) official.searchParams.set("slug", slug);
     $("officialUrl").textContent = official.pathname + official.search;
 
-    $("btnApp").href = withSlug("./app.html");
+    $("btnDashboard").href = withSlug("./app.html");
+    $("btnBackDashboard").href = withSlug("./app.html");
+    $("btnReservations").href = withSlug("./reservations.html");
+    $("btnTarifs").href = withSlug("./tarifs.html");
+    $("btnPhotos").href = withSlug("./photos.html");
     $("btnListing").href = withSlug("./listing.html");
+    $("btnWave").href = withSlug("./pin-wave.html");
     $("btnPin").href = pinUrl();
 
-    $("btnLogout").onclick = ()=>{
+    $("btnLogout").addEventListener("click", ()=>{
       try{
         window.DIGIY_GUARD?.logout?.(pinUrl());
       }catch(_){
         location.replace(pinUrl());
       }
-    };
+    });
 
-    $("btnSupport").onclick = (e)=>{
+    $("btnSupport").addEventListener("click", (e)=>{
       e.preventDefault();
+
       const phone =
         st.phone ||
         storageGet("DIGIY_PHONE") ||
@@ -711,37 +816,15 @@ Page: planning
 Merci. — DIGIY`;
 
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
-    };
+    });
 
-  Merci. — DIGIY`;
-
-      location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
-    };
-
-   $("btnAdd").addEventListener("click", addItem);
-$("btnClear").addEventListener("click", clearAll);
-$("btnReload").addEventListener("click", reload);
-$("btnSearch").addEventListener("click", render);
-$("q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") render(); });
-$("q").addEventListener("input", render);
-
-$("btnDashboard")?.addEventListener("click", ()=> location.href = withSlug("./app.html"));
-$("btnToday")?.addEventListener("click", ()=> location.href = withSlug("./today.html"));
-$("btnReservations")?.addEventListener("click", ()=> location.href = withSlug("./reservations.html"));
-$("btnWave")?.addEventListener("click", ()=> location.href = withSlug("./wave.html"));
-$("btnTarifs")?.addEventListener("click", ()=> location.href = withSlug("./tarifs.html"));
-$("btnPhotos")?.addEventListener("click", ()=> location.href = withSlug("./photos.html"));
-$("btnListing")?.addEventListener("click", ()=> location.href = withSlug("./listing.html"));
-$("btnBackDashboard")?.addEventListener("click", ()=> location.href = withSlug("./app.html"));
-
-$("btnLogout")?.addEventListener("click", ()=>{
-  try{
-    window.DIGIY_GUARD?.logout?.(pinUrl());
-  }catch(_){
-    location.replace(pinUrl());
-  }
-});
-    
+    $("btnAdd").addEventListener("click", addItem);
+    $("btnClear").addEventListener("click", clearAll);
+    $("btnReload").addEventListener("click", reload);
+    $("btnSearch").addEventListener("click", render);
+    $("q").addEventListener("keydown", (e)=>{ if(e.key === "Enter") render(); });
+    $("q").addEventListener("input", render);
+    $("filterStatus").addEventListener("change", render);
 
     reload();
 
@@ -759,10 +842,4 @@ $("btnLogout")?.addEventListener("click", ()=>{
 </body>
 </html>
 
-  }
-
-  init();
-})();
-</script>
-</body>
-</html>
+ 
