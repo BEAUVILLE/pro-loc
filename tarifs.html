@@ -3,28 +3,259 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC • Tarifs</title>
+  <title>DIGIY LOC PRO — Tarifs</title>
   <meta name="theme-color" content="#16a34a"/>
 
-  <!-- ✅ CONFIG SUPABASE -->
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
-  <!-- ✅ UI -->
-  <link rel="stylesheet" href="./ui.css">
-
-  <!-- ✅ Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-tarifs-clean-v1"></script>
+  <script src="./guard.js?v=locpro-tarifs-clean-v2"></script>
+
+  <style>
+    :root{
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:#0b2a1f;
+      --line:rgba(255,255,255,.12);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.72);
+      --gold:#facc15;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --blue:#38bdf8;
+      --radius:18px;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
+        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:16px;
+    }
+
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
+    .wrap{max-width:1180px;margin:0 auto}
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+    }
+
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .ico{
+      width:44px;height:44px;border-radius:16px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
+      border:1px solid rgba(250,204,21,.35);
+      font-size:20px;
+      flex:0 0 auto;
+    }
+    .title{font-size:16px;font-weight:1000;line-height:1.1}
+    .sub{margin-top:4px;font-size:12px;color:var(--muted);font-weight:800;line-height:1.35}
+
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill{
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:999px;
+      padding:8px 10px;
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+    .btn{
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:14px;
+      padding:11px 13px;
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:1000;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:44px;
+    }
+    .btn:hover{filter:brightness(1.08)}
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .access{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(250,204,21,.22);
+      background:rgba(250,204,21,.07);
+      color:#fde68a;
+      font-weight:900;
+      line-height:1.45;
+      display:none;
+      white-space:pre-wrap;
+    }
+
+    .nav{
+      margin-top:14px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .nav a{
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:14px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-weight:900;
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .nav a.on{
+      background:rgba(250,204,21,.10);
+      border-color:rgba(250,204,21,.35);
+      color:#fde68a;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .card h2{
+      margin:0 0 8px;
+      font-size:18px;
+    }
+
+    .muted{color:var(--muted);line-height:1.5}
+    .sep{height:1px;background:rgba(148,163,184,.16);margin:16px 0}
+
+    .field{margin-top:12px}
+    .field label{
+      display:block;
+      margin-bottom:6px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+    }
+    .field input{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      padding:12px;
+      font-weight:900;
+      outline:none;
+    }
+    .field input:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.12);
+    }
+
+    .stack{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .note{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+      white-space:pre-wrap;
+      display:none;
+      line-height:1.4;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+
+    .preview{
+      margin-top:14px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(0,0,0,.12);
+    }
+    .pvRow{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 0;
+      border-bottom:1px solid rgba(148,163,184,.12);
+    }
+    .pvRow:last-child{border-bottom:none}
+    .pvRow .k{color:var(--muted);font-weight:900}
+    .pvRow .v{font-weight:1000}
+
+    @media(max-width:560px){
+      .actions,.nav,.row{flex-direction:column;align-items:stretch}
+      .btn,.nav a{width:100%}
+      .pvRow{flex-direction:column}
+    }
+  </style>
 </head>
 
 <body>
 <div class="wrap">
 
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="brand">
       <div class="ico">🏷️</div>
@@ -36,107 +267,122 @@
 
     <div class="actions">
       <div class="pill" id="pillSlug">slug: —</div>
-      <button class="pill" id="goCockpit" type="button">← Cockpit</button>
-      <button class="pill" id="goMenu" type="button">🦅 Menu</button>
+      <div class="pill warn" id="pillState">aperçu</div>
+      <button class="btn" id="goCockpit" type="button">← App</button>
+      <button class="btn blue" id="goMenu" type="button">🦅 Menu</button>
     </div>
   </div>
 
-  <!-- NAV -->
+  <div class="access" id="accessBox"></div>
+
   <div class="nav">
     <a id="navPlanning" href="./planning.html">📅 Planning</a>
-    <a id="navReservations" href="./reservations.html">🧾 Réservations</a>
-    <a id="navEncaissements" href="./encaissements.html">💸 Encaissements</a>
-    <a class="on" id="navTarifs" href="./tarifs.html">🏷️ Tarifs</a>
+    <a id="navReservations" href="./reservations.html">📆 RESA</a>
+    <a id="navTarifs" class="on" href="./tarifs.html">🏷️ Tarifs</a>
+    <a id="navPinWave" href="./pin-wave.html">🌊 Paiement</a>
     <a id="navPhotos" href="./photos.html">📸 Photos</a>
-    <a id="navFiche" href="./fiche.html">👤 Fiche</a>
+    <a id="navApp" href="./app.html">🏠 App</a>
   </div>
 
-  <!-- GRID -->
   <div class="grid">
-
-    <!-- LEFT -->
     <div class="card">
       <h2>Tarifs de base</h2>
       <div class="muted">
-        Ajuste tes prix.<br>
-        ✅ Stockage offline + futur branchement Supabase.
+        Ajuste tes prix simplement.<br>
+        ✅ Stockage local par slug.<br>
+        ✅ Branchement Supabase plus tard si besoin.
       </div>
 
       <div class="field">
         <label>Prix / nuit (FCFA)</label>
-        <input id="pNight" type="number" placeholder="ex: 25000">
+        <input id="pNight" type="number" min="0" placeholder="ex : 25000">
       </div>
 
       <div class="field">
         <label>Prix / semaine (FCFA)</label>
-        <input id="pWeek" type="number" placeholder="ex: 150000">
+        <input id="pWeek" type="number" min="0" placeholder="ex : 150000">
       </div>
 
       <div class="field">
         <label>Prix / mois (FCFA)</label>
-        <input id="pMonth" type="number" placeholder="ex: 450000">
+        <input id="pMonth" type="number" min="0" placeholder="ex : 450000">
       </div>
 
-      <hr class="sep">
+      <div class="sep"></div>
 
       <h2>Options</h2>
 
       <div class="field">
         <label>Frais ménage (FCFA)</label>
-        <input id="pClean" type="number" placeholder="ex: 10000">
+        <input id="pClean" type="number" min="0" placeholder="ex : 10000">
       </div>
 
       <div class="field">
         <label>Caution (FCFA)</label>
-        <input id="pDeposit" type="number" placeholder="ex: 50000">
+        <input id="pDeposit" type="number" min="0" placeholder="ex : 50000">
       </div>
 
-      <button class="btn" id="btnSave" type="button">
-        💾 Enregistrer (offline)
-      </button>
-
-      <button class="btn ghost" id="btnSupabase" type="button">
-        ☁️ Sauvegarder Supabase (phase 2)
-      </button>
+      <div class="stack">
+        <button class="btn green" id="btnSave" type="button">💾 Enregistrer</button>
+        <button class="btn gold" id="btnAuto" type="button">⚡ Calcul automatique</button>
+        <button class="btn" id="btnSupabase" type="button">☁️ Sauvegarde Supabase (phase 2)</button>
+      </div>
 
       <div class="note" id="note"></div>
     </div>
 
-    <!-- RIGHT -->
     <div class="card">
       <h2>Conseil DIGIY</h2>
       <div class="muted">
         Fais simple au départ :
-
-        <div class="row" style="margin-top:10px">
-          <div class="chip">Nuit = base</div>
-          <div class="chip">Semaine = -10%</div>
-          <div class="chip">Mois = -20%</div>
-        </div>
-
-        <hr class="sep">
-
-        <b>Bonus :</b> bouton auto-calcul en bas 👇
       </div>
 
-      <button class="btn" id="btnAuto" type="button">
-        ⚡ Calcul automatique (-10% / -20%)
-      </button>
+      <div class="row" style="margin-top:10px">
+        <div class="chip">Nuit = base</div>
+        <div class="chip">Semaine = -10%</div>
+        <div class="chip">Mois = -20%</div>
+      </div>
 
-      <div class="muted" style="margin-top:10px;font-size:13px">
-        Phase suivante :
-        promo week-end, haute saison, prix par chambre.
+      <div class="sep"></div>
+
+      <div class="muted">
+        Le terrain aime les prix lisibles :
+        <br>• une base claire
+        <br>• une semaine avantageuse
+        <br>• un mois simple à comprendre
+      </div>
+
+      <div class="preview">
+        <div class="pvRow">
+          <div class="k">Prix nuit</div>
+          <div class="v" id="pvNight">—</div>
+        </div>
+        <div class="pvRow">
+          <div class="k">Prix semaine</div>
+          <div class="v" id="pvWeek">—</div>
+        </div>
+        <div class="pvRow">
+          <div class="k">Prix mois</div>
+          <div class="v" id="pvMonth">—</div>
+        </div>
+        <div class="pvRow">
+          <div class="k">Ménage</div>
+          <div class="v" id="pvClean">—</div>
+        </div>
+        <div class="pvRow">
+          <div class="k">Caution</div>
+          <div class="v" id="pvDeposit">—</div>
+        </div>
+      </div>
+
+      <div class="note ok" id="noteRight" style="display:block">
+        Rail DIGIY : tarifs simples d’abord, sophistication ensuite.
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-/* ============================
-   DIGIY LOC PRO — TARIFS
-   Offline first + Guard propre
-============================ */
 (function(){
   "use strict";
 
@@ -148,7 +394,7 @@
 
   const State = {
     slug: "",
-    mode: "preview", // preview | live
+    mode: "preview",
     reason: "booting"
   };
 
@@ -221,6 +467,20 @@
     location.href = withSlug(url);
   }
 
+  function fmtMoney(v){
+    const n = Number(v || 0);
+    if(!n) return "—";
+    return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
+  }
+
+  function updatePreview(){
+    $("pvNight").textContent = fmtMoney($("pNight").value);
+    $("pvWeek").textContent = fmtMoney($("pWeek").value);
+    $("pvMonth").textContent = fmtMoney($("pMonth").value);
+    $("pvClean").textContent = fmtMoney($("pClean").value);
+    $("pvDeposit").textContent = fmtMoney($("pDeposit").value);
+  }
+
   function setLocked(locked){
     FIELDS.forEach(id => {
       const el = $(id);
@@ -237,22 +497,34 @@
     $("pillSlug").textContent = "slug: " + (State.slug || "—");
   }
 
+  function setStatePill(text, cls){
+    const el = $("pillState");
+    el.textContent = text;
+    el.className = "pill " + (cls || "");
+  }
+
+  function setAccessBox(msg){
+    const el = $("accessBox");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
   function bindNav(){
-    $("goCockpit").onclick = () => go("./index.html");
+    $("goCockpit").onclick = () => go("./app.html");
     $("goMenu").onclick = () => {
       location.href = "https://beauville.github.io/mon-espace-digiy/?choose=1";
     };
 
     $("navPlanning").href = withSlug("./planning.html");
     $("navReservations").href = withSlug("./reservations.html");
-    $("navEncaissements").href = withSlug("./encaissements.html");
     $("navTarifs").href = withSlug("./tarifs.html");
+    $("navPinWave").href = withSlug("./pin-wave.html");
     $("navPhotos").href = withSlug("./photos.html");
-    $("navFiche").href = withSlug("./fiche.html");
+    $("navApp").href = withSlug("./app.html");
   }
 
   function getLSKey(){
-    return "DIGIY_LOC_TARIFS_V1:" + (State.slug || "noslug");
+    return "DIGIY_LOC_TARIFS_V2:" + (State.slug || "noslug");
   }
 
   function loadOffline(){
@@ -267,7 +539,7 @@
       $("pMonth").value = t.month || "";
       $("pClean").value = t.clean || "";
       $("pDeposit").value = t.deposit || "";
-
+      updatePreview();
       return true;
     }catch{
       return false;
@@ -285,7 +557,8 @@
     };
 
     localStorage.setItem(getLSKey(), JSON.stringify(payload));
-    show("✅ Enregistré (offline).", "ok");
+    updatePreview();
+    show("✅ Tarifs enregistrés localement.", "ok");
   }
 
   function autoCalc(){
@@ -297,23 +570,23 @@
 
     $("pWeek").value = Math.round(night * 7 * 0.90);
     $("pMonth").value = Math.round(night * 30 * 0.80);
-
+    updatePreview();
     show("⚡ Calcul automatique appliqué (-10% / -20%).", "ok");
   }
 
   async function saveSupabase(){
-    show("☁️ Phase 2… RPC Supabase bientôt branché.", "warn");
-    alert("Supabase tarifs → prochain rail RPC : digiy_loc_set_tarifs_owner()");
+    show("☁️ Phase 2 : futur RPC tarifs si on décide de le brancher.", "warn");
   }
 
   function setPreview(reason){
     State.mode = "preview";
     State.reason = reason || "preview";
     setLocked(true);
+    setStatePill("aperçu", "warn");
 
     const msg =
       reason === "slug_missing"
-        ? "❌ slug manquant. Ouvre la page depuis le cockpit."
+        ? "❌ slug manquant. Ouvre la page depuis l’app."
         : reason === "has_access_false"
         ? "👁️ Accès non actif. Passe par PIN pour modifier les tarifs."
         : reason === "guard_missing"
@@ -322,6 +595,7 @@
         ? "❌ Guard non prêt."
         : "👁️ Mode aperçu. Modification désactivée.";
 
+    setAccessBox(msg);
     show(msg, reason && reason.startsWith("guard") ? "bad" : "warn");
   }
 
@@ -329,11 +603,14 @@
     State.mode = "live";
     State.reason = "ok";
     setLocked(false);
+    setStatePill("vivant", "ok");
+    setAccessBox("");
 
     const ok = loadOffline();
     if(ok){
-      show("✅ Tarifs chargés (offline).", "ok");
+      show("✅ Tarifs chargés localement.", "ok");
     }else{
+      updatePreview();
       show("✅ Accès OK. Tu peux saisir tes tarifs.", "ok");
     }
   }
@@ -342,6 +619,11 @@
     $("btnSave").onclick = saveOffline;
     $("btnAuto").onclick = autoCalc;
     $("btnSupabase").onclick = saveSupabase;
+
+    FIELDS.forEach(id=>{
+      const el = $(id);
+      if(el) el.addEventListener("input", updatePreview);
+    });
   }
 
   async function init(){
@@ -373,6 +655,7 @@
         "";
       updateSlugUI();
       bindNav();
+      updatePreview();
       setPreview("guard_not_ready");
       return;
     }
@@ -391,11 +674,13 @@
     bindNav();
 
     if(!State.slug){
+      updatePreview();
       setPreview("slug_missing");
       return;
     }
 
     if(!st.access_ok){
+      updatePreview();
       setPreview("has_access_false");
       return;
     }
@@ -406,7 +691,5 @@
   init();
 })();
 </script>
-
-<script src="./ui.js"></script>
 </body>
 </html>
