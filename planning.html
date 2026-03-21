@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v6-beige-ink"></script>
+  <script src="./guard.js?v=locpro-planning-final-v6-beige-ink-fix"></script>
 
   <style>
     :root{
@@ -1178,11 +1178,11 @@ Entre 1, 2, 3, 4, 5 ou 6`,
     const c = String(choice).trim();
 
     if(c === "6"){
-      if(!confirm(\`Effacer toutes les lignes du \${ymd} ?\`)) return;
+      if(!confirm(`Effacer toutes les lignes du ${ymd} ?`)) return;
       ITEMS = ITEMS.filter(x => String(x.date || "") !== ymd);
       saveLS();
       render();
-      showRight(\`🧹 Journée effacée : \${ymd}\`, "warn");
+      showRight(`🧹 Journée effacée : ${ymd}`, "warn");
       return;
     }
 
@@ -1215,7 +1215,7 @@ Entre 1, 2, 3, 4, 5 ou 6`,
 
     saveLS();
     render();
-    showRight(\`✅ \${picked.name} ajouté le \${ymd}.\`, "ok");
+    showRight(`✅ ${picked.name} ajouté le ${ymd}.`, "ok");
   }
 
   function addItem(){
@@ -1365,14 +1365,14 @@ Entre 1, 2, 3, 4, 5 ou 6`,
         "";
 
       const txt =
-\`DIGIY LOC PRO • Support
+`DIGIY LOC PRO • Support
 
-Module: \${MODULE}
-Slug: \${slug || "—"}
-Téléphone: \${phone || "—"}
+Module: ${MODULE}
+Slug: ${slug || "—"}
+Téléphone: ${phone || "—"}
 Page: planning
 
-Merci. — DIGIY\`;
+Merci. — DIGIY`;
 
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
     });
