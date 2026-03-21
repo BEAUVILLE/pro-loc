@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v6-beige"></script>
+  <script src="./guard.js?v=locpro-planning-final-v6-beige-ink"></script>
 
   <style>
     :root{
@@ -39,8 +39,8 @@
       --sand-2:#efe2c5;
       --sand-3:#e4d2ab;
       --sand-4:#c8b38a;
-      --sand-ink:#3d2f1d;
-      --sand-muted:#6b5a42;
+      --sand-ink:#241a10;
+      --sand-muted:#5c4b36;
 
       --cal-wrap-bg:linear-gradient(180deg, #f7efdd, #efdfbf);
       --cal-wrap-line:rgba(120,95,56,.20);
@@ -290,7 +290,9 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,.28),
         0 8px 20px rgba(0,0,0,.08);
+      color:var(--sand-ink);
     }
+
     .calendarTop{
       display:flex;
       align-items:center;
@@ -298,15 +300,17 @@
       gap:10px;
       flex-wrap:wrap;
     }
+
     .calendarTitle{
       font-weight:1100;
       font-size:1.05rem;
-      color:var(--sand-ink);
+      color:#2f2417;
       text-transform:capitalize;
     }
+
     .calendarSubText{
-      color:var(--sand-muted);
-      font-weight:900;
+      color:#5b4a35;
+      font-weight:950;
       margin-top:4px;
       line-height:1.35;
     }
@@ -317,33 +321,71 @@
       flex-wrap:wrap;
       align-items:center;
     }
+
     .calendarLegend{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       margin-top:10px;
     }
+
     .legendItem{
       display:inline-flex;
       align-items:center;
       gap:6px;
       padding:6px 9px;
       border-radius:999px;
-      border:1px solid rgba(120,95,56,.15);
-      background:rgba(255,255,255,.45);
-      color:var(--sand-ink);
-      font-size:.78rem;
-      font-weight:950;
+      border:1px solid rgba(120,95,56,.18);
+      background:rgba(255,255,255,.52);
+      color:#241a10;
+      font-size:.80rem;
+      font-weight:1000;
+    }
+
+    .calendarWrap .pill{
+      border:1px solid rgba(120,95,56,.18);
+      background:rgba(255,255,255,.58);
+      color:#241a10;
+      font-weight:1000;
+    }
+
+    .calendarWrap .pill strong{
+      color:#1b140d;
+    }
+
+    .calendarWrap .btn.small{
+      background:rgba(255,255,255,.58);
+      border:1px solid rgba(120,95,56,.18);
+      color:#241a10;
+    }
+
+    .calendarWrap .btn.small:hover{
+      background:rgba(255,255,255,.72);
+    }
+
+    .calendarWrap .btn.small.gold{
+      background:#f6df8b;
+      border-color:rgba(202,138,4,.34);
+      color:#2b1d08;
+    }
+
+    .calendarWrap .btn.small.blue{
+      background:#d9eefb;
+      border-color:rgba(56,189,248,.30);
+      color:#163247;
     }
 
     .dot{
-      width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 auto;
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      display:inline-block;
+      flex:0 0 auto;
     }
-    .dot.resa{background:var(--blue)}
+    .dot.arrivee{background:var(--ok)}
     .dot.occupe{background:#60a5fa}
     .dot.bloque{background:var(--bad)}
     .dot.ferme{background:var(--warn)}
-    .dot.arrivee{background:var(--ok)}
     .dot.depart{background:#d1d5db}
     .dot.info{background:#94a3b8}
 
@@ -356,11 +398,11 @@
 
     .dow{
       text-align:center;
-      color:var(--sand-ink);
+      color:#2f2417;
       font-size:.80rem;
       font-weight:1000;
       padding:4px 0;
-      opacity:.92;
+      opacity:1;
     }
 
     .day{
@@ -374,7 +416,7 @@
       flex-direction:column;
       gap:6px;
       transition:.15s ease;
-      color:var(--sand-ink);
+      color:#2f2417;
       box-shadow:0 1px 0 rgba(255,255,255,.25) inset;
     }
     .day:hover{
@@ -383,9 +425,9 @@
     }
 
     .day.mutedDay{
-      opacity:.95;
-      background:var(--cal-day-muted-bg);
-      color:var(--cal-day-muted-text);
+      opacity:1;
+      background:#eadcbc;
+      color:#776247;
     }
 
     .day.today{
@@ -410,7 +452,7 @@
     .dayNum{
       font-weight:1100;
       font-size:.96rem;
-      color:var(--sand-ink);
+      color:#241a10;
     }
 
     .dayCount{
@@ -429,7 +471,7 @@
     .dayText{
       font-size:.76rem;
       line-height:1.22;
-      color:var(--sand-muted);
+      color:#5c4b36;
       font-weight:950;
     }
 
@@ -1136,11 +1178,11 @@ Entre 1, 2, 3, 4, 5 ou 6`,
     const c = String(choice).trim();
 
     if(c === "6"){
-      if(!confirm(`Effacer toutes les lignes du ${ymd} ?`)) return;
+      if(!confirm(\`Effacer toutes les lignes du \${ymd} ?\`)) return;
       ITEMS = ITEMS.filter(x => String(x.date || "") !== ymd);
       saveLS();
       render();
-      showRight(`🧹 Journée effacée : ${ymd}`, "warn");
+      showRight(\`🧹 Journée effacée : \${ymd}\`, "warn");
       return;
     }
 
@@ -1173,7 +1215,7 @@ Entre 1, 2, 3, 4, 5 ou 6`,
 
     saveLS();
     render();
-    showRight(`✅ ${picked.name} ajouté le ${ymd}.`, "ok");
+    showRight(\`✅ \${picked.name} ajouté le \${ymd}.\`, "ok");
   }
 
   function addItem(){
@@ -1323,14 +1365,14 @@ Entre 1, 2, 3, 4, 5 ou 6`,
         "";
 
       const txt =
-`DIGIY LOC PRO • Support
+\`DIGIY LOC PRO • Support
 
-Module: ${MODULE}
-Slug: ${slug || "—"}
-Téléphone: ${phone || "—"}
+Module: \${MODULE}
+Slug: \${slug || "—"}
+Téléphone: \${phone || "—"}
 Page: planning
 
-Merci. — DIGIY`;
+Merci. — DIGIY\`;
 
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
     });
@@ -1390,4 +1432,3 @@ Merci. — DIGIY`;
 </script>
 </body>
 </html>
- 
