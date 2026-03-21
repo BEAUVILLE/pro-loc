@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=pinwave-v5-slug-guard-clean"></script>
+  <script src="./guard.js?v=pinwave-v6-bridge-no-double-pin"></script>
 
   <style>
     :root{
@@ -44,7 +44,7 @@
     }
     .box{
       width:100%;
-      max-width:440px;
+      max-width:460px;
       background:rgba(255,255,255,.03);
       border:1px solid var(--line);
       border-radius:var(--r);
@@ -59,31 +59,48 @@
       line-height:1.4;
       margin-bottom:14px;
     }
-    label{
-      display:block;
-      font-size:.82rem;
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.20);
+      color:var(--muted);
+      font-weight:900;font-size:.82rem;
+    }
+    .pill.ok{
+      border-color:rgba(34,197,94,.35);
+      background:rgba(34,197,94,.10);
+      color:#bbf7d0;
+    }
+    .pill.warn{
+      border-color:rgba(250,204,21,.35);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+    }
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .kv{
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:8px;
+      margin-top:14px;
+    }
+    .kv div{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.02);
+    }
+    .kv .k{
       color:var(--muted);
       font-weight:900;
-      margin-bottom:6px;
     }
-    input{
-      width:100%;
-      padding:12px;
-      margin:0 0 12px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.22);
-      color:var(--ink);
-      font-size:1rem;
-      font-weight:900;
-      outline:none;
+    .kv .v{
+      font-weight:1000;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
-    input:focus{
-      border-color:rgba(250,204,21,.55);
-      box-shadow:0 0 0 3px rgba(250,204,21,.14);
-    }
-    input[readonly]{opacity:.88}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
     .btn{
       width:100%;
       padding:12px;
@@ -96,6 +113,7 @@
       min-height:46px;
       display:flex;align-items:center;justify-content:center;gap:8px;
       transition:.15s ease;
+      text-decoration:none;
     }
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
@@ -104,6 +122,11 @@
       background:transparent;
       border:1px solid rgba(148,163,184,.22);
       color:var(--ink);
+    }
+    .btn.gold{
+      background:rgba(250,204,21,.14);
+      border:1px solid rgba(250,204,21,.35);
+      color:#fde68a;
     }
     .note{
       margin-top:10px;
@@ -120,15 +143,6 @@
     .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
     .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.20);
-      color:var(--muted);
-      font-weight:900;font-size:.82rem;
-    }
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     .small{
       color:var(--muted);
       font-size:.82rem;
@@ -143,35 +157,42 @@
   <div class="box">
     <h2>🔐 Accès paiement</h2>
     <div class="sub">
-      Téléphone + PIN → ouverture directe de l’<b>app propriétaire</b> avec le cockpit paiement dedans.<br>
+      Cette page sert de <b>pont propre</b> vers l’app propriétaire.<br>
+      Le cockpit paiement est déjà dans l’app.<br>
       On garde toujours le <b>slug</b>.
     </div>
 
     <div class="row" style="margin-bottom:12px">
       <span class="pill">module: <span class="mono">LOC</span></span>
       <span class="pill mono" id="pillSlug">slug: —</span>
+      <span class="pill warn" id="pillState">aperçu</span>
     </div>
 
-    <label>Lieu</label>
-    <input id="slug" readonly/>
+    <div class="kv">
+      <div class="k">Lieu</div>
+      <div class="v mono" id="slugValue">—</div>
 
-    <label>Téléphone</label>
-    <input id="phone" placeholder="+221 77..." inputmode="tel" autocomplete="tel"/>
+      <div class="k">Téléphone</div>
+      <div class="v mono" id="phoneValue">—</div>
 
-    <label>PIN</label>
-    <input id="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="one-time-code"/>
+      <div class="k">Accès</div>
+      <div class="v" id="accessValue">—</div>
+    </div>
 
-    <button class="btn" id="go" type="button">🔓 Ouvrir mon app</button>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="goApp" type="button">🔓 Ouvrir mon app</button>
+    </div>
 
     <div class="row" style="margin-top:10px">
-      <button class="btn ghost" id="clear" type="button">🧹 Effacer</button>
+      <button class="btn gold" id="goPin" type="button">🔐 Passer par le PIN principal</button>
       <button class="btn ghost" id="back" type="button">⬅️ Retour app</button>
     </div>
 
     <div class="note warn" id="note"></div>
 
     <div class="small">
-      Astuce terrain : si le PIN est oublié, repasse par la page PIN principale.
+      On évite ici la double vérification PIN.
+      Si la session n’est pas ouverte, cette page renvoie simplement vers le PIN principal.
     </div>
   </div>
 
@@ -181,22 +202,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const $ = (id) => document.getElementById(id);
   const note = $("note");
-  const btnGo = $("go");
-  const btnClear = $("clear");
-  const btnBack = $("back");
+  const pillState = $("pillState");
 
   function show(msg, cls) {
     note.className = "note " + (cls || "warn");
     note.textContent = msg || "";
     note.style.display = msg ? "block" : "none";
-  }
-
-  function lock(on) {
-    btnGo.disabled = !!on;
-    $("phone").disabled = !!on;
-    $("pin").disabled = !!on;
-    btnClear.disabled = !!on;
-    btnBack.disabled = !!on;
   }
 
   function cleanSlug(v) {
@@ -207,10 +218,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       .replace(/[^a-z0-9\-_]/g, "")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
-  }
-
-  function digitsOnly(v) {
-    return String(v || "").replace(/\D/g, "");
   }
 
   function withSlug(url, slug) {
@@ -245,7 +252,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       access_ok: !!st.access_ok,
       slug: cleanSlug(st.slug || raw.slug || ""),
       phone: String(st.phone || raw.phone || "").trim(),
-      module: String(st.module || raw.module || "LOC").trim(),
       reason: String(st.reason || raw.reason || "").trim()
     };
   }
@@ -260,21 +266,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return cleanSlug(window.DIGIY_GUARD?.getSlug?.() || "");
   }
 
-  function fillContext(slug) {
-    const sess = getSession();
-    const phone = sess.phone || "";
-
-    $("slug").value = slug || "";
-    $("pillSlug").textContent = "slug: " + (slug || "—");
-
-    if (phone && !$("phone").value.trim()) {
-      $("phone").value = phone;
-    }
-  }
-
   if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
     show("❌ Guard absent.\nVérifie que ./guard.js est bien chargé.", "bad");
-    lock(true);
     return;
   }
 
@@ -283,78 +276,57 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (e) {
     console.error(e);
     show("❌ Guard non prêt.\nRecharge la page.", "bad");
-    lock(true);
     return;
   }
 
   const slug = getSlug();
-  fillContext(slug);
+  const sess = getSession();
 
-  if (!slug) {
-    show("⚠️ Slug manquant.\nOuvre cette page depuis l’app ou le planning.", "bad");
+  $("pillSlug").textContent = "slug: " + (slug || "—");
+  $("slugValue").textContent = slug || "—";
+  $("phoneValue").textContent = sess.phone || "—";
+
+  if (sess.access_ok) {
+    pillState.textContent = "connecté";
+    pillState.className = "pill ok";
+    $("accessValue").textContent = "Session propriétaire active";
+    show("✅ Session déjà ouverte. Tu peux entrer directement dans l’app.", "ok");
   } else {
-    show("Entre ton PIN pour ouvrir l’app propriétaire.", "warn");
+    pillState.textContent = "PIN requis";
+    pillState.className = "pill warn";
+    $("accessValue").textContent = "Passe par le PIN principal";
+    show("🔐 La session n’est pas encore ouverte.\nPasse par le PIN principal puis reviens ici si besoin.", "warn");
   }
 
-  btnClear.addEventListener("click", () => {
-    $("phone").value = "";
-    $("pin").value = "";
-    show("🧹 Effacé. Tu peux retaper.", "warn");
-    $("phone").focus();
+  $("goApp").addEventListener("click", () => {
+    if (!slug) {
+      show("❌ Slug manquant.\nRetourne à l’app ou au planning pour ouvrir cette page avec le bon slug.", "bad");
+      return;
+    }
+
+    if (getSession().access_ok) {
+      location.replace(withSlug("./app.html", slug));
+      return;
+    }
+
+    location.replace(withSlug("./pin.html", slug));
   });
 
-  btnBack.addEventListener("click", () => {
+  $("goPin").addEventListener("click", () => {
+    if (!slug) {
+      show("❌ Slug manquant.", "bad");
+      return;
+    }
+    location.replace(withSlug("./pin.html", slug));
+  });
+
+  $("back").addEventListener("click", () => {
+    if (!slug) {
+      location.href = "./app.html";
+      return;
+    }
     location.href = withSlug("./app.html", slug);
   });
-
-  $("pin").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") btnGo.click();
-  });
-
-  async function doOpen() {
-    const pin = ($("pin").value || "").trim();
-
-    if (!slug) {
-      show("❌ Slug manquant. Retourne à l’app puis reviens ici.", "bad");
-      return;
-    }
-
-    if (!pin || pin.length < 4) {
-      show("⚠️ PIN invalide (4–8 chiffres).", "bad");
-      $("pin").focus();
-      return;
-    }
-
-    lock(true);
-    show("⏳ Vérification…", "warn");
-
-    try {
-      if (typeof window.DIGIY_GUARD.loginWithPin !== "function") {
-        throw new Error("loginWithPin indisponible");
-      }
-
-      const res = await window.DIGIY_GUARD.loginWithPin(slug, pin);
-
-      if (!res || res.ok !== true) {
-        show((res && (res.error || res.reason)) || "PIN invalide.", "bad");
-        lock(false);
-        return;
-      }
-
-      $("phone").value = res.phone || $("phone").value || "";
-      show("✅ Accès validé. Ouverture de l’app…", "ok");
-
-      const next = withSlug("./app.html", slug);
-      setTimeout(() => location.replace(next), 350);
-
-    } catch (e) {
-      console.error(e);
-      show("❌ Problème technique.\nDétail: " + String(e?.message || e), "bad");
-      lock(false);
-    }
-  }
-
-  btnGo.addEventListener("click", doOpen);
 });
 </script>
 </body>
