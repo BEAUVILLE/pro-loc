@@ -7,8 +7,8 @@
   <title>DIGIY QR FACTORY ♾️ — Générateur Pro (V2)</title>
   <meta name="description" content="Génère un QR unique qui ouvre DIGIY QR PRO avec le slug."/>
 
-  <!-- ✅ QR local (pas d’API externe) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- Source principale -->
+  <script id="qr-lib-primary" src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <style>
     :root{
@@ -48,6 +48,7 @@
     }
     h1{font-size:16px;margin:0;font-weight:950;letter-spacing:.06em;text-transform:uppercase}
     .sub{color:var(--muted);font-weight:800;font-size:12px;line-height:1.35}
+    .topRight{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .pill{
       border:1px solid rgba(148,163,184,.35);
       padding:8px 10px;border-radius:999px;
@@ -84,6 +85,8 @@
       background:rgba(255,255,255,.06);
       color:#fff;border:1px solid rgba(148,163,184,.25);
       min-height:44px;
+      text-decoration:none;
+      display:inline-flex;align-items:center;justify-content:center;
     }
     .btn.primary{
       background:linear-gradient(135deg,var(--orange),#ea580c);
@@ -155,6 +158,8 @@
       background:rgba(255,255,255,.05);
       color:#fff;cursor:pointer;
       min-height:40px;
+      text-decoration:none;
+      display:inline-flex;align-items:center;justify-content:center;
     }
     .mini:hover{border-color:rgba(249,115,22,.75)}
     .mini.cyan{border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.10)}
@@ -206,17 +211,21 @@
         <div class="logo">♾️</div>
         <div>
           <h1>DIGIY QR FACTORY</h1>
-          <div class="sub">V2 • Un seul QR → ouvre <b>DIGIY QR PRO</b> (tout le reste derrière)<br/>Astuce: <span class="kbd">?slug=chez-astou-saly</span> génère direct.</div>
+          <div class="sub">V2 • Un seul QR → ouvre <b>DIGIY QR PRO</b> (tout le reste derrière)<br/>Astuce: <span class="kbd">?slug=loc-221771342889</span> génère direct.</div>
         </div>
       </div>
-      <div class="pill" id="pill">Slug : —</div>
+
+      <div class="topRight">
+        <a class="btn" id="btnBackApp" href="./app.html">⬅️ App LOC</a>
+        <div class="pill" id="pill">Slug : —</div>
+      </div>
     </div>
 
     <div class="grid">
       <!-- LEFT -->
       <div class="card">
         <label>Slug pro</label>
-        <input id="slug" placeholder="chez-astou-saly" autocomplete="off" />
+        <input id="slug" placeholder="loc-221771342889" autocomplete="off" />
 
         <div class="row">
           <button class="btn primary" id="btnGen" type="button">⚡ Générer</button>
@@ -235,8 +244,9 @@
               <div class="tag">UN SEUL LIEN • UN SEUL QR • TERRAIN READY</div>
             </div>
             <div class="miniBtns">
-              <button class="mini cyan" id="btnOpen">Ouvrir</button>
-              <button class="mini green" id="btnTest">📲 Test téléphone</button>
+              <button class="mini cyan" id="btnOpen" type="button">Ouvrir</button>
+              <button class="mini green" id="btnTest" type="button">📲 Test téléphone</button>
+              <a class="mini gold" id="btnBackAppMini" href="./app.html">⬅️ App LOC</a>
             </div>
           </div>
 
@@ -269,7 +279,7 @@
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
           <div style="font-weight:950">🕒 Historique (10 derniers)</div>
           <div class="miniBtns">
-            <button class="mini red" id="btnClearHistory">🗑️ Vider</button>
+            <button class="mini red" id="btnClearHistory" type="button">🗑️ Vider</button>
           </div>
         </div>
         <div class="mutedLine" style="margin-top:6px">Tu retrouves vite les QR d’hier sans tout retaper.</div>
@@ -291,15 +301,18 @@
   </div>
 
 <script>
-window.addEventListener("DOMContentLoaded", () => {
+(() => {
   "use strict";
-  const $ = (id)=>document.getElementById(id);
 
-  // ✅ LA VÉRITÉ: tous les QR ouvrent ça
+  const $ = (id) => document.getElementById(id);
+
   const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
-
-  // ✅ Local history
   const KEY_HIST = "DIGIY_QR_FACTORY_V2_HISTORY";
+
+  const QR_LIB_SOURCES = [
+    "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js",
+    "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"
+  ];
 
   const elSlug = $("slug");
   const btnGen = $("btnGen");
@@ -310,6 +323,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const btnTest = $("btnTest");
   const btnReset = $("btnReset");
   const btnClearHistory = $("btnClearHistory");
+  const btnBackApp = $("btnBackApp");
+  const btnBackAppMini = $("btnBackAppMini");
   const pill = $("pill");
   const note = $("note");
   const out = $("out");
@@ -319,27 +334,61 @@ window.addEventListener("DOMContentLoaded", () => {
   const histBody = $("histBody");
   const histCount = $("histCount");
 
+  let isGenerating = false;
+  let current = { slug:"", url:"", dataUrl:"", dataUrlXL:"" };
+
   function showNote(msg, type){
     note.textContent = msg || "";
     note.className = "note " + (type || "warn") + (msg ? " show" : "");
   }
 
-  // ✅ DIGIY slug clean officiel (accents, emojis, etc.)
+  function escapeHtml(s){
+    return String(s || "").replace(/[&<>"']/g, (m) => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[m]));
+  }
+
   function slugClean(v){
-    return (v||"")
+    return (v || "")
       .trim()
       .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")     // remove accents
-      .replace(/[^a-z0-9\- ]/g,"")                       // keep a-z0-9 space -
-      .replace(/\s+/g,"-")                               // spaces -> -
-      .replace(/-+/g,"-")                                // collapse
-      .replace(/^-|-$/g,"");                             // trim -
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\- ]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
   }
 
   function buildQrProUrl(slug){
-    const u = new URL(QR_PRO_BASE, location.href);
+    const u = new URL(QR_PRO_BASE);
     u.searchParams.set("slug", slug);
     return u.toString();
+  }
+
+  function buildAppUrl(slug){
+    const u = new URL("./app.html", location.href);
+    if(slug) u.searchParams.set("slug", slug);
+    return u.toString();
+  }
+
+  function syncOwnUrl(slug){
+    const u = new URL(location.href);
+    if(slug) u.searchParams.set("slug", slug);
+    else u.searchParams.delete("slug");
+    history.replaceState({}, "", u.toString());
+  }
+
+  function syncRouteUi(rawSlug){
+    const slug = slugClean(rawSlug);
+    pill.textContent = "Slug : " + (slug || "—");
+
+    const appUrl = buildAppUrl(slug);
+    btnBackApp.href = appUrl;
+    btnBackAppMini.href = appUrl;
   }
 
   function openUrl(url){
@@ -355,14 +404,27 @@ window.addEventListener("DOMContentLoaded", () => {
     a.remove();
   }
 
-  async function makeQrDataUrl(url, size){
-    if(!window.QRCode) throw new Error("QRCode lib missing");
-    const width = Number(size || 360);
-    return await QRCode.toDataURL(url, { margin: 1, width });
+  function copyFallback(text){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try{
+      ok = document.execCommand("copy");
+    }catch(_){}
+    ta.remove();
+    if(!ok) throw new Error("copy_failed");
   }
 
-  function copy(text){
-    return navigator.clipboard.writeText(text);
+  async function copy(text){
+    if(navigator.clipboard?.writeText){
+      return navigator.clipboard.writeText(text);
+    }
+    copyFallback(text);
   }
 
   function nowTs(){ return Date.now(); }
@@ -372,41 +434,55 @@ window.addEventListener("DOMContentLoaded", () => {
       const raw = localStorage.getItem(KEY_HIST);
       const h = raw ? JSON.parse(raw) : [];
       return Array.isArray(h) ? h : [];
-    }catch(_){ return []; }
+    }catch(_){
+      return [];
+    }
   }
 
   function saveHistory(list){
-    try{ localStorage.setItem(KEY_HIST, JSON.stringify(list || [])); }catch(_){}
+    try{
+      localStorage.setItem(KEY_HIST, JSON.stringify(list || []));
+    }catch(_){}
   }
 
   function pushHistory(slug, url){
     const h = loadHistory();
-    // remove duplicates
-    const filtered = h.filter(x => String(x?.slug||"") !== slug);
+    const filtered = h.filter(x => String(x?.slug || "") !== slug);
     filtered.unshift({ slug, url, ts: nowTs() });
-    const out = filtered.slice(0, 10);
-    saveHistory(out);
+    const trimmed = filtered.slice(0, 10);
+    saveHistory(trimmed);
     renderHistory();
   }
 
   function tsToNice(ts){
     try{
       const d = new Date(ts);
-      return d.toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
-    }catch(_){ return ""; }
+      return d.toLocaleString("fr-FR", {
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }catch(_){
+      return "";
+    }
   }
 
   function renderHistory(){
     const h = loadHistory();
     histCount.textContent = h.length + " élément(s)";
+
     if(!h.length){
       histBody.innerHTML = `<div class="hrow"><div style="color:rgba(203,213,225,.9);font-weight:850">— aucun historique —</div><div></div></div>`;
       return;
     }
-    histBody.innerHTML = h.map((x, idx)=>{
-      const slug = String(x.slug||"");
-      const url = String(x.url||"");
+
+    histBody.innerHTML = h.map((x, idx) => {
+      const slug = String(x.slug || "");
+      const url = String(x.url || "");
       const when = x.ts ? tsToNice(x.ts) : "";
+
       return `
         <div class="hrow">
           <div>
@@ -414,16 +490,16 @@ window.addEventListener("DOMContentLoaded", () => {
             <div class="hMeta">${when ? "⏱️ " + escapeHtml(when) + " · " : ""}<span style="opacity:.9">${escapeHtml(url)}</span></div>
           </div>
           <div class="hBtns">
-            <button class="mini gold" data-act="regen" data-i="${idx}">⚡</button>
-            <button class="mini cyan" data-act="open" data-i="${idx}">↗</button>
-            <button class="mini red" data-act="del" data-i="${idx}">🗑️</button>
+            <button class="mini gold" data-act="regen" data-i="${idx}" type="button">⚡</button>
+            <button class="mini cyan" data-act="open" data-i="${idx}" type="button">↗</button>
+            <button class="mini red" data-act="del" data-i="${idx}" type="button">🗑️</button>
           </div>
         </div>
       `;
     }).join("");
 
-    histBody.querySelectorAll("button[data-act]").forEach(b=>{
-      b.addEventListener("click", async ()=>{
+    histBody.querySelectorAll("button[data-act]").forEach((b) => {
+      b.addEventListener("click", async () => {
         const act = b.getAttribute("data-act");
         const i = Number(b.getAttribute("data-i"));
         const list = loadHistory();
@@ -434,13 +510,16 @@ window.addEventListener("DOMContentLoaded", () => {
           openUrl(item.url);
           return;
         }
+
         if(act === "regen"){
           elSlug.value = item.slug;
+          syncRouteUi(item.slug);
           await generate();
           return;
         }
+
         if(act === "del"){
-          list.splice(i,1);
+          list.splice(i, 1);
           saveHistory(list);
           renderHistory();
           showNote("🗑️ Supprimé de l’historique.", "ok");
@@ -449,33 +528,140 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function escapeHtml(s){
-    return String(s||"").replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
-  }
-
   function setUiIdle(){
     btnCopy.disabled = true;
     btnDl.disabled = true;
     btnSticker.disabled = true;
     out.style.display = "none";
-    qrImg.src = "";
+    qrImg.removeAttribute("src");
     linkText.textContent = "";
   }
 
-  let current = { slug:"", url:"", dataUrl:"", dataUrlXL:"" };
+  function setBusy(on){
+    isGenerating = !!on;
+    btnGen.disabled = on;
+    btnCopy.disabled = on || !current.url;
+    btnDl.disabled = on || !current.dataUrl;
+    btnSticker.disabled = on || !current.url;
+    btnReset.disabled = on;
+    elSlug.disabled = on;
+    btnGen.textContent = on ? "⏳ Génération..." : "⚡ Générer";
+  }
+
+  function wait(ms){
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function getQrApi(){
+    if(window.QRCode && typeof window.QRCode.toDataURL === "function") return window.QRCode;
+    if(window.qrcode && typeof window.qrcode.toDataURL === "function") return window.qrcode;
+    return null;
+  }
+
+  function loadScriptOnce(src){
+    return new Promise((resolve, reject) => {
+      const existing = Array.from(document.scripts).find((s) => s.src === src);
+
+      if(existing){
+        if(getQrApi()) return resolve(true);
+
+        let done = false;
+        const ok = () => {
+          if(done) return;
+          done = true;
+          resolve(true);
+        };
+        const ko = () => {
+          if(done) return;
+          done = true;
+          reject(new Error("load_failed:" + src));
+        };
+
+        existing.addEventListener("load", ok, { once:true });
+        existing.addEventListener("error", ko, { once:true });
+
+        setTimeout(() => {
+          if(done) return;
+          if(getQrApi()) ok();
+          else ko();
+        }, 4500);
+        return;
+      }
+
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+
+      let done = false;
+      s.onload = () => {
+        if(done) return;
+        done = true;
+        resolve(true);
+      };
+      s.onerror = () => {
+        if(done) return;
+        done = true;
+        reject(new Error("load_failed:" + src));
+      };
+
+      document.head.appendChild(s);
+
+      setTimeout(() => {
+        if(done) return;
+        if(getQrApi()){
+          done = true;
+          resolve(true);
+        }else{
+          done = true;
+          reject(new Error("load_timeout:" + src));
+        }
+      }, 6000);
+    });
+  }
+
+  async function ensureQrLib(){
+    let api = getQrApi();
+    if(api) return api;
+
+    let lastErr = null;
+
+    for(const src of QR_LIB_SOURCES){
+      try{
+        await loadScriptOnce(src);
+
+        for(let i = 0; i < 10; i++){
+          api = getQrApi();
+          if(api) return api;
+          await wait(120);
+        }
+
+        lastErr = new Error("qr_namespace_missing");
+      }catch(err){
+        lastErr = err;
+        console.warn("QR lib fallback failed:", src, err);
+      }
+    }
+
+    throw lastErr || new Error("qr_lib_unavailable");
+  }
+
+  async function makeQrDataUrl(url, size){
+    const QR = await ensureQrLib();
+    const width = Number(size || 360);
+    return QR.toDataURL(url, { margin: 1, width });
+  }
 
   async function generate(){
+    if(isGenerating) return;
+
     const slug = slugClean(elSlug.value);
-    pill.textContent = "Slug : " + (slug || "—");
+    syncRouteUi(slug);
 
     setUiIdle();
     current = { slug:"", url:"", dataUrl:"", dataUrlXL:"" };
 
-    // ✅ validations terrain
     if(!slug){
-      showNote("⚠️ Entre un slug (ex: chez-astou-saly).", "warn");
+      showNote("⚠️ Entre un slug (ex: loc-221771342889).", "warn");
       return;
     }
     if(slug.length < 4){
@@ -487,12 +673,18 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    showNote("✅ Génération en cours…", "warn");
-
-    const url = buildQrProUrl(slug);
+    setBusy(true);
 
     try{
-      const dataUrl = await makeQrDataUrl(url, 360);  // normal
+      if(!getQrApi()){
+        showNote("⚠️ Lib QR absente. Tentative de rechargement…", "warn");
+      }else{
+        showNote("✅ Génération en cours…", "warn");
+      }
+
+      const url = buildQrProUrl(slug);
+      const dataUrl = await makeQrDataUrl(url, 360);
+
       current = { slug, url, dataUrl, dataUrlXL: "" };
 
       linkText.textContent = url;
@@ -500,29 +692,48 @@ window.addEventListener("DOMContentLoaded", () => {
       qrLink.href = url;
 
       qrImg.style.cursor = "pointer";
-      qrImg.onclick = (e)=>{ e.preventDefault(); openUrl(url); };
+      qrImg.onclick = (e) => {
+        e.preventDefault();
+        openUrl(url);
+      };
 
-      btnOpen.onclick = ()=> openUrl(url);
-      btnTest.onclick = ()=> openUrl(url); // même lien (test terrain)
+      btnOpen.onclick = () => openUrl(url);
+      btnTest.onclick = () => openUrl(url);
 
       btnCopy.disabled = false;
       btnDl.disabled = false;
       btnSticker.disabled = false;
       out.style.display = "block";
 
+      syncOwnUrl(slug);
       pushHistory(slug, url);
 
       showNote("✅ OK.\n📲 Clique “Test téléphone” AVANT impression.\nPuis imprime.", "ok");
     }catch(e){
       console.error("QR local error", e);
-      showNote("❌ QR KO (lib). Recharge la page.", "bad");
+      showNote("❌ QR KO.\nLa lib QR n’a pas pu être chargée.\nRecharge la page puis réessaie.", "bad");
+    }finally{
+      setBusy(false);
     }
   }
 
-  btnGen.addEventListener("click", (e)=>{ e.preventDefault(); generate(); });
-  elSlug.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); generate(); }});
+  btnGen.addEventListener("click", (e) => {
+    e.preventDefault();
+    generate();
+  });
 
-  btnCopy.addEventListener("click", async ()=>{
+  elSlug.addEventListener("input", () => {
+    syncRouteUi(elSlug.value);
+  });
+
+  elSlug.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      generate();
+    }
+  });
+
+  btnCopy.addEventListener("click", async () => {
     if(!current.url) return;
     try{
       await copy(current.url);
@@ -532,18 +743,21 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  btnDl.addEventListener("click", ()=>{
+  btnDl.addEventListener("click", () => {
     if(!current.dataUrl || !current.slug) return;
     const filename = `QR_PRO_${current.slug}.png`;
     downloadPngFromDataUrl(current.dataUrl, filename);
     showNote("⬇️ PNG téléchargé : " + filename, "ok");
   });
 
-  btnSticker.addEventListener("click", async ()=>{
-    if(!current.url || !current.slug) return;
+  btnSticker.addEventListener("click", async () => {
+    if(!current.url || !current.slug || isGenerating) return;
+
+    setBusy(true);
     showNote("🟩 Génération Sticker XL…", "warn");
+
     try{
-      const dataUrlXL = await makeQrDataUrl(current.url, 900); // XL
+      const dataUrlXL = await makeQrDataUrl(current.url, 900);
       current.dataUrlXL = dataUrlXL;
       const filename = `STICKER_XL_${current.slug}.png`;
       downloadPngFromDataUrl(dataUrlXL, filename);
@@ -551,42 +765,48 @@ window.addEventListener("DOMContentLoaded", () => {
     }catch(e){
       console.error(e);
       showNote("❌ Sticker XL KO. Recharge et réessaie.", "bad");
+    }finally{
+      setBusy(false);
     }
   });
 
-  btnReset.addEventListener("click", ()=>{
+  btnReset.addEventListener("click", () => {
+    if(isGenerating) return;
     elSlug.value = "";
-    pill.textContent = "Slug : —";
+    syncRouteUi("");
+    syncOwnUrl("");
     setUiIdle();
+    current = { slug:"", url:"", dataUrl:"", dataUrlXL:"" };
     showNote("Reset OK. Entre un slug.", "warn");
   });
 
-  btnClearHistory.addEventListener("click", ()=>{
+  btnClearHistory.addEventListener("click", () => {
     if(!confirm("Vider l’historique ?")) return;
     saveHistory([]);
     renderHistory();
     showNote("Historique vidé.", "ok");
   });
 
-  // INIT
   renderHistory();
   setUiIdle();
 
-  // Auto ?slug=
   try{
     const s = new URL(location.href).searchParams.get("slug");
     if(s){
       elSlug.value = s;
+      syncRouteUi(s);
       generate();
     }else{
-      showNote("Astuce: ouvre avec ?slug=chez-astou-saly pour générer direct.", "warn");
+      syncRouteUi("");
+      showNote("Astuce: ouvre avec ?slug=loc-221771342889 pour générer direct.", "warn");
     }
   }catch{
-    showNote("Astuce: ouvre avec ?slug=chez-astou-saly pour générer direct.", "warn");
+    syncRouteUi("");
+    showNote("Astuce: ouvre avec ?slug=loc-221771342889 pour générer direct.", "warn");
   }
 
   console.log("✅ QR FACTORY V2 READY →", QR_PRO_BASE);
-});
+})();
 </script>
 
 </body>
