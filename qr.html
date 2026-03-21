@@ -17,10 +17,6 @@
       window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
   </script>
 
-  <!-- QR lib -->
-  <script id="qr-lib-primary" src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-
-  <!-- Guard LOC -->
   <script src="./guard.js?v=locpro-final"></script>
 
   <style>
@@ -117,13 +113,15 @@
       margin-top:12px;
       min-height:220px;
     }
-    canvas{
+    .qrImg{
       max-width:100%;
+      width:320px;
       height:auto;
       border-radius:12px;
       background:#fff;
       padding:10px;
       display:block;
+      border:1px solid rgba(148,163,184,.22);
     }
 
     .label{
@@ -155,6 +153,7 @@
 
     @media (max-width:680px){
       .wrap{padding:14px}
+      .qrImg{width:260px}
     }
   </style>
 </head>
@@ -182,7 +181,9 @@
     </div>
 
     <div class="qrbox">
-      <canvas id="qr"></canvas>
+      <a id="qrAnchor" href="#" target="_blank" rel="noopener">
+        <img id="qrImg" class="qrImg" alt="QR DIGIY QR PRO" />
+      </a>
     </div>
 
     <div class="label mono" id="urlBox">URL: —</div>
@@ -198,12 +199,9 @@
   "use strict";
 
   const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
-  const QR_LIB_SOURCES = [
-    "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js",
-    "https://unpkg.com/qrcode@1.5.4/build/qrcode.min.js"
-  ];
 
-  const qrCanvas = document.getElementById("qr");
+  const qrImg = document.getElementById("qrImg");
+  const qrAnchor = document.getElementById("qrAnchor");
   const urlBox = document.getElementById("urlBox");
   const noteEl = document.getElementById("note");
   const dbgEl = document.getElementById("dbg");
@@ -235,103 +233,9 @@
     btnBack.disabled = on;
   }
 
-  function getQrApi(){
-    if(window.QRCode){
-      if(typeof window.QRCode.toCanvas === "function") return window.QRCode;
-      if(typeof window.QRCode.toDataURL === "function") return window.QRCode;
-    }
-    if(window.qrcode){
-      if(typeof window.qrcode.toCanvas === "function") return window.qrcode;
-      if(typeof window.qrcode.toDataURL === "function") return window.qrcode;
-    }
-    return null;
-  }
-
-  function loadScriptOnce(src){
-    return new Promise((resolve, reject) => {
-      const existing = Array.from(document.scripts).find(s => s.src === src);
-      if(existing){
-        if(getQrApi()) return resolve(true);
-
-        let done = false;
-        const ok = () => {
-          if(done) return;
-          done = true;
-          resolve(true);
-        };
-        const ko = () => {
-          if(done) return;
-          done = true;
-          reject(new Error("load_failed:" + src));
-        };
-
-        existing.addEventListener("load", ok, { once:true });
-        existing.addEventListener("error", ko, { once:true });
-
-        setTimeout(() => {
-          if(done) return;
-          if(getQrApi()) ok();
-          else ko();
-        }, 4500);
-
-        return;
-      }
-
-      const s = document.createElement("script");
-      s.src = src;
-      s.async = true;
-
-      let done = false;
-      s.onload = () => {
-        if(done) return;
-        done = true;
-        resolve(true);
-      };
-      s.onerror = () => {
-        if(done) return;
-        done = true;
-        reject(new Error("load_failed:" + src));
-      };
-
-      document.head.appendChild(s);
-
-      setTimeout(() => {
-        if(done) return;
-        if(getQrApi()){
-          done = true;
-          resolve(true);
-        }else{
-          done = true;
-          reject(new Error("load_timeout:" + src));
-        }
-      }, 6000);
-    });
-  }
-
-  async function ensureQrLib(){
-    let api = getQrApi();
-    if(api) return api;
-
-    let lastErr = null;
-
-    for(const src of QR_LIB_SOURCES){
-      try{
-        await loadScriptOnce(src);
-        api = getQrApi();
-        if(api) return api;
-      }catch(err){
-        lastErr = err;
-        console.warn("QR fallback failed:", src, err);
-      }
-    }
-
-    throw lastErr || new Error("qr_lib_unavailable");
-  }
-
   function getGuardSession(){
     const st = window.DIGIY_GUARD?.state || {};
     const raw = window.DIGIY_GUARD?.getSession?.() || {};
-
     return {
       ok: !!st.access_ok,
       phone: String(st.phone || raw.phone || "").trim(),
@@ -372,7 +276,6 @@
     if(navigator.clipboard?.writeText){
       return navigator.clipboard.writeText(text);
     }
-
     const ta = document.createElement("textarea");
     ta.value = text;
     ta.setAttribute("readonly", "");
@@ -385,51 +288,22 @@
       ok = document.execCommand("copy");
     }catch(_){}
     ta.remove();
-
     if(!ok) throw new Error("copy_failed");
   }
 
-  async function gen(size){
-    const QR = await ensureQrLib();
-
-    if(typeof QR.toCanvas === "function"){
-      return QR.toCanvas(qrCanvas, url, {
-        errorCorrectionLevel: "M",
-        margin: 2,
-        width: size
-      });
-    }
-
-    if(typeof QR.toDataURL === "function"){
-      const dataUrl = await QR.toDataURL(url, {
-        errorCorrectionLevel: "M",
-        margin: 2,
-        width: size
-      });
-
-      const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = dataUrl;
-      });
-
-      const ctx = qrCanvas.getContext("2d");
-      qrCanvas.width = img.width;
-      qrCanvas.height = img.height;
-      ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
-      ctx.drawImage(img, 0, 0);
-
-      return;
-    }
-
-    throw new Error("qr_api_missing");
+  function buildQrImageUrl(targetUrl, size){
+    const s = Number(size || 520);
+    return "https://api.qrserver.com/v1/create-qr-code/?size=" +
+      s + "x" + s +
+      "&data=" + encodeURIComponent(targetUrl);
   }
 
-  function downloadCanvasPng(filename){
+  function directDownload(urlToFile, filename){
     const a = document.createElement("a");
+    a.href = urlToFile;
     a.download = filename;
-    a.href = qrCanvas.toDataURL("image/png");
+    a.target = "_blank";
+    a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -456,6 +330,10 @@
   urlBox.textContent = `URL: ${url}`;
   dbgEl.textContent = `slug: ${slug} | qr-base: ${QR_PRO_BASE}`;
 
+  const normalQrUrl = buildQrImageUrl(url, 520);
+  qrImg.src = normalQrUrl;
+  qrAnchor.href = url;
+
   btnBack.onclick = () => {
     location.href = withSlug("./app.html");
   };
@@ -472,23 +350,20 @@
 
   btnOpen.onclick = () => window.open(url, "_blank", "noopener");
 
-  try{
-    note("⏳ Génération du QR…", "warn");
-    await gen(520);
+  qrImg.onload = () => {
     note("✅ QR-PRO prêt. Test téléphone avant impression.", "ok");
-  }catch(e){
-    console.error(e);
-    note("❌ Erreur QR: " + (e?.message || e), "bad");
-    return;
-  }
+  };
+
+  qrImg.onerror = () => {
+    note("❌ Impossible de charger l’image QR.", "bad");
+  };
 
   btnDownload.onclick = async () => {
     if(busy) return;
     setBusy(true);
     try{
-      note("⏳ Génération PNG…", "warn");
-      await gen(520);
-      downloadCanvasPng(`DIGIY_QR_PRO_${slug}.png`);
+      note("⏳ Préparation du PNG…", "warn");
+      directDownload(buildQrImageUrl(url, 520), `DIGIY_QR_PRO_${slug}.png`);
       note("⬇️ Téléchargement lancé (QR normal).", "ok");
     }catch(e){
       console.error(e);
@@ -502,11 +377,9 @@
     if(busy) return;
     setBusy(true);
     try{
-      note("🟩 Génération Sticker XL…", "warn");
-      await gen(900);
-      downloadCanvasPng(`DIGIY_STICKER_XL_${slug}.png`);
+      note("🟩 Préparation Sticker XL…", "warn");
+      directDownload(buildQrImageUrl(url, 900), `DIGIY_STICKER_XL_${slug}.png`);
       note("⬇️ Sticker XL téléchargé.", "ok");
-      await gen(520);
     }catch(e){
       console.error(e);
       note("❌ Sticker XL KO: " + (e?.message || e), "bad");
