@@ -17,6 +17,7 @@
       window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
   </script>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script src="./guard.js?v=locpro-final"></script>
 
   <style>
@@ -215,8 +216,11 @@
   const btnOpen     = document.getElementById("btnOpen");
 
   let slug = "";
+  let phone = "";
   let url = "";
   let busy = false;
+  let qrNormalDataUrl = "";
+  let qrXLDataUrl = "";
 
   function note(msg, type){
     noteEl.className = "note " + (type || "warn");
@@ -259,6 +263,14 @@
     return String(sess.slug || window.DIGIY_GUARD?.state?.slug || qsSlug || "").trim();
   }
 
+  function getPhoneSafe(){
+    const sess = getGuardSession();
+    const qsTel =
+      new URLSearchParams(location.search).get("tel") ||
+      new URLSearchParams(location.search).get("phone") || "";
+    return String(sess.phone || qsTel || "").trim();
+  }
+
   function withSlug(path){
     const u = new URL(path, location.href);
     if(slug) u.searchParams.set("slug", slug);
@@ -269,6 +281,10 @@
     const u = new URL(location.href);
     if(slug) u.searchParams.set("slug", slug);
     else u.searchParams.delete("slug");
+
+    if(phone) u.searchParams.set("tel", phone);
+    else u.searchParams.delete("tel");
+
     history.replaceState({}, "", u.toString());
   }
 
@@ -291,27 +307,75 @@
     if(!ok) throw new Error("copy_failed");
   }
 
-  function buildQrImageUrl(targetUrl, size){
-    const s = Number(size || 520);
-    return "https://api.qrserver.com/v1/create-qr-code/?size=" +
-      s + "x" + s +
-      "&data=" + encodeURIComponent(targetUrl);
-  }
-
-  function directDownload(urlToFile, filename){
+  function directDownload(dataUrl, filename){
     const a = document.createElement("a");
-    a.href = urlToFile;
+    a.href = dataUrl;
     a.download = filename;
-    a.target = "_blank";
-    a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();
   }
 
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = () => resolve(true);
+      s.onerror = () => reject(new Error("script_load_failed: " + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureQrLib(){
+    if(window.QRCode?.toDataURL) return true;
+
+    const fallbacks = [
+      "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"
+    ];
+
+    for(const src of fallbacks){
+      try{
+        await loadScript(src);
+        if(window.QRCode?.toDataURL) return true;
+      }catch(e){
+        console.warn("QR fallback failed", src, e);
+      }
+    }
+    return !!window.QRCode?.toDataURL;
+  }
+
+  function qrOptions(size){
+    return {
+      width: size,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#111827",
+        light: "#FFFFFF"
+      }
+    };
+  }
+
+  function makeQrDataUrl(text, size){
+    return new Promise((resolve, reject) => {
+      if(!window.QRCode || typeof window.QRCode.toDataURL !== "function"){
+        reject(new Error("QRCode lib missing"));
+        return;
+      }
+      window.QRCode.toDataURL(text, qrOptions(size), (err, dataUrl) => {
+        if(err) reject(err);
+        else resolve(dataUrl);
+      });
+    });
+  }
+
   await bootGuardSafe();
 
   slug = getSlugSafe();
+  phone = getPhoneSafe();
+
   if(!slug){
     alert("❌ slug manquant. Ouvre via le cockpit LOC (slug obligatoire).");
     return;
@@ -319,20 +383,49 @@
 
   const sess = getGuardSession();
   pillSlug.textContent = "slug: " + slug;
-  pillState.textContent = sess.ok ? ("session: OK" + (sess.phone ? " · " + sess.phone : "")) : "session: aperçu / slug";
+  pillState.textContent = sess.ok
+    ? ("session: OK" + (phone ? " · " + phone : ""))
+    : "session: aperçu / slug";
 
   syncOwnSlug();
 
   const qrProUrl = new URL(QR_PRO_BASE);
   qrProUrl.searchParams.set("slug", slug);
+  qrProUrl.searchParams.set("module", "LOC");
+  if(phone) qrProUrl.searchParams.set("tel", phone);
   url = qrProUrl.toString();
 
-  urlBox.textContent = `URL: ${url}`;
-  dbgEl.textContent = `slug: ${slug} | qr-base: ${QR_PRO_BASE}`;
+  urlBox.textContent = "URL: " + url;
+  dbgEl.textContent = "slug: " + slug + " | module: LOC | qr-base: " + QR_PRO_BASE + (phone ? " | tel: " + phone : "");
 
-  const normalQrUrl = buildQrImageUrl(url, 520);
-  qrImg.src = normalQrUrl;
   qrAnchor.href = url;
+  note("⏳ Préparation du QR local…", "warn");
+  setBusy(true);
+
+  try{
+    const ok = await ensureQrLib();
+    if(!ok){
+      throw new Error("Librairie QR introuvable");
+    }
+
+    qrNormalDataUrl = await makeQrDataUrl(url, 520);
+    qrXLDataUrl = await makeQrDataUrl(url, 900);
+
+    qrImg.onload = () => {
+      note("✅ QR-PRO prêt. Test téléphone avant impression.", "ok");
+    };
+
+    qrImg.onerror = () => {
+      note("❌ Impossible d’afficher l’image QR locale.", "bad");
+    };
+
+    qrImg.src = qrNormalDataUrl;
+  }catch(e){
+    console.error(e);
+    note("❌ Génération QR locale impossible : " + (e?.message || e), "bad");
+  }finally{
+    setBusy(false);
+  }
 
   btnBack.onclick = () => {
     location.href = withSlug("./app.html");
@@ -348,22 +441,20 @@
     }
   };
 
-  btnOpen.onclick = () => window.open(url, "_blank", "noopener");
-
-  qrImg.onload = () => {
-    note("✅ QR-PRO prêt. Test téléphone avant impression.", "ok");
-  };
-
-  qrImg.onerror = () => {
-    note("❌ Impossible de charger l’image QR.", "bad");
+  btnOpen.onclick = () => {
+    window.open(url, "_blank", "noopener");
   };
 
   btnDownload.onclick = async () => {
     if(busy) return;
+    if(!qrNormalDataUrl){
+      note("❌ QR normal non prêt.", "bad");
+      return;
+    }
     setBusy(true);
     try{
       note("⏳ Préparation du PNG…", "warn");
-      directDownload(buildQrImageUrl(url, 520), `DIGIY_QR_PRO_${slug}.png`);
+      directDownload(qrNormalDataUrl, `DIGIY_QR_PRO_LOC_${slug}.png`);
       note("⬇️ Téléchargement lancé (QR normal).", "ok");
     }catch(e){
       console.error(e);
@@ -375,10 +466,14 @@
 
   btnSticker.onclick = async () => {
     if(busy) return;
+    if(!qrXLDataUrl){
+      note("❌ Sticker XL non prêt.", "bad");
+      return;
+    }
     setBusy(true);
     try{
       note("🟩 Préparation Sticker XL…", "warn");
-      directDownload(buildQrImageUrl(url, 900), `DIGIY_STICKER_XL_${slug}.png`);
+      directDownload(qrXLDataUrl, `DIGIY_STICKER_XL_LOC_${slug}.png`);
       note("⬇️ Sticker XL téléchargé.", "ok");
     }catch(e){
       console.error(e);
