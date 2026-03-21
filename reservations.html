@@ -445,9 +445,13 @@
     };
   }
 
-  async function waitGuardReady(){
-    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
-    const ready = window.DIGIY_GUARD.ready;
+ async function bootGuard(){
+  if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+    throw new Error("guard_missing");
+  }
+  await window.DIGIY_GUARD.ready();
+  return window.DIGIY_GUARD.state || {};
+}
 
     if(typeof ready === "function"){
       const maybe = ready(8000);
