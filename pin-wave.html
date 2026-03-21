@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=pinwave-v4-app-redirect"></script>
+  <script src="./guard.js?v=pinwave-v5-slug-guard-clean"></script>
 
   <style>
     :root{
@@ -161,7 +161,7 @@
     <label>PIN</label>
     <input id="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="one-time-code"/>
 
-    <button class="btn" id="go">🔓 Ouvrir mon app</button>
+    <button class="btn" id="go" type="button">🔓 Ouvrir mon app</button>
 
     <div class="row" style="margin-top:10px">
       <button class="btn ghost" id="clear" type="button">🧹 Effacer</button>
@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9\-_]/g, "")
       .replace(/-+/g, "-")
-      .replace(/^_+|_+$/g, "");
+      .replace(/^-|-$/g, "");
   }
 
   function digitsOnly(v) {
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!slug) return url;
     try {
       const u = new URL(url, location.href);
-      if (!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      u.searchParams.set("slug", slug);
       if (u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     } catch {
@@ -226,31 +226,60 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  if (!window.DIGIY_GUARD) {
+  function getGuardState() {
+    return window.DIGIY_GUARD?.state || {
+      preview: true,
+      access_ok: false,
+      slug: "",
+      phone: "",
+      module: "LOC",
+      reason: "guard_missing"
+    };
+  }
+
+  function getSession() {
+    const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    return {
+      ok: !!st.access_ok,
+      access_ok: !!st.access_ok,
+      slug: cleanSlug(st.slug || raw.slug || ""),
+      phone: String(st.phone || raw.phone || "").trim(),
+      module: String(st.module || raw.module || "LOC").trim(),
+      reason: String(st.reason || raw.reason || "").trim()
+    };
+  }
+
+  function getSlug() {
+    const qsSlug = cleanSlug(new URLSearchParams(location.search).get("slug") || "");
+    if (qsSlug) return qsSlug;
+
+    const sess = getSession();
+    if (sess.slug) return sess.slug;
+
+    return cleanSlug(window.DIGIY_GUARD?.getSlug?.() || "");
+  }
+
+  function fillContext(slug) {
+    const sess = getSession();
+    const phone = sess.phone || "";
+
+    $("slug").value = slug || "";
+    $("pillSlug").textContent = "slug: " + (slug || "—");
+
+    if (phone && !$("phone").value.trim()) {
+      $("phone").value = phone;
+    }
+  }
+
+  if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
     show("❌ Guard absent.\nVérifie que ./guard.js est bien chargé.", "bad");
     lock(true);
     return;
   }
 
   try {
-    if (typeof window.DIGIY_GUARD.boot === "function") {
-      try {
-        window.DIGIY_GUARD.boot({
-          module: "LOC",
-          login: "./pin.html",
-          dashboard: "./app.html",
-          requireSlug: true
-        });
-      } catch(_) {}
-    }
-
-    if (window.DIGIY_GUARD.ready) {
-      if (typeof window.DIGIY_GUARD.ready.then === "function") {
-        await window.DIGIY_GUARD.ready;
-      } else if (typeof window.DIGIY_GUARD.ready === "function") {
-        await window.DIGIY_GUARD.ready(8000);
-      }
-    }
+    await window.DIGIY_GUARD.ready();
   } catch (e) {
     console.error(e);
     show("❌ Guard non prêt.\nRecharge la page.", "bad");
@@ -258,23 +287,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const rawSlug = new URLSearchParams(location.search).get("slug") || "";
-  const slug = cleanSlug(rawSlug);
-
-  $("slug").value = slug || "";
-  $("pillSlug").textContent = "slug: " + (slug || "—");
+  const slug = getSlug();
+  fillContext(slug);
 
   if (!slug) {
     show("⚠️ Slug manquant.\nOuvre cette page depuis l’app ou le planning.", "bad");
   } else {
     show("Entre ton PIN pour ouvrir l’app propriétaire.", "warn");
   }
-
-  try {
-    const sess = window.DIGIY_GUARD.getSession?.();
-    const p = sess?.phone || window.DIGIY_GUARD.state?.phone || "";
-    if (p) $("phone").value = p;
-  } catch (_) {}
 
   btnClear.addEventListener("click", () => {
     $("phone").value = "";
@@ -292,7 +312,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   async function doOpen() {
-    const phoneInput = ($("phone").value || "").trim();
     const pin = ($("pin").value || "").trim();
 
     if (!slug) {
@@ -311,36 +330,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       if (typeof window.DIGIY_GUARD.loginWithPin !== "function") {
-        throw new Error("Guard: loginWithPin indisponible");
+        throw new Error("loginWithPin indisponible");
       }
 
       const res = await window.DIGIY_GUARD.loginWithPin(slug, pin);
 
       if (!res || res.ok !== true) {
-        show((res && (res.error || res.reason)) || "❌ PIN invalide ou accès refusé.", "bad");
+        show((res && (res.error || res.reason)) || "PIN invalide.", "bad");
         lock(false);
         return;
       }
 
-      const resolvedPhone = digitsOnly(res.phone || "");
-      const typedPhone = digitsOnly(phoneInput || "");
+      $("phone").value = res.phone || $("phone").value || "";
+      show("✅ Accès validé. Ouverture de l’app…", "ok");
 
-      if (typedPhone && resolvedPhone && typedPhone !== resolvedPhone) {
-        $("phone").value = res.phone || "";
-        show(
-          "⚠️ Le téléphone saisi ne correspondait pas au compte.\nLe téléphone du compte a été remis automatiquement. Redirection…",
-          "warn"
-        );
-      } else {
-        $("phone").value = res.phone || phoneInput || "";
-        show("✅ Accès autorisé. Redirection…", "ok");
-      }
-
-      const next = window.DIGIY_GUARD.withSlug
-        ? window.DIGIY_GUARD.withSlug("./app.html")
-        : withSlug("./app.html", slug);
-
-      setTimeout(() => location.replace(next), 450);
+      const next = withSlug("./app.html", slug);
+      setTimeout(() => location.replace(next), 350);
 
     } catch (e) {
       console.error(e);
