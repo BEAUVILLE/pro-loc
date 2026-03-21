@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v3"></script>
+  <script src="./guard.js?v=locpro-planning-final-v4"></script>
 
   <style>
     :root{
@@ -413,28 +413,11 @@
   }
 
   async function waitGuardReady(){
-    if (!window.DIGIY_GUARD) throw new Error("guard_missing");
-
-    const ready = window.DIGIY_GUARD.ready;
-    if (ready && typeof ready.then === "function") {
-      await ready;
-      return;
+    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+      throw new Error("guard_missing");
     }
-
-    if (typeof window.DIGIY_GUARD.boot === "function") {
-      const maybe = window.DIGIY_GUARD.boot({
-        module: "LOC",
-        login: "./pin.html",
-        dashboard: "./planning.html",
-        requireSlug: true
-      });
-      if (maybe && typeof maybe.then === "function") {
-        await maybe;
-        return;
-      }
-    }
-
-    throw new Error("guard_not_ready");
+    await window.DIGIY_GUARD.ready();
+    return window.DIGIY_GUARD.state || {};
   }
 
   function getGuardState(){
@@ -443,13 +426,29 @@
       access_ok: false,
       slug: "",
       phone: "",
+      module: MODULE,
       reason: "guard_missing"
     };
   }
 
-  function getSlug(){
+  function getSession(){
     const st = getGuardState();
-    if (st.slug) return String(st.slug).trim().toLowerCase();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+
+    return {
+      ok: !!st.access_ok,
+      access_ok: !!st.access_ok,
+      preview: !!st.preview,
+      reason: String(st.reason || raw.reason || "").trim(),
+      slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
+      phone: String(st.phone || raw.phone || "").trim(),
+      module: String(st.module || raw.module || MODULE).trim()
+    };
+  }
+
+  function getSlug(){
+    const sess = getSession();
+    if (sess.slug) return sess.slug;
 
     try{
       const qsSlug = new URL(location.href).searchParams.get("slug") || "";
@@ -458,7 +457,9 @@
 
     return (
       storageGet("digiy_loc_slug") ||
-      storageGet("digiy_last_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SESSION") ||
+      storageGet("DIGIY_LOC_ACCESS") ||
       storageGet("DIGIY_SLUG") ||
       ""
     ).trim().toLowerCase();
@@ -470,7 +471,7 @@
 
     try{
       const u = new URL(path, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      u.searchParams.set("slug", slug);
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{
@@ -480,12 +481,11 @@
   }
 
   function pinUrl(){
-    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
-    catch { return withSlug("./pin.html"); }
+    return withSlug("./pin.html");
   }
 
   function isLive(){
-    return UX_MODE === "live" && !!getGuardState().access_ok;
+    return UX_MODE === "live" && !!getSession().access_ok && !!getSlug();
   }
 
   function makeItemId(){
@@ -535,9 +535,9 @@
   }
 
   function renderLiveHeader(){
-    const st = getGuardState();
+    const sess = getSession();
     const phone =
-      st.phone ||
+      sess.phone ||
       storageGet("DIGIY_PHONE") ||
       storageGet("DIGIY_LOC_PHONE") ||
       "—";
@@ -629,7 +629,7 @@
             <div class="itMeta">Ajoute une RESA, une date bloquée, une fermeture, une arrivée ou un départ.</div>
           </div>
           <div class="itR">
-            <span class="badge">🧪 Offline</span>
+            <span class="badge">🧪 Local</span>
           </div>
         </div>
       `;
@@ -745,6 +745,17 @@
   }
 
   async function init(){
+    $("pillModule").textContent = MODULE;
+
+    const today = new Date();
+    const fmt = new Intl.DateTimeFormat("fr-FR", {
+      weekday:"long",
+      year:"numeric",
+      month:"long",
+      day:"numeric"
+    });
+    $("pillToday").textContent = fmt.format(today);
+
     if(!window.DIGIY_GUARD){
       setSub("❌ Guard absent.");
       show("❌ Guard absent ou non chargé.\n➡️ Vérifie ./guard.js", "bad");
@@ -757,23 +768,16 @@
       console.error(e);
       setSub("❌ Guard non prêt.");
       show("❌ Le guard n’a pas pu s’initialiser.", "bad");
+      $("pillSlug").textContent = "slug: —";
+      $("who").textContent = "❌ Guard indisponible";
+      $("abo").textContent = "Recharge la page ou reconnecte-toi via PIN.";
       return;
     }
 
-    const st = getGuardState();
+    const sess = getSession();
     const slug = getSlug();
 
     $("pillSlug").textContent = "slug: " + (slug || "—");
-    $("pillModule").textContent = MODULE;
-
-    const today = new Date();
-    const fmt = new Intl.DateTimeFormat("fr-FR", {
-      weekday:"long",
-      year:"numeric",
-      month:"long",
-      day:"numeric"
-    });
-    $("pillToday").textContent = fmt.format(today);
 
     const official = new URL("./planning.html", location.href);
     if(slug) official.searchParams.set("slug", slug);
@@ -790,7 +794,7 @@
 
     $("btnLogout").addEventListener("click", ()=>{
       try{
-        window.DIGIY_GUARD?.logout?.(pinUrl());
+        window.DIGIY_GUARD?.logout?.();
       }catch(_){
         location.replace(pinUrl());
       }
@@ -800,7 +804,7 @@
       e.preventDefault();
 
       const phone =
-        st.phone ||
+        sess.phone ||
         storageGet("DIGIY_PHONE") ||
         storageGet("DIGIY_LOC_PHONE") ||
         "";
@@ -828,8 +832,13 @@ Merci. — DIGIY`;
 
     reload();
 
-    if(!st.access_ok){
-      renderPreview(st.reason || (slug ? "has_access_false" : "slug_missing"));
+    if(!slug){
+      renderPreview("slug_missing");
+      return;
+    }
+
+    if(!sess.access_ok){
+      renderPreview("has_access_false");
       return;
     }
 
