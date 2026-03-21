@@ -10,18 +10,22 @@
 
   const SUPABASE_URL =
     String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
+
   const SUPABASE_ANON_KEY =
-    String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3").trim();
+    String(
+      window.DIGIY_SUPABASE_ANON ||
+      window.DIGIY_SUPABASE_ANON_KEY ||
+      "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3"
+    ).trim();
 
   const MODULE_CODE = "LOC";
+  const MODULE_PREFIX = "digiy_loc";
   const LOGIN_URL = window.DIGIY_LOGIN_URL || "./pin.html";
   const PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
-
   const ALLOW_PREVIEW_WITHOUT_IDENTITY = false;
 
   const SESSION_KEY = `DIGIY_${MODULE_CODE}_SESSION`;
   const ACCESS_KEY = `DIGIY_${MODULE_CODE}_ACCESS`;
-  const MODULE_PREFIX = "digiy_pay";
 
   const state = {
     preview: false,
@@ -359,6 +363,7 @@
     for (const t of tries) {
       const res = await rpc(t.name, t.body);
       if (!res.ok) continue;
+
       if (res.data === true) return true;
       if (res.data?.ok === true) return true;
       if (res.data?.access === true) return true;
@@ -518,7 +523,7 @@
         const ok = await checkAccess(phone);
 
         if (ok) {
-          const finalSlug = normSlug(slug || `pay-${phone}`);
+          const finalSlug = normSlug(slug || `loc-${phone}`);
           const finalPhone = normPhone(phone);
 
           enrichUrlIfMissingSlug(finalSlug, finalPhone);
@@ -548,6 +553,11 @@
         }
 
         goLogin(slug || "");
+        return null;
+      }
+
+      if (slug && !phone) {
+        goLogin(slug);
         return null;
       }
 
