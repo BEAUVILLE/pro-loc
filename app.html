@@ -241,7 +241,7 @@ a{color:inherit}
       <div class="logo"></div>
       <div>
         <h1>DIGIY LOC PRO <span class="infinity">∞</span></h1>
-        <div class="sub">App propriétaire • simple • terrain • RESA au centre</div>
+        <div class="sub">App propriétaire • simple • terrain • planning au centre</div>
       </div>
     </div>
 
@@ -258,8 +258,8 @@ a{color:inherit}
         <div class="navLabel" id="navPlace">Lieu : —</div>
       </div>
       <div class="navRight">
-        <a class="btn small" id="goPrefiche" href="#">📝 Mon logement</a>
         <a class="btn small primary" id="goPlanning" href="#">🗓️ Planning</a>
+        <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
         <a class="btn small" id="goReservations" href="#">📆 RESA</a>
         <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
         <a class="btn small" id="goPinWave" href="#">🌊 Paiement</a>
@@ -284,9 +284,9 @@ a{color:inherit}
         </div>
 
         <div class="quickGrid">
-          <a class="btn quickBtn" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
-          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
+          <a class="btn quickBtn" id="goPrefiche" href="#">📝 Mon logement</a>
           <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Ouvrir l’accès</a>
+          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
           <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Outils avancés</button>
         </div>
 
@@ -814,7 +814,7 @@ a{color:inherit}
     refreshSessionUI();
     showNote(
       "noteMain",
-      "✅ App propriétaire active.\nFaçade allégée.\nPlanning + blocage de dates + RESA devant.\nCLAW gardé via le SQL déjà posé.",
+      "✅ App propriétaire active.\nPlanning au centre.\nBloquer des dates et RESA bien visibles.\nCLAW gardé via le SQL déjà posé.",
       "ok"
     );
     await loadClaw();
@@ -884,7 +884,7 @@ a{color:inherit}
     }else{
       showNote(
         "noteMain",
-        "✅ App propriétaire active.\nMinimum visible côté terrain.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAide DIGIY gardée via CLAW.",
+        "✅ App propriétaire active.\nFaçade simplifiée.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAide DIGIY gardée via CLAW.",
         "ok"
       );
     }
