@@ -3,11 +3,19 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Accès Cockpit Wave</title>
+  <title>DIGIY LOC PRO — Accès paiement</title>
+  <meta name="theme-color" content="#16a34a"/>
 
-  <!-- Supabase + Guard -->
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=pinwave-v3-FINAL"></script>
+  <script src="./guard.js?v=pinwave-v4-app-redirect"></script>
 
   <style>
     :root{
@@ -36,7 +44,7 @@
     }
     .box{
       width:100%;
-      max-width:420px;
+      max-width:440px;
       background:rgba(255,255,255,.03);
       border:1px solid var(--line);
       border-radius:var(--r);
@@ -44,8 +52,20 @@
       box-shadow:var(--shadow);
     }
     h2{margin:0 0 10px;font-size:1.15rem}
-    .sub{color:var(--muted);font-weight:800;font-size:.9rem;line-height:1.35;margin-bottom:14px}
-    label{display:block;font-size:.82rem;color:var(--muted);font-weight:900;margin-bottom:6px}
+    .sub{
+      color:var(--muted);
+      font-weight:800;
+      font-size:.9rem;
+      line-height:1.4;
+      margin-bottom:14px;
+    }
+    label{
+      display:block;
+      font-size:.82rem;
+      color:var(--muted);
+      font-weight:900;
+      margin-bottom:6px;
+    }
     input{
       width:100%;
       padding:12px;
@@ -58,8 +78,11 @@
       font-weight:900;
       outline:none;
     }
-    input:focus{border-color:rgba(250,204,21,.55);box-shadow:0 0 0 3px rgba(250,204,21,.14)}
-    input[readonly]{opacity:.85}
+    input:focus{
+      border-color:rgba(250,204,21,.55);
+      box-shadow:0 0 0 3px rgba(250,204,21,.14);
+    }
+    input[readonly]{opacity:.88}
     .row{display:flex;gap:10px;flex-wrap:wrap}
     .btn{
       width:100%;
@@ -105,17 +128,23 @@
       color:var(--muted);
       font-weight:900;font-size:.82rem;
     }
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
-    .small{color:var(--muted);font-size:.82rem;font-weight:850;line-height:1.35;margin-top:10px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .small{
+      color:var(--muted);
+      font-size:.82rem;
+      font-weight:850;
+      line-height:1.35;
+      margin-top:10px;
+    }
   </style>
 </head>
 
 <body>
   <div class="box">
-    <h2>🔐 Accès Cockpit Wave</h2>
+    <h2>🔐 Accès paiement</h2>
     <div class="sub">
-      Téléphone Wave + PIN → ouverture directe du cockpit.<br>
-      On garde le <b>slug</b> partout.
+      Téléphone + PIN → ouverture directe de l’<b>app propriétaire</b> avec le cockpit paiement dedans.<br>
+      On garde toujours le <b>slug</b>.
     </div>
 
     <div class="row" style="margin-bottom:12px">
@@ -126,22 +155,23 @@
     <label>Lieu</label>
     <input id="slug" readonly/>
 
-    <label>Téléphone (Wave)</label>
+    <label>Téléphone</label>
     <input id="phone" placeholder="+221 77..." inputmode="tel" autocomplete="tel"/>
 
     <label>PIN</label>
     <input id="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="one-time-code"/>
 
-    <button class="btn" id="go">🔓 Ouvrir mon cockpit</button>
+    <button class="btn" id="go">🔓 Ouvrir mon app</button>
 
     <div class="row" style="margin-top:10px">
       <button class="btn ghost" id="clear" type="button">🧹 Effacer</button>
+      <button class="btn ghost" id="back" type="button">⬅️ Retour app</button>
     </div>
 
     <div class="note warn" id="note"></div>
 
     <div class="small">
-      Astuce terrain : si le PIN est oublié, repasse par la page PIN principale (support WhatsApp).
+      Astuce terrain : si le PIN est oublié, repasse par la page PIN principale.
     </div>
   </div>
 
@@ -153,6 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const note = $("note");
   const btnGo = $("go");
   const btnClear = $("clear");
+  const btnBack = $("back");
 
   function show(msg, cls) {
     note.className = "note " + (cls || "warn");
@@ -165,6 +196,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("phone").disabled = !!on;
     $("pin").disabled = !!on;
     btnClear.disabled = !!on;
+    btnBack.disabled = !!on;
   }
 
   function cleanSlug(v) {
@@ -201,8 +233,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
+    if (typeof window.DIGIY_GUARD.boot === "function") {
+      try {
+        window.DIGIY_GUARD.boot({
+          module: "LOC",
+          login: "./pin.html",
+          dashboard: "./app.html",
+          requireSlug: true
+        });
+      } catch(_) {}
+    }
+
     if (window.DIGIY_GUARD.ready) {
-      await window.DIGIY_GUARD.ready;
+      if (typeof window.DIGIY_GUARD.ready.then === "function") {
+        await window.DIGIY_GUARD.ready;
+      } else if (typeof window.DIGIY_GUARD.ready === "function") {
+        await window.DIGIY_GUARD.ready(8000);
+      }
     }
   } catch (e) {
     console.error(e);
@@ -218,9 +265,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("pillSlug").textContent = "slug: " + (slug || "—");
 
   if (!slug) {
-    show("⚠️ Slug manquant.\nExemple: wave-pin.html?slug=loc-221770000111", "bad");
+    show("⚠️ Slug manquant.\nOuvre cette page depuis l’app ou le planning.", "bad");
   } else {
-    show("Entre ton PIN pour ouvrir le cockpit Wave.", "warn");
+    show("Entre ton PIN pour ouvrir l’app propriétaire.", "warn");
   }
 
   try {
@@ -236,6 +283,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("phone").focus();
   });
 
+  btnBack.addEventListener("click", () => {
+    location.href = withSlug("./app.html", slug);
+  });
+
   $("pin").addEventListener("keydown", (e) => {
     if (e.key === "Enter") btnGo.click();
   });
@@ -245,7 +296,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const pin = ($("pin").value || "").trim();
 
     if (!slug) {
-      show("❌ Slug manquant. Retourne à la galerie et clique “Wave”.", "bad");
+      show("❌ Slug manquant. Retourne à l’app puis reviens ici.", "bad");
       return;
     }
 
@@ -266,7 +317,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const res = await window.DIGIY_GUARD.loginWithPin(slug, pin);
 
       if (!res || res.ok !== true) {
-        show((res && res.error) || "❌ PIN invalide ou accès refusé.", "bad");
+        show((res && (res.error || res.reason)) || "❌ PIN invalide ou accès refusé.", "bad");
         lock(false);
         return;
       }
@@ -277,7 +328,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (typedPhone && resolvedPhone && typedPhone !== resolvedPhone) {
         $("phone").value = res.phone || "";
         show(
-          "⚠️ Le téléphone saisi ne correspondait pas au logement.\nLe téléphone du compte a été remis automatiquement. Redirection…",
+          "⚠️ Le téléphone saisi ne correspondait pas au compte.\nLe téléphone du compte a été remis automatiquement. Redirection…",
           "warn"
         );
       } else {
@@ -286,8 +337,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       const next = window.DIGIY_GUARD.withSlug
-        ? window.DIGIY_GUARD.withSlug("./wave.html")
-        : withSlug("./wave.html", slug);
+        ? window.DIGIY_GUARD.withSlug("./app.html")
+        : withSlug("./app.html", slug);
 
       setTimeout(() => location.replace(next), 450);
 
