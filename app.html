@@ -475,7 +475,7 @@
       <div class="cta-row">
         <a class="btn" href="https://digiylyfe.com/">DIGIYLYFE</a>
         <a class="btn" href="./index.html">Galerie</a>
-        <a class="btn primary" href="./fiche-abo.html">Fiche abonnement</a>
+        <a class="btn primary" href="./go-pin-public.html">Accès public</a>
       </div>
     </div>
 
@@ -1111,14 +1111,14 @@
                 ${recoHtml}
 
                 <div class="actions">
-                  <a class="primary" href="${buildUrl("./fiche-abo.html", room.room_slug)}">Fiche abo</a>
-                  <a href="${buildUrl("./fiche.html", room.room_slug)}">Fiche publique</a>
-                  ${
-                    wa
-                      ? `<a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`
-                      : `<a href="${buildUrl("./fiche-abo.html", room.room_slug)}">Ouvrir</a>`
-                  }
-                </div>
+  <a class="primary" href="${buildUrl("./fiche.html", room.room_slug)}">Voir fiche</a>
+  ${
+    wa
+      ? `<a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`
+      : `<a href="${buildUrl("./fiche.html", room.room_slug)}">Ouvrir</a>`
+  }
+  <a href="./go-pin-public.html">Accès public</a>
+</div>
               </div>
             </article>
           `;
