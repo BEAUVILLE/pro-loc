@@ -8,7 +8,7 @@
 
 <!-- Supabase CDN (OK). Important: on ne create PAS de client ici, on utilise celui de guard.js -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra-v2"></script>
+<script src="./guard.js?v=locpro-wave-ultra-v3"></script>
 
 <style>
 :root{
@@ -192,6 +192,7 @@ a{color:inherit}
       <div class="navRight">
         <a class="btn small" id="goToday" href="#">📅 Vue du jour</a>
         <button class="btn small navBtn" id="goApp" type="button">🏠 APP</button>
+        <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche locale</a>
         <a class="btn small" id="goPulse" href="#">📲 Pulse</a>
         <a class="btn small" id="goPlanning" href="#">🗓️ Planning</a>
         <a class="btn small" id="goListing" href="#">📋 Liste du jour</a>
@@ -338,6 +339,14 @@ a{color:inherit}
     if(el && el.tagName === "A") el.href = withSlug(path);
   });
 
+  const extraLinks = [
+    ["goPrefiche","./fiche-abo.html"]
+  ];
+  extraLinks.forEach(([id, path])=>{
+    const el = $(id);
+    if(el && el.tagName === "A") el.href = withSlug(path);
+  });
+
   const pub = new URL("./go-pin.html", location.href);
   if(slug) pub.searchParams.set("slug", slug);
   if($("btnPublic")) $("btnPublic").href = pub.toString();
@@ -392,6 +401,11 @@ a{color:inherit}
 
   $("btnRefresh")?.addEventListener("click", async ()=>{
     refreshSessionUI();
+    showNote(
+      "noteMain",
+      "✅ Cockpit propriétaire actif.\nPré-fiche logement : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
+      "ok"
+    );
     await loadWave();
   });
 
@@ -634,6 +648,11 @@ a{color:inherit}
   }
 
   refreshSessionUI();
+  showNote(
+    "noteMain",
+    "✅ Cockpit propriétaire actif.\nPré-fiche logement : rail local sans upload photo Supabase.\nWave : déclarations et vérifications ici.",
+    "ok"
+  );
   await loadWave();
 
 })();
