@@ -3,9 +3,22 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Pré-fiche propriétaire</title>
+  <title>DIGIY LOC PRO — Pré-fiche locale propriétaire</title>
   <meta name="theme-color" content="#0b1020"/>
-  <meta name="description" content="DIGIY LOC PRO — Pré-fiche propriétaire locale, sans upload photo vers Supabase, en attente du traitement des photos par DIGIY."/>
+  <meta
+    name="description"
+    content="DIGIY LOC PRO — Pré-fiche locale propriétaire, sécurisée côté propriétaire, sans upload photo Supabase, avec brouillon local par slug."
+  />
+
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=locpro-wave-ultra-v3"></script>
 
   <style>
     :root{
@@ -89,10 +102,49 @@
       font-weight:700;
     }
 
+    .head-right{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-end;
+      flex:1;
+      min-width:280px;
+    }
+
+    .pills{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      border:1px solid rgba(148,163,184,.35);
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-weight:900;
+      font-size:.83rem;
+      line-height:1;
+    }
+    .pill strong{color:#fff}
+    .pill.ok{
+      border-color:rgba(34,197,94,.35);
+      background:rgba(34,197,94,.10);
+      color:#dcfce7;
+    }
+    .pill.warn{
+      border-color:rgba(250,204,21,.35);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+    }
+
     .head-actions{
       display:flex;
       flex-wrap:wrap;
       gap:10px;
+      justify-content:flex-end;
     }
 
     .btn{
@@ -164,6 +216,8 @@
 
     @media(max-width:980px){
       .grid{grid-template-columns:1fr}
+      .head-right{align-items:stretch}
+      .pills,.head-actions{justify-content:flex-start}
     }
 
     .card{
@@ -336,9 +390,13 @@
 
     .meta{
       display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
+      grid-template-columns:repeat(3,minmax(0,1fr));
       gap:12px;
       margin-top:16px;
+    }
+
+    @media(max-width:980px){
+      .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
 
     @media(max-width:760px){
@@ -578,15 +636,25 @@
     <div class="title">
       <div class="logo">🏠</div>
       <div>
-        <h1>DIGIY LOC PRO — Pré-fiche propriétaire</h1>
-        <p>Pré-fiche locale sans upload photo Supabase — traitement humain DIGIY ensuite</p>
+        <h1>DIGIY LOC PRO — Pré-fiche locale propriétaire</h1>
+        <p>Rail protégé propriétaire • brouillon local par slug • zéro upload photo Supabase</p>
       </div>
     </div>
 
-    <div class="head-actions">
-      <a class="btn btn-secondary" href="./index.html">← Retour</a>
-      <button class="btn btn-secondary" id="btnLoadDraft" type="button">↻ Recharger brouillon</button>
-      <button class="btn btn-primary" id="btnSaveDraft" type="button">💾 Sauver brouillon</button>
+    <div class="head-right">
+      <div class="pills">
+        <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
+        <div class="pill" id="pillPhone">📞 <strong>—</strong></div>
+        <div class="pill warn" id="pillState">🔒 Session en attente</div>
+      </div>
+
+      <div class="head-actions">
+        <a class="btn btn-secondary" id="btnBackApp" href="#">⬅️ Retour cockpit</a>
+        <a class="btn btn-secondary" id="btnOpenPin" href="#">🔑 PIN</a>
+        <button class="btn btn-secondary" id="btnLoadDraft" type="button">↻ Recharger brouillon</button>
+        <button class="btn btn-primary" id="btnSaveDraft" type="button">💾 Sauver brouillon</button>
+        <button class="btn btn-danger" id="btnLogout" type="button" style="display:none">🚪 Déconnexion</button>
+      </div>
     </div>
   </div>
 
@@ -597,7 +665,8 @@
     2️⃣ Les photos sont envoyées humainement à DIGIY par WhatsApp / email si besoin.<br>
     3️⃣ DIGIY traite, héberge et renvoie les <b>URLs officielles</b>.<br>
     4️⃣ Le propriétaire colle ensuite ces URLs dans la zone prévue.<br><br>
-    ✔ Ce rail protège la marge DIGIY : <b>pas de commission, pas de taxe stockage Supabase inutile</b>.
+    ✔ Rail voulu : <b>pré-fiche locale → traitement humain DIGIY → URLs officielles → publication</b>.<br>
+    ✔ Protection marge DIGIY : <b>pas de commission, pas de taxe stockage Supabase inutile</b>.
   </div>
 
   <div class="grid">
@@ -676,7 +745,7 @@
 
           <label>
             Message / besoin
-            <textarea id="need_text" placeholder="Ex : Je veux mon accès DIGIY LOC, envoyer mes photos et préparer mon abonnement."></textarea>
+            <textarea id="need_text" placeholder="Ex : Je veux mon accès DIGIY LOC, préparer ma fiche, faire traiter mes photos et recevoir mes URLs officielles."></textarea>
           </label>
 
           <div class="drop">
@@ -692,8 +761,8 @@
             </div>
 
             <div class="mini">
-              Les photos restent sur l’appareil.  
-              DIGIY les récupère ensuite par canal humain si besoin, puis renvoie les URLs officielles.
+              Les photos restent sur l’appareil. DIGIY les récupère ensuite par canal humain si besoin,
+              puis renvoie les URLs officielles.
             </div>
 
             <div class="gallery" id="gallery"></div>
@@ -732,6 +801,14 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
         <div class="meta">
           <div class="metaBox">
+            <div class="metaK">Slug propriétaire</div>
+            <div class="metaV" id="metaSlug">—</div>
+          </div>
+          <div class="metaBox">
+            <div class="metaK">Session</div>
+            <div class="metaV" id="metaSession">En attente</div>
+          </div>
+          <div class="metaBox">
             <div class="metaK">WhatsApp DIGIY</div>
             <div class="metaV">+221771342889</div>
           </div>
@@ -745,12 +822,12 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
           </div>
           <div class="metaBox">
             <div class="metaK">Statut dossier</div>
-            <div class="metaV" id="metaState">Pré-fiche en attente</div>
+            <div class="metaV" id="metaState">Pré-fiche locale en attente</div>
           </div>
         </div>
 
         <div class="note">
-          Rail DIGIY LOC : <b>pré-fiche locale → envoi humain DIGIY → traitement photos → URLs officielles → fiche officielle publiable</b>.
+          Rail DIGIY LOC : <b>pré-fiche locale propriétaire → envoi humain DIGIY → traitement des photos → URLs officielles → fiche officielle publiable</b>.
         </div>
       </div>
     </section>
@@ -765,7 +842,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
             <div class="chips">
               <div class="chip gold" id="pvType">Type</div>
               <div class="chip" id="pvVille">Ville</div>
-              <div class="chip green" id="pvState">Pré-fiche en attente</div>
+              <div class="chip green" id="pvState">Pré-fiche locale en attente</div>
             </div>
           </div>
         </div>
@@ -829,8 +906,29 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
   const TEAM_WA = "221771342889";
   const TEAM_EMAIL = "digiylyfe@gmail.com";
-  const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
-  const STORAGE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V3";
+  const DRAFT_BASE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V4";
+  const LEGACY_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V3";
+
+  function makeFallbackSvg(label){
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+        <defs>
+          <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#0f172a"/>
+            <stop offset="100%" stop-color="#052e16"/>
+          </linearGradient>
+        </defs>
+        <rect width="1400" height="900" fill="url(#g)"/>
+        <circle cx="1120" cy="180" r="180" fill="rgba(250,204,21,.18)"/>
+        <circle cx="240" cy="120" r="140" fill="rgba(34,197,94,.14)"/>
+        <text x="80" y="430" fill="#facc15" font-size="66" font-family="Arial, sans-serif" font-weight="700">DIGIY LOC</text>
+        <text x="80" y="520" fill="#e5e7eb" font-size="34" font-family="Arial, sans-serif">${String(label || "Pré-fiche locale propriétaire").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>
+      </svg>
+    `;
+    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+  }
+
+  const FALLBACK_IMG = makeFallbackSvg("Pré-fiche locale propriétaire");
 
   const state = {
     photos: []
@@ -854,6 +952,8 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     statusBox: document.getElementById("statusBox"),
     metaPhotos: document.getElementById("metaPhotos"),
     metaState: document.getElementById("metaState"),
+    metaSlug: document.getElementById("metaSlug"),
+    metaSession: document.getElementById("metaSession"),
     btnAdvice: document.getElementById("btnAdvice"),
     btnWhatsApp: document.getElementById("btnWhatsApp"),
     btnEmail: document.getElementById("btnEmail"),
@@ -861,6 +961,12 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     btnSaveDraft: document.getElementById("btnSaveDraft"),
     btnLoadDraft: document.getElementById("btnLoadDraft"),
     btnReset: document.getElementById("btnReset"),
+    btnBackApp: document.getElementById("btnBackApp"),
+    btnOpenPin: document.getElementById("btnOpenPin"),
+    btnLogout: document.getElementById("btnLogout"),
+    pillSlug: document.getElementById("pillSlug"),
+    pillPhone: document.getElementById("pillPhone"),
+    pillState: document.getElementById("pillState"),
     assistantBox: document.getElementById("assistantBox"),
     assistantIntro: document.getElementById("assistantIntro"),
     assistantList: document.getElementById("assistantList"),
@@ -891,8 +997,56 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     return n.toLocaleString("fr-FR") + " FCFA";
   }
 
-  function safeImg(v){
-    return safe(v) || FALLBACK_IMG;
+  function getSlug(){
+    return safe(
+      window.DIGIY_GUARD?.getSlug?.() ||
+      new URLSearchParams(location.search).get("slug")
+    );
+  }
+
+  function withSlug(path){
+    const currentSlug = getSlug();
+
+    if (window.DIGIY_GUARD?.withSlug) {
+      return window.DIGIY_GUARD.withSlug(path);
+    }
+
+    if (!currentSlug) return path;
+    const url = new URL(path, location.href);
+    url.searchParams.set("slug", currentSlug);
+    return url.toString();
+  }
+
+  function getSession(){
+    return window.DIGIY_GUARD?.getSession?.() || {};
+  }
+
+  function draftKey(){
+    const slug = getSlug();
+    return slug ? `${DRAFT_BASE_KEY}:${slug}` : DRAFT_BASE_KEY;
+  }
+
+  async function bootGuard(){
+    if (!window.DIGIY_GUARD) {
+      throw new Error("guard_missing");
+    }
+
+    if (typeof window.DIGIY_GUARD.boot === "function") {
+      const maybe = window.DIGIY_GUARD.boot({
+        module: "LOC",
+        login: "./pin.html",
+        dashboard: "./app.html",
+        requireSlug: true
+      });
+      if (maybe && typeof maybe.then === "function") {
+        await maybe;
+      }
+    }
+
+    const ready = window.DIGIY_GUARD.ready;
+    if (ready && typeof ready.then === "function") {
+      await ready;
+    }
   }
 
   function showStatus(msg, type="ok"){
@@ -909,14 +1063,21 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     return state.photos.map((p, i) => `${i + 1}. ${p.name}`).join("\n") || "Aucune photo sélectionnée";
   }
 
+  function parseOfficialUrls(){
+    return safe(els.photos_urls.value)
+      .split("\n")
+      .map(x => x.trim())
+      .filter(Boolean);
+  }
+
   function hasOfficialUrls(){
-    return safe(els.photos_urls.value).length > 0;
+    return parseOfficialUrls().length > 0;
   }
 
   function currentStateLabel(){
     return hasOfficialUrls()
       ? "Fiche prête pour publication"
-      : "Pré-fiche en attente";
+      : "Pré-fiche locale en attente";
   }
 
   function buildMessage(){
@@ -924,6 +1085,10 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       "Bonjour DIGIY 👋",
       "",
       "Je vous envoie ma pré-fiche DIGIY LOC.",
+      "",
+      "CONTEXTE",
+      `Slug propriétaire : ${getSlug() || "—"}`,
+      `Statut : ${currentStateLabel()}`,
       "",
       "PROPRIÉTAIRE",
       `Nom : ${safe(els.owner_name.value) || "—"}`,
@@ -950,9 +1115,6 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       "PHOTOS OFFICIELLES (URLS DIGIY)",
       safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.",
       "",
-      "STATUT",
-      currentStateLabel(),
-      "",
       "NOTE",
       "Les photos n'ont pas été uploadées dans Supabase depuis cette pré-fiche. Rail local pour protéger les coûts."
     ];
@@ -960,10 +1122,41 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     return lines.join("\n");
   }
 
+  function refreshContextUI(){
+    const slug = getSlug();
+    const sess = getSession();
+    const phone = safe(sess.phone);
+
+    els.pillSlug.innerHTML = `🏷️ <strong>${slug || "—"}</strong>`;
+    els.pillPhone.innerHTML = `📞 <strong>${phone || "—"}</strong>`;
+
+    els.metaSlug.textContent = slug || "—";
+    els.metaSession.textContent = sess?.ok ? "Session propriétaire OK" : "Session en attente";
+
+    if (sess?.ok) {
+      els.pillState.textContent = "✅ Connecté";
+      els.pillState.classList.remove("warn");
+      els.pillState.classList.add("ok");
+      els.btnLogout.style.display = "inline-flex";
+    } else {
+      els.pillState.textContent = "🔒 Session en attente";
+      els.pillState.classList.remove("ok");
+      els.pillState.classList.add("warn");
+      els.btnLogout.style.display = "none";
+    }
+
+    els.btnBackApp.href = withSlug("./app.html");
+    els.btnOpenPin.href = withSlug("./pin.html");
+
+    if (!safe(els.owner_phone.value) && phone) {
+      els.owner_phone.value = phone;
+    }
+  }
+
   function updatePreview(){
     const firstPhoto = state.photos[0]?.url || FALLBACK_IMG;
 
-    els.pvCover.src = safeImg(firstPhoto);
+    els.pvCover.src = firstPhoto;
     els.pvCover.onerror = () => {
       els.pvCover.onerror = null;
       els.pvCover.src = FALLBACK_IMG;
@@ -1015,6 +1208,11 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
   }
 
   function validateBeforeSend(){
+    if (!getSlug()) {
+      showStatus("Slug propriétaire introuvable. Reconnecte-toi via PIN.", "bad");
+      return false;
+    }
+
     if (!safe(els.owner_name.value)) {
       showStatus("Ajoute le nom du propriétaire.", "warn");
       els.owner_name.focus();
@@ -1037,8 +1235,8 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     return true;
   }
 
-  function saveDraft(){
-    const payload = {
+  function getDraftPayload(){
+    return {
       owner_name: els.owner_name.value,
       owner_phone: els.owner_phone.value,
       nom: els.nom.value,
@@ -1050,52 +1248,81 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       prix_mois: els.prix_mois.value,
       description: els.description.value,
       need_text: els.need_text.value,
-      photos_urls: els.photos_urls.value
+      photos_urls: els.photos_urls.value,
+      saved_at: new Date().toISOString(),
+      slug: getSlug()
     };
+  }
 
+  function saveDraft(){
     try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      showStatus("Brouillon sauvegardé localement ✅\nAucune photo n'a été envoyée vers Supabase.", "ok");
+      localStorage.setItem(draftKey(), JSON.stringify(getDraftPayload()));
+      showStatus(
+        "Brouillon sauvegardé localement ✅\n" +
+        `Clé locale : ${draftKey()}\n` +
+        "Aucune photo n'a été envoyée vers Supabase.",
+        "ok"
+      );
     }catch(e){
       showStatus("Impossible de sauvegarder le brouillon localement.", "bad");
     }
   }
 
+  function applyDraft(d){
+    els.owner_name.value = d.owner_name || "";
+    els.owner_phone.value = d.owner_phone || "";
+    els.nom.value = d.nom || "";
+    els.adresse.value = d.adresse || "";
+    els.type_logement.value = d.type_logement || "";
+    els.personnes_max.value = d.personnes_max || "";
+    els.prix_nuit.value = d.prix_nuit || "";
+    els.prix_semaine.value = d.prix_semaine || "";
+    els.prix_mois.value = d.prix_mois || "";
+    els.description.value = d.description || "";
+    els.need_text.value = d.need_text || "";
+    els.photos_urls.value = d.photos_urls || "";
+    updatePreview();
+  }
+
   function loadDraft(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const candidates = [draftKey(), LEGACY_KEY];
+      let raw = "";
+
+      for (const key of candidates) {
+        raw = localStorage.getItem(key) || "";
+        if (raw) break;
+      }
+
       if (!raw) {
-        showStatus("Aucun brouillon local trouvé.", "warn");
+        showStatus("Aucun brouillon local trouvé pour ce rail.", "warn");
         return;
       }
 
       const d = JSON.parse(raw);
-      els.owner_name.value = d.owner_name || "";
-      els.owner_phone.value = d.owner_phone || "";
-      els.nom.value = d.nom || "";
-      els.adresse.value = d.adresse || "";
-      els.type_logement.value = d.type_logement || "";
-      els.personnes_max.value = d.personnes_max || "";
-      els.prix_nuit.value = d.prix_nuit || "";
-      els.prix_semaine.value = d.prix_semaine || "";
-      els.prix_mois.value = d.prix_mois || "";
-      els.description.value = d.description || "";
-      els.need_text.value = d.need_text || "";
-      els.photos_urls.value = d.photos_urls || "";
+      applyDraft(d);
 
-      updatePreview();
-      showStatus("Brouillon rechargé ✅", "ok");
+      const savedAt = safe(d.saved_at);
+      showStatus(
+        "Brouillon rechargé ✅\n" +
+        (savedAt ? `Dernière sauvegarde : ${savedAt}\n` : "") +
+        "Note : les photos locales ne sont jamais restaurées automatiquement.",
+        "ok"
+      );
     }catch(e){
       showStatus("Impossible de relire le brouillon local.", "bad");
     }
   }
 
   function resetAll(){
+    const ok = confirm("Vider la pré-fiche locale en cours ?");
+    if (!ok) return;
+
     [
       els.owner_name, els.owner_phone, els.nom, els.adresse, els.personnes_max,
       els.prix_nuit, els.prix_semaine, els.prix_mois, els.description,
       els.need_text, els.photos_urls
-    ].forEach(el => el.value = "");
+    ].forEach(el => { el.value = ""; });
 
     els.type_logement.value = "";
     els.photos.value = "";
@@ -1105,6 +1332,11 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     });
     state.photos = [];
 
+    const sess = getSession();
+    if (sess?.phone) {
+      els.owner_phone.value = sess.phone;
+    }
+
     els.assistantBox.style.display = "none";
     els.assistantIntro.textContent = "";
     els.assistantList.innerHTML = "";
@@ -1112,6 +1344,10 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     renderGallery();
     updatePreview();
     hideStatus();
+
+    try{
+      localStorage.removeItem(draftKey());
+    }catch(_){}
   }
 
   async function copyText(){
@@ -1119,7 +1355,9 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       await navigator.clipboard.writeText(buildMessage());
       showStatus("Texte copié ✅", "ok");
     }catch(e){
-      showStatus("Copie impossible automatiquement. Sélectionne le texte à droite.", "warn");
+      els.messageBox.focus();
+      els.messageBox.select();
+      showStatus("Copie automatique impossible. Le texte est sélectionné à droite.", "warn");
     }
   }
 
@@ -1168,7 +1406,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     if (state.photos.length) {
       showStatus(
         `${state.photos.length} photo(s) chargée(s) dans l’aperçu local ✅\n` +
-        `Aucun upload Supabase effectué.`,
+        "Aucun upload Supabase effectué.",
         "ok"
       );
     } else {
@@ -1186,9 +1424,14 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     const type = safe(els.type_logement.value);
     const cap = Number(els.personnes_max.value || 0);
     const prixNuit = Number(els.prix_nuit.value || 0);
+    const prixSemaine = Number(els.prix_semaine.value || 0);
+    const prixMois = Number(els.prix_mois.value || 0);
     const desc = safe(els.description.value);
     const need = safe(els.need_text.value);
-    const urls = safe(els.photos_urls.value);
+    const urls = parseOfficialUrls();
+
+    if (!getSlug()) items.push({ cls:"bad", text:"Le slug propriétaire manque. Reviens par le rail PIN / cockpit avant d’utiliser cette page." });
+    else items.push({ cls:"ok", text:`Slug propriétaire détecté : ${getSlug()}` });
 
     if (!ownerName) items.push({ cls:"bad", text:"Ajoute le nom du propriétaire pour que DIGIY sache à qui rattacher le dossier." });
     else items.push({ cls:"ok", text:"Nom propriétaire présent." });
@@ -1208,22 +1451,22 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     if (!cap || cap < 1) items.push({ cls:"warn", text:"Ajoute la capacité du logement. C’est une info décisive." });
     else items.push({ cls:"ok", text:`Capacité renseignée : ${cap} pers.` });
 
-    if (!prixNuit && !safe(els.prix_semaine.value) && !safe(els.prix_mois.value)) {
+    if (!prixNuit && !prixSemaine && !prixMois) {
       items.push({ cls:"bad", text:"Aucun prix visible. Mets au moins un prix pour éviter une fiche trop floue." });
     } else {
       items.push({ cls:"ok", text:"Au moins un prix est renseigné." });
     }
 
     if (desc.length < 80) {
-      items.push({ cls:"warn", text:"La description est encore faible. Raconte l’ambiance, le confort, la zone, les atouts." });
+      items.push({ cls:"warn", text:"La description est encore faible. Raconte l’ambiance, le confort, la zone et les atouts." });
     } else {
       items.push({ cls:"ok", text:"Description assez solide pour une pré-fiche." });
     }
 
-    if (state.photos.length < 3 && !urls) {
+    if (state.photos.length < 3 && urls.length === 0) {
       items.push({ cls:"warn", text:"Ajoute au moins 3 photos locales ou attends les URLs officielles DIGIY." });
-    } else if (urls) {
-      items.push({ cls:"ok", text:"URLs officielles présentes : la fiche peut passer vers la publication." });
+    } else if (urls.length > 0) {
+      items.push({ cls:"ok", text:`URLs officielles présentes : ${urls.length}. La fiche peut passer vers la publication.` });
     } else {
       items.push({ cls:"ok", text:`Photos locales présentes : ${state.photos.length}.` });
     }
@@ -1234,8 +1477,8 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       items.push({ cls:"ok", text:"Besoin exprimé clairement." });
     }
 
-    if (!urls) {
-      items.push({ cls:"warn", text:"Pas encore d’URLs officielles : statut pré-fiche en attente." });
+    if (urls.length === 0) {
+      items.push({ cls:"warn", text:"Pas encore d’URLs officielles : statut pré-fiche locale en attente." });
     } else {
       items.push({ cls:"ok", text:"URLs officielles collées : statut prêt pour publication." });
     }
@@ -1257,7 +1500,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       return `<div class="assistantItem ${item.cls}">${item.text}</div>`;
     }).join("");
 
-    showStatus("Aide DIGIY affichée ✅\nConseils locaux sans Supabase, sans upload, sans coût.", "ok");
+    showStatus("Aide DIGIY affichée ✅\nConseils locaux, sans upload Supabase, sans coût inutile.", "ok");
   }
 
   function bind(){
@@ -1280,13 +1523,42 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     els.btnSaveDraft.addEventListener("click", saveDraft);
     els.btnLoadDraft.addEventListener("click", loadDraft);
     els.btnReset.addEventListener("click", resetAll);
+
+    els.btnLogout.addEventListener("click", () => {
+      window.DIGIY_GUARD?.logout?.(withSlug("./pin.html"));
+    });
   }
 
-  function init(){
+  async function init(){
     bind();
     renderGallery();
     updatePreview();
-    loadDraft();
+
+    try{
+      await bootGuard();
+      refreshContextUI();
+
+      if (!getSlug()) {
+        showStatus("Slug propriétaire introuvable. Reviens par le PIN ou le cockpit LOC.", "bad");
+      } else {
+        showStatus(
+          "Pré-fiche propriétaire active ✅\n" +
+          "Brouillon local par slug.\n" +
+          "Aucun upload photo Supabase depuis cette page.",
+          "ok"
+        );
+      }
+
+      loadDraft();
+      updatePreview();
+    }catch(e){
+      refreshContextUI();
+      showStatus(
+        "Guard non prêt ou session indisponible.\n" +
+        "Recharge la page ou reconnecte-toi via PIN pour retrouver le rail propriétaire.",
+        "bad"
+      );
+    }
   }
 
   init();
