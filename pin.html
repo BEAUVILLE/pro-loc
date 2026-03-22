@@ -1,548 +1,659 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#061b14"/>
-  <title>DIGIY LOC PRO — PIN</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>DIGIY LOC PRO — Accès PIN</title>
+  <meta name="description" content="Accès sécurisé DIGIY LOC PRO par slug, téléphone et PIN." />
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+    window.DIGIY_PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
-      --bg:#061b14;
-      --card:#0b2a1f;
-      --line:rgba(255,255,255,.14);
-      --text:#eafff1;
-      --muted:rgba(234,255,241,.72);
-      --gold:#facc15;
-      --ok:#22c55e;
-      --bad:#fb7185;
-      --shadow:0 18px 55px rgba(0,0,0,.45);
-      --r:18px;
+      --bg:#08101a;
+      --bg2:#020617;
+      --card:rgba(255,255,255,.05);
+      --line:rgba(255,255,255,.10);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --sky:#38bdf8;
+      --sky2:#7dd3fc;
+      --green:#22c55e;
+      --red:#ef4444;
+      --radius:24px;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --max:560px;
     }
-
     *{box-sizing:border-box}
-
+    html,body{margin:0;padding:0}
     body{
-      margin:0;
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      min-height:100dvh;
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(circle at top, rgba(250,204,21,.10), transparent 55%),
-        linear-gradient(135deg,#04160f,#0a2b1f);
-      color:var(--text);
-      padding:18px;
+        radial-gradient(circle at top, rgba(56,189,248,.10), transparent 30%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
     }
-
+    .wrap{width:100%;max-width:var(--max)}
     .card{
-      width:min(520px,92vw);
-      background:linear-gradient(145deg,rgba(11,42,31,.96),rgba(6,35,25,.96));
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
       border:1px solid var(--line);
-      border-radius:22px;
+      border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:18px;
+      overflow:hidden;
+      backdrop-filter:blur(12px);
     }
-
-    .top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
+    .hero{
+      padding:22px 22px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:radial-gradient(circle at top right, rgba(56,189,248,.16), transparent 36%);
     }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:50px;height:50px;border-radius:16px;display:grid;place-items:center;
+      background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(125,211,252,.12));
+      border:1px solid rgba(56,189,248,.24);
+      font-size:24px;
     }
-
-    .ico{
-      width:46px;
-      height:46px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      background:radial-gradient(circle at 30% 0,var(--gold),transparent 60%);
-      color:#062015;
-      font-weight:1000;
-      border:1px solid rgba(250,204,21,.35);
-    }
-
-    .t{
-      font-weight:1000;
-      letter-spacing:.12em;
-      font-size:12px;
-    }
-
-    .sub{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:4px;
-    }
-
-    .pill{
-      border:1px solid var(--line);
-      background:rgba(250,204,21,.10);
-      padding:7px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-    }
-
-    .sep{
-      height:1px;
-      background:var(--line);
-      margin:14px 0;
-    }
-
-    label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin:8px 0 6px;
-    }
-
+    h1{margin:0;font-size:1.1rem}
+    .sub{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+    .body{padding:20px}
+    .intro{margin:0 0 16px;color:var(--muted);line-height:1.5}
+    .field{margin-bottom:12px}
+    label{display:block;margin-bottom:7px;font-weight:700;font-size:.92rem}
     input{
-      width:100%;
-      padding:14px 14px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.22);
-      color:var(--text);
-      font-size:16px;
-      font-weight:900;
-      letter-spacing:.14em;
-      outline:none;
+      width:100%;min-height:52px;border-radius:16px;border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);color:var(--text);padding:0 14px;font-size:1rem;outline:none;
     }
-
-    input:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.10);
-    }
-
-    button{
-      width:100%;
-      margin-top:12px;
-      padding:14px 14px;
-      border-radius:14px;
-      border:none;
-      background:linear-gradient(90deg,var(--ok),var(--gold));
-      color:#062015;
-      font-weight:1000;
-      font-size:15px;
-      cursor:pointer;
-    }
-
-    button:disabled{
-      opacity:.6;
-      cursor:not-allowed;
-    }
-
-    .msg{
-      margin-top:12px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
-      min-height:18px;
-    }
-
-    .ok{
-      color:var(--ok);
-      font-weight:900;
-    }
-
-    .bad{
-      color:var(--bad);
-      font-weight:900;
-    }
-
+    input:focus{border-color:rgba(56,189,248,.55);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+    .pin-row{display:flex;gap:10px}
+    .pin-row input{flex:1;text-align:center;letter-spacing:.25em;font-weight:800}
     .mini{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
+      min-width:56px;min-height:52px;border:none;border-radius:16px;cursor:pointer;
+      background:rgba(255,255,255,.06);color:var(--text);font-size:1rem;font-weight:800;
     }
-
-    .mini b{
-      color:var(--text);
-      word-break:break-word;
+    .actions{display:grid;gap:10px;margin-top:16px}
+    .btn{
+      appearance:none;border:none;min-height:54px;border-radius:18px;padding:0 16px;
+      text-decoration:none;display:flex;align-items:center;justify-content:center;cursor:pointer;
+      font-weight:800;font-size:1rem;
     }
+    .btn.primary{background:linear-gradient(135deg,var(--sky),var(--sky2));color:#082f49}
+    .btn.secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.08)}
+    .btn.ghost{background:transparent;color:#bae6fd;border:1px solid rgba(186,230,253,.25)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .status{
+      margin-top:16px;border-radius:16px;padding:12px 14px;min-height:48px;line-height:1.5;
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:var(--muted);
+      white-space:pre-line;
+    }
+    .status.ok{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.28);color:#dcfce7}
+    .status.err{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.28);color:#fee2e2}
+    .meta{
+      display:grid;gap:8px;margin-top:16px;padding:14px;border-radius:18px;
+      background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06)
+    }
+    .row{display:flex;justify-content:space-between;gap:12px}
+    .k{color:var(--muted)}
+    .v{font-weight:700;text-align:right;word-break:break-word}
+    .hidden{display:none!important}
+    .foot{padding:0 20px 20px;text-align:center;color:#94a3b8;font-size:.84rem}
+    @media (max-width:560px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
-
 <body>
-  <div class="card">
-    <div class="top">
-      <div class="brand">
-        <div class="ico">∞</div>
-        <div>
-          <div class="t" id="title">LOC PRO — PIN</div>
-          <div class="sub" id="subtitle">Chargement…</div>
+  <div class="wrap">
+    <section class="card">
+      <div class="hero">
+        <div class="brand">
+          <div class="logo">🏠</div>
+          <div>
+            <h1>DIGIY LOC PRO</h1>
+            <p class="sub">PIN d’accès — session interne directe</p>
+          </div>
         </div>
       </div>
-      <div class="pill" id="modPill">loc_pro</div>
-    </div>
 
-    <div class="sep"></div>
+      <div class="body">
+        <p class="intro">
+          Entre avec ton <strong>slug</strong> ou ton <strong>téléphone</strong>, puis ton <strong>PIN</strong>.
+          Une fois validé, la session est posée pour le guard et tu entres directement dans ton app propriétaire.
+        </p>
 
-    <div class="mini">
-      SLUG : <b id="slugBox">—</b>
-    </div>
+        <div class="field">
+          <label for="slug">Slug</label>
+          <input id="slug" type="text" placeholder="loc-221771342889" autocomplete="off" />
+        </div>
 
-    <label for="pin">Entre ton PIN propriétaire</label>
-    <input id="pin" type="password" inputmode="numeric" autocomplete="one-time-code" placeholder="••••" maxlength="8"/>
+        <div class="field">
+          <label for="phone">Téléphone</label>
+          <input id="phone" type="tel" inputmode="numeric" placeholder="221771342889" autocomplete="tel" />
+        </div>
 
-    <button id="go">🚀 OUVRIR MON ESPACE</button>
+        <div class="field">
+          <label for="pin">PIN</label>
+          <div class="pin-row">
+            <input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="one-time-code" />
+            <button id="togglePin" class="mini" type="button" aria-label="Afficher le PIN">👁️</button>
+          </div>
+        </div>
 
-    <div class="msg" id="msg"></div>
+        <div class="actions">
+          <button id="btnOpen" class="btn primary" type="button">🔓 Ouvrir mon espace LOC</button>
+          <a id="btnReturn" class="btn secondary hidden" href="./app.html">↩️ Retour cible</a>
+          <a id="btnPay" class="btn ghost" href="https://commencer-a-payer.digiylyfe.com/" target="_blank" rel="noopener">💳 Gérer mon abonnement</a>
+        </div>
+
+        <div class="grid">
+          <a id="btnApp" class="btn secondary hidden" href="./app.html">🧭 App propriétaire</a>
+          <a id="btnPublic" class="btn secondary hidden" href="./fiche.html">🌍 Fiche publique</a>
+          <a id="btnIndex" class="btn secondary hidden" href="./index.html">🏘️ Galerie publique</a>
+          <a id="btnPreSheet" class="btn secondary hidden" href="./fiche-abo.html">📝 Pré-fiche</a>
+        </div>
+
+        <div id="status" class="status">Prêt.</div>
+
+        <div class="meta">
+          <div class="row"><div class="k">Module</div><div class="v">LOC</div></div>
+          <div class="row"><div class="k">Retour cible</div><div id="returnInfo" class="v">app.html</div></div>
+          <div class="row"><div class="k">Session</div><div id="sessionInfo" class="v">Aucune</div></div>
+        </div>
+      </div>
+
+      <div class="foot">DIGIYLYFE • LOC • PIN MASTER compatible guard</div>
+    </section>
   </div>
 
-<script>
-(async () => {
-  "use strict";
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (() => {
+      "use strict";
 
-  const MODULE = "LOC";
-  const NEXT_URL = "./app.html";
+      const CFG = {
+        MODULE: "LOC",
+        MODULE_LOWER: "loc",
+        DEFAULT_NEXT: "./app.html",
+        LOGIN_URL: "./pin.html",
+        PAY_URL: window.DIGIY_PAY_URL || "https://commencer-a-payer.digiylyfe.com/",
+        KEEP_PHONE_IN_URL: true,
+        SESSION_MAX_AGE_MS: 8 * 60 * 60 * 1000,
+        STORAGE_KEYS: [
+          "DIGIY_LOC_PIN_SESSION",
+          "DIGIY_LOC_SESSION",
+          "DIGIY_PIN_SESSION",
+          "DIGIY_ACCESS",
+          "DIGIY_SESSION_LOC",
+          "digiy_loc_session"
+        ],
+        SLUG_KEY: "digiy_loc_slug",
+        PHONE_KEY: "digiy_loc_phone",
+        LAST_SLUG_KEY: "digiy_loc_last_slug",
+        RPC_VERIFY_PIN: "digiy_verify_pin",
+        TABLE_SUBS: "digiy_subscriptions_public"
+      };
 
-  const SESSION_KEY = "DIGIY_LOC_PRO_SESSION";
-  const GENERIC_SESSION_KEY = "DIGIY_PRO_SESSION";
-  const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+      const SUPABASE_URL = String(window.DIGIY_SUPABASE_URL || "").trim();
+      const SUPABASE_KEY = String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim();
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const STORAGE_SLUG_KEY = "digiy_loc_slug";
-  const STORAGE_LAST_SLUG = "digiy_last_slug";
+      const el = {
+        slug: document.getElementById("slug"),
+        phone: document.getElementById("phone"),
+        pin: document.getElementById("pin"),
+        togglePin: document.getElementById("togglePin"),
+        btnOpen: document.getElementById("btnOpen"),
+        btnReturn: document.getElementById("btnReturn"),
+        btnApp: document.getElementById("btnApp"),
+        btnPublic: document.getElementById("btnPublic"),
+        btnIndex: document.getElementById("btnIndex"),
+        btnPreSheet: document.getElementById("btnPreSheet"),
+        status: document.getElementById("status"),
+        returnInfo: document.getElementById("returnInfo"),
+        sessionInfo: document.getElementById("sessionInfo")
+      };
 
-  const SUPABASE_URL = String(window.DIGIY_SUPABASE_URL || "").trim();
-  const SUPABASE_ANON_KEY = String(window.DIGIY_SUPABASE_ANON_KEY || "").trim();
-
-  const $ = (id) => document.getElementById(id);
-
-  function normalizeSlug(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
-
-  function normalizePin(value) {
-    return String(value || "").replace(/\s+/g, "");
-  }
-
-  function normalizePhone(value) {
-    return String(value || "").replace(/[^\d]/g, "");
-  }
-
-  function now() {
-    return Date.now();
-  }
-
-  function msg(html) {
-    $("msg").innerHTML = html;
-  }
-
-  function storageSet(key, value) {
-    try { localStorage.setItem(key, String(value ?? "")); } catch {}
-    try { sessionStorage.setItem(key, String(value ?? "")); } catch {}
-  }
-
-  function storageRemove(key) {
-    try { localStorage.removeItem(key); } catch {}
-    try { sessionStorage.removeItem(key); } catch {}
-  }
-
-  function safeJsonParse(value) {
-    try {
-      return typeof value === "string" ? JSON.parse(value) : value;
-    } catch {
-      return null;
-    }
-  }
-
-  function normalizeResult(raw, forced = {}) {
-    const r = safeJsonParse(raw) || {};
-    return {
-      ok: !!r.ok,
-      owner_id: String(r.owner_id || r.ownerId || r.pro_id || r.id || forced.owner_id || "").trim(),
-      phone: normalizePhone(r.phone || r.pro_phone || forced.phone || ""),
-      title: String(r.title || r.business_name || r.name || forced.title || "").trim(),
-      business_name: String(r.business_name || r.title || r.name || forced.business_name || "").trim(),
-      business_code: String(r.business_code || r.code || forced.business_code || "").trim(),
-      slug: normalizeSlug(r.slug || forced.slug || ""),
-      module: String(r.module || forced.module || MODULE).trim().toUpperCase(),
-      error: String(r.error || r.reason || forced.error || "").trim()
-    };
-  }
-
-  function clearOldSessionKeys() {
-    [
-      SESSION_KEY,
-      GENERIC_SESSION_KEY,
-      STORAGE_SLUG_KEY,
-      STORAGE_LAST_SLUG,
-      "DIGIY_SLUG",
-      "digiy_slug",
-      "DIGIY_LOC_OWNER_ID",
-      "digiy_loc_owner_id",
-      "DIGIY_OWNER_ID",
-      "owner_id",
-      "DIGIY_LOC_BUSINESS_CODE",
-      "DIGIY_BUSINESS_CODE",
-      "DIGIY_LOC_BUSINESS_NAME",
-      "DIGIY_BUSINESS_NAME",
-      "DIGIY_TITLE",
-      "DIGIY_PHONE",
-      "DIGIY_LOC_PHONE",
-      "digiy_loc_phone",
-      "DIGIY_PRO_ID"
-    ].forEach(storageRemove);
-  }
-
-  function saveSession(raw, bridged = {}) {
-    const data = normalizeResult(raw, bridged);
-
-    const finalSlug = normalizeSlug(data.slug || bridged.slug || "");
-    const finalPhone = normalizePhone(data.phone || bridged.phone || "");
-
-    const session = {
-      ok: true,
-      module: MODULE,
-      owner_id: data.owner_id || "",
-      slug: finalSlug,
-      phone: finalPhone,
-      title: data.title || data.business_name || "",
-      business_name: data.business_name || data.title || "",
-      business_code: data.business_code || "LOC",
-      created_at: now(),
-      expires_at: now() + SESSION_TTL_MS
-    };
-
-    clearOldSessionKeys();
-
-    storageSet(SESSION_KEY, JSON.stringify(session));
-    storageSet(GENERIC_SESSION_KEY, JSON.stringify(session));
-
-    storageSet(STORAGE_SLUG_KEY, session.slug);
-    storageSet(STORAGE_LAST_SLUG, session.slug);
-    storageSet("DIGIY_SLUG", session.slug);
-    storageSet("digiy_slug", session.slug);
-
-    if (session.owner_id) {
-      storageSet("DIGIY_LOC_OWNER_ID", session.owner_id);
-      storageSet("digiy_loc_owner_id", session.owner_id);
-      storageSet("DIGIY_OWNER_ID", session.owner_id);
-      storageSet("owner_id", session.owner_id);
-      storageSet("DIGIY_PRO_ID", session.owner_id);
-    }
-
-    storageSet("DIGIY_LOC_BUSINESS_CODE", session.business_code);
-    storageSet("DIGIY_BUSINESS_CODE", session.business_code);
-
-    if (session.business_name) {
-      storageSet("DIGIY_LOC_BUSINESS_NAME", session.business_name);
-      storageSet("DIGIY_BUSINESS_NAME", session.business_name);
-      storageSet("DIGIY_TITLE", session.business_name);
-    }
-
-    if (session.phone) {
-      storageSet("DIGIY_PHONE", session.phone);
-      storageSet("DIGIY_LOC_PHONE", session.phone);
-      storageSet("digiy_loc_phone", session.phone);
-    }
-
-    return session;
-  }
-
-  if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    $("subtitle").textContent = "Configuration manquante";
-    msg(`<span class="bad">❌ Configuration Supabase absente.</span>`);
-    $("go").disabled = true;
-    return;
-  }
-
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-      storage: {
-        getItem: () => null,
-        setItem: () => {},
-        removeItem: () => {}
+      function qs(name) {
+        return new URLSearchParams(window.location.search).get(name);
       }
-    }
-  });
 
-  const url = new URL(location.href);
-  const slug = normalizeSlug(url.searchParams.get("slug") || "");
-
-  $("slugBox").textContent = slug || "—";
-  $("subtitle").textContent = slug
-    ? "Accès sécurisé — PIN requis"
-    : "SLUG manquant";
-
-  if (!slug) {
-    msg(`<span class="bad">❌ SLUG manquant.</span><br>Reviens depuis ton lien GO PIN avec <b>?slug=...</b>.`);
-    $("go").disabled = true;
-    return;
-  }
-
-  function buildNextUrl(finalSlug) {
-    const next = new URL(NEXT_URL, location.href);
-    if (finalSlug) next.searchParams.set("slug", finalSlug);
-    return next.toString();
-  }
-
-  async function resolveSlugToPhone(currentSlug) {
-    const { data, error } = await sb
-      .from("digiy_subscriptions_public")
-      .select("slug, phone, module")
-      .eq("slug", currentSlug)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!data?.phone) return null;
-
-    return {
-      slug: normalizeSlug(data.slug || currentSlug),
-      phone: normalizePhone(data.phone),
-      module: String(data.module || MODULE).trim().toUpperCase()
-    };
-  }
-
-  async function tryRpcDigiyVerifyPin(phone, pin) {
-    const { data, error } = await sb.rpc("digiy_verify_pin", {
-      p_phone: phone,
-      p_module: MODULE,
-      p_pin: pin
-    });
-
-    if (error) throw error;
-    return data;
-  }
-
-  async function tryRpcVerifyAccessPin(currentSlug, pin) {
-    const { data, error } = await sb.rpc("verify_access_pin", {
-      p_slug: currentSlug,
-      p_pin: pin
-    });
-
-    if (error) throw error;
-    return data;
-  }
-
-  async function tryRpcLocPinLogin(currentSlug, pin) {
-    const { data, error } = await sb.rpc("loc_pin_login", {
-      p_slug: currentSlug,
-      p_pin: pin
-    });
-
-    if (error) throw error;
-    return data;
-  }
-
-  async function enter() {
-    const pin = normalizePin($("pin").value);
-
-    if (pin.length < 3) {
-      msg(`<span class="bad">❌ PIN invalide.</span>`);
-      return;
-    }
-
-    $("go").disabled = true;
-    msg(`Vérification en cours…`);
-
-    let bridge = null;
-    try {
-      bridge = await resolveSlugToPhone(slug);
-    } catch (e) {
-      $("go").disabled = false;
-      msg(`<span class="bad">❌ Erreur lecture abonnement.</span><br>${String(e?.message || e)}`);
-      return;
-    }
-
-    if (!bridge?.phone) {
-      $("go").disabled = false;
-      msg(`<span class="bad">❌ SLUG inconnu.</span><br>Aucun téléphone actif trouvé pour ce slug.`);
-      return;
-    }
-
-    const attempts = [];
-
-    try {
-      const data = await tryRpcDigiyVerifyPin(bridge.phone, pin);
-      attempts.push({ name: "digiy_verify_pin", data, error: null });
-    } catch (e) {
-      attempts.push({ name: "digiy_verify_pin", data: null, error: e });
-    }
-
-    if (!normalizeResult(attempts[0]?.data, bridge).ok) {
-      try {
-        const data = await tryRpcVerifyAccessPin(slug, pin);
-        attempts.push({ name: "verify_access_pin", data, error: null });
-      } catch (e) {
-        attempts.push({ name: "verify_access_pin", data: null, error: e });
+      function normSlug(value) {
+        return String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
       }
-    }
 
-    const bestSoFar = attempts.find(x => normalizeResult(x.data, bridge).ok);
-
-    if (!bestSoFar) {
-      try {
-        const data = await tryRpcLocPinLogin(slug, pin);
-        attempts.push({ name: "loc_pin_login", data, error: null });
-      } catch (e) {
-        attempts.push({ name: "loc_pin_login", data: null, error: e });
+      function normPhone(value) {
+        const raw = String(value || "").trim();
+        const cleaned = raw.replace(/[^\d+]/g, "");
+        const digits = cleaned.replace(/[^\d]/g, "");
+        if (!digits) return "";
+        return cleaned.startsWith("+") ? `+${digits}` : digits;
       }
-    }
 
-    const success = attempts.find(x => normalizeResult(x.data, bridge).ok);
+      function normPin(value) {
+        return String(value || "").trim().replace(/\s+/g, "");
+      }
 
-    if (!success) {
-      $("go").disabled = false;
+      function safeJsonParse(raw) {
+        try { return JSON.parse(raw); } catch { return null; }
+      }
 
-      const lastError =
-        attempts.map(x => x.error && String(x.error?.message || x.error)).filter(Boolean).pop() || "";
+      function setStatus(message, type = "") {
+        el.status.className = `status${type ? " " + type : ""}`;
+        el.status.textContent = message;
+      }
 
-      msg(
-        `<span class="bad">❌ Accès refusé.</span><br>${
-          lastError || "PIN incorrect ou rail PIN non disponible."
-        }`
-      );
-      return;
-    }
+      function nowMs() {
+        return Date.now();
+      }
 
-    const result = normalizeResult(success.data, {
-      slug: bridge.slug,
-      phone: bridge.phone,
-      module: bridge.module
-    });
+      function isRecent(ts) {
+        const n = Number(ts || 0);
+        if (!n) return false;
+        return (Date.now() - n) <= CFG.SESSION_MAX_AGE_MS;
+      }
 
-    const session = saveSession(result, bridge);
+      function buildNormalizedSession({ slug, phone, owner_id = null }) {
+        const t = nowMs();
+        return {
+          slug: normSlug(slug),
+          phone: normPhone(phone),
+          owner_id: owner_id || null,
+          module: CFG.MODULE,
 
-    msg(`<span class="ok">✅ Accès validé.</span> Ouverture de ton espace…`);
+          access: true,
+          access_ok: true,
+          ok: true,
+          verified: true,
 
-    setTimeout(() => {
-      location.href = buildNextUrl(session.slug || slug);
-    }, 450);
-  }
+          verified_at: t,
+          validated_at: new Date(t).toISOString(),
+          ts: t,
 
-  $("go").addEventListener("click", enter);
-  $("pin").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") enter();
-  });
+          reason: "pin_ok"
+        };
+      }
 
-  setTimeout(() => $("pin").focus(), 150);
-})();
-</script>
+      function saveSession(payload) {
+        const session = buildNormalizedSession(payload);
+
+        for (const key of CFG.STORAGE_KEYS) {
+          try { localStorage.setItem(key, JSON.stringify(session)); } catch (_) {}
+          try { sessionStorage.setItem(key, JSON.stringify(session)); } catch (_) {}
+        }
+
+        try { localStorage.setItem(CFG.SLUG_KEY, session.slug); } catch (_) {}
+        try { sessionStorage.setItem(CFG.SLUG_KEY, session.slug); } catch (_) {}
+        try { localStorage.setItem(CFG.PHONE_KEY, session.phone); } catch (_) {}
+        try { sessionStorage.setItem(CFG.PHONE_KEY, session.phone); } catch (_) {}
+        try { localStorage.setItem(CFG.LAST_SLUG_KEY, session.slug); } catch (_) {}
+        try { sessionStorage.setItem(CFG.LAST_SLUG_KEY, session.slug); } catch (_) {}
+
+        try {
+          window.DIGIY_ACCESS = Object.assign({}, window.DIGIY_ACCESS || {}, session);
+        } catch (_) {}
+
+        return session;
+      }
+
+      function readSession() {
+        for (const key of CFG.STORAGE_KEYS) {
+          let parsed = null;
+          try {
+            parsed = safeJsonParse(localStorage.getItem(key));
+            if (!parsed) parsed = safeJsonParse(sessionStorage.getItem(key));
+          } catch (_) {}
+
+          if (!parsed || typeof parsed !== "object") continue;
+
+          const moduleName = String(parsed.module || parsed.module_code || "").trim().toUpperCase();
+          if (moduleName && moduleName !== CFG.MODULE) continue;
+
+          const access = !!parsed.access || !!parsed.access_ok || !!parsed.ok || !!parsed.has_access;
+          const verifiedAt = Number(parsed.verified_at || parsed.validated_at_ms || parsed.ts || 0) || 0;
+          const validatedAt = parsed.validated_at || null;
+
+          let recent = false;
+          if (verifiedAt && isRecent(verifiedAt)) recent = true;
+          if (!recent && validatedAt) {
+            const dt = new Date(validatedAt).getTime();
+            if (dt && isRecent(dt)) recent = true;
+          }
+
+          if (!access || !recent) continue;
+
+          return {
+            slug: normSlug(parsed.slug || ""),
+            phone: normPhone(parsed.phone || ""),
+            owner_id: parsed.owner_id || null,
+            verified_at: verifiedAt,
+            validated_at: validatedAt
+          };
+        }
+        return null;
+      }
+
+      async function resolveSubBySlug(slug) {
+        const s = normSlug(slug);
+        if (!s) return null;
+
+        const tries = [
+          { slug: s, module: CFG.MODULE },
+          { slug: s, module: CFG.MODULE_LOWER },
+          { slug: s }
+        ];
+
+        for (const q of tries) {
+          const { data, error } = await supabase
+            .from(CFG.TABLE_SUBS)
+            .select("phone,slug,module")
+            .match(q)
+            .limit(1);
+
+          if (!error && Array.isArray(data) && data[0]) {
+            return {
+              slug: normSlug(data[0].slug),
+              phone: normPhone(data[0].phone),
+              module: String(data[0].module || CFG.MODULE).toUpperCase()
+            };
+          }
+        }
+        return null;
+      }
+
+      async function resolveSubByPhone(phone) {
+        const p = normPhone(phone);
+        if (!p) return null;
+
+        const tries = [
+          { phone: p, module: CFG.MODULE },
+          { phone: p, module: CFG.MODULE_LOWER },
+          { phone: p }
+        ];
+
+        for (const q of tries) {
+          const { data, error } = await supabase
+            .from(CFG.TABLE_SUBS)
+            .select("phone,slug,module")
+            .match(q)
+            .limit(1);
+
+          if (!error && Array.isArray(data) && data[0]) {
+            return {
+              slug: normSlug(data[0].slug),
+              phone: normPhone(data[0].phone),
+              module: String(data[0].module || CFG.MODULE).toUpperCase()
+            };
+          }
+        }
+        return null;
+      }
+
+      function parseVerifyPinPayload(raw, fallbackPhone = "") {
+        const data = Array.isArray(raw) ? raw[0] : raw;
+        if (!data) return null;
+
+        if (typeof data === "object" && !Array.isArray(data)) {
+          if (data.ok === true) {
+            return {
+              ok: true,
+              phone: normPhone(data.phone || data.p_phone || fallbackPhone || ""),
+              module: String(data.module || data.p_module || CFG.MODULE).toUpperCase(),
+              owner_id: data.owner_id || null
+            };
+          }
+          const vals = Object.values(data);
+          if (vals.length >= 3) {
+            const okLike = vals[0] === true || vals[0] === "t" || vals[0] === "true" || vals[0] === 1;
+            if (okLike) {
+              return {
+                ok: true,
+                module: String(vals[1] || CFG.MODULE).toUpperCase(),
+                phone: normPhone(vals[2] || fallbackPhone || ""),
+                owner_id: vals[4] || null
+              };
+            }
+          }
+        }
+
+        if (typeof data === "string") {
+          const txt = data.trim();
+          if (txt.startsWith("(") && txt.endsWith(")")) {
+            const m = txt.match(/^\(([^,]+),([^,]+),([^,]+),?(.*)\)$/);
+            if (m) {
+              const okToken = String(m[1] || "").trim().replace(/^"|"$/g, "");
+              const moduleToken = String(m[2] || "").trim().replace(/^"|"$/g, "");
+              const phoneToken = String(m[3] || "").trim().replace(/^"|"$/g, "");
+              const okLike = okToken === "t" || okToken === "true" || okToken === "1";
+              if (okLike) {
+                return {
+                  ok: true,
+                  module: String(moduleToken || CFG.MODULE).toUpperCase(),
+                  phone: normPhone(phoneToken || fallbackPhone || ""),
+                  owner_id: null
+                };
+              }
+            }
+          }
+        }
+
+        return null;
+      }
+
+      async function verifyPin(phone, pin) {
+        const p = normPhone(phone);
+        const code = normPin(pin);
+
+        const tries = [
+          { p_phone: p, p_module: CFG.MODULE, p_pin: code },
+          { p_phone: p, p_module: CFG.MODULE_LOWER, p_pin: code }
+        ];
+
+        for (const body of tries) {
+          const { data, error } = await supabase.rpc(CFG.RPC_VERIFY_PIN, body);
+          if (error) continue;
+          const parsed = parseVerifyPinPayload(data, p);
+          if (parsed?.ok) return parsed;
+        }
+
+        return null;
+      }
+
+      function isAllowedReturnPath(pathname) {
+        const allowed = [
+          "/app.html",
+          "/fiche.html",
+          "/index.html",
+          "/fiche-abo.html",
+          "/"
+        ];
+        return allowed.includes(pathname);
+      }
+
+      function buildReturnUrl(session) {
+        const ret = qs("return");
+        if (ret) {
+          try {
+            const u = new URL(ret, location.href);
+            if (u.origin === location.origin && isAllowedReturnPath(u.pathname)) {
+              u.searchParams.set("slug", session.slug);
+              if (CFG.KEEP_PHONE_IN_URL && session.phone) u.searchParams.set("phone", session.phone);
+              u.searchParams.set("module", CFG.MODULE);
+              u.searchParams.set("from", "pin");
+              return u.toString();
+            }
+          } catch (_) {}
+        }
+
+        const target = (qs("target") || "").trim().toLowerCase();
+        let next = CFG.DEFAULT_NEXT;
+        if (target === "public") next = "./fiche.html";
+        if (target === "index") next = "./index.html";
+        if (target === "pre") next = "./fiche-abo.html";
+        if (target === "app") next = "./app.html";
+
+        const u = new URL(next, location.href);
+        u.searchParams.set("slug", session.slug);
+        if (CFG.KEEP_PHONE_IN_URL && session.phone) u.searchParams.set("phone", session.phone);
+        u.searchParams.set("module", CFG.MODULE);
+        u.searchParams.set("from", "pin");
+        return u.toString();
+      }
+
+      function refreshLinks(slug, phone) {
+        const s = normSlug(slug);
+        const p = normPhone(phone);
+        const add = (base) => {
+          const u = new URL(base, location.href);
+          if (s) u.searchParams.set("slug", s);
+          if (CFG.KEEP_PHONE_IN_URL && p) u.searchParams.set("phone", p);
+          return u.toString();
+        };
+
+        el.btnApp.href = add("./app.html");
+        el.btnPublic.href = add("./fiche.html");
+        el.btnIndex.href = add("./index.html");
+        el.btnPreSheet.href = add("./fiche-abo.html");
+
+        if (s) {
+          el.btnApp.classList.remove("hidden");
+          el.btnPublic.classList.remove("hidden");
+          el.btnIndex.classList.remove("hidden");
+          el.btnPreSheet.classList.remove("hidden");
+        }
+
+        const dummy = { slug: s, phone: p };
+        el.btnReturn.href = buildReturnUrl(dummy);
+        el.btnReturn.classList.remove("hidden");
+        el.returnInfo.textContent = new URL(el.btnReturn.href).pathname.split("/").pop() || "app.html";
+      }
+
+      function hydrate() {
+        const qSlug = normSlug(qs("slug"));
+        const qPhone = normPhone(qs("phone"));
+        const saved = readSession();
+
+        el.slug.value =
+          qSlug ||
+          saved?.slug ||
+          normSlug(sessionStorage.getItem(CFG.SLUG_KEY) || localStorage.getItem(CFG.SLUG_KEY) || localStorage.getItem(CFG.LAST_SLUG_KEY) || "");
+
+        el.phone.value =
+          qPhone ||
+          saved?.phone ||
+          normPhone(sessionStorage.getItem(CFG.PHONE_KEY) || localStorage.getItem(CFG.PHONE_KEY) || "");
+
+        if (saved?.slug || saved?.phone) {
+          refreshLinks(saved.slug || el.slug.value, saved.phone || el.phone.value);
+        } else if (el.slug.value || el.phone.value) {
+          refreshLinks(el.slug.value, el.phone.value);
+        }
+
+        if (saved?.verified_at || saved?.validated_at) {
+          el.sessionInfo.textContent = "Active";
+          setStatus("Session locale déjà fraîche. Tu peux reprendre ton app LOC.", "ok");
+        }
+      }
+
+      async function login() {
+        try {
+          let slug = normSlug(el.slug.value);
+          let phone = normPhone(el.phone.value);
+          const pin = normPin(el.pin.value);
+
+          if (!slug && !phone) {
+            setStatus("Renseigne au moins le slug ou le téléphone.", "err");
+            return;
+          }
+
+          if (!pin) {
+            setStatus("Entre ton PIN.", "err");
+            return;
+          }
+
+          el.btnOpen.disabled = true;
+          setStatus("Vérification du PIN...");
+
+          if (slug && !phone) {
+            const sub = await resolveSubBySlug(slug);
+            if (sub?.phone) phone = sub.phone;
+          }
+
+          if (phone && !slug) {
+            const sub = await resolveSubByPhone(phone);
+            if (sub?.slug) slug = sub.slug;
+          }
+
+          if (!slug) {
+            setStatus("Slug inconnu.", "err");
+            return;
+          }
+
+          if (!phone) {
+            setStatus("Téléphone introuvable pour ce slug.", "err");
+            return;
+          }
+
+          const auth = await verifyPin(phone, pin);
+          if (!auth?.ok) {
+            setStatus("PIN invalide.", "err");
+            return;
+          }
+
+          const session = saveSession({
+            slug,
+            phone: auth.phone || phone,
+            owner_id: auth.owner_id || null
+          });
+
+          el.sessionInfo.textContent = "Active";
+          refreshLinks(session.slug, session.phone);
+          setStatus("PIN validé. Ouverture de ton espace LOC...", "ok");
+
+          setTimeout(() => {
+            window.location.href = buildReturnUrl(session);
+          }, 220);
+        } catch (err) {
+          console.error(err);
+          setStatus(err?.message || "Erreur de vérification.", "err");
+        } finally {
+          el.btnOpen.disabled = false;
+        }
+      }
+
+      el.togglePin.addEventListener("click", () => {
+        const visible = el.pin.type === "text";
+        el.pin.type = visible ? "password" : "text";
+        el.togglePin.textContent = visible ? "👁️" : "🙈";
+      });
+
+      el.btnOpen.addEventListener("click", login);
+      [el.slug, el.phone, el.pin].forEach(node => {
+        node.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") login();
+        });
+      });
+      el.slug.addEventListener("input", () => refreshLinks(el.slug.value, el.phone.value));
+      el.phone.addEventListener("input", () => refreshLinks(el.slug.value, el.phone.value));
+
+      hydrate();
+    })();
+  </script>
 </body>
 </html>
