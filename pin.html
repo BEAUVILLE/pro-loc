@@ -18,51 +18,242 @@
 
   <style>
     :root{
-      --bg:#08101a;--bg2:#020617;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.10);
-      --text:#f8fafc;--muted:#cbd5e1;--sky:#38bdf8;--sky2:#7dd3fc;
-      --green:#22c55e;--red:#ef4444;--radius:24px;
-      --shadow:0 20px 60px rgba(0,0,0,.35);--max:560px;
-      /* ━━━ AVANT : Inter seul → Outfit ━━━ */
+      --bg:#08101a;
+      --bg2:#020617;
+      --card:rgba(255,255,255,.05);
+      --line:rgba(255,255,255,.10);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --sky:#38bdf8;
+      --sky2:#7dd3fc;
+      --green:#22c55e;
+      --red:#ef4444;
+      --radius:24px;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --max:560px;
       --fontA:"Outfit",Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;
     }
+
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
+
     body{
-      min-height:100dvh;color:var(--text);font-family:var(--fontA);
-      background:radial-gradient(circle at top, rgba(56,189,248,.10), transparent 30%),linear-gradient(180deg,var(--bg),var(--bg2));
-      display:flex;align-items:center;justify-content:center;padding:20px;
+      min-height:100dvh;
+      color:var(--text);
+      font-family:var(--fontA);
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,.10), transparent 30%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
     }
+
     .wrap{width:100%;max-width:var(--max)}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;backdrop-filter:blur(12px);}
-    .hero{padding:22px 22px 10px;border-bottom:1px solid rgba(255,255,255,.06);background:radial-gradient(circle at top right, rgba(56,189,248,.16), transparent 36%);}
+
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter:blur(12px);
+    }
+
+    .hero{
+      padding:22px 22px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:radial-gradient(circle at top right, rgba(56,189,248,.16), transparent 36%);
+    }
+
     .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(125,211,252,.12));border:1px solid rgba(56,189,248,.24);font-size:24px;}
+
+    .logo{
+      width:50px;
+      height:50px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(125,211,252,.12));
+      border:1px solid rgba(56,189,248,.24);
+      font-size:24px;
+    }
+
     h1{margin:0;font-size:1.1rem}
-    .sub{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+
+    .sub{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:.92rem;
+    }
+
     .body{padding:20px}
-    .intro{margin:0 0 16px;color:var(--muted);line-height:1.5}
+
+    .intro{
+      margin:0 0 16px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
     .field{margin-bottom:12px}
-    label{display:block;margin-bottom:7px;font-weight:700;font-size:.92rem}
-    input{width:100%;min-height:52px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--text);padding:0 14px;font-size:1rem;outline:none;font-family:var(--fontA);}
-    input:focus{border-color:rgba(56,189,248,.55);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+
+    label{
+      display:block;
+      margin-bottom:7px;
+      font-weight:700;
+      font-size:.92rem;
+    }
+
+    input{
+      width:100%;
+      min-height:52px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:0 14px;
+      font-size:1rem;
+      outline:none;
+      font-family:var(--fontA);
+    }
+
+    input:focus{
+      border-color:rgba(56,189,248,.55);
+      box-shadow:0 0 0 4px rgba(56,189,248,.12);
+    }
+
     .pin-row{display:flex;gap:10px}
-    .pin-row input{flex:1;text-align:center;letter-spacing:.25em;font-weight:800}
-    .mini{min-width:56px;min-height:52px;border:none;border-radius:16px;cursor:pointer;background:rgba(255,255,255,.06);color:var(--text);font-size:1rem;font-weight:800;font-family:var(--fontA);}
-    .actions{display:grid;gap:10px;margin-top:16px}
-    .btn{appearance:none;border:none;min-height:54px;border-radius:18px;padding:0 16px;text-decoration:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:800;font-size:1rem;font-family:var(--fontA);}
-    .btn.primary{background:linear-gradient(135deg,var(--sky),var(--sky2));color:#082f49}
-    .btn.secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.08)}
-    .btn.ghost{background:transparent;color:#bae6fd;border:1px solid rgba(186,230,253,.25)}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-    .status{margin-top:16px;border-radius:16px;padding:12px 14px;min-height:48px;line-height:1.5;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:var(--muted);white-space:pre-line;}
-    .status.ok{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.28);color:#dcfce7}
-    .status.err{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.28);color:#fee2e2}
-    .meta{display:grid;gap:8px;margin-top:16px;padding:14px;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06)}
-    .row{display:flex;justify-content:space-between;gap:12px}
-    .k{color:var(--muted)}.v{font-weight:700;text-align:right;word-break:break-word}
-    .hidden{display:none!important}
-    .foot{padding:0 20px 20px;text-align:center;color:#94a3b8;font-size:.84rem}
-    @media(max-width:560px){.grid{grid-template-columns:1fr}}
+
+    .pin-row input{
+      flex:1;
+      text-align:center;
+      letter-spacing:.25em;
+      font-weight:800;
+    }
+
+    .mini{
+      min-width:56px;
+      min-height:52px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-size:1rem;
+      font-weight:800;
+      font-family:var(--fontA);
+    }
+
+    .actions{
+      display:grid;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      min-height:54px;
+      border-radius:18px;
+      padding:0 16px;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-weight:800;
+      font-size:1rem;
+      font-family:var(--fontA);
+      transition:transform .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{transform:translateY(-1px)}
+    .btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+
+    .btn.primary{
+      background:linear-gradient(135deg,var(--sky),var(--sky2));
+      color:#082f49;
+    }
+
+    .btn.secondary{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .btn.ghost{
+      background:transparent;
+      color:#bae6fd;
+      border:1px solid rgba(186,230,253,.25);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .status{
+      margin-top:16px;
+      border-radius:16px;
+      padding:12px 14px;
+      min-height:48px;
+      line-height:1.5;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--muted);
+      white-space:pre-line;
+    }
+
+    .status.ok{
+      background:rgba(34,197,94,.10);
+      border-color:rgba(34,197,94,.28);
+      color:#dcfce7;
+    }
+
+    .status.err{
+      background:rgba(239,68,68,.10);
+      border-color:rgba(239,68,68,.28);
+      color:#fee2e2;
+    }
+
+    .meta{
+      display:grid;
+      gap:8px;
+      margin-top:16px;
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.025);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .k{color:var(--muted)}
+    .v{
+      font-weight:700;
+      text-align:right;
+      word-break:break-word;
+    }
+
+    .hidden{display:none !important}
+
+    .foot{
+      padding:0 20px 20px;
+      text-align:center;
+      color:#94a3b8;
+      font-size:.84rem;
+    }
+
+    @media (max-width:560px){
+      .grid{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
@@ -84,7 +275,6 @@
           Une fois validé, tu entres directement dans ton espace propriétaire.
         </p>
 
-        <!-- ━━━ AVANT : label "Slug" → "Identifiant boutique" ━━━ -->
         <div class="field">
           <label for="slug">Identifiant boutique</label>
           <input id="slug" type="text" placeholder="loc-221771342889" autocomplete="off" />
@@ -130,33 +320,25 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=loc-pin-20260328-1"></script>
   <script>
     (() => {
       "use strict";
 
       const CFG = {
         MODULE: "LOC",
-        MODULE_LOWER: "loc",
         DEFAULT_NEXT: "./app.html",
-        LOGIN_URL: "./pin.html",
         PAY_URL: window.DIGIY_PAY_URL || "https://commencer-a-payer.digiylyfe.com/",
         KEEP_PHONE_IN_URL: true,
         SESSION_MAX_AGE_MS: 8 * 60 * 60 * 1000,
-        STORAGE_KEYS: [
-          "DIGIY_LOC_PIN_SESSION","DIGIY_LOC_SESSION","DIGIY_PIN_SESSION",
-          "DIGIY_ACCESS","DIGIY_SESSION_LOC","digiy_loc_session"
-        ],
-        SLUG_KEY: "digiy_loc_slug",
-        PHONE_KEY: "digiy_loc_phone",
-        LAST_SLUG_KEY: "digiy_loc_last_slug",
-        /* ━━━ CORRIGÉ : verify_access_pin = Rail de l'Infini ━━━ */
-        RPC_VERIFY_PIN: "verify_access_pin",
         TABLE_SUBS: "digiy_subscriptions_public"
       };
 
-      const SUPABASE_URL = String(window.DIGIY_SUPABASE_URL||"").trim();
-      const SUPABASE_KEY = String(window.DIGIY_SUPABASE_ANON||window.DIGIY_SUPABASE_ANON_KEY||"").trim();
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const SUPABASE_URL = String(window.DIGIY_SUPABASE_URL || "").trim();
+      const SUPABASE_KEY = String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim();
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false }
+      });
 
       const el = {
         slug: document.getElementById("slug"),
@@ -174,219 +356,298 @@
         sessionInfo: document.getElementById("sessionInfo")
       };
 
-      function qs(name){ return new URLSearchParams(window.location.search).get(name); }
+      function qs(name){
+        return new URLSearchParams(window.location.search).get(name);
+      }
 
       function normSlug(value){
-        return String(value||"").trim().toLowerCase()
-          .replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")
-          .replace(/-+/g,"-").replace(/^-|-$/g,"");
+        return String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
       }
 
       function normPhone(value){
-        const raw=String(value||"").trim();
-        const cleaned=raw.replace(/[^\d+]/g,"");
-        const digits=cleaned.replace(/[^\d]/g,"");
-        if(!digits)return "";
-        return cleaned.startsWith("+")?`+${digits}`:digits;
+        return String(value || "").replace(/[^\d]/g, "");
       }
 
-      function normPin(value){ return String(value||"").trim().replace(/\s+/g,""); }
-
-      function safeJsonParse(raw){ try{return JSON.parse(raw);}catch{return null;} }
-
-      function setStatus(message,type=""){
-        el.status.className=`status${type?" "+type:""}`;
-        el.status.textContent=message;
+      function normPin(value){
+        return String(value || "").trim().replace(/\s+/g, "");
       }
 
-      function nowMs(){ return Date.now(); }
+      function setStatus(message, type){
+        el.status.className = "status" + (type ? " " + type : "");
+        el.status.textContent = message;
+      }
+
+      function nowMs(){
+        return Date.now();
+      }
 
       function isRecent(ts){
-        const n=Number(ts||0); if(!n)return false;
-        return (Date.now()-n)<=CFG.SESSION_MAX_AGE_MS;
+        const n = Number(ts || 0);
+        if(!n) return false;
+        return (nowMs() - n) <= CFG.SESSION_MAX_AGE_MS;
       }
 
-      function buildNormalizedSession({slug,phone,owner_id=null}){
-        const t=nowMs();
+      function readFreshGuardSession(){
+        if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.getSession !== "function"){
+          return null;
+        }
+
+        const s = window.DIGIY_GUARD.getSession();
+        if(!s || typeof s !== "object") return null;
+        if(String(s.module || "").toUpperCase() !== CFG.MODULE) return null;
+        if(!s.access) return null;
+        if(!isRecent(s.validated_at)) return null;
+
         return {
-          slug:normSlug(slug),phone:normPhone(phone),owner_id:owner_id||null,
-          module:CFG.MODULE,access:true,access_ok:true,ok:true,verified:true,
-          verified_at:t,validated_at:new Date(t).toISOString(),ts:t,reason:"pin_ok"
+          slug: normSlug(s.slug),
+          phone: normPhone(s.phone),
+          validated_at: Number(s.validated_at || 0)
         };
       }
 
-      function saveSession(payload){
-        const session=buildNormalizedSession(payload);
-        for(const key of CFG.STORAGE_KEYS){
-          try{localStorage.setItem(key,JSON.stringify(session));}catch(_){}
-          try{sessionStorage.setItem(key,JSON.stringify(session));}catch(_){}
-        }
-        try{localStorage.setItem(CFG.SLUG_KEY,session.slug);}catch(_){}
-        try{sessionStorage.setItem(CFG.SLUG_KEY,session.slug);}catch(_){}
-        try{localStorage.setItem(CFG.PHONE_KEY,session.phone);}catch(_){}
-        try{sessionStorage.setItem(CFG.PHONE_KEY,session.phone);}catch(_){}
-        try{localStorage.setItem(CFG.LAST_SLUG_KEY,session.slug);}catch(_){}
-        try{sessionStorage.setItem(CFG.LAST_SLUG_KEY,session.slug);}catch(_){}
-        try{window.DIGIY_ACCESS=Object.assign({},window.DIGIY_ACCESS||{},session);}catch(_){}
-        return session;
-      }
-
-      function readSession(){
-        for(const key of CFG.STORAGE_KEYS){
-          let parsed=null;
-          try{parsed=safeJsonParse(localStorage.getItem(key));if(!parsed)parsed=safeJsonParse(sessionStorage.getItem(key));}catch(_){}
-          if(!parsed||typeof parsed!=="object")continue;
-          const moduleName=String(parsed.module||parsed.module_code||"").trim().toUpperCase();
-          if(moduleName&&moduleName!==CFG.MODULE)continue;
-          const access=!!parsed.access||!!parsed.access_ok||!!parsed.ok||!!parsed.has_access;
-          const verifiedAt=Number(parsed.verified_at||parsed.validated_at_ms||parsed.ts||0)||0;
-          const validatedAt=parsed.validated_at||null;
-          let recent=false;
-          if(verifiedAt&&isRecent(verifiedAt))recent=true;
-          if(!recent&&validatedAt){const dt=new Date(validatedAt).getTime();if(dt&&isRecent(dt))recent=true;}
-          if(!access||!recent)continue;
-          return{slug:normSlug(parsed.slug||""),phone:normPhone(parsed.phone||""),owner_id:parsed.owner_id||null,verified_at:verifiedAt,validated_at:validatedAt};
-        }
-        return null;
-      }
-
-      async function resolveSubBySlug(slug){
-        const s=normSlug(slug); if(!s)return null;
-        const tries=[{slug:s,module:CFG.MODULE},{slug:s,module:CFG.MODULE_LOWER},{slug:s}];
-        for(const q of tries){
-          const{data,error}=await supabase.from(CFG.TABLE_SUBS).select("phone,slug,module").match(q).limit(1);
-          if(!error&&Array.isArray(data)&&data[0])return{slug:normSlug(data[0].slug),phone:normPhone(data[0].phone),module:String(data[0].module||CFG.MODULE).toUpperCase()};
-        }
-        return null;
-      }
-
       async function resolveSubByPhone(phone){
-        const p=normPhone(phone); if(!p)return null;
-        const tries=[{phone:p,module:CFG.MODULE},{phone:p,module:CFG.MODULE_LOWER},{phone:p}];
-        for(const q of tries){
-          const{data,error}=await supabase.from(CFG.TABLE_SUBS).select("phone,slug,module").match(q).limit(1);
-          if(!error&&Array.isArray(data)&&data[0])return{slug:normSlug(data[0].slug),phone:normPhone(data[0].phone),module:String(data[0].module||CFG.MODULE).toUpperCase()};
-        }
-        return null;
-      }
+        const p = normPhone(phone);
+        if(!p) return null;
 
-      function parseVerifyPinPayload(raw,fallbackPhone=""){
-        const data=Array.isArray(raw)?raw[0]:raw; if(!data)return null;
-        if(typeof data==="object"&&!Array.isArray(data)){
-          if(data.ok===true)return{ok:true,phone:normPhone(data.phone||data.p_phone||fallbackPhone||""),module:String(data.module||data.p_module||CFG.MODULE).toUpperCase(),owner_id:data.owner_id||null};
-          const vals=Object.values(data);
-          if(vals.length>=3){const okLike=vals[0]===true||vals[0]==="t"||vals[0]==="true"||vals[0]===1;if(okLike)return{ok:true,module:String(vals[1]||CFG.MODULE).toUpperCase(),phone:normPhone(vals[2]||fallbackPhone||""),owner_id:vals[4]||null};}
-        }
-        if(typeof data==="string"){
-          const txt=data.trim();
-          if(txt.startsWith("(")&&txt.endsWith(")")){
-            const m=txt.match(/^\(([^,]+),([^,]+),([^,]+),?(.*)\)$/);
-            if(m){const okToken=String(m[1]||"").trim().replace(/^"|"$/g,"");const okLike=okToken==="t"||okToken==="true"||okToken==="1";if(okLike)return{ok:true,module:String(m[2]||"").trim().replace(/^"|"$/g,"")||CFG.MODULE,phone:normPhone(String(m[3]||"").trim().replace(/^"|"$/g,"")||fallbackPhone||""),owner_id:null};}
-          }
-        }
-        return null;
-      }
-
-      async function verifyPin(slug, phone, pin){
-        const s=normSlug(slug);
-        const p=normPhone(phone);
-        const code=normPin(pin);
-
-        /* ━━━ CORRIGÉ : verify_access_pin attend p_slug + p_pin ━━━
-           AVANT : { p_phone, p_module, p_pin } → RPC ignorait les params → null
-           APRÈS : { p_slug, p_pin } = Rail de l'Infini canonique            */
-        const tries=[
-          { p_slug: s, p_pin: code },
-          { p_phone: p, p_pin: code }   // fallback si slug vide
+        const tries = [
+          { phone: p, module: CFG.MODULE },
+          { phone: p }
         ];
 
-        for(const body of tries){
-          const{data,error}=await supabase.rpc(CFG.RPC_VERIFY_PIN,body);
-          if(error)continue;
-          const parsed=parseVerifyPinPayload(data,p);
-          if(parsed?.ok)return parsed;
+        for(const q of tries){
+          const { data, error } = await supabase
+            .from(CFG.TABLE_SUBS)
+            .select("phone,slug,module")
+            .match(q)
+            .limit(1);
+
+          if(!error && Array.isArray(data) && data[0]){
+            return {
+              slug: normSlug(data[0].slug),
+              phone: normPhone(data[0].phone),
+              module: String(data[0].module || CFG.MODULE).toUpperCase()
+            };
+          }
         }
+
         return null;
       }
 
       function isAllowedReturnPath(pathname){
-        return["/app.html","/fiche.html","/index.html","/fiche-abo.html","/"].includes(pathname);
+        return [
+          "/app.html",
+          "/fiche.html",
+          "/index.html",
+          "/fiche-abo.html",
+          "/"
+        ].includes(pathname);
       }
 
       function buildReturnUrl(session){
-        const ret=qs("return");
-        if(ret){try{const u=new URL(ret,location.href);if(u.origin===location.origin&&isAllowedReturnPath(u.pathname)){u.searchParams.set("slug",session.slug);if(CFG.KEEP_PHONE_IN_URL&&session.phone)u.searchParams.set("phone",session.phone);u.searchParams.set("module",CFG.MODULE);u.searchParams.set("from","pin");return u.toString();}}catch(_){}}
-        const target=(qs("target")||"").trim().toLowerCase();
-        let next=CFG.DEFAULT_NEXT;
-        if(target==="public")next="./fiche.html";
-        if(target==="index")next="./index.html";
-        if(target==="pre")next="./fiche-abo.html";
-        if(target==="app")next="./app.html";
-        const u=new URL(next,location.href);
-        u.searchParams.set("slug",session.slug);
-        if(CFG.KEEP_PHONE_IN_URL&&session.phone)u.searchParams.set("phone",session.phone);
-        u.searchParams.set("module",CFG.MODULE);u.searchParams.set("from","pin");
+        const ret = qs("return");
+
+        if(ret){
+          try{
+            const u = new URL(ret, location.href);
+            if(u.origin === location.origin && isAllowedReturnPath(u.pathname)){
+              u.searchParams.set("slug", normSlug(session.slug));
+              if(CFG.KEEP_PHONE_IN_URL && session.phone){
+                u.searchParams.set("phone", normPhone(session.phone));
+              }
+              u.searchParams.set("module", CFG.MODULE);
+              u.searchParams.set("from", "pin");
+              return u.toString();
+            }
+          }catch(_){}
+        }
+
+        const target = String(qs("target") || "").trim().toLowerCase();
+        let next = CFG.DEFAULT_NEXT;
+
+        if(target === "public") next = "./fiche.html";
+        if(target === "index") next = "./index.html";
+        if(target === "pre") next = "./fiche-abo.html";
+        if(target === "app") next = "./app.html";
+
+        const u = new URL(next, location.href);
+        u.searchParams.set("slug", normSlug(session.slug));
+        if(CFG.KEEP_PHONE_IN_URL && session.phone){
+          u.searchParams.set("phone", normPhone(session.phone));
+        }
+        u.searchParams.set("module", CFG.MODULE);
+        u.searchParams.set("from", "pin");
         return u.toString();
       }
 
-      function refreshLinks(slug,phone){
-        const s=normSlug(slug);const p=normPhone(phone);
-        const add=(base)=>{const u=new URL(base,location.href);if(s)u.searchParams.set("slug",s);if(CFG.KEEP_PHONE_IN_URL&&p)u.searchParams.set("phone",p);return u.toString();};
-        el.btnApp.href=add("./app.html");el.btnPublic.href=add("./fiche.html");
-        el.btnIndex.href=add("./index.html");el.btnPreSheet.href=add("./fiche-abo.html");
-        if(s){el.btnApp.classList.remove("hidden");el.btnPublic.classList.remove("hidden");el.btnIndex.classList.remove("hidden");el.btnPreSheet.classList.remove("hidden");}
-        const dummy={slug:s,phone:p};el.btnReturn.href=buildReturnUrl(dummy);el.btnReturn.classList.remove("hidden");
-        el.returnInfo.textContent=new URL(el.btnReturn.href).pathname.split("/").pop()||"app.html";
+      function refreshLinks(slug, phone){
+        const s = normSlug(slug);
+        const p = normPhone(phone);
+
+        const add = (base) => {
+          const u = new URL(base, location.href);
+          if(s) u.searchParams.set("slug", s);
+          if(CFG.KEEP_PHONE_IN_URL && p) u.searchParams.set("phone", p);
+          return u.toString();
+        };
+
+        el.btnApp.href = add("./app.html");
+        el.btnPublic.href = add("./fiche.html");
+        el.btnIndex.href = add("./index.html");
+        el.btnPreSheet.href = add("./fiche-abo.html");
+
+        if(s){
+          el.btnApp.classList.remove("hidden");
+          el.btnPublic.classList.remove("hidden");
+          el.btnIndex.classList.remove("hidden");
+          el.btnPreSheet.classList.remove("hidden");
+        }
+
+        const dummy = { slug: s, phone: p };
+        el.btnReturn.href = buildReturnUrl(dummy);
+        el.btnReturn.classList.remove("hidden");
+        el.returnInfo.textContent = new URL(el.btnReturn.href).pathname.split("/").pop() || "app.html";
       }
 
       function hydrate(){
-        const qSlug=normSlug(qs("slug"));const qPhone=normPhone(qs("phone"));const saved=readSession();
-        el.slug.value=qSlug||saved?.slug||normSlug(sessionStorage.getItem(CFG.SLUG_KEY)||localStorage.getItem(CFG.SLUG_KEY)||localStorage.getItem(CFG.LAST_SLUG_KEY)||"");
-        el.phone.value=qPhone||saved?.phone||normPhone(sessionStorage.getItem(CFG.PHONE_KEY)||localStorage.getItem(CFG.PHONE_KEY)||"");
-        if(saved?.slug||saved?.phone)refreshLinks(saved.slug||el.slug.value,saved.phone||el.phone.value);
-        else if(el.slug.value||el.phone.value)refreshLinks(el.slug.value,el.phone.value);
-        if(saved?.verified_at||saved?.validated_at){el.sessionInfo.textContent="Active";setStatus("Session locale déjà fraîche. Tu peux reprendre ton espace LOC.","ok");}
+        const ctx = window.DIGIY_GUARD && typeof window.DIGIY_GUARD.getContext === "function"
+          ? window.DIGIY_GUARD.getContext()
+          : null;
+
+        const fresh = readFreshGuardSession();
+
+        const qSlug = normSlug(qs("slug"));
+        const qPhone = normPhone(qs("phone"));
+
+        const baseSlug = qSlug || (fresh && fresh.slug) || (ctx && ctx.slug) || "";
+        const basePhone = qPhone || (fresh && fresh.phone) || (ctx && ctx.phone) || "";
+
+        el.slug.value = baseSlug;
+        el.phone.value = basePhone;
+
+        if(baseSlug || basePhone){
+          refreshLinks(baseSlug, basePhone);
+        }
+
+        if(fresh && (fresh.slug || fresh.phone)){
+          el.sessionInfo.textContent = "Active";
+          setStatus("Session locale déjà fraîche. Tu peux reprendre ton espace LOC.", "ok");
+        }
       }
 
       async function login(){
         try{
-          let slug=normSlug(el.slug.value);
-          let phone=normPhone(el.phone.value);
-          const pin=normPin(el.pin.value);
+          if(!window.DIGIY_GUARD){
+            throw new Error("guard_absent");
+          }
 
-          /* ━━━ AVANT : "Renseigne au moins le slug ou le téléphone." → banni ━━━ */
-          if(!slug&&!phone){setStatus("Renseigne ton identifiant ou ton téléphone.","err");return;}
-          if(!pin){setStatus("Entre ton PIN.","err");return;}
+          let slug = normSlug(el.slug.value);
+          let phone = normPhone(el.phone.value);
+          const pin = normPin(el.pin.value);
 
-          el.btnOpen.disabled=true;
+          if(!slug && !phone){
+            setStatus("Renseigne ton identifiant ou ton téléphone.", "err");
+            return;
+          }
+
+          if(!pin){
+            setStatus("Entre ton PIN.", "err");
+            return;
+          }
+
+          el.btnOpen.disabled = true;
           setStatus("Vérification du PIN...");
 
-          if(slug&&!phone){const sub=await resolveSubBySlug(slug);if(sub?.phone)phone=sub.phone;}
-          if(phone&&!slug){const sub=await resolveSubByPhone(phone);if(sub?.slug)slug=sub.slug;}
+          if(slug && !phone){
+            phone = await window.DIGIY_GUARD.resolvePhoneBySlug(slug);
+          }
 
-          /* ━━━ AVANT : "Slug inconnu." → banni ━━━ */
-          if(!slug){setStatus("Identifiant inconnu.","err");return;}
-          /* ━━━ AVANT : "Téléphone introuvable pour ce slug." → banni ━━━ */
-          if(!phone){setStatus("Téléphone introuvable pour cet identifiant.","err");return;}
+          if(phone && !slug){
+            const sub = await resolveSubByPhone(phone);
+            if(sub && sub.slug){
+              slug = normSlug(sub.slug);
+            }
+          }
 
-          const auth=await verifyPin(slug,phone,pin);
-          if(!auth?.ok){setStatus("PIN invalide.","err");return;}
+          if(!slug){
+            setStatus("Identifiant inconnu.", "err");
+            return;
+          }
 
-          const session=saveSession({slug,phone:auth.phone||phone,owner_id:auth.owner_id||null});
-          el.sessionInfo.textContent="Active";
-          refreshLinks(session.slug,session.phone);
-          setStatus("PIN validé. Ouverture de ton espace LOC...","ok");
-          setTimeout(()=>{window.location.href=buildReturnUrl(session);},220);
+          if(!phone){
+            setStatus("Téléphone introuvable pour cet identifiant.", "err");
+            return;
+          }
+
+          if(typeof window.DIGIY_GUARD.saveContext === "function"){
+            window.DIGIY_GUARD.saveContext(slug, phone);
+          }
+
+          const auth = await window.DIGIY_GUARD.loginWithPin(slug, pin, phone);
+
+          if(!auth || !auth.ok){
+            setStatus("PIN invalide.", "err");
+            return;
+          }
+
+          const session = readFreshGuardSession() || {
+            slug: normSlug(auth.slug || slug),
+            phone: normPhone(auth.phone || phone)
+          };
+
+          el.sessionInfo.textContent = "Active";
+          refreshLinks(session.slug, session.phone);
+          setStatus("PIN validé. Ouverture de ton espace LOC...", "ok");
+
+          setTimeout(() => {
+            window.location.href = buildReturnUrl(session);
+          }, 220);
         }catch(err){
-          console.error(err);setStatus(err?.message||"Erreur de vérification.","err");
-        }finally{el.btnOpen.disabled=false;}
+          console.error("[LOC PIN] login error", err);
+          setStatus(err && err.message ? err.message : "Erreur de vérification.", "err");
+        }finally{
+          el.btnOpen.disabled = false;
+        }
       }
 
-      el.togglePin.addEventListener("click",()=>{const visible=el.pin.type==="text";el.pin.type=visible?"password":"text";el.togglePin.textContent=visible?"👁️":"🙈";});
-      el.btnOpen.addEventListener("click",login);
-      [el.slug,el.phone,el.pin].forEach(node=>{node.addEventListener("keydown",(e)=>{if(e.key==="Enter")login();});});
-      el.slug.addEventListener("input",()=>refreshLinks(el.slug.value,el.phone.value));
-      el.phone.addEventListener("input",()=>refreshLinks(el.slug.value,el.phone.value));
+      el.togglePin.addEventListener("click", () => {
+        const visible = el.pin.type === "text";
+        el.pin.type = visible ? "password" : "text";
+        el.togglePin.textContent = visible ? "👁️" : "🙈";
+      });
+
+      el.btnOpen.addEventListener("click", login);
+
+      [el.slug, el.phone, el.pin].forEach((node) => {
+        node.addEventListener("keydown", (e) => {
+          if(e.key === "Enter"){
+            login();
+          }
+        });
+      });
+
+      el.slug.addEventListener("input", () => {
+        const s = normSlug(el.slug.value);
+        const p = normPhone(el.phone.value);
+        if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.saveContext === "function"){
+          window.DIGIY_GUARD.saveContext(s, p);
+        }
+        refreshLinks(s, p);
+      });
+
+      el.phone.addEventListener("input", () => {
+        const s = normSlug(el.slug.value);
+        const p = normPhone(el.phone.value);
+        if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.saveContext === "function"){
+          window.DIGIY_GUARD.saveContext(s, p);
+        }
+        refreshLinks(s, p);
+      });
 
       hydrate();
     })();
