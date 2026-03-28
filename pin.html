@@ -36,6 +36,7 @@
     }
 
     *{box-sizing:border-box}
+
     html,body{
       margin:0;
       min-height:100%;
@@ -461,7 +462,8 @@
       }
 
       function safeJsonParse(value){
-        try { return JSON.parse(value); } catch { return null; }
+        try { return JSON.parse(value); }
+        catch { return null; }
       }
 
       function getStorage(key){
@@ -488,6 +490,7 @@
           getStorage("digiy_loc_return_target") ||
           DEFAULT_RETURN
         );
+
         if (!candidate) return DEFAULT_RETURN;
         if (/^https?:\/\//i.test(candidate)) return candidate;
         if (candidate.startsWith("./")) return candidate;
@@ -512,12 +515,14 @@
         for (const key of keys){
           const raw = getStorage(key);
           if (!raw) continue;
+
           const parsed = safeJsonParse(raw);
           if (!parsed || typeof parsed !== "object") continue;
 
           const validatedAt = Number(parsed.validated_at || parsed.validatedAt || 0);
           const maxAge = SESSION_HOURS * 60 * 60 * 1000;
           const fresh = validatedAt && (Date.now() - validatedAt < maxAge);
+
           if (!fresh) continue;
 
           return {
@@ -527,6 +532,7 @@
             validatedAt
           };
         }
+
         return null;
       }
 
@@ -540,7 +546,7 @@
           validated_at: Date.now(),
           expires_at: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
           source: "pin.html",
-          via: "verify_pin_loc"
+          via: "digiy_verify_pin"
         };
 
         setStorage("digiy_loc_session", JSON.stringify(session));
@@ -551,10 +557,13 @@
           setStorage("digiy_loc_last_slug", session.slug);
           setStorage("digiy_loc_slug", session.slug);
         }
+
         if (session.phone){
           setStorage("digiy_loc_phone", session.phone);
           setStorage("digiy_loc_last_phone", session.phone);
         }
+
+        setStorage("digiy_loc_last_module", MODULE);
       }
 
       function updateMetaSession(text){
@@ -601,69 +610,28 @@
         }
       }
 
-      function normalizeRpcResult(data){
+      function normalizeRpcResult(data, fallbackPhone){
         const row = Array.isArray(data) ? data[0] : data;
         if (!row) return null;
 
         return {
-          ok: !!(row.ok ?? row.success ?? row.valid ?? row.is_valid ?? false),
+          ok: !!row.ok,
           module: clean(row.module || MODULE),
-          phone: normPhone(row.phone || row.owner_phone || ""),
-          label: clean(row.label || row.title || "PIN LOC PRO"),
-          owner_id: row.owner_id || row.owner || row.id || null
+          phone: normPhone(row.phone || row.owner_phone || fallbackPhone || ""),
+          label: clean(row.label || "PIN LOC PRO"),
+          owner_id: row.owner_id || null
         };
       }
 
-      async function rpcVerifyPinExact(phone, pin, mode){
-        if (mode === "p_phone") {
-          return supabase.rpc("verify_pin_loc", {
-            p_phone: phone,
-            p_pin: pin
-          });
-        }
-
-        if (mode === "p_owner_phone") {
-          return supabase.rpc("verify_pin_loc", {
-            p_owner_phone: phone,
-            p_pin: pin
-          });
-        }
-
-        throw new Error("Mode RPC inconnu");
-      }
-
       async function callVerifyPin(phone, pin){
-        let first;
-        try{
-          first = await rpcVerifyPinExact(phone, pin, "p_phone");
-          if (!first.error) return normalizeRpcResult(first.data);
-        }catch(err){
-          first = { error: err };
-        }
+        const { data, error } = await supabase.rpc("digiy_verify_pin", {
+          p_phone: phone,
+          p_module: MODULE,
+          p_pin: pin
+        });
 
-        const msg1 = String(first?.error?.message || "");
-        const schemaMiss1 = /Could not find the function/i.test(msg1) || /schema cache/i.test(msg1);
-
-        let second;
-        try{
-          second = await rpcVerifyPinExact(phone, pin, "p_owner_phone");
-          if (!second.error) return normalizeRpcResult(second.data);
-        }catch(err){
-          second = { error: err };
-        }
-
-        const msg2 = String(second?.error?.message || "");
-        const schemaMiss2 = /Could not find the function/i.test(msg2) || /schema cache/i.test(msg2);
-
-        if (schemaMiss1 && schemaMiss2) {
-          throw new Error(
-            "La fonction verify_pin_loc est bien appelée, mais sa signature RPC ne correspond ni à (p_phone, p_pin), ni à (p_owner_phone, p_pin)."
-          );
-        }
-
-        if (second?.error) throw second.error;
-        if (first?.error) throw first.error;
-        return null;
+        if (error) throw error;
+        return normalizeRpcResult(data, phone);
       }
 
       function hydrateFromContext(){
@@ -749,7 +717,7 @@
             return;
           }
 
-          setStatus("info", "Vérification du PIN", "Contrôle du PIN sur le rail LOC…");
+          setStatus("info", "Vérification du PIN", "Contrôle du PIN sur le rail maître DIGIY…");
 
           const result = await callVerifyPin(phone, pin);
 
@@ -766,7 +734,7 @@
           writeSession({
             phone: finalPhone,
             slug: finalSlug,
-            label
+            label: label
           });
 
           els.identifier.value = finalSlug || finalPhone;
@@ -808,4 +776,3 @@
   </script>
 </body>
 </html>
-
