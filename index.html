@@ -8,18 +8,34 @@
 
   <!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
   <script>
-  window.DIGIY_SUPABASE_URL  = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
   window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
   window.DIGIY_MODULE = "LOC";
-
-  // IMPORTANT : défini AVANT guard.js
   window.DIGIY_LOGIN_URL = "./pin.html";
-
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js"></script>
+<script src="./guard.js?v=loc-20260328-3"></script>
+
+<script>
+window.addEventListener("load", async function(){
+  try{
+    console.log("[LOC] guard present ?", !!window.DIGIY_GUARD);
+    console.log("[LOC] guard object", window.DIGIY_GUARD);
+
+    if(!window.DIGIY_GUARD){
+      throw new Error("guard_absent");
+    }
+
+    const result = await window.DIGIY_GUARD.ready({ redirect:false });
+    console.log("[LOC] guard ready result", result);
+    console.log("[LOC] guard state", window.DIGIY_GUARD.state);
+  }catch(err){
+    console.error("[LOC] init error", err);
+  }
+});
+</script>
   <style>
     :root{
       --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
