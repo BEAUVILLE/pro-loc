@@ -42,7 +42,7 @@
       /* ━━━ CORRIGÉ : verify_access_pin = Rail de l'Infini
          AVANT : "digiy_verify_pin" → RPC inexistant → null → PIN invalide
          APRÈS : params { p_slug, p_pin } = doctrine canonique              ━━━ */
-      VERIFY_PIN: "verify_access_pin",
+      VERIFY_PIN: "digiy_verify_pin",
       HAS_ACCESS: "digiy_has_access"
     },
 
@@ -228,12 +228,10 @@
 
     if(!s||!p)return null;
 
-    /* ━━━ CORRIGÉ : verify_access_pin attend { p_slug, p_pin }
-       AVANT : { p_phone, p_module, p_pin } → params inconnus → RPC retournait null
-       APRÈS : { p_slug, p_pin } = Rail de l'Infini canonique (go_pins table)  ━━━ */
+    /* ━━━ PARAMS : digiy_verify_pin(p_phone, p_module, p_pin) — identique POS ━━━ */
     const tries=[
-      { p_slug: s, p_pin: p },
-      { p_phone: ph, p_pin: p }    // fallback si slug vide
+      { p_phone: ph, p_module: MODULE,       p_pin: p },
+      { p_phone: ph, p_module: MODULE_LOWER, p_pin: p }
     ];
 
     for(const body of tries){
@@ -382,4 +380,4 @@
   };
 
   ready();
-})();;
+})();
