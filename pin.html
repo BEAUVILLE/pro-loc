@@ -336,9 +336,14 @@
 
       const SUPABASE_URL = String(window.DIGIY_SUPABASE_URL || "").trim();
       const SUPABASE_KEY = String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim();
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false }
-      });
+     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+    storageKey: "digiy-loc-pin-auth"
+  }
+});
 
       const el = {
         slug: document.getElementById("slug"),
