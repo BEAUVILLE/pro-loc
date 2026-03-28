@@ -1,15 +1,6 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1020" />
-  <title>DIGIY LOC PRO — Accès PIN</title>
-  <meta name="description" content="Accès sécurisé DIGIY LOC PRO par identifiant, téléphone et PIN." />
-
- <!doctype html>
-<html lang="fr">
-<head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#0b1f17"/>
@@ -45,7 +36,6 @@
     }
 
     *{box-sizing:border-box}
-
     html,body{
       margin:0;
       min-height:100%;
@@ -209,6 +199,9 @@
     }
 
     .btn-secondary{
+      display:flex;
+      align-items:center;
+      justify-content:center;
       background:rgba(255,255,255,.05);
       color:var(--text);
       border:1px solid rgba(255,255,255,.10);
@@ -294,14 +287,6 @@
       font-size:12px;
       line-height:1.5;
     }
-
-    .tiny{
-      font-size:12px;
-      color:rgba(236,255,245,.58);
-      line-height:1.5;
-    }
-
-    .hidden{display:none !important}
 
     @media (max-width:520px){
       h1{font-size:27px}
@@ -432,7 +417,6 @@
         statusBox: $("statusBox"),
         statusTitle: $("statusTitle"),
         statusBody: $("statusBody"),
-        metaModule: $("metaModule"),
         metaReturn: $("metaReturn"),
         metaSession: $("metaSession")
       };
@@ -512,8 +496,7 @@
       }
 
       function buildUrl(target, slug, phone){
-        const base = target || DEFAULT_RETURN;
-        const url = new URL(base, window.location.href);
+        const url = new URL(target || DEFAULT_RETURN, window.location.href);
         if (slug) url.searchParams.set("slug", slug);
         if (phone) url.searchParams.set("phone", phone);
         return url.toString();
@@ -572,8 +555,6 @@
           setStorage("digiy_loc_phone", session.phone);
           setStorage("digiy_loc_last_phone", session.phone);
         }
-
-        setStorage("digiy_loc_last_module", MODULE);
       }
 
       function updateMetaSession(text){
@@ -584,114 +565,104 @@
         const wantedSlug = normSlug(slug);
         if (!wantedSlug) return "";
 
-        const tries = [
-          async () => {
-            const { data, error } = await supabase
-              .from("digiy_subscriptions_public")
-              .select("phone,slug,module")
-              .eq("slug", wantedSlug)
-              .eq("module", MODULE)
-              .maybeSingle();
-            if (error) throw error;
-            return normPhone(data && data.phone);
-          },
-          async () => {
-            const { data, error } = await supabase
-              .from("digiy_subscriptions_public")
-              .select("phone,slug,module")
-              .eq("slug", wantedSlug)
-              .maybeSingle();
-            if (error) throw error;
-            return normPhone(data && data.phone);
-          }
-        ];
+        try{
+          const { data, error } = await supabase
+            .from("digiy_subscriptions_public")
+            .select("phone,slug,module")
+            .eq("slug", wantedSlug)
+            .eq("module", MODULE)
+            .maybeSingle();
 
-        for (const fn of tries){
-          try{
-            const phone = await fn();
-            if (phone) return phone;
-          }catch(_){}
+          if (error) throw error;
+          return normPhone(data && data.phone);
+        }catch(err){
+          console.warn("[LOC PIN] resolvePhoneBySlug", err);
+          return "";
         }
-        return "";
       }
 
       async function resolveSlugByPhone(phone){
         const wantedPhone = normPhone(phone);
         if (!wantedPhone) return "";
 
-        const tries = [
-          async () => {
-            const { data, error } = await supabase
-              .from("digiy_subscriptions_public")
-              .select("phone,slug,module")
-              .eq("phone", wantedPhone)
-              .eq("module", MODULE)
-              .maybeSingle();
-            if (error) throw error;
-            return normSlug(data && data.slug);
-          },
-          async () => {
-            const { data, error } = await supabase
-              .from("digiy_subscriptions_public")
-              .select("phone,slug,module")
-              .eq("phone", wantedPhone)
-              .maybeSingle();
-            if (error) throw error;
-            return normSlug(data && data.slug);
-          }
-        ];
+        try{
+          const { data, error } = await supabase
+            .from("digiy_subscriptions_public")
+            .select("phone,slug,module")
+            .eq("phone", wantedPhone)
+            .eq("module", MODULE)
+            .maybeSingle();
 
-        for (const fn of tries){
-          try{
-            const slug = await fn();
-            if (slug) return slug;
-          }catch(_){}
+          if (error) throw error;
+          return normSlug(data && data.slug);
+        }catch(err){
+          console.warn("[LOC PIN] resolveSlugByPhone", err);
+          return "";
         }
-        return "";
       }
 
       function normalizeRpcResult(data){
-        if (Array.isArray(data)) return normalizeRpcResult(data[0] || null);
-        if (!data) return null;
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) return null;
 
-        if (typeof data === "object"){
-          return {
-            ok: !!(data.ok ?? data.success ?? data.valid ?? data.is_valid ?? false),
-            module: clean(data.module || MODULE),
-            phone: normPhone(data.phone || data.owner_phone || ""),
-            label: clean(data.label || data.title || "PIN LOC PRO"),
-            owner_id: data.owner_id || data.owner || data.id || null
-          };
+        return {
+          ok: !!(row.ok ?? row.success ?? row.valid ?? row.is_valid ?? false),
+          module: clean(row.module || MODULE),
+          phone: normPhone(row.phone || row.owner_phone || ""),
+          label: clean(row.label || row.title || "PIN LOC PRO"),
+          owner_id: row.owner_id || row.owner || row.id || null
+        };
+      }
+
+      async function rpcVerifyPinExact(phone, pin, mode){
+        if (mode === "p_phone") {
+          return supabase.rpc("verify_pin_loc", {
+            p_phone: phone,
+            p_pin: pin
+          });
         }
 
-        return null;
+        if (mode === "p_owner_phone") {
+          return supabase.rpc("verify_pin_loc", {
+            p_owner_phone: phone,
+            p_pin: pin
+          });
+        }
+
+        throw new Error("Mode RPC inconnu");
       }
 
       async function callVerifyPin(phone, pin){
-        const payloads = [
-          { p_phone: phone, p_pin: pin },
-          { phone: phone, pin: pin },
-          { p_owner_phone: phone, p_pin: pin },
-          { owner_phone: phone, pin: pin }
-        ];
-
-        let lastError = null;
-
-        for (const params of payloads){
-          try{
-            const { data, error } = await supabase.rpc("verify_pin_loc", params);
-            if (error){
-              lastError = error;
-              continue;
-            }
-            const normalized = normalizeRpcResult(data);
-            if (normalized) return normalized;
-          }catch(err){
-            lastError = err;
-          }
+        let first;
+        try{
+          first = await rpcVerifyPinExact(phone, pin, "p_phone");
+          if (!first.error) return normalizeRpcResult(first.data);
+        }catch(err){
+          first = { error: err };
         }
 
-        if (lastError) throw lastError;
+        const msg1 = String(first?.error?.message || "");
+        const schemaMiss1 = /Could not find the function/i.test(msg1) || /schema cache/i.test(msg1);
+
+        let second;
+        try{
+          second = await rpcVerifyPinExact(phone, pin, "p_owner_phone");
+          if (!second.error) return normalizeRpcResult(second.data);
+        }catch(err){
+          second = { error: err };
+        }
+
+        const msg2 = String(second?.error?.message || "");
+        const schemaMiss2 = /Could not find the function/i.test(msg2) || /schema cache/i.test(msg2);
+
+        if (schemaMiss1 && schemaMiss2) {
+          throw new Error(
+            "La fonction verify_pin_loc est bien appelée, mais sa signature RPC ne correspond ni à (p_phone, p_pin), ni à (p_owner_phone, p_pin)."
+          );
+        }
+
+        if (second?.error) throw second.error;
+        if (first?.error) throw first.error;
         return null;
       }
 
@@ -779,6 +750,7 @@
           }
 
           setStatus("info", "Vérification du PIN", "Contrôle du PIN sur le rail LOC…");
+
           const result = await callVerifyPin(phone, pin);
 
           if (!result || !result.ok){
@@ -787,14 +759,14 @@
             return;
           }
 
-          const finalSlug = slug || await resolveSlugByPhone(result.phone || phone);
           const finalPhone = normPhone(result.phone || phone);
+          const finalSlug = slug || await resolveSlugByPhone(finalPhone);
           const label = clean(result.label || "PIN LOC PRO");
 
           writeSession({
             phone: finalPhone,
             slug: finalSlug,
-            label: label
+            label
           });
 
           els.identifier.value = finalSlug || finalPhone;
@@ -802,20 +774,17 @@
           updateMetaSession("Session LOC ouverte");
           els.returnBtn.href = buildUrl(getReturnTarget(), finalSlug, finalPhone);
 
-          setStatus(
-            "ok",
-            "Accès validé",
-            "PIN accepté. Entrée directe vers l’espace propriétaire LOC."
-          );
+          setStatus("ok", "Accès validé", "PIN accepté. Entrée directe vers l’espace propriétaire LOC.");
 
-          const target = buildUrl(getReturnTarget(), finalSlug, finalPhone);
-          window.location.href = target;
+          window.location.href = buildUrl(getReturnTarget(), finalSlug, finalPhone);
         }catch(err){
           console.error("[DIGIY LOC PIN] erreur", err);
           setStatus(
             "bad",
             "Erreur de vérification",
-            (err && err.message) ? err.message : "Impossible de vérifier le PIN pour le moment."
+            err && err.message
+              ? err.message
+              : "Impossible de vérifier le PIN pour le moment."
           );
           updateMetaSession("Aucune");
         }finally{
@@ -827,9 +796,9 @@
         els.form.addEventListener("submit", handleSubmit);
 
         els.togglePin.addEventListener("click", function(){
-          const isHidden = els.pin.type === "password";
-          els.pin.type = isHidden ? "text" : "password";
-          els.togglePin.textContent = isHidden ? "🙈" : "👁️";
+          const hidden = els.pin.type === "password";
+          els.pin.type = hidden ? "text" : "password";
+          els.togglePin.textContent = hidden ? "🙈" : "👁️";
         });
       }
 
