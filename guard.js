@@ -39,7 +39,7 @@
     },
 
     RPC: {
-      VERIFY_PIN: "digiy_verify_pin",
+      VERIFY_PIN: "verify_access_pin",
       HAS_ACCESS: "digiy_has_access"
     },
 
