@@ -2,19 +2,23 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>🔥 GÉNÉRATEUR DIGIY LOC - Créer une fiche logement en 2 min ! 🔥</title>
+<title>DIGIY LOC — Créer une fiche logement</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
 <script>
   window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  window.DIGIY_MODULE = "LOC";
+  window.DIGIY_LOGIN_URL = "./pin.html";
 </script>
 
-<!-- ✅ Supabase + Guard (UN SEUL client, créé par le guard) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=generator-final-loc-v9"></script>
+<script src="./guard.js?v=generator-loc-facade-v10"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -26,13 +30,14 @@
   --muted:#9ca3af;
   --line:#1f2937;
   --sn-green:#00853F;
+  --fontA:"Outfit",system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
   background:radial-gradient(circle at top,#111827 0,#020617 55%);
   color:var(--ink);
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:var(--fontA);
   padding:20px;
 }
 .container{max-width:900px;margin:0 auto}
@@ -94,6 +99,7 @@ input, textarea, select{
   color:var(--ink);
   font-size:14px;
   font-weight:500;
+  font-family:var(--fontA);
 }
 input:focus, textarea:focus, select:focus{
   outline:none;
@@ -102,7 +108,6 @@ input:focus, textarea:focus, select:focus{
 textarea{
   min-height:100px;
   resize:vertical;
-  font-family:inherit;
 }
 .hint{
   font-size:12px;
@@ -121,6 +126,7 @@ textarea{
   justify-content:center;
   gap:10px;
   transition:all 0.2s;
+  font-family:var(--fontA);
 }
 .btn-generate{
   background:linear-gradient(135deg,var(--sn-green),#006B32);
@@ -195,6 +201,7 @@ textarea{
   padding:10px 14px;
   font-weight:800;
   cursor:pointer;
+  font-family:var(--fontA);
 }
 .small-btn:hover{ transform:translateY(-1px); }
 .error-box{
@@ -226,14 +233,14 @@ textarea{
 
 <body>
 
-<div id="loading" class="loading">🔒 Vérification contexte...</div>
+<div id="loading" class="loading">🔒 Vérification de l’accès…</div>
 
 <div id="app" style="display:none;">
   <div class="container">
     <div class="header">
       <h1>🦅 GÉNÉRATEUR DIGIY LOC</h1>
-      <p>Créez votre fiche logement en 2 minutes !</p>
-      <div class="badge">∞ Pierre par pierre - L'aigle royal construit ∞</div>
+      <p>Crée ta fiche logement en 2 minutes</p>
+      <div class="badge">∞ Pierre par pierre — l’aigle royal construit ∞</div>
     </div>
 
     <div class="form-card">
@@ -243,22 +250,22 @@ textarea{
         <div class="form-grid">
           <div class="form-group">
             <label>Nom du logement <span class="required">*</span></label>
-            <input type="text" name="nom" id="nom" placeholder="Ex: CHEZ BAPTISTE" required>
+            <input type="text" name="nom" id="nom" placeholder="Ex : CHEZ BAPTISTE" required>
             <div class="hint">Sans guillemets, MAJUSCULES recommandées</div>
           </div>
 
           <div class="form-group">
             <label>Ville <span class="required">*</span></label>
-            <input type="text" name="adresse" id="adresse" placeholder="Ex: Saly" required>
+            <input type="text" name="adresse" id="adresse" placeholder="Ex : Saly" required>
           </div>
 
           <div class="form-group full">
             <label>Description courte <span class="required">*</span></label>
-            <textarea name="description" id="description" placeholder="Ex: Appartement confortable dans un quartier paisible de Saly, idéal pour les séjours en famille." required></textarea>
+            <textarea name="description" id="description" placeholder="Ex : Appartement confortable dans un quartier paisible de Saly, idéal pour les séjours en famille." required></textarea>
           </div>
 
           <div class="form-group">
-            <label>Capacité max (info vitrine)</label>
+            <label>Capacité max</label>
             <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20">
             <div class="hint">Gardé pour plus tard, non envoyé au RPC actuel.</div>
           </div>
@@ -294,7 +301,7 @@ textarea{
           </div>
         </div>
 
-        <h2 class="section-title">👤 Contact (pré-rempli)</h2>
+        <h2 class="section-title">👤 Contact</h2>
 
         <div class="form-grid">
           <div class="form-group">
@@ -314,7 +321,7 @@ textarea{
           <div class="form-group full">
             <label>URL de la photo principale <span class="required">*</span></label>
             <input type="url" name="photo_url" id="photo_url" placeholder="https://..." required>
-            <div class="hint">Upload d'abord sur ton hébergement, puis colle l'URL</div>
+            <div class="hint">Héberge d’abord la photo, puis colle l’URL.</div>
           </div>
         </div>
 
@@ -326,7 +333,7 @@ textarea{
         </button>
 
         <button class="btn btn-back" type="button" id="btnBack">
-          ⬅️ Retour au cockpit
+          ⬅️ Retour à ma gestion
         </button>
       </form>
 
@@ -344,7 +351,7 @@ textarea{
         </div>
 
         <button class="btn btn-back" type="button" id="btnRetour">
-          ✅ Retour au cockpit
+          ✅ Retour à ma gestion
         </button>
       </div>
     </div>
@@ -375,7 +382,8 @@ textarea{
     businessName: "",
     mode: "preview",
     reason: "booting",
-    guardAccessOk: false
+    accessOk: false,
+    sb: null
   };
 
   function showError(msg){
@@ -405,61 +413,147 @@ textarea{
     if (err.error_description) return err.error_description;
     if (err.details) return err.details;
     if (err.hint) return err.hint;
-    try { return JSON.stringify(err, null, 2); } catch {}
+    try { return JSON.stringify(err, null, 2); } catch (_) {}
     return String(err);
   }
 
+  function safe(v){
+    return String(v ?? "").trim();
+  }
+
+  function safeJsonParse(raw){
+    try { return JSON.parse(raw); } catch (_) { return null; }
+  }
+
   function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      reason: "guard_missing"
+    return window.DIGIY_GUARD?.state || {};
+  }
+
+  function getRawSession(){
+    return window.DIGIY_GUARD?.getSession?.() || {};
+  }
+
+  function getSession(){
+    const st = getGuardState();
+    const raw = getRawSession();
+
+    const access = !!(
+      st.access === true ||
+      st.access_ok === true ||
+      raw.access === true ||
+      raw.ok === true
+    );
+
+    return {
+      ok: access,
+      access_ok: access,
+      reason: st.reason || raw.reason || "",
+      module: st.module || raw.module || "LOC",
+      slug: safe(st.slug || raw.slug || ""),
+      phone: safe(st.phone || raw.phone || ""),
+      validated_at: raw.validated_at || st.validated_at || "",
+      session_token: raw.session_token || st.session_token || ""
     };
   }
 
-  function getSB(){
-    return window.DIGIY_GUARD?.getSb?.() || window.sb || null;
+  function readStorage(keys){
+    for (const key of keys) {
+      try {
+        const a = localStorage.getItem(key);
+        if (a) return a;
+      } catch (_) {}
+      try {
+        const b = sessionStorage.getItem(key);
+        if (b) return b;
+      } catch (_) {}
+    }
+    return "";
   }
 
-  async function waitGuardReady(){
-    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
-    const r = window.DIGIY_GUARD.ready;
-    if(typeof r === "function") return await r(8000);
-    return await r;
-  }
-
-  function withSlug(url){
-    const proSlug = State.proSlug || "";
-    if(!proSlug) return url;
+  function buildSafeUrl(base, params = {}){
+    const baseStr = String(base || "").trim();
+    if (!baseStr) return location.href;
 
     try{
-      const u = new URL(url, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", proSlug);
-      return u.origin === location.origin ? (u.pathname + u.search + u.hash) : u.toString();
-    }catch{
-      const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(proSlug);
+      const u = new URL(baseStr, location.href);
+      Object.entries(params).forEach(([k, v]) => {
+        const val = String(v ?? "").trim();
+        if (val) u.searchParams.set(k, val);
+      });
+      return u.toString();
+    }catch(_){
+      try{
+        const query = new URLSearchParams();
+        Object.entries(params).forEach(([k, v]) => {
+          const val = String(v ?? "").trim();
+          if (val) query.set(k, val);
+        });
+        const qs = query.toString();
+        if (!qs) return baseStr;
+        return baseStr + (baseStr.includes("?") ? "&" : "?") + qs;
+      }catch(__){
+        return baseStr;
+      }
     }
   }
 
+  function withContext(url){
+    return buildSafeUrl(url, {
+      slug: State.proSlug || "",
+      phone: State.phone || ""
+    });
+  }
+
   function pinUrl(){
-    try { return window.DIGIY_GUARD?.getPinUrl?.() || withSlug("./pin.html"); }
-    catch { return withSlug("./pin.html"); }
+    return withContext("./pin.html");
   }
 
   function payUrl(){
-    try { return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
-    catch { return withSlug("https://beauville.github.io/commencer-a-payer/?module=LOC"); }
+    return buildSafeUrl("https://beauville.github.io/commencer-a-payer/", {
+      module: "LOC",
+      slug: State.proSlug || "",
+      phone: State.phone || ""
+    });
   }
 
   function goBack(){
-    location.href = withSlug("./app.html");
+    location.href = withContext("./app.html");
   }
 
   function isLive(){
-    return State.mode === "live" && !!State.proSlug;
+    return State.mode === "live" && !!State.proSlug && !!State.accessOk;
+  }
+
+  function createSupabaseClient(){
+    if (State.sb) return State.sb;
+
+    if (!window.supabase?.createClient) return null;
+
+    State.sb = window.supabase.createClient(
+      window.DIGIY_SUPABASE_URL,
+      window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      }
+    );
+
+    return State.sb;
+  }
+
+  async function waitGuardReady(){
+    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+      throw new Error("guard_absent");
+    }
+
+    return await window.DIGIY_GUARD.ready({
+      redirect: false,
+      preserve_validation: true,
+      allow_soft_session: true
+    });
   }
 
   function disableFormForPreview(reason){
@@ -470,12 +564,12 @@ textarea{
       el.disabled = true;
     });
 
-    showError(
+    const msg =
       reason === "slug_missing"
-        ? "👁️ Mode aperçu : aucun slug LOC détecté. Passe par le lien GO PIN."
-        : "👁️ Mode aperçu : connexion PIN requise pour créer une fiche logement."
-    );
+        ? "👁️ Mode aperçu : identifiant LOC introuvable. Passe par le PIN."
+        : "👁️ Mode aperçu : connexion PIN requise pour créer une fiche logement.";
 
+    showError(msg);
     btnSubmit.textContent = "🔒 MODE APERÇU";
 
     if(!document.getElementById("previewHelper")){
@@ -484,7 +578,7 @@ textarea{
       helper.style.marginTop = "14px";
       helper.innerHTML = `
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a href="${pinUrl()}" class="small-btn" style="text-decoration:none">🔐 Ouvrir PIN</a>
+          <a href="${pinUrl()}" class="small-btn" style="text-decoration:none">🔐 Ouvrir le PIN</a>
           <a href="${payUrl()}" class="small-btn" style="text-decoration:none">💳 Activer l’accès</a>
         </div>
       `;
@@ -518,52 +612,85 @@ textarea{
     const ownerNameEl = document.getElementById("owner_name");
     const phoneEl = document.getElementById("phone");
 
-    ownerNameEl.value =
-      localStorage.getItem("DIGIY_LOC_BUSINESS_NAME") ||
-      localStorage.getItem("DIGIY_BUSINESS_NAME") ||
-      "Propriétaire";
+    const storedBusinessName =
+      readStorage(["DIGIY_LOC_BUSINESS_NAME", "DIGIY_BUSINESS_NAME"]);
 
-    phoneEl.value =
-      State.phone ||
-      localStorage.getItem("DIGIY_PHONE") ||
-      localStorage.getItem("DIGIY_LOC_PHONE") ||
-      "";
+    ownerNameEl.value = storedBusinessName || "Propriétaire";
+    phoneEl.value = State.phone || "";
+  }
+
+  function normalizeRpcPayload(data){
+    if (Array.isArray(data)) {
+      return data[0] || null;
+    }
+
+    if (typeof data === "string") {
+      try {
+        return JSON.parse(data);
+      } catch (_) {
+        return { ok:false, error:data };
+      }
+    }
+
+    return data || null;
   }
 
   btnBack?.addEventListener("click", goBack);
   btnRetour?.addEventListener("click", goBack);
 
   if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
-    loading.innerHTML = '❌ Guard absent. <a href="./pin.html" style="color:#facc15">Se connecter</a>';
+    loading.innerHTML = `❌ Vérification absente. <a href="./pin.html" style="color:#facc15">Se connecter</a>`;
     return;
   }
 
   try{
     await waitGuardReady();
-  }catch(e){
-    loading.innerHTML = '❌ Guard non prêt. <a href="./pin.html" style="color:#facc15">Se connecter</a>';
+  }catch(_){
+    const qs = new URLSearchParams(location.search);
+    const storedSession = safeJsonParse(readStorage(["digiy_loc_session"])) || {};
+
+    State.phone =
+      safe(qs.get("phone")) ||
+      safe(storedSession.phone) ||
+      safe(readStorage(["digiy_loc_phone", "DIGIY_PHONE", "DIGIY_LOC_PHONE"]));
+
+    State.proSlug =
+      safe(qs.get("pro_slug")) ||
+      safe(qs.get("slug")) ||
+      safe(storedSession.slug) ||
+      safe(readStorage(["digiy_loc_last_slug", "digiy_loc_pro_slug"]));
+
+    hydrateReadonlyFields();
+
+    loading.style.display = "none";
+    app.style.display = "block";
+
+    if(!State.proSlug){
+      disableFormForPreview("slug_missing");
+    }else{
+      disableFormForPreview("preview");
+    }
     return;
   }
 
   const qs = new URLSearchParams(location.search);
-  const st = getGuardState();
+  const sess = getSession();
 
-  State.guardAccessOk = !!st.access_ok;
+  State.accessOk = !!sess.ok;
 
   State.phone =
-    st.phone ||
-    localStorage.getItem("DIGIY_PHONE") ||
-    localStorage.getItem("DIGIY_LOC_PHONE") ||
-    "";
+    safe(qs.get("phone")) ||
+    safe(sess.phone) ||
+    safe(readStorage(["DIGIY_PHONE", "DIGIY_LOC_PHONE", "digiy_loc_phone"]));
 
   State.proSlug =
-    (qs.get("pro_slug") || "").trim() ||
-    (qs.get("slug") || "").trim() ||
-    (st.slug || "").trim() ||
-    (localStorage.getItem("digiy_loc_pro_slug") || "").trim();
+    safe(qs.get("pro_slug")) ||
+    safe(qs.get("slug")) ||
+    safe(sess.slug) ||
+    safe(readStorage(["digiy_loc_last_slug", "digiy_loc_pro_slug"]));
 
   if(State.proSlug){
-    try { localStorage.setItem("digiy_loc_pro_slug", State.proSlug); } catch {}
+    try { localStorage.setItem("digiy_loc_pro_slug", State.proSlug); } catch (_) {}
   }
 
   hydrateReadonlyFields();
@@ -576,17 +703,18 @@ textarea{
     return;
   }
 
-  enableFormForLive();
-
-  if(!State.guardAccessOk){
-    showInfo("ℹ️ Le guard n’a pas confirmé l’accès, mais le serveur RPC va trancher au moment de l’envoi. Si l’abonnement LOC est actif, la création passera.");
-  } else {
-    clearInfo();
+  if(!State.accessOk){
+    disableFormForPreview("preview");
+    return;
   }
+
+  enableFormForLive();
+  clearInfo();
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearError();
+    clearInfo();
 
     if(!isLive()){
       showError("🔒 Le générateur n’est pas disponible en aperçu.");
@@ -597,16 +725,16 @@ textarea{
     btnSubmit.textContent = "⏳ Création en cours...";
 
     try {
-      const sb = getSB();
+      const sb = createSupabaseClient();
       if(!sb) throw new Error("Supabase non initialisé");
 
       const fd = new FormData(form);
 
-      const nom = String(fd.get("nom") || "").trim();
-      const adresse = String(fd.get("adresse") || "").trim();
-      const description = String(fd.get("description") || "").trim();
-      const photo_url = String(fd.get("photo_url") || "").trim();
-      const type_logement = String(fd.get("type_logement") || "").trim();
+      const nom = safe(fd.get("nom"));
+      const adresse = safe(fd.get("adresse"));
+      const description = safe(fd.get("description"));
+      const photo_url = safe(fd.get("photo_url"));
+      const type_logement = safe(fd.get("type_logement"));
 
       if(!nom) throw new Error("Nom du logement requis");
       if(!adresse) throw new Error("Ville / adresse requise");
@@ -634,24 +762,23 @@ textarea{
         p_is_public: true
       });
 
-      console.log("RPC loc_create_room data:", data);
-      console.log("RPC loc_create_room error:", error);
-
       if (error) throw error;
 
-      const result = typeof data === "string" ? JSON.parse(data) : data;
+      const result = normalizeRpcPayload(data);
 
       if (!result?.ok) {
         throw new Error(result?.message || result?.error || "Création impossible");
       }
 
-      try { localStorage.setItem("digiy_loc_last_room_slug", result.room_slug || ""); } catch {}
+      try {
+        localStorage.setItem("digiy_loc_last_room_slug", result.room_slug || "");
+      } catch (_) {}
 
       form.style.display = "none";
       successMsg.classList.add("show");
 
-      const roomSlug = result?.room_slug || "—";
-      const urlPublic = result?.public_url || "";
+      const roomSlug = result?.room_slug || "";
+      const urlPublic = safe(result?.public_url);
 
       publicLinkBox.style.display = "block";
 
@@ -672,7 +799,7 @@ textarea{
         info.style.color = "#bbf7d0";
         publicLinkBox.appendChild(info);
       }
-      info.textContent = "Slug logement : " + roomSlug;
+      info.textContent = "Identifiant logement : " + (roomSlug || "—");
 
     } catch(err) {
       console.error("❌ Erreur complète:", err);
@@ -691,7 +818,7 @@ textarea{
       await navigator.clipboard.writeText(publicLink.href || "");
       btnCopy.textContent = "✅ Copié";
       setTimeout(()=> btnCopy.textContent = "📋 Copier", 1200);
-    }catch(e){
+    }catch(_){
       alert("Impossible de copier automatiquement. Copie manuellement le lien.");
     }
   });
