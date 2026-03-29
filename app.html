@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>DIGIY LOC PRO ♾️ — App propriétaire</title>
+<title>DIGIY LOC — Mon espace</title>
 <meta name="theme-color" content="#0b1020" />
 
 <script>
@@ -15,19 +15,28 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra-v5"></script>
+<script src="./guard.js?v=locpro-wave-ultra-v6"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 
 <style>
 :root{
-  --bg:#020617;--bg2:#0b1020;--card:rgba(255,255,255,.03);--line:#1f2937;
-  --ink:#f9fafb;--muted:#cbd5f5;--gold:#facc15;--green:#22c55e;--danger:#ef4444;
+  --bg:#020617;
+  --bg2:#0b1020;
+  --card:rgba(255,255,255,.03);
+  --line:#1f2937;
+  --ink:#f9fafb;
+  --muted:#cbd5f5;
+  --gold:#facc15;
+  --green:#22c55e;
+  --danger:#ef4444;
   --shadow:0 22px 50px rgba(0,0,0,.55);
   --fontA:"Outfit",system-ui,-apple-system,sans-serif;
 }
+
 *{box-sizing:border-box;margin:0;padding:0}
+
 body{
   min-height:100vh;
   font-family:var(--fontA);
@@ -37,98 +46,261 @@ body{
     radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
     linear-gradient(180deg, var(--bg2), var(--bg));
 }
+
 a{color:inherit}
+
 .wrap{max-width:1100px;margin:0 auto;padding:14px}
+
 .top{
-  display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-  padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow);
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:var(--card);
+  box-shadow:var(--shadow);
 }
+
 .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
 .logo{
-  width:40px;height:40px;border-radius:14px;
+  width:40px;
+  height:40px;
+  border-radius:14px;
   background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
-  border:1px solid rgba(250,204,21,.35);box-shadow:0 0 22px rgba(250,204,21,.12);
+  border:1px solid rgba(250,204,21,.35);
+  box-shadow:0 0 22px rgba(250,204,21,.12);
 }
+
 .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
 .brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
 .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:2px}
+
 .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
 .pill{
-  border:1px solid rgba(148,163,184,.35);padding:7px 10px;border-radius:999px;
-  background:rgba(255,255,255,.02);color:var(--muted);font-weight:900;font-size:.86rem;
+  border:1px solid rgba(148,163,184,.35);
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.02);
+  color:var(--muted);
+  font-weight:900;
+  font-size:.86rem;
 }
+
 .pill strong{color:#fff}
-.pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-.pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+
+.pill.ok{
+  border-color:rgba(34,197,94,.35);
+  background:rgba(34,197,94,.10);
+  color:#bbf7d0;
+}
+
+.pill.warn{
+  border-color:rgba(250,204,21,.35);
+  background:rgba(250,204,21,.10);
+  color:#fde68a;
+}
+
 .btn{
-  border:0;cursor:pointer;border-radius:14px;padding:11px 12px;font-weight:1000;
-  background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--muted);
-  transition:all 0.2s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
+  border:0;
+  cursor:pointer;
+  border-radius:14px;
+  padding:11px 12px;
+  font-weight:1000;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--line);
+  color:var(--muted);
+  transition:all .2s ease;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   font-family:var(--fontA);
 }
+
 .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .btn:active:not(:disabled){transform:translateY(0)}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
 .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
 .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
 .btn.ghost{background:rgba(255,255,255,.02)}
 .btn.small{padding:9px 10px;border-radius:12px;min-height:44px}
+
 .navRow{
-  width:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px;
+  width:100%;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:10px;
 }
+
 .navLeft,.navRight{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
 .navLabel{
-  color:var(--muted);font-weight:900;font-size:.86rem;padding:7px 10px;border-radius:999px;
-  border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.02);
+  color:var(--muted);
+  font-weight:900;
+  font-size:.86rem;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.02);
 }
+
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-@media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+@media(max-width:980px){
+  .grid{grid-template-columns:1fr}
+}
+
 .card{
-  border:1px solid var(--line);background:rgba(255,255,255,.03);
-  border-radius:20px;box-shadow:var(--shadow);overflow:hidden;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
+
 .cardHead{
-  padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
-  gap:10px;flex-wrap:wrap;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+  padding:12px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
 }
+
 .cardHead h2{margin:0;font-size:1.02rem}
 .cardHead small{color:var(--muted);font-weight:800}
 .cardBody{padding:14px}
+
 .note{
-  margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.03);color:var(--muted);white-space:pre-wrap;display:none;
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  white-space:pre-wrap;
+  display:none;
 }
+
 .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
 .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
 .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
-.kv{display:grid;grid-template-columns:160px 1fr;gap:8px;margin-top:10px}
-.kv div{padding:8px 10px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(255,255,255,.02)}
+
+.kv{
+  display:grid;
+  grid-template-columns:160px 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
+.kv div{
+  padding:8px 10px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:12px;
+  background:rgba(255,255,255,.02);
+}
+
 .kv .k{color:var(--muted);font-weight:900}
 .kv .v{font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.quickGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;}
-.quickBtn{min-height:56px;font-size:.98rem;}
-.clawList{display:grid;gap:10px;margin-top:12px;}
-.clawItem{border:1px solid rgba(250,204,21,.20);background:rgba(250,204,21,.08);border-radius:16px;padding:12px;}
-.clawTitle{font-weight:1000;color:#fff2b0;margin-bottom:6px;}
-.clawText{color:#f8f3d8;line-height:1.55;font-size:.92rem;}
-.clawMeta{margin-top:8px;color:#d9d4b4;font-size:.8rem;font-weight:800;}
-.clawEmpty{border:1px dashed rgba(148,163,184,.25);border-radius:14px;padding:12px;color:var(--muted);background:rgba(255,255,255,.02);}
-.toolsBox{margin-top:14px;border:1px dashed rgba(148,163,184,.22);border-radius:18px;background:rgba(255,255,255,.02);padding:12px;}
-.toolsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;}
-.toolsBox[hidden]{display:none}
-.table{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-.row{border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.02);border-radius:16px;padding:10px 12px;}
-.rowTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
-.row b{font-weight:1100}
-.mini{font-size:12px;color:var(--muted);font-weight:850;line-height:1.35}
-.badge{
-  padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.02);font-weight:950;font-size:12px;color:var(--muted);
+
+.quickGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
 }
+
+.quickBtn{min-height:56px;font-size:.98rem}
+
+.clawList{display:grid;gap:10px;margin-top:12px}
+
+.clawItem{
+  border:1px solid rgba(250,204,21,.20);
+  background:rgba(250,204,21,.08);
+  border-radius:16px;
+  padding:12px;
+}
+
+.clawTitle{font-weight:1000;color:#fff2b0;margin-bottom:6px}
+.clawText{color:#f8f3d8;line-height:1.55;font-size:.92rem}
+.clawMeta{margin-top:8px;color:#d9d4b4;font-size:.8rem;font-weight:800}
+
+.clawEmpty{
+  border:1px dashed rgba(148,163,184,.25);
+  border-radius:14px;
+  padding:12px;
+  color:var(--muted);
+  background:rgba(255,255,255,.02);
+}
+
+.toolsBox{
+  margin-top:14px;
+  border:1px dashed rgba(148,163,184,.22);
+  border-radius:18px;
+  background:rgba(255,255,255,.02);
+  padding:12px;
+}
+
+.toolsGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+
+.toolsBox[hidden]{display:none}
+
+.table{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+
+.row{
+  border:1px solid rgba(148,163,184,.18);
+  background:rgba(255,255,255,.02);
+  border-radius:16px;
+  padding:10px 12px;
+}
+
+.rowTop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.row b{font-weight:1100}
+
+.mini{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:850;
+  line-height:1.35;
+}
+
+.badge{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.02);
+  font-weight:950;
+  font-size:12px;
+  color:var(--muted);
+}
+
 .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
 .badge.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
 @media(max-width:720px){
   .wrap{padding:12px}
   .btn{width:100%}
@@ -147,29 +319,29 @@ a{color:inherit}
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>DIGIY LOC PRO <span class="infinity">∞</span></h1>
-        <div class="sub">App propriétaire • simple • terrain • planning au centre</div>
+        <h1>DIGIY LOC <span class="infinity">∞</span></h1>
+        <div class="sub">Mon espace • simple • terrain • planning au centre</div>
       </div>
     </div>
 
     <div class="pills">
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
       <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
-      <div class="pill warn" id="pillState">🔒 Déconnecté</div>
-      <button class="btn danger small" id="btnLogout" style="display:none">🚪 Déconnexion</button>
+      <div class="pill warn" id="pillState">🔒 Accès fermé</div>
+      <button class="btn danger small" id="btnLogout" style="display:none">🚪 Sortir</button>
     </div>
 
     <div class="navRow">
       <div class="navLeft">
         <a class="btn ghost small" id="btnBack" href="#">⬅️ Retour</a>
-        <div class="navLabel" id="navPlace">Lieu : —</div>
+        <div class="navLabel" id="navPlace">Mon lieu : —</div>
       </div>
       <div class="navRight">
         <a class="btn small primary" id="goPlanning" href="#">🗓️ Planning</a>
         <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
         <a class="btn small" id="goReservations" href="#">📆 RESA</a>
         <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
-        <a class="btn small" id="goPinWave" href="#">🌊 Paiement</a>
+        <a class="btn small" id="goPinWave" href="#">🌊 Déclarations Wave</a>
       </div>
     </div>
   </div>
@@ -178,41 +350,41 @@ a{color:inherit}
     <section class="card">
       <div class="cardHead">
         <div>
-          <h2>⚡ Vue terrain</h2>
-          <small>Le minimum utile côté propriétaire.</small>
+          <h2>⚡ Mon espace</h2>
+          <small>Le minimum utile pour avancer.</small>
         </div>
         <button class="btn" id="btnRefresh" type="button">↻ Recharger</button>
       </div>
       <div class="cardBody">
         <div class="kv">
-          <div class="k">Lieu</div><div class="v" id="kvSlug">—</div>
+          <div class="k">Identifiant</div><div class="v" id="kvSlug">—</div>
           <div class="k">Téléphone</div><div class="v" id="kvPhone">—</div>
           <div class="k">Session</div><div class="v" id="kvSess">—</div>
         </div>
 
         <div class="quickGrid">
-          <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Ouvrir l'accès</a>
-          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ GO PIN public</a>
-          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Outils avancés</button>
-          <button class="btn quickBtn" id="btnGoPlanning" type="button">📍 Aller au planning</button>
-          <a class="btn quickBtn" id="goNdimbalLocMain" href="#">🏠 NDIMBAL LOC</a>
+          <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Mon accès</a>
+          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ Accès public</a>
+          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Plus d’outils</button>
+          <button class="btn quickBtn" id="btnGoPlanning" type="button">📍 Ouvrir le planning</button>
+          <a class="btn quickBtn" id="goNdimbalLocMain" href="#">🏠 Entraide LOC</a>
         </div>
 
         <div class="note" id="noteMain"></div>
 
         <div class="toolsBox" id="toolsBox" hidden>
-          <div class="mini">Le dépôt reste complet, mais ces outils restent derrière.</div>
+          <div class="mini">Outils complémentaires, rangés derrière.</div>
           <div class="toolsGrid">
-            <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche locale</a>
-            <a class="btn small" id="goListing" href="#">📋 Listing</a>
-            <a class="btn small" id="goPhotos" href="#">🖼️ Photos</a>
-            <a class="btn small" id="goLinks" href="#">🔗 Liens / QR</a>
-            <a class="btn small" id="goReservationsPulse" href="#">📲 RESA Pulse</a>
+            <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche</a>
+            <a class="btn small" id="goListing" href="#">📋 Mon listing</a>
+            <a class="btn small" id="goPhotos" href="#">🖼️ Mes photos</a>
+            <a class="btn small" id="goLinks" href="#">🔗 Mes liens</a>
+            <a class="btn small" id="goReservationsPulse" href="#">📲 Messages RESA</a>
             <a class="btn small" id="goGenerator" href="#">⚙️ Générateur</a>
-            <a class="btn small" id="goQr" href="#">🔳 QR</a>
-            <a class="btn small" id="goQrFactory" href="#">🏭 QR Factory</a>
-            <a class="btn small" id="goNdimbal" href="#">🤝 Ndimbal</a>
-            <a class="btn small" id="goNdimbalLoc" href="#">🏠 Ndimbal LOC</a>
+            <a class="btn small" id="goQr" href="#">🔳 Mon QR</a>
+            <a class="btn small" id="goQrFactory" href="#">🏭 Atelier QR</a>
+            <a class="btn small" id="goNdimbal" href="#">🤝 Entraide</a>
+            <a class="btn small" id="goNdimbalLoc" href="#">🏠 Entraide LOC</a>
           </div>
         </div>
       </div>
@@ -221,10 +393,10 @@ a{color:inherit}
     <section class="card">
       <div class="cardHead">
         <div>
-          <h2>💳 Mon suivi Wave</h2>
+          <h2>💳 Mes paiements Wave</h2>
           <small>Déclarations → vérification → preuves.</small>
         </div>
-        <button class="btn gold" id="btnDeclareOwner" type="button">➕ Ajouter un paiement</button>
+        <button class="btn gold" id="btnDeclareOwner" type="button">➕ Déclarer un paiement</button>
       </div>
       <div class="cardBody">
         <div class="kv">
@@ -242,12 +414,12 @@ a{color:inherit}
   <section class="card" style="margin-top:14px">
     <div class="cardHead">
       <div>
-        <h2>✨ Aide DIGIY</h2>
-        <small>Analyse branchée sur tes données réelles.</small>
+        <h2>✨ Analyse DIGIY</h2>
+        <small>Conseils branchés sur tes données réelles.</small>
       </div>
     </div>
     <div class="cardBody">
-      <div class="mini" id="clawState">En attente…</div>
+      <div class="mini" id="clawState">Analyse en attente…</div>
       <div class="clawList" id="clawList"></div>
     </div>
   </section>
@@ -305,19 +477,60 @@ a{color:inherit}
   }
 
   function getRawSession(){
-    return window.DIGIY_GUARD?.getSession?.() || {};
+    try{
+      return window.DIGIY_GUARD?.getSession?.() || {};
+    }catch{
+      return {};
+    }
+  }
+
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if (s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if (l) return l;
+    }catch{}
+    return "";
   }
 
   function getSlug(){
     const st = getGuardState();
     const raw = getRawSession();
-    return String(st.slug || raw.slug || "").trim();
+
+    try{
+      const q = new URL(window.location.href).searchParams.get("slug");
+      if (q) return String(q).trim();
+    }catch{}
+
+    return String(
+      st.slug ||
+      raw.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG") ||
+      ""
+    ).trim();
   }
 
   function getPhone(){
     const st = getGuardState();
     const raw = getRawSession();
-    return String(st.phone || raw.phone || "").trim();
+
+    try{
+      const q = new URL(window.location.href).searchParams.get("phone");
+      if (q) return String(q).trim();
+    }catch{}
+
+    return String(
+      st.phone ||
+      raw.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      ""
+    ).trim();
   }
 
   function getSession(){
@@ -328,16 +541,17 @@ a{color:inherit}
       st.access === true ||
       st.access_ok === true ||
       raw.access === true ||
+      raw.access_ok === true ||
       raw.ok === true
     );
 
     return {
       ok: access,
       access_ok: access,
-      reason: st.reason || "",
+      reason: st.reason || raw.reason || "",
       module: st.module || raw.module || "LOC",
-      slug: String(st.slug || raw.slug || "").trim(),
-      phone: String(st.phone || raw.phone || "").trim(),
+      slug: getSlug(),
+      phone: getPhone(),
       validated_at: raw.validated_at || st.validated_at || "",
       session_token: raw.session_token || st.session_token || ""
     };
@@ -368,17 +582,37 @@ a{color:inherit}
   }
 
   async function bootGuard(){
-    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+    if (!window.DIGIY_GUARD) {
       throw new Error("guard_missing");
     }
 
-    await window.DIGIY_GUARD.ready({
-      redirect: true,
-      preserve_validation: true,
-      allow_soft_session: true
-    });
+    const ready = window.DIGIY_GUARD.ready;
 
-    return window.DIGIY_GUARD.state || {};
+    if (typeof ready === "function") {
+      let out;
+      try{
+        out = ready({
+          redirect: true,
+          preserve_validation: true,
+          allow_soft_session: true
+        });
+      }catch{
+        out = ready();
+      }
+      if (out && typeof out.then === "function") await out;
+      return window.DIGIY_GUARD.state || {};
+    }
+
+    if (ready && typeof ready.then === "function") {
+      await ready;
+      return window.DIGIY_GUARD.state || {};
+    }
+
+    if (ready) {
+      return window.DIGIY_GUARD.state || {};
+    }
+
+    throw new Error("guard_not_ready");
   }
 
   function formatDateTime(value){
@@ -401,7 +635,7 @@ a{color:inherit}
   function refreshRouteUI(){
     const currentSlug = getSlug();
 
-    if ($("navPlace")) $("navPlace").textContent = "Lieu : " + (currentSlug || "—");
+    if ($("navPlace")) $("navPlace").textContent = "Mon lieu : " + (currentSlug || "—");
     if ($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
     if ($("pillSlug")) $("pillSlug").innerHTML = `🏷️ <strong>${escapeHtml(currentSlug || "—")}</strong>`;
 
@@ -452,7 +686,7 @@ a{color:inherit}
     if (sess.ok && sess.phone) {
       if ($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${escapeHtml(phone)}</strong>`;
       if ($("pillState")) {
-        $("pillState").textContent = "✅ Connecté";
+        $("pillState").textContent = "✅ Accès actif";
         $("pillState").classList.remove("warn");
         $("pillState").classList.add("ok");
       }
@@ -462,7 +696,7 @@ a{color:inherit}
 
     if ($("pillUser")) $("pillUser").innerHTML = `👤 <strong>—</strong>`;
     if ($("pillState")) {
-      $("pillState").textContent = "🔒 Déconnecté";
+      $("pillState").textContent = "🔒 Accès fermé";
       $("pillState").classList.remove("ok");
       $("pillState").classList.add("warn");
     }
@@ -472,7 +706,11 @@ a{color:inherit}
 
   function getLocalSupabase(){
     if (sb?.rpc) return sb;
-    if (!window.supabase?.createClient) throw new Error("Supabase JS indisponible.");
+
+    if (!window.supabase?.createClient) {
+      throw new Error("Supabase JS indisponible.");
+    }
+
     sb = window.supabase.createClient(SB_URL, SB_ANON, {
       auth: {
         persistSession: false,
@@ -480,6 +718,7 @@ a{color:inherit}
         detectSessionInUrl: false
       }
     });
+
     return sb;
   }
 
@@ -505,7 +744,7 @@ a{color:inherit}
     if (!box) return;
 
     if (!rows || !rows.length) {
-      box.innerHTML = `<div class="row"><div class="mini">Aucun paiement déclaré pour ce logement.</div></div>`;
+      box.innerHTML = `<div class="row"><div class="mini">Aucun paiement déclaré pour le moment.</div></div>`;
       return;
     }
 
@@ -517,7 +756,7 @@ a{color:inherit}
         ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`
         : "";
       const proof = r.proof_url
-        ? `<div style="margin-top:6px"><a href="${escapeAttr(r.proof_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#facc15;font-weight:900">📎 Voir preuve</a></div>`
+        ? `<div style="margin-top:6px"><a href="${escapeAttr(r.proof_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#facc15;font-weight:900">📎 Voir la preuve</a></div>`
         : "";
 
       const status = String(r.status || "declared").toLowerCase();
@@ -553,7 +792,7 @@ a{color:inherit}
         const placeSlug = getSlug();
 
         if (!ownerPhone || !placeSlug) {
-          showNote("noteWave", "❌ Identifiant ou session manquants. Reconnecte-toi via PIN.", "bad");
+          showNote("noteWave", "❌ Identifiant ou session manquants. Passe par ton PIN.", "bad");
           return;
         }
 
@@ -576,7 +815,7 @@ a{color:inherit}
           await loadWave();
         } catch (e) {
           console.error(e);
-          showNote("noteWave", "❌ Erreur vérification : " + (e?.message || e), "bad");
+          showNote("noteWave", "❌ Erreur pendant la vérification : " + (e?.message || e), "bad");
           btn.disabled = false;
           btn.textContent = old;
         }
@@ -618,7 +857,7 @@ a{color:inherit}
     const sessOk = refreshSessionUI();
 
     if (!sessOk) {
-      showNote("noteWave", "🔒 Connecte-toi via PIN pour voir ton suivi Wave.", "warn");
+      showNote("noteWave", "🔒 Passe par ton PIN pour voir tes paiements Wave.", "warn");
       if ($("waveList")) $("waveList").innerHTML = "";
       return;
     }
@@ -696,13 +935,13 @@ a{color:inherit}
     if (!stateEl || !box) return;
 
     if (!currentSlug) {
-      stateEl.textContent = "Identifiant manquant. L'aide DIGIY attend la connexion.";
+      stateEl.textContent = "Identifiant manquant. L’analyse DIGIY attend la connexion.";
       box.innerHTML = "";
       return;
     }
 
     try {
-      stateEl.textContent = "Chargement de l'aide DIGIY…";
+      stateEl.textContent = "Chargement de l’analyse DIGIY…";
 
       const S = await needSB();
       const { data, error } = await S
@@ -721,8 +960,8 @@ a{color:inherit}
       stateEl.textContent = "Analyse DIGIY chargée.";
     } catch (e) {
       console.error(e);
-      stateEl.textContent = "Aide DIGIY momentanément indisponible.";
-      box.innerHTML = `<div class="clawEmpty">L'analyse DIGIY n'a pas abouti pour le moment. Recharge la page.</div>`;
+      stateEl.textContent = "Analyse DIGIY momentanément indisponible.";
+      box.innerHTML = `<div class="clawEmpty">L’analyse DIGIY n’a pas abouti pour le moment. Recharge la page.</div>`;
     }
   }
 
@@ -733,7 +972,7 @@ a{color:inherit}
   });
 
   $("btnGoPlanning")?.addEventListener("click", () => {
-    location.href = withContext("./planning.html");
+    window.location.href = withContext("./planning.html");
   });
 
   $("btnBack")?.addEventListener("click", (e) => {
@@ -742,7 +981,7 @@ a{color:inherit}
       history.back();
       return;
     }
-    location.href = withContext("./pin.html");
+    window.location.href = withContext("./pin.html");
   });
 
   $("btnLogout")?.addEventListener("click", () => {
@@ -756,11 +995,11 @@ a{color:inherit}
     if (getSession().ok && getSlug()) {
       showNote(
         "noteMain",
-        "✅ App propriétaire active.\nPlanning au centre.\nPré-fiche locale rangée derrière.\nAnalyse DIGIY active.",
+        "✅ Espace actif.\nPlanning au centre.\nPré-fiche rangée derrière.\nAnalyse DIGIY active.",
         "ok"
       );
     } else {
-      showNote("noteMain", "⚠️ Session propriétaire absente. Reconnecte-toi via PIN.", "warn");
+      showNote("noteMain", "⚠️ Session absente. Reconnecte-toi via PIN.", "warn");
     }
 
     await loadClaw();
@@ -814,7 +1053,7 @@ a{color:inherit}
       await loadWave();
     } catch (e) {
       console.error(e);
-      showNote("noteWave", "❌ Impossible d'enregistrer.\nDétail: " + (e?.message || e), "bad");
+      showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail : " + (e?.message || e), "bad");
     }
   });
 
@@ -825,13 +1064,13 @@ a{color:inherit}
     const sessOk = refreshSessionUI();
 
     if (!getSlug()) {
-      showNote("noteMain", "❌ Identifiant propriétaire introuvable. Reconnecte-toi via PIN.", "bad");
+      showNote("noteMain", "❌ Identifiant introuvable. Reconnecte-toi via PIN.", "bad");
     } else if (!sessOk) {
       showNote("noteMain", "⚠️ Identifiant trouvé mais session non validée.", "warn");
     } else {
       showNote(
         "noteMain",
-        "✅ App propriétaire active.\nPré-fiche locale rangée derrière.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAnalyse DIGIY active.",
+        "✅ Espace actif.\nPré-fiche rangée derrière.\nPlanning, dates bloquées, RESA, tarifs et paiements devant.\nAnalyse DIGIY active.",
         "ok"
       );
     }
@@ -844,13 +1083,13 @@ a{color:inherit}
     refreshRouteUI();
     refreshSessionUI();
 
-    showNote("noteMain", "❌ Guard non prêt. Recharge la page ou reconnecte-toi via PIN.", "bad");
-    showNote("noteWave", "🔒 Accès Wave indisponible tant que la session propriétaire n'est pas prête.", "warn");
+    showNote("noteMain", "❌ Vérification non prête. Recharge la page ou repasse par PIN.", "bad");
+    showNote("noteWave", "🔒 Les paiements Wave restent fermés tant que la session n’est pas prête.", "warn");
 
     if ($("waveList")) $("waveList").innerHTML = "";
 
     const stateEl = $("clawState");
-    if (stateEl) stateEl.textContent = "Aide DIGIY indisponible tant que la session n'est pas prête.";
+    if (stateEl) stateEl.textContent = "Analyse DIGIY indisponible tant que la session n’est pas prête.";
   }
 })();
 </script>
