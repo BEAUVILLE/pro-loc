@@ -15,7 +15,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-ndimbal-loc-v1"></script>
+<script src="./guard.js?v=locpro-ndimbal-loc-clean-20260329"></script>
 
 <style>
   :root{
@@ -23,20 +23,21 @@
     --bg2:#065f46;
     --card:rgba(0,0,0,.25);
     --line:rgba(255,255,255,.12);
-    --line2:rgba(250,204,21,.18);
     --ink:#e5e7eb;
     --muted:rgba(229,231,235,.78);
     --gold:#facc15;
     --ok:#22c55e;
     --bad:#ef4444;
+    --warn:#f59e0b;
     --shadow:0 20px 40px rgba(0,0,0,.35);
     --r:18px;
   }
 
   *{box-sizing:border-box}
+
   body{
     margin:0;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    font-family:Outfit,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     background:
       radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.10), transparent 60%),
       radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
@@ -97,6 +98,18 @@
     border-color:rgba(34,197,94,.35);
     background:rgba(34,197,94,.10);
     color:#bbf7d0;
+  }
+
+  .pill.warn{
+    border-color:rgba(245,158,11,.35);
+    background:rgba(245,158,11,.10);
+    color:#fde68a;
+  }
+
+  .pill.bad{
+    border-color:rgba(239,68,68,.35);
+    background:rgba(239,68,68,.10);
+    color:#fecaca;
   }
 
   .mono{
@@ -262,7 +275,7 @@
   <div class="topPills">
     <span class="pill">module: <span class="mono">LOC</span></span>
     <span class="pill mono" id="pillSlug">slug: —</span>
-    <span class="pill" id="pillState">mode: aperçu</span>
+    <span class="pill warn" id="pillState">mode: aperçu</span>
   </div>
 
   <div class="switch">
@@ -333,10 +346,51 @@
     alertEl.style.display = msg ? "block" : "none";
   }
 
+  function cleanSlug(v){
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9\-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
+  }
+
+  function normPhone(p){
+    p = String(p || "").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if (p.startsWith("00221")) p = "+221" + p.slice(5);
+    if (!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if (!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
+  }
+
+  function storageGet(key){
+    try{
+      const v1 = sessionStorage.getItem(key);
+      if(v1) return v1;
+    }catch(_){}
+    try{
+      const v2 = localStorage.getItem(key);
+      if(v2) return v2;
+    }catch(_){}
+    return "";
+  }
+
   function getLocalSupabase(){
+    try{
+      const guardSb = window.DIGIY_GUARD?.getSb?.();
+      if (guardSb?.rpc) return guardSb;
+    } catch(_) {}
+
     if (sb?.rpc) return sb;
     if (!window.supabase?.createClient) throw new Error("supabase_not_ready");
-    sb = window.supabase.createClient(SB_URL, SB_ANON);
+    sb = window.supabase.createClient(SB_URL, SB_ANON, {
+      auth:{
+        persistSession:false,
+        autoRefreshToken:false,
+        detectSessionInUrl:false
+      }
+    });
     return sb;
   }
 
@@ -358,38 +412,62 @@
       ok: !!st.access_ok,
       access_ok: !!st.access_ok,
       preview: !!st.preview,
-      slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
-      phone: String(st.phone || raw.phone || "").trim(),
+      slug: String(
+        st.slug ||
+        raw.slug ||
+        storageGet("digiy_loc_slug") ||
+        storageGet("digiy_last_slug") ||
+        ""
+      ).trim().toLowerCase(),
+      phone: String(
+        st.phone ||
+        raw.phone ||
+        storageGet("DIGIY_PHONE") ||
+        storageGet("DIGIY_LOC_PHONE") ||
+        ""
+      ).trim(),
       reason: String(st.reason || raw.reason || "").trim(),
       module: String(st.module || raw.module || MODULE).trim()
     };
   }
 
-  function cleanSlug(v){
-    return String(v || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9\-_]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
+  async function waitGuardReady(){
+    if (!window.DIGIY_GUARD) throw new Error("guard_missing");
+
+    const ready = window.DIGIY_GUARD.ready;
+
+    if (typeof ready === "function") {
+      const maybe = ready(8000);
+      if (maybe && typeof maybe.then === "function") return await maybe;
+      return maybe;
+    }
+
+    if (ready && typeof ready.then === "function") {
+      return await ready;
+    }
+
+    if (ready) return true;
+    throw new Error("guard_not_ready");
   }
 
   function getSlug(){
     const qs = cleanSlug(new URLSearchParams(location.search).get("slug") || "");
     if (qs) return qs;
+
     const sess = getSession();
     if (sess.slug) return cleanSlug(sess.slug);
+
     return cleanSlug(window.DIGIY_GUARD?.getSlug?.() || "");
   }
 
   function getPhone(){
     const sess = getSession();
-    return String(sess.phone || "").trim();
+    return normPhone(sess.phone || "");
   }
 
   function withSlug(url){
     if (!State.slug) return url;
+
     try {
       const u = new URL(url, location.href);
       u.searchParams.set("slug", State.slug);
@@ -414,9 +492,12 @@
     if (State.mode === "live") {
       pillState.textContent = "mode: vivant";
       pillState.className = "pill ok";
+    } else if (State.reason === "guard_missing" || State.reason === "guard_not_ready") {
+      pillState.textContent = "mode: erreur";
+      pillState.className = "pill bad";
     } else {
       pillState.textContent = "mode: aperçu";
-      pillState.className = "pill";
+      pillState.className = "pill warn";
     }
 
     stateEl.textContent = State.ndimbal ? "NDIMBAL ON" : "NDIMBAL OFF";
@@ -490,6 +571,7 @@
     ];
 
     let lastErr = null;
+
     for (const run of attempts) {
       try {
         const res = await run();
@@ -516,7 +598,7 @@
         if (typeof data === "boolean") return { ok:true, enabled:data };
         if (data && typeof data === "object") {
           if (data.ok === true || data.ok === undefined) {
-            return { ok:true, enabled: !!data.enabled };
+            return { ok:true, enabled: ("enabled" in data) ? !!data.enabled : target };
           }
           return { ok:false, reason: data.reason || "rpc_not_ok" };
         }
@@ -531,7 +613,7 @@
         if (typeof data === "boolean") return { ok:true, enabled:data };
         if (data && typeof data === "object") {
           if (data.ok === true || data.ok === undefined) {
-            return { ok:true, enabled: !!data.enabled };
+            return { ok:true, enabled: ("enabled" in data) ? !!data.enabled : target };
           }
           return { ok:false, reason: data.reason || "rpc_not_ok" };
         }
@@ -557,6 +639,7 @@
     ];
 
     let lastErr = null;
+
     for (const run of attempts) {
       try {
         const res = await run();
@@ -600,14 +683,14 @@
     refreshNav();
     paint();
 
-    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+    if (!window.DIGIY_GUARD) {
       showAlert("❌ Guard absent ou non chargé.", "bad");
       setPreview("guard_missing");
       return;
     }
 
     try {
-      await window.DIGIY_GUARD.ready();
+      await waitGuardReady();
     } catch (e) {
       console.error(e);
       showAlert("❌ Guard non prêt. Recharge la page.", "bad");
@@ -628,7 +711,7 @@
 
     const sess = getSession();
     if (!sess.access_ok) {
-      showAlert("🔐 Tu dois être connecté (PIN) pour gérer NDIMBAL.", "warn");
+      showAlert("🔐 Tu dois être connecté par PIN pour gérer NDIMBAL.", "warn");
       setPreview("access_required");
       return;
     }
