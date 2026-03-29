@@ -3,8 +3,13 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO • Planning</title>
+  <title>Je loue • Mon planning</title>
   <meta name="theme-color" content="#d6c29a"/>
+  <meta name="description" content="Je loue — mon planning terrain pour suivre les dates, les arrivées, les occupations, les blocages et les fermetures."/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -15,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-final-v6-beige-ink-fix"></script>
+  <script src="./guard.js?v=locpro-planning-human-front-v7"></script>
 
   <style>
     :root{
@@ -60,9 +65,10 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.08), transparent 60%),
         radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.08), transparent 60%),
@@ -112,6 +118,7 @@
       transition:.15s ease;
       user-select:none;
       touch-action:manipulation;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
     }
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
@@ -268,6 +275,7 @@
       font-weight:950;
       outline:none;
       min-width:220px;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
     }
     input::placeholder{color:rgba(246,248,242,.62)}
     input:focus,select:focus{
@@ -418,6 +426,7 @@
       transition:.15s ease;
       color:#2f2417;
       box-shadow:0 1px 0 rgba(255,255,255,.25) inset;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
     }
     .day:hover{
       background:var(--cal-day-bg-hover);
@@ -495,25 +504,25 @@
     <div class="card">
       <div class="row">
         <div>
-          <div class="h">DIGIY LOC PRO • Planning</div>
-          <div class="muted" id="sub">🧭 Vérification accès LOC…</div>
+          <div class="h">Je loue • Mon planning</div>
+          <div class="muted" id="sub">🧭 Vérification de ton accès…</div>
         </div>
 
         <div class="row" style="justify-content:flex-end">
-          <span class="pill mono" id="pillSlug">slug: —</span>
-          <span class="pill">module: <span class="mono" id="pillModule">LOC</span></span>
+          <span class="pill mono" id="pillSlug">identifiant : —</span>
+          <span class="pill">activité : <span class="mono" id="pillModule">Je loue</span></span>
         </div>
       </div>
 
       <div class="row" style="margin-top:10px;justify-content:flex-start">
-        <a class="btn gold" id="btnDashboard" href="./app.html">🏠 App</a>
-        <a class="btn blue" id="btnReservations" href="./reservations.html">📆 RESA</a>
-        <a class="btn" id="btnTarifs" href="./tarifs.html">💰 Tarifs</a>
-        <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
-        <a class="btn" id="btnListing" href="./listing.html">📋 Listing</a>
-        <a class="btn" id="btnWave" href="./pin-wave.html">🌊 PIN Wave</a>
-        <a class="btn" id="btnPin" href="./pin.html">🔐 PIN</a>
-        <button class="btn bad" id="btnLogout" type="button">🚪 Déconnexion</button>
+        <a class="btn gold" id="btnDashboard" href="./app.html">🏠 Mon espace</a>
+        <a class="btn blue" id="btnReservations" href="./reservations.html">📆 Réservations</a>
+        <a class="btn" id="btnTarifs" href="./tarifs.html">💰 Mes tarifs</a>
+        <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Mes photos</a>
+        <a class="btn" id="btnListing" href="./listing.html">📋 Ma fiche</a>
+        <a class="btn" id="btnWave" href="./pin-wave.html">🌊 Code Wave</a>
+        <a class="btn" id="btnPin" href="./pin.html">🔐 Mon accès</a>
+        <button class="btn bad" id="btnLogout" type="button">🚪 Me déconnecter</button>
       </div>
 
       <div class="note warn" id="note"></div>
@@ -522,7 +531,7 @@
     <div class="grid">
       <div class="card">
         <div class="row">
-          <div style="font-weight:1100">🗓️ Planning terrain</div>
+          <div style="font-weight:1100">🗓️ Mon planning terrain</div>
           <span class="pill" id="pillToday">—</span>
         </div>
 
@@ -564,23 +573,23 @@
               </div>
 
               <div class="row" style="margin-top:10px;justify-content:flex-start">
-                <span class="pill" id="selectedDayPill">Jour sélectionné : tout le mois</span>
+                <span class="pill" id="selectedDayPill">Jour choisi : tout le mois</span>
                 <button class="btn small blue" id="btnActionDay" type="button">⚙️ Agir sur ce jour</button>
-                <button class="btn small" id="btnClearDayFilter" type="button">♻️ Effacer filtre jour</button>
+                <button class="btn small" id="btnClearDayFilter" type="button">♻️ Effacer le filtre jour</button>
               </div>
 
               <div class="calendarGrid" id="calendarGrid"></div>
             </div>
 
             <div class="tools">
-              <input id="q" placeholder="Recherche : nom, date, tel, note…" />
+              <input id="q" placeholder="Recherche : nom, date, téléphone, note…" />
               <select id="filterStatus">
                 <option value="">Tous les états</option>
                 <option value="arrivee">Arrivée</option>
                 <option value="occupe">Occupé</option>
                 <option value="bloque">Bloqué</option>
                 <option value="ferme">Fermé</option>
-                <option value="resa">RESA</option>
+                <option value="resa">Réservation</option>
                 <option value="depart">Départ (journal)</option>
               </select>
               <button class="btn ok" id="btnSearch" type="button">🔎 Chercher</button>
@@ -591,8 +600,8 @@
             <div class="list" id="list"></div>
 
             <div class="kpi" style="margin-top:12px">
-              <div class="muted">URL officielle à garder</div>
-              <div class="big">Toujours avec le slug :</div>
+              <div class="muted">Lien à garder</div>
+              <div class="big">Toujours avec ton identifiant :</div>
               <span class="mono" id="officialUrl">/planning.html?slug=...</span>
             </div>
           </div>
@@ -600,21 +609,21 @@
       </div>
 
       <div class="card">
-        <div style="font-weight:1100">🧩 Accès & aide terrain</div>
+        <div style="font-weight:1100">🧩 Mon accès & mon aide</div>
         <div class="muted" style="margin-top:6px">
-          Si tu changes de téléphone / propriétaire, déconnecte puis reconnecte avec le bon numéro.
-          Le guard gère la session, le slug et l’abonnement.
+          Si tu changes de téléphone ou de propriétaire, déconnecte-toi puis reconnecte-toi avec le bon numéro.
+          Ton accès garde ta session, ton identifiant et ton droit d’entrée.
         </div>
 
         <div class="kpi" style="margin-top:12px">
-          <div class="muted">Statut session</div>
+          <div class="muted">Ma connexion</div>
           <div class="big" id="who">—</div>
           <div class="muted" style="margin-top:6px" id="abo">—</div>
         </div>
 
         <div class="row" style="margin-top:12px">
           <a class="btn warn" id="btnSupport" href="#" role="button">💬 Support WhatsApp</a>
-          <a class="btn gold" id="btnBackDashboard" href="./app.html">⬅️ Retour app</a>
+          <a class="btn gold" id="btnBackDashboard" href="./app.html">⬅️ Retour espace</a>
         </div>
 
         <div class="kpi" style="margin-top:12px">
@@ -702,6 +711,53 @@
     return "";
   }
 
+  function readStoredSlug(key){
+    try{
+      const raw = sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+      if(!raw) return "";
+
+      const txt = String(raw).trim();
+      if(!txt) return "";
+
+      if(txt.startsWith("{")){
+        const obj = JSON.parse(txt);
+        return String(obj.slug || obj.last_slug || "").trim().toLowerCase();
+      }
+
+      return txt.trim().toLowerCase();
+    }catch{
+      return "";
+    }
+  }
+
+  function buildSafeUrl(path, extraParams){
+    const rawPath = String(path || "").trim() || "./";
+    let url;
+
+    try{
+      url = new URL(rawPath, location.href);
+    }catch{
+      const basePath = location.pathname.replace(/[^/]*$/, "");
+      const cleanPath = rawPath
+        .replace(/^\.\//, "")
+        .replace(/^\/+/, "");
+      url = new URL(basePath + cleanPath, location.origin);
+    }
+
+    const params = extraParams && typeof extraParams === "object" ? extraParams : {};
+    Object.entries(params).forEach(([key, value]) => {
+      if(value == null) return;
+      const text = String(value).trim();
+      if(!text) return;
+      url.searchParams.set(key, text);
+    });
+
+    if(url.origin === location.origin){
+      return url.pathname + url.search + url.hash;
+    }
+    return url.toString();
+  }
+
   async function waitGuardReady(){
     if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
       throw new Error("guard_missing");
@@ -746,28 +802,18 @@
     }catch{}
 
     return (
-      storageGet("digiy_loc_slug") ||
-      storageGet("digiy_loc_last_slug") ||
-      storageGet("DIGIY_LOC_SESSION") ||
-      storageGet("DIGIY_LOC_ACCESS") ||
-      storageGet("DIGIY_SLUG") ||
+      readStoredSlug("digiy_loc_slug") ||
+      readStoredSlug("digiy_loc_last_slug") ||
+      readStoredSlug("DIGIY_LOC_SESSION") ||
+      readStoredSlug("DIGIY_LOC_ACCESS") ||
+      readStoredSlug("DIGIY_SLUG") ||
       ""
-    ).trim().toLowerCase();
+    );
   }
 
   function withSlug(path){
     const slug = getSlug();
-    if(!slug) return path;
-
-    try{
-      const u = new URL(path, location.href);
-      u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      const sep = path.includes("?") ? "&" : "?";
-      return path + sep + "slug=" + encodeURIComponent(slug);
-    }
+    return buildSafeUrl(path, slug ? { slug } : {});
   }
 
   function pinUrl(){
@@ -843,13 +889,13 @@
     UX_MODE = "preview";
     UX_REASON = reason || "preview";
 
-    setSub("👁️ Aperçu planning LOC");
+    setSub("👁️ Aperçu de ton planning");
     show(
       reason === "slug_missing"
-        ? "👁️ Aucun slug détecté.\n➡️ Tu vois un aperçu propre du planning."
+        ? "👁️ Aucun identifiant détecté.\n➡️ Tu vois un aperçu propre de ton planning."
         : reason === "has_access_false"
-        ? "👁️ Slug présent mais accès non actif.\n➡️ Aperçu propre, sans mur brutal."
-        : "👁️ Planning en aperçu.\n➡️ Passe par PIN pour ouvrir le mode vivant.",
+        ? "👁️ Ton identifiant est bien là, mais ton accès n’est pas encore actif.\n➡️ Tu gardes un aperçu propre, sans mur brutal."
+        : "👁️ Planning en aperçu.\n➡️ Passe par ton accès pour ouvrir le mode vivant.",
       "warn"
     );
 
@@ -868,9 +914,9 @@
     UX_MODE = "live";
     UX_REASON = "ok";
 
-    setSub("✅ Accès OK.");
+    setSub("✅ Ton accès est ouvert.");
     $("who").textContent = "✅ Connecté · " + phone;
-    $("abo").textContent = "Abo validé par le guard.";
+    $("abo").textContent = "Ton accès est bien actif.";
     show("✅ Planning prêt.\nCalendrier compact + liste terrain active.", "ok");
   }
 
@@ -900,7 +946,7 @@
 
   function badgeStatus(st){
     const v = normalizeStatus(st);
-    if(v === "resa") return `<span class="badge blue">📆 RESA</span>`;
+    if(v === "resa") return `<span class="badge blue">📆 Réservation</span>`;
     if(v === "occupe") return `<span class="badge occupe">🛏️ Occupé</span>`;
     if(v === "bloque") return `<span class="badge bad">⛔ Bloqué</span>`;
     if(v === "ferme") return `<span class="badge warn">🚫 Fermé</span>`;
@@ -911,7 +957,7 @@
 
   function statusLabel(st){
     const v = normalizeStatus(st);
-    if(v === "resa") return "RESA";
+    if(v === "resa") return "Réservation";
     if(v === "occupe") return "Occupé";
     if(v === "bloque") return "Bloqué";
     if(v === "ferme") return "Fermé";
@@ -1011,10 +1057,10 @@
     title.textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
 
     if(MONTH_STATE.selectedDate){
-      selectedPill.textContent = "Jour sélectionné : " + MONTH_STATE.selectedDate;
+      selectedPill.textContent = "Jour choisi : " + MONTH_STATE.selectedDate;
       sub.textContent = "Clique un autre jour pour lire vite, ou efface le filtre jour.";
     } else {
-      selectedPill.textContent = "Jour sélectionné : tout le mois";
+      selectedPill.textContent = "Jour choisi : tout le mois";
       sub.textContent = "Lecture compacte du terrain. Clique un jour pour filtrer la liste.";
     }
 
@@ -1065,7 +1111,7 @@
         MONTH_STATE.month = cell.date.getMonth();
         MONTH_STATE.selectedDate = cell.ymd;
         render();
-        showRight(`📅 Jour sélectionné : ${cell.ymd}`, "ok");
+        showRight(`📅 Jour choisi : ${cell.ymd}`, "ok");
       });
 
       grid.appendChild(btn);
@@ -1140,7 +1186,7 @@
   }
 
   function askStatus(){
-    const raw = prompt("État : Arrivée / Occupé / Bloqué / Fermé / Départ / RESA", "Occupé");
+    const raw = prompt("État : Arrivée / Occupé / Bloqué / Fermé / Départ / Réservation", "Occupé");
     if(raw == null) return null;
     const st = normalizeStatus(raw);
     return st === "info" ? "occupe" : st;
@@ -1148,7 +1194,7 @@
 
   function actionSelectedDay(){
     if(!isLive()){
-      showRight("👁️ Passe par PIN pour modifier le terrain.", "warn");
+      showRight("👁️ Passe par ton accès pour modifier le terrain.", "warn");
       return;
     }
 
@@ -1220,7 +1266,7 @@ Entre 1, 2, 3, 4, 5 ou 6`,
 
   function addItem(){
     if(!isLive()){
-      showRight("👁️ Passe par PIN pour entrer en mode vivant avant d’ajouter une date.", "warn");
+      showRight("👁️ Passe par ton accès avant d’ajouter une date.", "warn");
       return;
     }
 
@@ -1235,7 +1281,7 @@ Entre 1, 2, 3, 4, 5 ou 6`,
     if(!status) return;
 
     const nameDefault =
-      status === "resa" ? "RESA" :
+      status === "resa" ? "Réservation" :
       status === "occupe" ? "Occupé" :
       status === "bloque" ? "Date bloquée" :
       status === "ferme" ? "Fermeture" :
@@ -1300,7 +1346,7 @@ Entre 1, 2, 3, 4, 5 ou 6`,
   }
 
   async function init(){
-    $("pillModule").textContent = MODULE;
+    $("pillModule").textContent = "Je loue";
 
     const today = new Date();
     const fmt = new Intl.DateTimeFormat("fr-FR", {
@@ -1312,8 +1358,8 @@ Entre 1, 2, 3, 4, 5 ou 6`,
     $("pillToday").textContent = fmt.format(today);
 
     if(!window.DIGIY_GUARD){
-      setSub("❌ Guard absent.");
-      show("❌ Guard absent ou non chargé.\n➡️ Vérifie ./guard.js", "bad");
+      setSub("❌ Ton accès n’est pas disponible.");
+      show("❌ Le fichier d’accès n’est pas chargé.\n➡️ Vérifie ./guard.js", "bad");
       return;
     }
 
@@ -1321,22 +1367,20 @@ Entre 1, 2, 3, 4, 5 ou 6`,
       await waitGuardReady();
     }catch(e){
       console.error(e);
-      setSub("❌ Guard non prêt.");
-      show("❌ Le guard n’a pas pu s’initialiser.", "bad");
-      $("pillSlug").textContent = "slug: —";
-      $("who").textContent = "❌ Guard indisponible";
-      $("abo").textContent = "Recharge la page ou reconnecte-toi via PIN.";
+      setSub("❌ Ton accès ne répond pas.");
+      show("❌ Ton accès n’a pas pu s’initialiser.", "bad");
+      $("pillSlug").textContent = "identifiant : —";
+      $("who").textContent = "❌ Accès indisponible";
+      $("abo").textContent = "Recharge la page ou reconnecte-toi.";
       return;
     }
 
     const sess = getSession();
     const slug = getSlug();
 
-    $("pillSlug").textContent = "slug: " + (slug || "—");
+    $("pillSlug").textContent = "identifiant : " + (slug || "—");
 
-    const official = new URL("./planning.html", location.href);
-    if(slug) official.searchParams.set("slug", slug);
-    $("officialUrl").textContent = official.pathname + official.search;
+    $("officialUrl").textContent = buildSafeUrl("./planning.html", slug ? { slug } : {});
 
     $("btnDashboard").href = withSlug("./app.html");
     $("btnBackDashboard").href = withSlug("./app.html");
@@ -1365,12 +1409,12 @@ Entre 1, 2, 3, 4, 5 ou 6`,
         "";
 
       const txt =
-`DIGIY LOC PRO • Support
+`DIGIY LOC • Support
 
-Module: ${MODULE}
-Slug: ${slug || "—"}
-Téléphone: ${phone || "—"}
-Page: planning
+Activité : location
+Identifiant : ${slug || "—"}
+Téléphone : ${phone || "—"}
+Page : planning
 
 Merci. — DIGIY`;
 
