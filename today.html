@@ -3,8 +3,13 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Vue du jour</title>
+  <title>Je loue • Vue du jour</title>
   <meta name="theme-color" content="#0b1020"/>
+  <meta name="description" content="Je loue — vue du jour pour suivre les arrivées, les départs, les logements occupés, les rappels et les paiements."/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -13,7 +18,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-today-clean-v6"></script>
+  <script src="./guard.js?v=locpro-today-human-front-v7"></script>
 
   <style>
     :root{
@@ -25,7 +30,7 @@
     *{box-sizing:border-box}
     body{
       margin:0; color:var(--ink);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
         radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
@@ -45,7 +50,7 @@
       border:1px solid rgba(250,204,21,.35);
       box-shadow:0 0 22px rgba(250,204,21,.12);
     }
-    h1{margin:0;font-size:1.05rem}
+    h1{margin:0;font-size:1.05rem;font-weight:1000}
     .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:4px;line-height:1.2}
     .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .pill{
@@ -70,6 +75,7 @@
       align-items:center;
       justify-content:center;
       gap:8px;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
     }
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
@@ -162,21 +168,21 @@
     <div class="body">
       <div class="row">
         <div>
-          <div style="font-weight:1100;font-size:1rem">🔐 Accès DIGIY LOC PRO</div>
+          <div style="font-weight:1100;font-size:1rem">🔐 Mon accès</div>
           <div id="accessGateText" style="margin-top:6px;color:var(--muted)">
-            Vérification accès…
+            Vérification de ton accès…
           </div>
         </div>
 
         <div class="row" style="gap:8px;flex-wrap:wrap">
-          <a class="btn gold" id="btnGatePin" href="#">🔑 Ouvrir PIN</a>
-          <a class="btn primary" id="btnGatePay" href="#">💳 Activer mon module</a>
-          <a class="btn ghost" id="btnGateDashboard" href="#">🏠 Retour cockpit</a>
+          <a class="btn gold" id="btnGatePin" href="#">🔑 Entrer avec mon code</a>
+          <a class="btn primary" id="btnGatePay" href="#">💳 Activer mon accès</a>
+          <a class="btn ghost" id="btnGateDashboard" href="#">🏠 Retour à mon espace</a>
         </div>
       </div>
 
       <div class="note warn" id="accessGateNote" style="display:block;margin-top:12px">
-        La vraie vue du jour reste protégée tant que l’accès n’est pas confirmé.
+        La vraie vue du jour reste protégée tant que ton accès n’est pas confirmé.
       </div>
     </div>
   </div>
@@ -185,14 +191,14 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>DIGIY LOC PRO — Vue du jour</h1>
-        <div class="sub">Arrivées • Départs • Occupés • Pulse • Paiements</div>
+        <h1>Je loue • Vue du jour</h1>
+        <div class="sub">Arrivées • Départs • Logements occupés • Rappels • Paiements</div>
       </div>
     </div>
 
     <div class="pills">
       <div class="pill" id="pillUser">👤 <strong>—</strong></div>
-      <div class="pill warn" id="pillState">🔒 Déconnecté</div>
+      <div class="pill warn" id="pillState">🔒 Accès fermé</div>
 
       <a class="btn ghost" data-go="__back__" href="#">⬅️ Retour</a>
       <button class="btn gold" data-action="refresh" type="button">↻ Rafraîchir</button>
@@ -204,7 +210,7 @@
     <section class="card col4">
       <div class="head">
         <div>
-          <h2>📊 Résumé</h2>
+          <h2>📊 Résumé du jour</h2>
           <small id="lblDay">Aujourd’hui</small>
         </div>
       </div>
@@ -217,8 +223,8 @@
     <section class="card col4">
       <div class="head">
         <div>
-          <h2>📲 Pulse</h2>
-          <small>Outbox</small>
+          <h2>📲 Rappels</h2>
+          <small>à envoyer ou déjà partis</small>
         </div>
         <div class="row">
           <span class="tag warn">À venir: <span id="pulseQueued">0</span></span>
@@ -236,7 +242,7 @@
       <div class="head">
         <div>
           <h2>💳 Paiements</h2>
-          <small>preuves Wave</small>
+          <small>preuves récentes</small>
         </div>
       </div>
       <div class="body">
@@ -248,8 +254,8 @@
     <section class="card col6">
       <div class="head">
         <div>
-          <h2>🧳 Arrivées / Départs / Occupés</h2>
-          <small>via RPC (si dispo) + fallback</small>
+          <h2>🧳 Mouvements du jour</h2>
+          <small>arrivées, départs et logements occupés</small>
         </div>
       </div>
       <div class="body">
@@ -261,8 +267,8 @@
     <section class="card col6">
       <div class="head">
         <div>
-          <h2>⏳ Réservations en attente</h2>
-          <small>à confirmer</small>
+          <h2>⏳ Réservations à confirmer</h2>
+          <small>en attente d’action</small>
         </div>
       </div>
       <div class="body">
@@ -362,6 +368,47 @@
     return "";
   }
 
+  function readStoredSlug(key){
+    try{
+      const raw = sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+      if(!raw) return "";
+
+      const txt = String(raw).trim();
+      if(!txt) return "";
+
+      if(txt.startsWith("{")){
+        const obj = JSON.parse(txt);
+        return String(obj.slug || obj.last_slug || "").trim();
+      }
+
+      return txt.trim();
+    }catch{
+      return "";
+    }
+  }
+
+  function buildSafeUrl(path, params){
+    let u;
+    try{
+      u = new URL(path, location.href);
+    }catch{
+      u = new URL(location.href);
+      u.pathname = String(path || "./");
+      u.search = "";
+      u.hash = "";
+    }
+
+    Object.entries(params || {}).forEach(([k,v]) => {
+      if(v == null || String(v).trim() === "") return;
+      u.searchParams.set(k, String(v).trim());
+    });
+
+    if(u.origin === location.origin){
+      return u.pathname + u.search + u.hash;
+    }
+    return u.toString();
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
@@ -401,26 +448,18 @@
     } catch {}
 
     return (
-      storageGet("digiy_loc_slug") ||
-      storageGet("digiy_last_slug") ||
-      storageGet("DIGIY_SLUG") ||
+      readStoredSlug("digiy_loc_slug") ||
+      readStoredSlug("digiy_last_slug") ||
+      readStoredSlug("DIGIY_LOC_SESSION") ||
+      readStoredSlug("DIGIY_LOC_ACCESS") ||
+      readStoredSlug("DIGIY_SLUG") ||
       ""
     ).trim();
   }
 
   function withSlug(path){
     const slug = getSlug();
-    if(!slug) return path;
-
-    try{
-      const u = new URL(path, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      const sep = path.includes("?") ? "&" : "?";
-      return path + sep + "slug=" + encodeURIComponent(slug);
-    }
+    return buildSafeUrl(path, slug ? { slug } : {});
   }
 
   function getSB(){
@@ -450,9 +489,9 @@
 
   function payUrl(){
     try{
-      return window.DIGIY_GUARD?.getPayUrl?.() || withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC");
+      return window.DIGIY_GUARD?.getPayUrl?.() || buildSafeUrl("https://commencer-a-payer.digiylyfe.com/", { module: "LOC" });
     }catch{
-      return withSlug("https://commencer-a-payer.digiylyfe.com/?module=LOC");
+      return buildSafeUrl("https://commencer-a-payer.digiylyfe.com/", { module: "LOC" });
     }
   }
 
@@ -489,13 +528,13 @@
     }
 
     if(reason === "slug_missing"){
-      txt.textContent = "Aucun slug détecté. Ouvre la page depuis ton cockpit ou ton lien GO PIN.";
-      note.textContent = "Ajoute un slug valide pour brancher la vraie vue du jour.";
+      txt.textContent = "Aucun identifiant détecté. Ouvre la page depuis ton espace ou ton lien d’entrée.";
+      note.textContent = "Ajoute un identifiant valide pour brancher la vraie vue du jour.";
     } else if(reason === "has_access_false"){
-      txt.textContent = "Slug détecté mais accès non actif. Passe par PIN ou active ton module.";
-      note.textContent = "La vraie vue du jour reste verrouillée tant que l’accès n’est pas confirmé.";
+      txt.textContent = "Identifiant détecté mais accès non actif. Passe par ton code ou active ton accès.";
+      note.textContent = "La vraie vue du jour reste verrouillée tant que ton accès n’est pas confirmé.";
     } else {
-      txt.textContent = "Passe par PIN ou active ton module pour ouvrir la vraie vue du jour.";
+      txt.textContent = "Passe par ton code ou active ton accès pour ouvrir la vraie vue du jour.";
       note.textContent = "Le contenu métier reste masqué tant que l’accès réel n’est pas confirmé.";
     }
   }
@@ -508,7 +547,7 @@
       "PRO";
 
     $("pillUser").innerHTML = `👤 <strong>${esc(phone)}</strong>`;
-    $("pillState").textContent = "✅ Connecté";
+    $("pillState").textContent = "✅ Accès ouvert";
     $("pillState").classList.remove("warn","bad");
     $("pillState").classList.add("ok");
     setAccessGate(false);
@@ -516,13 +555,13 @@
 
   function setDisconnected(msg, reason="preview"){
     $("pillUser").innerHTML = `👤 <strong>—</strong>`;
-    $("pillState").textContent = "🔒 Déconnecté";
+    $("pillState").textContent = "🔒 Accès fermé";
     $("pillState").classList.remove("ok","bad");
     $("pillState").classList.add("warn");
 
     setAccessGate(true, reason);
 
-    setNote("noteStats", msg || "Connecte-toi d’abord (PIN).", "warn");
+    setNote("noteStats", msg || "Connecte-toi d’abord avec ton code.", "warn");
     setNote("notePulse", "Connecte-toi d’abord.", "warn");
     setNote("notePay", "Connecte-toi d’abord.", "warn");
     setNote("noteArrDep", "Connecte-toi d’abord.", "warn");
@@ -553,9 +592,9 @@
       ["Arrivées", Summary.arrivals],
       ["Départs", Summary.departures],
       ["Occupés", Summary.occupied],
-      ["Pulse à venir", Summary.pulseQueued],
-      ["Pulse échecs", Summary.pulseFailed],
-      ["Pulse envoyés", Summary.pulseSent],
+      ["Rappels à venir", Summary.pulseQueued],
+      ["Rappels en échec", Summary.pulseFailed],
+      ["Rappels envoyés", Summary.pulseSent],
     ];
 
     cards.forEach(([lbl,val])=>{
@@ -834,7 +873,7 @@
     $("pulseFailed").textContent = String(failed.length);
 
     if(!rows.length){
-      setNote("notePulse","Aucun Pulse visible pour le moment.","warn");
+      setNote("notePulse","Aucun rappel visible pour le moment.","warn");
       return;
     }
 
@@ -847,7 +886,7 @@
 
       div.innerHTML = `
         <div class="itemTop">
-          <div class="itemTitle">${esc(r.pulse_kind || "Pulse")} <span class="tag ${st}">${esc(r.status || "")}</span></div>
+          <div class="itemTitle">${esc(r.pulse_kind || "Rappel")} <span class="tag ${st}">${esc(r.status || "")}</span></div>
           <div class="tag">⏱️ ${esc((r.due_at || "").toString().slice(0,16).replace("T"," "))}</div>
         </div>
         <div class="itemMeta">
@@ -863,7 +902,7 @@
     $("payList").innerHTML = "";
 
     if(!rows.length){
-      setNote("notePay","Aucune preuve Wave récente.","warn");
+      setNote("notePay","Aucune preuve récente.","warn");
       return;
     }
 
@@ -930,7 +969,7 @@
         return { ok:true, payload };
       }
 
-      return { ok:false, error: payload?.reason || "RPC_DAY_LISTING_NOT_OK" };
+      return { ok:false, error: payload?.reason || "DAY_LISTING_NOT_OK" };
     }catch(e){
       return { ok:false, error: e?.message || String(e) };
     }
@@ -944,7 +983,7 @@
     $("pulseFailed").textContent = "0";
 
     if(!businessCode){
-      setNote("notePulse","business_code introuvable pour Pulse.","warn");
+      setNote("notePulse","Impossible de retrouver les rappels pour le moment.","warn");
       return;
     }
 
@@ -960,7 +999,7 @@
       if(error) throw error;
       renderPulse(data || []);
     }catch(e){
-      setNote("notePulse","Pulse indisponible :\n" + (e?.message || e),"warn");
+      setNote("notePulse","Rappels indisponibles :\n" + (e?.message || e),"warn");
     }
   }
 
@@ -969,7 +1008,7 @@
     $("payList").innerHTML = "";
 
     if(!ownerId){
-      setNote("notePay","owner_id introuvable pour les paiements.","warn");
+      setNote("notePay","Impossible de retrouver les paiements pour le moment.","warn");
       return;
     }
 
@@ -1016,7 +1055,7 @@
     $("pendingList").innerHTML = "";
 
     if(!businessCode){
-      setNote("notePending","business_code introuvable pour les réservations.","warn");
+      setNote("notePending","Impossible de retrouver les réservations pour le moment.","warn");
       return [];
     }
 
@@ -1118,7 +1157,7 @@
     ]);
 
     if(!dayRes.ok){
-      setNote("noteArrDep","RPC digiy_loc_day_listing indisponible :\n" + (dayRes.error || "—"),"warn");
+      setNote("noteArrDep","La lecture directe du jour est indisponible pour le moment.\n" + (dayRes.error || "—"),"warn");
       await fallbackStatsAndArrDep(businessCode, day);
     }
   }
@@ -1156,14 +1195,14 @@
     clearAllNotes();
 
     if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
-      setDisconnected("Guard absent ou non chargé.", "guard_missing");
+      setDisconnected("Accès absent ou non chargé.", "guard_missing");
       return;
     }
 
     try{
       await waitGuardReady();
     }catch(_){
-      setDisconnected("Guard non prêt. Recharge la page ou repasse par PIN.", "guard_not_ready");
+      setDisconnected("Accès non prêt. Recharge la page ou repasse par ton code.", "guard_not_ready");
       return;
     }
 
@@ -1174,12 +1213,12 @@
     $("lblDay").textContent = "Aujourd’hui • " + prettyDateFR(day);
 
     if(!slug){
-      setDisconnected("Slug manquant. Ouvre cette page via le cockpit avec ?slug=...", "slug_missing");
+      setDisconnected("Identifiant manquant. Ouvre cette page depuis ton espace avec le bon lien.", "slug_missing");
       return;
     }
 
     if(!st.access_ok){
-      setDisconnected("Accès non actif. Passe par PIN pour ouvrir la vraie vue du jour.", "has_access_false");
+      setDisconnected("Accès non actif. Passe par ton code pour ouvrir la vraie vue du jour.", "has_access_false");
       return;
     }
 
