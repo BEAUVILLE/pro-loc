@@ -3,17 +3,21 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Aujourd’hui</title>
+  <title>DIGIY LOC — Aujourd’hui</title>
   <meta name="theme-color" content="#16a34a"/>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
   <script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-</script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-today-v2"></script>
+  <script src="./guard.js?v=locpro-today-v3"></script>
 
   <style>
     :root{
@@ -33,12 +37,13 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       background:
         radial-gradient(1200px 800px at 20% 0%, #0f3a2a 0%, var(--bg) 55%);
       color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       padding:16px;
     }
 
@@ -155,6 +160,7 @@
       color:var(--text);
       outline:none;
       font-weight:900;
+      font-family:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
     .two{display:grid;gap:10px}
     @media(min-width:900px){ .two{grid-template-columns:1fr 1fr } }
@@ -204,20 +210,20 @@
 
   <header>
     <div class="brand">
-      <b>DIGIY LOC • PRO</b>
-      <small id="topSub">Vue “Aujourd’hui” — branchée au slug actif</small>
+      <b>DIGIY LOC — Aujourd’hui</b>
+      <small id="topSub">Lecture du jour — branchée à ton identifiant actif</small>
     </div>
-    <div class="pill" id="bizLabel">🏷️ Business • —</div>
+    <div class="pill" id="bizLabel">🏷️ Activité • —</div>
   </header>
 
   <div class="card">
     <div class="two">
       <div>
-        <label class="muted">Business code résolu</label>
+        <label class="muted">Code activité résolu</label>
         <input id="business_code" readonly placeholder="Résolution en cours..." />
       </div>
       <div>
-        <label class="muted">Fenêtre “à venir”</label>
+        <label class="muted">Fenêtre à venir</label>
         <select id="windowDays">
           <option value="7">7 jours</option>
           <option value="14">14 jours</option>
@@ -228,19 +234,19 @@
 
     <div class="row" style="margin-top:10px">
       <div class="row">
-        <div class="pill" id="pillSlug">slug: —</div>
+        <div class="pill" id="pillSlug">identifiant : —</div>
         <div class="pill warn" id="pillState">aperçu</div>
       </div>
 
       <div class="row">
-        <a class="btn ghost" id="btnBack" href="#">⬅️ Cockpit</a>
-        <a class="btn ghost" id="btnPlanning" href="#">📅 Planning</a>
+        <a class="btn ghost" id="btnBack" href="#">⬅️ Ma gestion</a>
+        <a class="btn ghost" id="btnPlanning" href="#">📅 Mon planning</a>
         <button class="btn primary" id="btnLoad" type="button">🔄 Charger</button>
       </div>
     </div>
 
     <div class="muted" style="margin-top:10px;font-size:12px">
-      DIGIY n’ouvre que le message WhatsApp. Le texte reste côté propriétaire. Le marquage est tenté si le RPC existe, sinon on reste souple.
+      DIGIY ouvre seulement le message WhatsApp. Le texte reste côté propriétaire. Si l’enregistrement du suivi n’est pas disponible, la page reste souple et continue.
     </div>
 
     <div class="note" id="noteMain"></div>
@@ -248,7 +254,7 @@
 
   <div class="grid">
     <div class="card">
-      <h3>AUJOURD’HUI</h3>
+      <h3>Aujourd’hui</h3>
       <div class="kpis">
         <div class="kpi"><b id="kArr">0</b><span>🟢 Arrivées</span></div>
         <div class="kpi"><b id="kDep">0</b><span>🔵 Départs</span></div>
@@ -266,7 +272,7 @@
     </div>
 
     <div class="card">
-      <h3>FICHE</h3>
+      <h3>Fiche</h3>
       <div id="empty" class="muted">Sélectionne une réservation à gauche.</div>
 
       <div id="detail" class="detail" style="display:none">
@@ -324,7 +330,7 @@
 
   const MODULE = "LOC";
 
-  const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
   const State = {
     slug: "",
@@ -336,22 +342,24 @@
     selected: null
   };
 
+  let SB_FALLBACK = null;
+
   function toast(msg){
     const el = $("toast");
     el.textContent = msg;
     el.style.display = "block";
     clearTimeout(window.__digiy_toast);
-    window.__digiy_toast = setTimeout(()=> el.style.display="none", 2200);
+    window.__digiy_toast = setTimeout(() => el.style.display = "none", 2200);
   }
 
-  function setNote(msg, type="warn"){
+  function setNote(msg, type = "warn"){
     const el = $("noteMain");
     el.className = "note " + type;
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
   }
 
-  function setSide(msg, type="warn"){
+  function setSide(msg, type = "warn"){
     const el = $("noteSide");
     el.className = "note " + type;
     el.textContent = msg || "";
@@ -359,7 +367,7 @@
   }
 
   function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, (m)=>({
+    return String(s ?? "").replace(/[&<>"']/g, (m) => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
@@ -372,23 +380,23 @@
   function todayYMD(){
     const now = new Date();
     const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,"0");
-    const d = String(now.getDate()).padStart(2,"0");
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   }
 
   function addDaysYMD(ymd, days){
-    const [y,m,d] = ymd.split("-").map(Number);
-    const dt = new Date(Date.UTC(y, m-1, d));
+    const [y, m, d] = ymd.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
     dt.setUTCDate(dt.getUTCDate() + Number(days));
     const yy = dt.getUTCFullYear();
-    const mm = String(dt.getUTCMonth()+1).padStart(2,"0");
-    const dd = String(dt.getUTCDate()).padStart(2,"0");
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getUTCDate()).padStart(2, "0");
     return `${yy}-${mm}-${dd}`;
   }
 
   function normalizePhone(p){
-    return String(p || "").replace(/[^0-9+]/g,"").trim();
+    return String(p || "").replace(/[^0-9+]/g, "").trim();
   }
 
   function digitsOnly(v){
@@ -403,7 +411,7 @@
 
   function tmplWelcome(res){
     const name = (res.client_nom || "").trim();
-    const greet = name ? `Bonjour ${name},` : `Bonjour,`;
+    const greet = name ? `Bonjour ${name},` : "Bonjour,";
     return [
       `${greet} merci pour votre réservation 🙏`,
       `Nous sommes ravis de vous accueillir à ${res.logement_nom || "la maison"}.`,
@@ -452,25 +460,61 @@
   }
 
   function getSB(){
-    return window.DIGIY_GUARD?.getSb?.()
+    const fromGuard =
+      window.DIGIY_GUARD?.getSb?.()
       || window.DIGIY_GUARD?.getSupabase?.()
       || window.DIGIY_GUARD?.sb
       || window.sb
       || null;
+
+    if(fromGuard && typeof fromGuard.rpc === "function"){
+      return fromGuard;
+    }
+
+    if(!SB_FALLBACK && window.supabase && window.DIGIY_SUPABASE_URL && (window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON)){
+      SB_FALLBACK = window.supabase.createClient(
+        window.DIGIY_SUPABASE_URL,
+        window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON,
+        {
+          auth:{
+            persistSession:false,
+            autoRefreshToken:false,
+            detectSessionInUrl:false
+          }
+        }
+      );
+    }
+
+    return SB_FALLBACK;
+  }
+
+  function buildSafeUrl(path, params = {}){
+    try{
+      const u = new URL(path, location.href);
+      Object.entries(params).forEach(([key, value]) => {
+        if(value !== undefined && value !== null && String(value).trim() !== ""){
+          u.searchParams.set(key, String(value));
+        }
+      });
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if(value !== undefined && value !== null && String(value).trim() !== ""){
+          qs.set(key, String(value));
+        }
+      });
+      const tail = qs.toString();
+      if(!tail) return path;
+      return path + (String(path).includes("?") ? "&" : "?") + tail;
+    }
   }
 
   function withSlug(path){
     const slug = State.slug || getGuardState().slug || "";
     if(!slug) return path;
-    try{
-      const u = new URL(path, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      const sep = path.includes("?") ? "&" : "?";
-      return path + sep + "slug=" + encodeURIComponent(slug);
-    }
+    return buildSafeUrl(path, { slug });
   }
 
   function setPreview(reason){
@@ -481,9 +525,11 @@
     $("pillState").className = "pill warn";
 
     const msg =
-      reason === "slug_missing" ? "Aucun slug détecté. La page reste en aperçu propre."
-      : reason === "has_access_false" ? "Slug détecté mais accès non actif. Passe par PIN."
-      : reason === "business_missing" ? "Business code introuvable. Vérifie le rail slug → business."
+      reason === "slug_missing" ? "Aucun identifiant détecté. La page reste en aperçu propre."
+      : reason === "has_access_false" ? "Identifiant détecté mais accès non confirmé. Passe par ton PIN."
+      : reason === "business_missing" ? "Le code activité n’a pas pu être retrouvé."
+      : reason === "security_missing" ? "La sécurité de la page n’est pas chargée."
+      : reason === "security_not_ready" ? "La vérification de l’accès n’a pas abouti."
       : "Mode aperçu actif.";
 
     setNote("👁️ " + msg, "warn");
@@ -493,7 +539,7 @@
   function setLive(){
     State.mode = "live";
     State.reason = "ok";
-    $("pillState").textContent = "vivant";
+    $("pillState").textContent = "actif";
     $("pillState").className = "pill ok";
   }
 
@@ -567,11 +613,11 @@
           <div class="chip ${chip.cls}">${esc(chip.label)}</div>
         </div>
         <div class="tag" style="margin-top:8px">
-          📞 ${esc(normalizePhone(r.client_phone) || "—")} • Accueil: ${r.welcome_message_sent_at ? "✅" : "—"} • Après: ${r.afterstay_message_sent_at ? "✅" : "—"}
+          📞 ${esc(normalizePhone(r.client_phone) || "—")} • Accueil : ${r.welcome_message_sent_at ? "✅" : "—"} • Après séjour : ${r.afterstay_message_sent_at ? "✅" : "—"}
         </div>
       `;
 
-      div.addEventListener("click", ()=> selectReservation(r.id));
+      div.addEventListener("click", () => selectReservation(r.id));
       el.appendChild(div);
     });
   }
@@ -594,10 +640,10 @@
     $("dPhone").textContent = normalizePhone(r.client_phone) || "—";
     $("dEmail").textContent = r.client_email || "—";
     $("dLogement").textContent = r.logement_nom || "—";
-    $("dTrack").textContent = `Tracking: ${r.tracking_code || "—"} • ID: ${r.id}`;
+    $("dTrack").textContent = `Référence : ${r.tracking_code || "—"} • ID : ${r.id}`;
 
-    $("cWelcome").textContent = `Accueil : ${r.welcome_message_sent_at ? new Date(r.welcome_message_sent_at).toLocaleString() : "—"}`;
-    $("cAfter").textContent = `Après séjour : ${r.afterstay_message_sent_at ? new Date(r.afterstay_message_sent_at).toLocaleString() : "—"}`;
+    $("cWelcome").textContent = `Accueil : ${r.welcome_message_sent_at ? new Date(r.welcome_message_sent_at).toLocaleString("fr-FR") : "—"}`;
+    $("cAfter").textContent = `Après séjour : ${r.afterstay_message_sent_at ? new Date(r.afterstay_message_sent_at).toLocaleString("fr-FR") : "—"}`;
 
     renderList();
   }
@@ -632,7 +678,7 @@
   async function loadReservations(){
     const sb = getSB();
     if(!sb){
-      setNote("❌ Supabase non prêt via le guard.", "bad");
+      setNote("❌ Connexion de lecture indisponible.", "bad");
       return;
     }
 
@@ -645,9 +691,13 @@
       ""
     ).trim().toLowerCase();
 
-    State.phone = getGuardState().phone || localStorage.getItem("DIGIY_PHONE") || localStorage.getItem("DIGIY_LOC_PHONE") || "";
+    State.phone =
+      getGuardState().phone ||
+      localStorage.getItem("DIGIY_PHONE") ||
+      localStorage.getItem("DIGIY_LOC_PHONE") ||
+      "";
 
-    $("pillSlug").textContent = "slug: " + (State.slug || "—");
+    $("pillSlug").textContent = "identifiant : " + (State.slug || "—");
     $("btnBack").href = withSlug("./app.html");
     $("btnPlanning").href = withSlug("./planning.html");
 
@@ -663,7 +713,7 @@
 
     State.businessCode = await tryResolveBusinessCode(sb);
     $("business_code").value = State.businessCode || "";
-    $("bizLabel").innerHTML = `🏷️ Business • ${esc(State.businessCode || "—")}`;
+    $("bizLabel").innerHTML = `🏷️ Activité • ${esc(State.businessCode || "—")}`;
 
     if(!State.businessCode){
       setPreview("business_missing");
@@ -696,7 +746,7 @@
 
       if(error) throw error;
 
-      State.reservations = data || [];
+      State.reservations = Array.isArray(data) ? data : [];
       renderKPIs();
       renderList();
       resetDetail();
@@ -705,7 +755,7 @@
     }catch(e){
       console.error(e);
       clearView();
-      setNote("❌ Erreur chargement réservations.\n" + (e?.message || e), "bad");
+      setNote("❌ Erreur de chargement des réservations.\n" + (e?.message || e), "bad");
     }
   }
 
@@ -739,7 +789,7 @@
     }
   }
 
-  $("btnWelcome").addEventListener("click", async ()=>{
+  $("btnWelcome").addEventListener("click", async () => {
     if(!State.selected){
       toast("Sélectionne une réservation");
       return;
@@ -756,13 +806,13 @@
     const marked = await tryMarkSent("welcome");
     if(marked){
       await afterMark("welcome");
-      setSide("✅ WhatsApp accueil ouvert et marquage enregistré.", "ok");
+      setSide("✅ Message d’accueil ouvert et suivi enregistré.", "ok");
     }else{
-      setSide("✅ WhatsApp accueil ouvert. Marquage non confirmé côté backend, mais rien n’a cassé.", "warn");
+      setSide("✅ Message d’accueil ouvert. Le suivi n’a pas pu être confirmé, mais rien n’a cassé.", "warn");
     }
   });
 
-  $("btnAfter").addEventListener("click", async ()=>{
+  $("btnAfter").addEventListener("click", async () => {
     if(!State.selected){
       toast("Sélectionne une réservation");
       return;
@@ -779,13 +829,13 @@
     const marked = await tryMarkSent("afterstay");
     if(marked){
       await afterMark("afterstay");
-      setSide("✅ WhatsApp après séjour ouvert et marquage enregistré.", "ok");
+      setSide("✅ Message après séjour ouvert et suivi enregistré.", "ok");
     }else{
-      setSide("✅ WhatsApp après séjour ouvert. Marquage non confirmé côté backend, mais rien n’a cassé.", "warn");
+      setSide("✅ Message après séjour ouvert. Le suivi n’a pas pu être confirmé, mais rien n’a cassé.", "warn");
     }
   });
 
-  $("btnCopyPhone").addEventListener("click", async ()=>{
+  $("btnCopyPhone").addEventListener("click", async () => {
     if(!State.selected){
       toast("Sélectionne une réservation");
       return;
@@ -806,26 +856,24 @@
   });
 
   $("btnLoad").addEventListener("click", loadReservations);
-  $("windowDays").addEventListener("change", ()=>{
+  $("windowDays").addEventListener("change", () => {
     if(State.mode === "live") loadReservations();
   });
 
   async function init(){
-    $("pillSlug").textContent = "slug: —";
+    $("pillSlug").textContent = "identifiant : —";
     $("btnBack").href = "./app.html";
     $("btnPlanning").href = "./planning.html";
 
     if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
-      setPreview("guard_missing");
-      setNote("❌ Guard absent ou non chargé.", "bad");
+      setPreview("security_missing");
       return;
     }
 
     try{
       await waitGuardReady();
     }catch{
-      setPreview("guard_not_ready");
-      setNote("❌ Guard non prêt.", "bad");
+      setPreview("security_not_ready");
       return;
     }
 
