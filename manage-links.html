@@ -5,22 +5,37 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>DIGIY ♾️ — Liens / QR</title>
   <meta name="theme-color" content="#0b1020"/>
+  <meta name="description" content="DIGIY LOC — gestion des liens et QR via session PIN réelle."/>
+
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v3=locpro-final"></script>
+  <script src="./guard.js?v=loc-links-qr-clean-20260329"></script>
 
   <style>
     :root{
-      --bg:#020617; --bg2:#0b1020; --line:rgba(148,163,184,.22);
-      --ink:#f9fafb; --muted:#cbd5f5;
-      --gold:#facc15; --green:#22c55e; --red:#ef4444;
-      --card:rgba(255,255,255,.03); --shadow:0 22px 50px rgba(0,0,0,.55);
-      --r:18px;
+      --bg:#020617;
+      --bg2:#0b1020;
+      --line:rgba(148,163,184,.22);
+      --ink:#f9fafb;
+      --muted:#cbd5f5;
+      --gold:#facc15;
+      --green:#22c55e;
+      --red:#ef4444;
+      --card:rgba(255,255,255,.03);
+      --shadow:0 22px 50px rgba(0,0,0,.55);
     }
+
     *{box-sizing:border-box;margin:0;padding:0}
+
     body{
       min-height:100vh;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      font-family:Outfit,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--ink);
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
@@ -28,57 +43,185 @@
         linear-gradient(180deg, var(--bg2), var(--bg));
       padding:16px;
     }
+
     .wrap{max-width:1040px;margin:0 auto}
+
     .top{
-      display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
-      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--card);
       box-shadow:var(--shadow);
     }
+
     .brand{display:flex;gap:10px;align-items:center}
+
     .logo{
-      width:44px;height:44px;border-radius:16px;
+      width:44px;
+      height:44px;
+      border-radius:16px;
       background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
       border:1px solid rgba(250,204,21,.35);
-      display:grid;place-items:center;color:#061b14;font-weight:1100;
+      display:grid;
+      place-items:center;
+      color:#061b14;
+      font-weight:1100;
     }
+
     h1{font-size:1.06rem}
-    .sub{color:var(--muted);font-weight:850;margin-top:4px}
+
+    .sub{
+      color:var(--muted);
+      font-weight:850;
+      margin-top:4px;
+    }
+
     .pill{
       border:1px solid rgba(148,163,184,.35);
-      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
-      color:var(--muted);font-weight:900;font-size:.86rem;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      font-weight:900;
+      font-size:.86rem;
     }
-    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+
+    .pill.ok{
+      border-color:rgba(34,197,94,.35);
+      background:rgba(34,197,94,.10);
+      color:#bbf7d0;
+    }
+
+    .pill.warn{
+      border-color:rgba(250,204,21,.35);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+    }
+
+    .pill.bad{
+      border-color:rgba(239,68,68,.35);
+      background:rgba(239,68,68,.10);
+      color:#fecaca;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+
     .card{
-      border:1px solid var(--line);background:rgba(255,255,255,.03);
-      border-radius:20px;box-shadow:var(--shadow);padding:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:16px;
     }
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
     .btn{
-      min-height:46px;border-radius:14px;border:1px solid var(--line);
-      background:rgba(255,255,255,.04);color:#fff;font-weight:1100;font-size:15px;
-      cursor:pointer;text-decoration:none; padding:10px 12px;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      min-height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      font-weight:1100;
+      font-size:15px;
+      cursor:pointer;
+      text-decoration:none;
+      padding:10px 12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
     }
+
     .btn.primary{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
     .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
     .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
     .btn:disabled{opacity:.55;cursor:not-allowed}
+
     .note{
-      margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.03);color:var(--muted);font-weight:900;white-space:pre-wrap;display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+      white-space:pre-wrap;
+      display:none;
     }
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
 
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:10px;border-bottom:1px solid rgba(148,163,184,.18);text-align:left;font-weight:850;vertical-align:top}
-    th{color:rgba(203,213,245,.9);font-size:.85rem}
-    td{color:#f9fafb;font-size:.95rem}
+    .note.ok{
+      display:block;
+      border-color:rgba(34,197,94,.35);
+      background:rgba(34,197,94,.09);
+      color:#bbf7d0;
+    }
 
-    .tiny{color:rgba(203,213,245,.9);font-weight:850;font-size:.9rem;line-height:1.35;margin-top:10px}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
+    .note.bad{
+      display:block;
+      border-color:rgba(239,68,68,.35);
+      background:rgba(239,68,68,.09);
+      color:#fecaca;
+    }
+
+    .note.warn{
+      display:block;
+      border-color:rgba(250,204,21,.35);
+      background:rgba(250,204,21,.09);
+      color:#fde68a;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+    }
+
+    th,td{
+      padding:10px;
+      border-bottom:1px solid rgba(148,163,184,.18);
+      text-align:left;
+      font-weight:850;
+      vertical-align:top;
+    }
+
+    th{
+      color:rgba(203,213,245,.9);
+      font-size:.85rem;
+    }
+
+    td{
+      color:#f9fafb;
+      font-size:.95rem;
+    }
+
+    .tiny{
+      color:rgba(203,213,245,.9);
+      font-weight:850;
+      font-size:.9rem;
+      line-height:1.35;
+      margin-top:10px;
+    }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      word-break:break-all;
+    }
 
     .field{
       width:100%;
@@ -90,10 +233,12 @@
       font-weight:900;
       outline:none;
     }
+
     .field:focus{
       border-color:rgba(250,204,21,.45);
       box-shadow:0 0 0 3px rgba(250,204,21,.12);
     }
+
     .miniBtn{
       min-height:40px;
       padding:8px 10px;
@@ -107,10 +252,49 @@
       align-items:center;
       gap:8px;
     }
+
     .miniBtn.red{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10)}
     .miniBtn.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10)}
     .miniBtn.green{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10)}
     .miniBtn:disabled{opacity:.55;cursor:not-allowed}
+
+    .emptyRow{
+      color:rgba(203,213,245,.9);
+      text-align:center;
+      padding:18px 10px;
+    }
+
+    @media (max-width:900px){
+      table, thead, tbody, th, td, tr{
+        display:block;
+      }
+
+      thead{
+        display:none;
+      }
+
+      tr{
+        border-bottom:1px solid rgba(148,163,184,.18);
+        padding:10px 0;
+      }
+
+      td{
+        border-bottom:none;
+        padding:6px 0;
+      }
+
+      td::before{
+        display:block;
+        color:rgba(203,213,245,.8);
+        font-size:.8rem;
+        margin-bottom:4px;
+        font-weight:900;
+      }
+
+      td[data-label]::before{
+        content:attr(data-label);
+      }
+    }
   </style>
 </head>
 
@@ -121,18 +305,17 @@
       <div class="logo">∞</div>
       <div>
         <h1>DIGIY ♾️ — Liens / QR</h1>
-        <div class="sub">Zéro email · Zéro magic link · Session PIN (Guard)</div>
+        <div class="sub">Session PIN réelle • Liens terrain • QR centralisé</div>
       </div>
     </div>
     <div class="pill" id="pillSlug">slug : —</div>
   </div>
 
   <div class="grid">
-    <!-- SESSION -->
     <div class="card">
       <div class="row" style="justify-content:space-between">
         <div style="font-weight:950">🔐 Session</div>
-        <div class="pill" id="pillStatus">—</div>
+        <div class="pill warn" id="pillStatus">—</div>
       </div>
 
       <div class="tiny" id="who">—</div>
@@ -154,7 +337,6 @@
       <div class="note warn" id="note"></div>
     </div>
 
-    <!-- LINKS -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-weight:950">🔗 GO LINKS</div>
@@ -165,8 +347,7 @@
       </div>
 
       <div class="tiny">
-        Ces liens deviennent des boutons (Commander / Réserver / WhatsApp / etc.).
-        Conseil terrain : mets <span class="mono">order</span> par pas de 10 (10, 20, 30).
+        Ces liens deviennent des boutons terrain. Mets les ordres par pas de 10 : 10, 20, 30.
       </div>
 
       <table>
@@ -183,9 +364,8 @@
       </table>
     </div>
 
-    <!-- QR -->
     <div class="card">
-      <div style="font-weight:950">⬇️ QR (téléchargement)</div>
+      <div style="font-weight:950">⬇️ QR</div>
       <div class="tiny">QR-PRO → <span class="mono" id="qrProUrl">—</span></div>
       <div class="row" style="margin-top:10px">
         <button class="btn" id="btnQrApp" type="button">⬇️ QR APP</button>
@@ -199,21 +379,29 @@
 </div>
 
 <script>
-(async function(){
+(function(){
   "use strict";
 
   const $ = (id)=>document.getElementById(id);
 
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
+  const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON;
   const MODULE = "LOC";
   const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
+
+  const PAGE_APP = "./app.html";
+  const PAGE_PUBLIC = "./go-pin-public.html";
+  const PAGE_PIN = "./pin.html";
 
   let LINKS = [];
   let UX_MODE = "preview";
   let UX_REASON = "booting";
+
+  function setPill(text, cls){
+    const el = $("pillStatus");
+    el.textContent = text || "—";
+    el.className = "pill " + (cls || "warn");
+  }
 
   function show(msg, cls){
     const el = $("note");
@@ -223,30 +411,24 @@
     el.style.display = msg ? "block" : "none";
   }
 
-  function copyText(txt){
+  function storageGet(key){
     try{
-      return navigator.clipboard.writeText(txt).then(()=>true).catch(()=>false);
-    }catch(_){
-      try{
-        const ta = document.createElement("textarea");
-        ta.value = txt;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        return Promise.resolve(true);
-      }catch(__){
-        return Promise.resolve(false);
-      }
-    }
+      const v1 = sessionStorage.getItem(key);
+      if(v1) return v1;
+    }catch(_){}
+    try{
+      const v2 = localStorage.getItem(key);
+      if(v2) return v2;
+    }catch(_){}
+    return "";
   }
 
   function digitsOnly(p){
-    return String(p||"").replace(/\D/g,"");
+    return String(p || "").replace(/\D/g, "");
   }
 
   function normPhone(p){
-    p = String(p||"").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    p = String(p || "").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
     if(p.startsWith("00221")) p = "+221" + p.slice(5);
     if(!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
     if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
@@ -256,6 +438,17 @@
   function pin4FromPhone(phone){
     const p = normPhone(phone);
     return p ? p.slice(-4) : "";
+  }
+
+  function cleanSlug(s){
+    const x = String(s || "").trim();
+    if(!x) return "";
+    return x
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
   }
 
   function getGuardState(){
@@ -268,15 +461,49 @@
     };
   }
 
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
+
+    const ready = window.DIGIY_GUARD.ready;
+
+    if(typeof ready === "function"){
+      const maybe = ready(8000);
+      if(maybe && typeof maybe.then === "function") return await maybe;
+      return maybe;
+    }
+
+    if(ready && typeof ready.then === "function"){
+      return await ready;
+    }
+
+    if(ready) return true;
+    throw new Error("guard_not_ready");
+  }
+
   function getSlug(){
     const st = getGuardState();
-    if(st.slug) return String(st.slug).trim();
+    if(st.slug) return cleanSlug(st.slug);
 
     try{
-      return (new URL(location.href)).searchParams.get("slug") || "";
-    }catch{
+      return cleanSlug((new URL(location.href)).searchParams.get("slug") || "");
+    }catch(_){
       return "";
     }
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    return normPhone(
+      st.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      storageGet("digiy_loc_phone") ||
+      ""
+    );
+  }
+
+  function isLive(){
+    return UX_MODE === "live" && !!getGuardState().access_ok;
   }
 
   function withSlug(url){
@@ -288,24 +515,10 @@
       if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
-    }catch{
+    }catch(_){
       const sep = url.includes("?") ? "&" : "?";
       return url + sep + "slug=" + encodeURIComponent(slug);
     }
-  }
-
-  function getPhone(){
-    const st = getGuardState();
-    return normPhone(
-      st.phone ||
-      localStorage.getItem("DIGIY_PHONE") ||
-      localStorage.getItem("DIGIY_LOC_PHONE") ||
-      ""
-    );
-  }
-
-  function isLive(){
-    return UX_MODE === "live" && !!getGuardState().access_ok;
   }
 
   async function getSB(){
@@ -318,25 +531,49 @@
 
     try{
       if(window.sb) return window.sb;
-      return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth:{
+          persistSession:false,
+          autoRefreshToken:false,
+          detectSessionInUrl:false
+        }
+      });
     }catch(e){
       console.error(e);
       return null;
     }
   }
 
+  async function copyText(txt){
+    try{
+      await navigator.clipboard.writeText(txt);
+      return true;
+    }catch(_){
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        return true;
+      }catch(__){
+        return false;
+      }
+    }
+  }
+
   function nextOrder(){
-    const max = LINKS.reduce((m,x)=>Math.max(m, Number(x.order||0)), 0);
-    return (max ? (Math.ceil(max/10)*10 + 10) : 10);
+    const max = LINKS.reduce((m, x) => Math.max(m, Number(x.order || 0)), 0);
+    return max ? (Math.ceil(max / 10) * 10 + 10) : 10;
   }
 
   function normalizeUrl(u){
-    u = String(u||"").trim();
+    u = String(u || "").trim();
     if(!u) return "";
 
-    if(/^\+?\d{9,15}$/.test(u.replace(/\s+/g,""))){
-      const d = digitsOnly(u);
-      return "https://wa.me/" + d;
+    if(/^\+?\d{9,15}$/.test(u.replace(/\s+/g, ""))){
+      return "https://wa.me/" + digitsOnly(u);
     }
 
     if(/^wa\.me\//i.test(u)) return "https://" + u;
@@ -353,29 +590,34 @@
 
   function validateLinks(list){
     const clean = [];
-    for(const x of (list||[])){
-      const label = String(x.label||"").trim();
-      const url = normalizeUrl(x.url||"");
-      const order = Number(x.order||100);
+
+    for(const x of (list || [])){
+      const label = String(x.label || "").trim();
+      const url = normalizeUrl(x.url || "");
+      const order = Number(x.order || 100);
       const active = !!x.active;
+
       if(!label || !url) continue;
       clean.push({ order, label, url, active });
     }
-    clean.sort((a,b)=>(a.order-b.order) || a.label.localeCompare(b.label));
+
+    clean.sort((a,b)=>(a.order - b.order) || a.label.localeCompare(b.label));
     return clean;
   }
 
   function makeEl(tag, attrs, children){
     const el = document.createElement(tag);
+
     if(attrs){
       for(const [k,v] of Object.entries(attrs)){
-        if(k==="class") el.className = v;
-        else if(k==="text") el.textContent = v;
-        else if(k==="html") el.innerHTML = v;
+        if(k === "class") el.className = v;
+        else if(k === "text") el.textContent = v;
+        else if(k === "html") el.innerHTML = v;
         else el.setAttribute(k, String(v));
       }
     }
-    (children||[]).forEach(ch=> el.appendChild(ch));
+
+    (children || []).forEach(child => el.appendChild(child));
     return el;
   }
 
@@ -386,49 +628,53 @@
     tb.innerHTML = "";
 
     if(!LINKS.length){
-      tb.appendChild(makeEl("tr", null, [
-        makeEl("td", {
-          colspan:"5",
-          style:"color:rgba(203,213,245,.9)",
-          text:"— aucun lien —"
-        })
-      ]));
+      const tr = document.createElement("tr");
+      const td = makeEl("td", {
+        colspan:"5",
+        class:"emptyRow",
+        text:"— aucun lien —"
+      });
+      tr.appendChild(td);
+      tb.appendChild(tr);
       return;
     }
 
-    const display = LINKS.map((x,idx)=>({x,idx}))
-      .sort((a,b)=> (Number(a.x.order||999)-Number(b.x.order||999)) || (a.idx-b.idx));
+    const display = LINKS.map((x, idx) => ({ x, idx }))
+      .sort((a,b) => (Number(a.x.order || 999) - Number(b.x.order || 999)) || (a.idx - b.idx));
 
     for(const it of display){
       const i = it.idx;
       const x = LINKS[i];
-
       const tr = document.createElement("tr");
 
       const order = makeEl("input", {
         class:"field",
         type:"number",
-        value:String(Number(x.order||100)),
+        value:String(Number(x.order || 100)),
         style:"width:90px"
       });
       order.disabled = !isLive();
-      order.addEventListener("change", ()=>{ x.order = Number(order.value||100); });
+      order.addEventListener("change", () => {
+        x.order = Number(order.value || 100);
+      });
 
       const label = makeEl("input", {
         class:"field",
-        value:String(x.label||""),
+        value:String(x.label || ""),
         placeholder:"Ex: WhatsApp / Réserver / Commander"
       });
       label.disabled = !isLive();
-      label.addEventListener("change", ()=>{ x.label = String(label.value||"").trim(); });
+      label.addEventListener("change", () => {
+        x.label = String(label.value || "").trim();
+      });
 
       const url = makeEl("input", {
         class:"field",
-        value:String(x.url||""),
+        value:String(x.url || ""),
         placeholder:"https://... ou wa.me/..."
       });
       url.disabled = !isLive();
-      url.addEventListener("change", ()=>{
+      url.addEventListener("change", () => {
         const n = normalizeUrl(url.value);
         if(!n){
           show("⚠️ URL invalide. Utilise https://..., tel:..., mailto:..., wa.me/...", "warn");
@@ -449,7 +695,9 @@
       `;
       sel.value = x.active ? "true" : "false";
       sel.disabled = !isLive();
-      sel.addEventListener("change", ()=>{ x.active = (sel.value==="true"); });
+      sel.addEventListener("change", () => {
+        x.active = (sel.value === "true");
+      });
 
       const actions = makeEl("div", { class:"row" });
 
@@ -458,45 +706,51 @@
       const bDup  = makeEl("button", { class:"miniBtn green", type:"button", text:"📎 Dupliquer" });
       const bDel  = makeEl("button", { class:"miniBtn red", type:"button", text:"🗑️" });
 
-      bTest.addEventListener("click", ()=>{
-        const u = normalizeUrl(x.url||"");
-        if(!u){ show("❌ URL vide/invalide.", "bad"); return; }
+      bTest.addEventListener("click", () => {
+        const u = normalizeUrl(x.url || "");
+        if(!u){
+          show("❌ URL vide ou invalide.", "bad");
+          return;
+        }
         window.open(u, "_blank", "noopener,noreferrer");
         show("✅ Test ouverture : " + u, "ok");
       });
 
-      bCopy.addEventListener("click", async ()=>{
-        const u = normalizeUrl(x.url||"");
-        if(!u){ show("❌ URL vide/invalide.", "bad"); return; }
+      bCopy.addEventListener("click", async () => {
+        const u = normalizeUrl(x.url || "");
+        if(!u){
+          show("❌ URL vide ou invalide.", "bad");
+          return;
+        }
         const ok = await copyText(u);
         show(ok ? "✅ URL copiée." : "❌ Copie impossible.", ok ? "ok" : "bad");
       });
 
       bDup.disabled = !isLive();
-      bDup.addEventListener("click", ()=>{
+      bDup.addEventListener("click", () => {
         if(!isLive()){
           show("👁️ Passe par PIN pour modifier les liens.", "warn");
           return;
         }
         LINKS.push({
           order: nextOrder(),
-          label: (x.label||"") + " (copy)",
-          url: x.url||"",
-          active: x.active!==false
+          label: (x.label || "") + " (copy)",
+          url: x.url || "",
+          active: x.active !== false
         });
         render();
         show("✅ Lien dupliqué.", "ok");
       });
 
       bDel.disabled = !isLive();
-      bDel.addEventListener("click", ()=>{
+      bDel.addEventListener("click", () => {
         if(!isLive()){
           show("👁️ En aperçu, suppression désactivée.", "warn");
           return;
         }
         LINKS.splice(i, 1);
         render();
-        show("Lien supprimé (pense à Enregistrer).", "warn");
+        show("Lien supprimé. Clique Enregistrer pour appliquer.", "warn");
       });
 
       actions.appendChild(bTest);
@@ -504,11 +758,31 @@
       actions.appendChild(bDup);
       actions.appendChild(bDel);
 
-      tr.appendChild(makeEl("td", null, [order]));
-      tr.appendChild(makeEl("td", null, [label]));
-      tr.appendChild(makeEl("td", null, [url]));
-      tr.appendChild(makeEl("td", null, [sel]));
-      tr.appendChild(makeEl("td", null, [actions]));
+      const tdOrder = document.createElement("td");
+      tdOrder.setAttribute("data-label", "Ordre");
+      tdOrder.appendChild(order);
+
+      const tdLabel = document.createElement("td");
+      tdLabel.setAttribute("data-label", "Label");
+      tdLabel.appendChild(label);
+
+      const tdUrl = document.createElement("td");
+      tdUrl.setAttribute("data-label", "URL");
+      tdUrl.appendChild(url);
+
+      const tdActive = document.createElement("td");
+      tdActive.setAttribute("data-label", "Actif");
+      tdActive.appendChild(sel);
+
+      const tdActions = document.createElement("td");
+      tdActions.setAttribute("data-label", "Actions");
+      tdActions.appendChild(actions);
+
+      tr.appendChild(tdOrder);
+      tr.appendChild(tdLabel);
+      tr.appendChild(tdUrl);
+      tr.appendChild(tdActive);
+      tr.appendChild(tdActions);
 
       tb.appendChild(tr);
     }
@@ -520,10 +794,10 @@
     const st = getGuardState();
 
     return {
-      slug: getSlug(),
+      slug:getSlug(),
       phone,
       pin4,
-      access_ok: !!st.access_ok
+      access_ok:!!st.access_ok
     };
   }
 
@@ -547,24 +821,23 @@
         p_pin4: pin4
       });
 
-      if(error) return show("❌ Erreur: " + (error.message || error), "bad");
-      if(!data?.ok) return show("❌ Accès refusé: " + (data?.error || "unknown"), "bad");
+      if(error) return show("❌ Erreur : " + (error.message || error), "bad");
+      if(!data?.ok) return show("❌ Accès refusé : " + (data?.error || "unknown"), "bad");
 
       LINKS = Array.isArray(data.links)
-        ? data.links.map(x=>({
-            order:Number(x.order||100),
-            label:String(x.label||"").trim(),
-            url:String(x.url||"").trim(),
-            active:x.active!==false
+        ? data.links.map(x => ({
+            order:Number(x.order || 100),
+            label:String(x.label || "").trim(),
+            url:String(x.url || "").trim(),
+            active:x.active !== false
           }))
         : [];
 
       render();
       show("✅ Liens chargés.", "ok");
-
     }catch(e){
       console.error(e);
-      show("❌ Crash chargement: " + String(e?.message||e), "bad");
+      show("❌ Crash chargement : " + String(e?.message || e), "bad");
     }finally{
       $("btnLoad").disabled = false;
     }
@@ -581,7 +854,8 @@
     if(!pin4) return show("⚠️ PIN4 absent. Vérifie la session.", "bad");
 
     const clean = validateLinks(LINKS);
-    if(!clean.length){
+
+    if(LINKS.length > 0 && clean.length === 0){
       show("⚠️ Aucun lien valide à enregistrer. Label + URL obligatoires.", "warn");
       return;
     }
@@ -597,16 +871,15 @@
         p_links: clean
       });
 
-      if(error) return show("❌ Erreur: " + (error.message || error), "bad");
-      if(!data?.ok) return show("❌ Refusé: " + (data?.error || "unknown"), "bad");
+      if(error) return show("❌ Erreur : " + (error.message || error), "bad");
+      if(!data?.ok) return show("❌ Refusé : " + (data?.error || "unknown"), "bad");
 
       LINKS = clean;
       render();
       show("✅ Enregistré (" + (data.count ?? clean.length) + " lien(s)).", "ok");
-
     }catch(e){
       console.error(e);
-      show("❌ Crash save: " + String(e?.message||e), "bad");
+      show("❌ Crash save : " + String(e?.message || e), "bad");
     }finally{
       $("btnSave").disabled = false;
     }
@@ -616,10 +889,10 @@
     UX_MODE = "preview";
     UX_REASON = reason || "preview";
 
-    if($("pillStatus")) $("pillStatus").textContent = "Aperçu 👁️";
-    if($("who")) $("who").textContent = "Accès réel non confirmé.";
+    setPill("Aperçu 👁️", "warn");
+    $("who").textContent = "Accès réel non confirmé.";
 
-    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id=>{
+    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id => {
       if($(id)) $(id).disabled = true;
     });
 
@@ -640,11 +913,14 @@
     UX_REASON = "ok";
 
     const phone = getPhone();
-    if($("pillStatus")) $("pillStatus").textContent = "Connecté ✅";
-    if($("who")) $("who").textContent =
-      "Téléphone: " + phone + " · PIN4 auto: " + pin4FromPhone(phone) + " · (PIN4 = contrôle rapide, pas un secret)";
 
-    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id=>{
+    setPill("Connecté ✅", "ok");
+    $("who").textContent =
+      "Téléphone : " + phone +
+      " · PIN4 auto : " + pin4FromPhone(phone) +
+      " · contrôle rapide de session";
+
+    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id => {
       if($(id)) $(id).disabled = false;
     });
 
@@ -654,11 +930,7 @@
   function initStaticUi(){
     const slug = getSlug();
 
-    if($("pillSlug")) $("pillSlug").textContent = "slug : " + (slug || "—");
-
-    const PAGE_APP = "./app.html";
-    const PAGE_PUBLIC = "./go-pin-public.html";
-    const PAGE_PIN = "./pin.html";
+    $("pillSlug").textContent = "slug : " + (slug || "—");
 
     const appUrl = new URL(PAGE_APP, location.href);
     const publicUrl = new URL(PAGE_PUBLIC, location.href);
@@ -670,14 +942,13 @@
       pinUrl.searchParams.set("slug", slug);
     }
 
-    if($("btnBack")) $("btnBack").href = appUrl.toString();
-    if($("btnOpenApp")) $("btnOpenApp").href = appUrl.toString();
-    if($("btnOpenPublic")) $("btnOpenPublic").href = publicUrl.toString();
-    if($("btnOpenPin")) $("btnOpenPin").href = pinUrl.toString();
+    $("btnBack").href = appUrl.toString();
+    $("btnOpenApp").href = appUrl.toString();
+    $("btnOpenPublic").href = publicUrl.toString();
+    $("btnOpenPin").href = pinUrl.toString();
 
-    if($("btnCopyAll")){
-      $("btnCopyAll").addEventListener("click", async ()=>{
-        const pack =
+    $("btnCopyAll").addEventListener("click", async () => {
+      const pack =
 `DIGIY URLs
 slug: ${slug || "—"}
 
@@ -685,86 +956,91 @@ APP: ${appUrl.toString()}
 PUBLIC: ${publicUrl.toString()}
 PIN: ${pinUrl.toString()}
 `;
-        const ok = await copyText(pack);
-        show(ok ? "✅ URLs copiées." : "❌ Copie impossible.", ok ? "ok" : "bad");
-      });
-    }
+      const ok = await copyText(pack);
+      show(ok ? "✅ URLs copiées." : "❌ Copie impossible.", ok ? "ok" : "bad");
+    });
 
     const qrPro = new URL(QR_PRO_BASE);
     if(slug) qrPro.searchParams.set("slug", slug);
 
-    if($("qrProUrl")) $("qrProUrl").textContent = qrPro.toString();
-    if($("qrInfo")) $("qrInfo").textContent = "QR-PRO centralise tes QR (app/public/pin).";
+    $("qrProUrl").textContent = qrPro.toString();
+    $("qrInfo").textContent = "QR-PRO centralise APP / public / accès.";
 
     function openQrPro(type){
       const u = new URL(QR_PRO_BASE);
       if(slug) u.searchParams.set("slug", slug);
       if(type) u.searchParams.set("t", type);
       window.open(u.toString(), "_blank", "noopener,noreferrer");
-      if($("qrInfo")) $("qrInfo").textContent = "Ouvert QR-PRO (" + (type || "—") + ") → " + u.toString();
+      $("qrInfo").textContent = "Ouvert QR-PRO (" + (type || "—") + ") → " + u.toString();
     }
 
-    $("btnQrApp")?.addEventListener("click", ()=> openQrPro("app"));
-    $("btnQrPublic")?.addEventListener("click", ()=> openQrPro("public"));
-    $("btnQrPin")?.addEventListener("click", ()=> openQrPro("pin"));
+    $("btnQrApp").addEventListener("click", () => openQrPro("app"));
+    $("btnQrPublic").addEventListener("click", () => openQrPro("public"));
+    $("btnQrPin").addEventListener("click", () => openQrPro("pin"));
 
-    $("btnCopyQr")?.addEventListener("click", async ()=>{
+    $("btnCopyQr").addEventListener("click", async () => {
       const ok = await copyText(qrPro.toString());
       show(ok ? "✅ Lien QR-PRO copié." : "❌ Copie impossible.", ok ? "ok" : "bad");
     });
 
-    $("btnAdd")?.addEventListener("click", ()=>{
+    $("btnAdd").addEventListener("click", () => {
       if(!isLive()){
         show("👁️ Passe par PIN pour ajouter un lien.", "warn");
         return;
       }
+
       LINKS.push({
         order: nextOrder(),
         label:"WhatsApp",
         url:"https://wa.me/221XXXXXXXXX",
         active:true
       });
+
       render();
-      show("✅ Nouveau lien ajouté (pense à Enregistrer).", "ok");
+      show("✅ Nouveau lien ajouté. Pense à Enregistrer.", "ok");
     });
 
-    $("btnSort")?.addEventListener("click", ()=>{
+    $("btnSort").addEventListener("click", () => {
       if(!isLive()){
         show("👁️ En aperçu, tri désactivé.", "warn");
         return;
       }
+
       LINKS = validateLinks(LINKS);
       render();
-      show("✅ Tri + nettoyage appliqués (pense à Enregistrer).", "ok");
+      show("✅ Tri + nettoyage appliqués. Pense à Enregistrer.", "ok");
     });
 
-    $("btnReset")?.addEventListener("click", ()=>{
+    $("btnReset").addEventListener("click", () => {
       if(!isLive()){
         show("👁️ En aperçu, reset désactivé.", "warn");
         return;
       }
+
       if(!confirm("Vider la liste ?")) return;
       LINKS = [];
       render();
       show("Liste vidée. Clique Enregistrer pour appliquer.", "warn");
     });
 
-    $("btnLoad")?.addEventListener("click", loadLinks);
-    $("btnSave")?.addEventListener("click", saveLinks);
+    $("btnLoad").addEventListener("click", loadLinks);
+    $("btnSave").addEventListener("click", saveLinks);
   }
 
   async function init(){
     initStaticUi();
     render();
 
-    if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
+    if(!window.DIGIY_GUARD){
+      setPill("Guard absent", "bad");
       show("❌ Guard absent ou non chargé.", "bad");
       return;
     }
 
     try{
-      await window.DIGIY_GUARD.ready;
+      await waitGuardReady();
     }catch(e){
+      setPill("Guard non prêt", "bad");
       show("❌ Guard non prêt.", "bad");
       return;
     }
@@ -778,7 +1054,7 @@ PIN: ${pinUrl.toString()}
     }
 
     if(!st.access_ok){
-      setPreviewUi(st.reason || "preview");
+      setPreviewUi(st.reason || "has_access_false");
       return;
     }
 
