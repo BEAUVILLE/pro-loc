@@ -25,7 +25,6 @@
   --bg:#020617;--bg2:#0b1020;--card:rgba(255,255,255,.03);--line:#1f2937;
   --ink:#f9fafb;--muted:#cbd5f5;--gold:#facc15;--green:#22c55e;--danger:#ef4444;
   --shadow:0 22px 50px rgba(0,0,0,.55);
-  /* ━━━ AVANT : system-ui…Segoe UI seul → Outfit ━━━ */
   --fontA:"Outfit",system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -175,7 +174,6 @@ a{color:inherit}
     <section class="card">
       <div class="cardHead">
         <div>
-          <!-- ━━━ AVANT : "Cockpit Wave" → "Mon suivi Wave" ━━━ -->
           <h2>💳 Mon suivi Wave</h2>
           <small>Déclarations → vérification → preuves.</small>
         </div>
@@ -198,7 +196,6 @@ a{color:inherit}
     <div class="cardHead">
       <div>
         <h2>✨ Aide DIGIY</h2>
-        <!-- ━━━ AVANT : "CLAW via SQL existant" → banni ━━━ -->
         <small>Analyse branchée sur tes données réelles.</small>
       </div>
     </div>
@@ -216,285 +213,563 @@ a{color:inherit}
 
   const $ = (id)=>document.getElementById(id);
 
-  const SB_URL = String(window.DIGIY_SUPABASE_URL||"https://wesqmwjjtsefyjnluosj.supabase.co").trim();
-  const SB_ANON = String(window.DIGIY_SUPABASE_ANON||window.DIGIY_SUPABASE_ANON_KEY||"sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3").trim();
+  const SB_URL = String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
+  const SB_ANON = String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3").trim();
 
   let sb = null;
 
-  function showNote(elId,msg,type){
-    const el=$(elId); if(!el)return;
-    el.style.display=msg?"block":"none";
-    el.classList.remove("ok","bad","warn");
-    if(type)el.classList.add(type);
-    el.textContent=msg||"";
+  function showNote(elId, msg, type){
+    const el = $(elId);
+    if (!el) return;
+    el.style.display = msg ? "block" : "none";
+    el.classList.remove("ok", "bad", "warn");
+    if (type) el.classList.add(type);
+    el.textContent = msg || "";
   }
 
-  function money(v){ const n=Number(v); if(Number.isFinite(n))return n.toLocaleString("fr-FR")+" FCFA"; return "—"; }
+  function money(v){
+    const n = Number(v);
+    if (Number.isFinite(n)) return n.toLocaleString("fr-FR") + " FCFA";
+    return "—";
+  }
 
-  function escapeHtml(str){ return String(str??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
-  function escapeAttr(str){ return escapeHtml(str).replaceAll("`","&#096;"); }
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
 
-  function getGuardState(){ return window.DIGIY_GUARD?.state||{}; }
+  function escapeAttr(str){
+    return escapeHtml(str).replaceAll("`","&#096;");
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {};
+  }
 
   function getSlug(){
-    const st=getGuardState(); const raw=window.DIGIY_GUARD?.getSession?.()||{};
-    return String(st.slug||raw.slug||"").trim();
+    const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    return String(st.slug || raw.slug || "").trim();
   }
 
   function getSession(){
-    const st=getGuardState(); const raw=window.DIGIY_GUARD?.getSession?.()||{};
-    return {ok:!!st.access_ok,access_ok:!!st.access_ok,reason:st.reason||"",module:st.module||raw.module||"LOC",slug:String(st.slug||raw.slug||"").trim(),phone:String(st.phone||raw.phone||"").trim(),exp:raw.exp||"",expires_at:raw.expires_at||""};
+    const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    return {
+      ok: !!st.access_ok,
+      access_ok: !!st.access_ok,
+      reason: st.reason || "",
+      module: st.module || raw.module || "LOC",
+      slug: String(st.slug || raw.slug || "").trim(),
+      phone: String(st.phone || raw.phone || "").trim(),
+      exp: raw.exp || "",
+      expires_at: raw.expires_at || ""
+    };
   }
 
-  /* ━━━ AVANT : new URL(path, location.href) fragile → buildSafeUrl ━━━ */
   function buildSafeUrl(base, params){
-    const baseStr=(base==null?"":String(base)).trim(); if(!baseStr)return location.href;
+    const baseStr = (base == null ? "" : String(base)).trim();
+    if (!baseStr) return location.href;
+
     let u;
-    try{
-      if(/^https?:\/\//i.test(baseStr)){u=new URL(baseStr);}
-      else{const o=location.protocol+"//"+location.host; const f=baseStr.startsWith("/")?o+baseStr:o+"/"+baseStr; u=new URL(f);}
-    }catch(e){console.warn("[LOC PRO] buildSafeUrl KO:",baseStr,e.message);return baseStr;}
-    try{Object.entries(params||{}).forEach(([k,v])=>{if(v!==null&&v!==undefined&&String(v)!=="")u.searchParams.set(k,String(v));});}catch(e){}
+    try {
+      if (/^https?:\/\//i.test(baseStr)) {
+        u = new URL(baseStr);
+      } else {
+        const origin = location.protocol + "//" + location.host;
+        const full = baseStr.startsWith("/") ? (origin + baseStr) : (origin + "/" + baseStr);
+        u = new URL(full);
+      }
+    } catch (e) {
+      console.warn("[LOC PRO] buildSafeUrl KO:", baseStr, e.message);
+      return baseStr;
+    }
+
+    try {
+      Object.entries(params || {}).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && String(v) !== "") {
+          u.searchParams.set(k, String(v));
+        }
+      });
+    } catch (_e) {}
+
     return u.toString();
   }
 
   function withSlug(path){
-    const currentSlug=getSlug(); if(!currentSlug)return path;
-    return buildSafeUrl(path,{slug:currentSlug});
+    const currentSlug = getSlug();
+    if (!currentSlug) return path;
+    return buildSafeUrl(path, { slug: currentSlug });
   }
 
   async function bootGuard(){
-    if(!window.DIGIY_GUARD||typeof window.DIGIY_GUARD.ready!=="function")throw new Error("guard_missing");
+    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+      throw new Error("guard_missing");
+    }
     await window.DIGIY_GUARD.ready();
-    return window.DIGIY_GUARD.state||{};
+    return window.DIGIY_GUARD.state || {};
   }
 
   function formatExpiry(expRaw){
-    if(!expRaw)return ""; const str=String(expRaw).trim(); let d=null;
-    if(/^\d+$/.test(str)){d=new Date(Number(str));}else{d=new Date(str);}
-    if(!d||Number.isNaN(d.getTime()))return ""; return d.toLocaleString("fr-FR");
+    if (!expRaw) return "";
+    const str = String(expRaw).trim();
+    let d = null;
+
+    if (/^\d+$/.test(str)) {
+      d = new Date(Number(str));
+    } else {
+      d = new Date(str);
+    }
+
+    if (!d || Number.isNaN(d.getTime())) return "";
+    return d.toLocaleString("fr-FR");
   }
 
   function refreshRouteUI(){
-    const currentSlug=getSlug();
-    if($("navPlace"))$("navPlace").textContent="Lieu : "+(currentSlug||"—");
-    if($("kvSlug"))$("kvSlug").textContent=currentSlug||"—";
-    if($("pillSlug"))$("pillSlug").innerHTML=`🏷️ <strong>${escapeHtml(currentSlug||"—")}</strong>`;
+    const currentSlug = getSlug();
 
-    const links=[
-      ["goPrefiche","./fiche-abo.html"],["goPlanning","./planning.html"],
-      ["goBlockDates","./planning.html"],["goReservations","./reservations.html"],
-      ["goTarifs","./tarifs.html"],["goPinWave","./pin-wave.html"],
-      ["goListing","./listing.html"],["goPhotos","./photos.html"],
-      ["goLinks","./manage-links.html"],["goReservationsPulse","./reservations-pulse.html"],
-      ["goGenerator","./generator.html"],["goQr","./qr.html"],
-      ["goQrFactory","./qr-factory.html"],["goNdimbal","./ndimbal.html"],
-      ["goNdimbalLoc","./ndimbal-loc.html"],["goNdimbalLocMain","./ndimbal-loc.html"],
+    if ($("navPlace")) $("navPlace").textContent = "Lieu : " + (currentSlug || "—");
+    if ($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
+    if ($("pillSlug")) $("pillSlug").innerHTML = `🏷️ <strong>${escapeHtml(currentSlug || "—")}</strong>`;
+
+    const links = [
+      ["goPrefiche","./fiche-abo.html"],
+      ["goPlanning","./planning.html"],
+      ["goBlockDates","./planning.html"],
+      ["goReservations","./reservations.html"],
+      ["goTarifs","./tarifs.html"],
+      ["goPinWave","./pin-wave.html"],
+      ["goListing","./listing.html"],
+      ["goPhotos","./photos.html"],
+      ["goLinks","./manage-links.html"],
+      ["goReservationsPulse","./reservations-pulse.html"],
+      ["goGenerator","./generator.html"],
+      ["goQr","./qr.html"],
+      ["goQrFactory","./qr-factory.html"],
+      ["goNdimbal","./ndimbal.html"],
+      ["goNdimbalLoc","./ndimbal-loc.html"],
+      ["goNdimbalLocMain","./ndimbal-loc.html"],
       ["btnOpenPin","./pin.html"]
     ];
 
-    links.forEach(([id,path])=>{ const el=$(id); if(el&&el.tagName==="A")el.href=withSlug(path); });
+    links.forEach(([id, path]) => {
+      const el = $(id);
+      if (el && el.tagName === "A") el.href = withSlug(path);
+    });
 
-    const pub=buildSafeUrl("./go-pin-public.html",currentSlug?{slug:currentSlug}:{});
-    if($("btnPublic"))$("btnPublic").href=pub;
+    const pub = buildSafeUrl("./go-pin-public.html", currentSlug ? { slug: currentSlug } : {});
+    if ($("btnPublic")) $("btnPublic").href = pub;
   }
 
   function refreshSessionUI(){
-    const sess=getSession(); const phone=sess?.phone||"—";
-    const expText=formatExpiry(sess?.expires_at||sess?.exp);
-    if($("kvPhone"))$("kvPhone").textContent=phone;
-    if($("kvSess"))$("kvSess").textContent=sess?.ok?("OK"+(expText?" (expire : "+expText+")"):""):"—";
-    if(sess?.ok&&sess?.phone){
-      if($("pillUser"))$("pillUser").innerHTML=`👤 <strong>${escapeHtml(phone)}</strong>`;
-      if($("pillState")){$("pillState").textContent="✅ Connecté";$("pillState").classList.remove("warn");$("pillState").classList.add("ok");}
-      if($("btnLogout"))$("btnLogout").style.display="inline-flex";
+    const sess = getSession();
+    const phone = sess?.phone || "—";
+    const expText = formatExpiry(sess?.expires_at || sess?.exp);
+
+    if ($("kvPhone")) $("kvPhone").textContent = phone;
+    if ($("kvSess")) {
+      $("kvSess").textContent = sess?.ok
+        ? ("OK" + (expText ? " (expire : " + expText + ")" : ""))
+        : "—";
+    }
+
+    if (sess?.ok && sess?.phone) {
+      if ($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${escapeHtml(phone)}</strong>`;
+      if ($("pillState")) {
+        $("pillState").textContent = "✅ Connecté";
+        $("pillState").classList.remove("warn");
+        $("pillState").classList.add("ok");
+      }
+      if ($("btnLogout")) $("btnLogout").style.display = "inline-flex";
       return true;
     }
-    if($("pillUser"))$("pillUser").innerHTML=`👤 <strong>—</strong>`;
-    if($("pillState")){$("pillState").textContent="🔒 Déconnecté";$("pillState").classList.remove("ok");$("pillState").classList.add("warn");}
-    if($("btnLogout"))$("btnLogout").style.display="none";
+
+    if ($("pillUser")) $("pillUser").innerHTML = `👤 <strong>—</strong>`;
+    if ($("pillState")) {
+      $("pillState").textContent = "🔒 Déconnecté";
+      $("pillState").classList.remove("ok");
+      $("pillState").classList.add("warn");
+    }
+    if ($("btnLogout")) $("btnLogout").style.display = "none";
     return false;
   }
 
   function getLocalSupabase(){
-    if(sb?.rpc)return sb;
-    if(!window.supabase?.createClient)throw new Error("Supabase JS indisponible.");
-    sb=window.supabase.createClient(SB_URL,SB_ANON);
+    if (sb?.rpc) return sb;
+    if (!window.supabase?.createClient) throw new Error("Supabase JS indisponible.");
+    sb = window.supabase.createClient(SB_URL, SB_ANON);
     return sb;
   }
 
-  async function needSB(){ return getLocalSupabase(); }
+  async function needSB(){
+    return getLocalSupabase();
+  }
 
   function rowBadge(status){
-    status=String(status||"declared").toLowerCase();
-    if(status==="verified")return `<span class="badge ok">✅ Vérifié</span>`;
-    if(status==="rejected")return `<span class="badge bad">⛔ Refusé</span>`;
+    status = String(status || "declared").toLowerCase();
+    if (status === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
+    if (status === "rejected") return `<span class="badge bad">⛔ Refusé</span>`;
     return `<span class="badge warn">⏳ Déclaré</span>`;
   }
 
-  function getAmountAny(r){ const v=r?.amount_fcfa??r?.amount??r?.amount_xof??0; const n=Number(v); return Number.isFinite(n)?n:0; }
+  function getAmountAny(r){
+    const v = r?.amount_fcfa ?? r?.amount ?? r?.amount_xof ?? 0;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
 
   function renderList(rows){
-    const box=$("waveList"); if(!box)return;
-    if(!rows||!rows.length){box.innerHTML=`<div class="row"><div class="mini">Aucun paiement déclaré pour ce logement.</div></div>`;return;}
-    box.innerHTML=rows.map(r=>{
-      const dt=r.created_at?new Date(r.created_at).toLocaleString("fr-FR"):"";
-      const who=(r.client_name||"Client")+(r.client_phone?" · "+r.client_phone:"");
-      const noteTxt=(r.note??r.comment??r.message??"");
-      const note=noteTxt?`<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`:"";
-      const proof=r.proof_url?`<div style="margin-top:6px"><a href="${escapeAttr(r.proof_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#facc15;font-weight:900">📎 Voir preuve</a></div>`:"";
-      const status=String(r.status||"declared").toLowerCase();
-      const amt=getAmountAny(r); const amtTxt=(amt>0)?(amt.toLocaleString("fr-FR")+" F"):"—";
-      const verifyBtn=(status==="verified")?`<button class="btn small" disabled>✅ Déjà vérifié</button>`:`<button class="btn small primary jsVerify" data-id="${r.id}">✅ Vérifier</button>`;
+    const box = $("waveList");
+    if (!box) return;
+
+    if (!rows || !rows.length) {
+      box.innerHTML = `<div class="row"><div class="mini">Aucun paiement déclaré pour ce logement.</div></div>`;
+      return;
+    }
+
+    box.innerHTML = rows.map(r => {
+      const dt = r.created_at ? new Date(r.created_at).toLocaleString("fr-FR") : "";
+      const who = (r.client_name || "Client") + (r.client_phone ? " · " + r.client_phone : "");
+      const noteTxt = (r.note ?? r.comment ?? r.message ?? "");
+      const note = noteTxt
+        ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`
+        : "";
+      const proof = r.proof_url
+        ? `<div style="margin-top:6px"><a href="${escapeAttr(r.proof_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#facc15;font-weight:900">📎 Voir preuve</a></div>`
+        : "";
+
+      const status = String(r.status || "declared").toLowerCase();
+      const amt = getAmountAny(r);
+      const amtTxt = (amt > 0) ? (amt.toLocaleString("fr-FR") + " F") : "—";
+      const verifyBtn = (status === "verified")
+        ? `<button class="btn small" disabled>✅ Déjà vérifié</button>`
+        : `<button class="btn small primary jsVerify" data-id="${r.id}">✅ Vérifier</button>`;
+
       return `
         <div class="row">
-          <div class="rowTop"><div><b>${amtTxt}</b><div class="mini">${dt}</div></div>${rowBadge(status)}</div>
+          <div class="rowTop">
+            <div>
+              <b>${amtTxt}</b>
+              <div class="mini">${dt}</div>
+            </div>
+            ${rowBadge(status)}
+          </div>
           <div style="margin-top:8px;font-weight:950">${escapeHtml(who)}</div>
-          ${note}${proof}
+          ${note}
+          ${proof}
           <div style="display:flex;justify-content:flex-end;margin-top:10px">${verifyBtn}</div>
         </div>`;
     }).join("");
 
-    box.querySelectorAll(".jsVerify").forEach(btn=>{
-      btn.addEventListener("click",async()=>{
-        const id=Number(btn.getAttribute("data-id")); if(!id)return;
-        const sess=getSession(); const ownerPhone=sess.phone||""; const placeSlug=getSlug();
-        /* ━━━ AVANT : "Session / slug manquants" → "Identifiant manquant" ━━━ */
-        if(!ownerPhone||!placeSlug){showNote("noteWave","❌ Identifiant ou session manquants. Reconnecte-toi via PIN.","bad");return;}
-        const old=btn.textContent; btn.disabled=true; btn.textContent="⏳ Vérification…";
-        try{
-          const S=await needSB();
-          const{data,error}=await S.rpc("loc_wave_payment_verify",{p_id:id,p_slug:placeSlug,p_owner_phone:ownerPhone});
-          if(error)throw error; if(!data?.ok)throw new Error(data?.reason||"verify_failed");
-          showNote("noteWave","✅ Paiement vérifié.","ok"); await loadWave();
-        }catch(e){
-          console.error(e); showNote("noteWave","❌ Erreur vérification : "+(e?.message||e),"bad");
-          btn.disabled=false; btn.textContent=old;
+    box.querySelectorAll(".jsVerify").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = Number(btn.getAttribute("data-id"));
+        if (!id) return;
+
+        const sess = getSession();
+        const ownerPhone = sess.phone || "";
+        const placeSlug = getSlug();
+
+        if (!ownerPhone || !placeSlug) {
+          showNote("noteWave", "❌ Identifiant ou session manquants. Reconnecte-toi via PIN.", "bad");
+          return;
+        }
+
+        const old = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "⏳ Vérification…";
+
+        try {
+          const S = await needSB();
+          const { data, error } = await S.rpc("loc_wave_payment_verify", {
+            p_id: id,
+            p_slug: placeSlug,
+            p_owner_phone: ownerPhone
+          });
+
+          if (error) throw error;
+          if (!data?.ok) throw new Error(data?.reason || "verify_failed");
+
+          showNote("noteWave", "✅ Paiement vérifié.", "ok");
+          await loadWave();
+        } catch (e) {
+          console.error(e);
+          showNote("noteWave", "❌ Erreur vérification : " + (e?.message || e), "bad");
+          btn.disabled = false;
+          btn.textContent = old;
         }
       });
     });
   }
 
   async function loadStats(ownerPhone){
-    const currentSlug=getSlug(); if(!currentSlug)throw new Error("identifiant_manquant");
-    const S=await needSB();
-    const{data,error}=await S.rpc("loc_wave_payments_stats_owner",{p_slug:currentSlug,p_owner_phone:ownerPhone});
-    if(error)throw error; if(!data||data.ok!==true)throw new Error(data?.reason||"stats_failed"); return data;
+    const currentSlug = getSlug();
+    if (!currentSlug) throw new Error("identifiant_manquant");
+
+    const S = await needSB();
+    const { data, error } = await S.rpc("loc_wave_payments_stats_owner", {
+      p_slug: currentSlug,
+      p_owner_phone: ownerPhone
+    });
+
+    if (error) throw error;
+    if (!data || data.ok !== true) throw new Error(data?.reason || "stats_failed");
+    return data;
   }
 
   async function loadList(ownerPhone){
-    const currentSlug=getSlug(); if(!currentSlug)throw new Error("identifiant_manquant");
-    const S=await needSB();
-    const{data,error}=await S.rpc("loc_wave_payments_list_owner",{p_slug:currentSlug,p_owner_phone:ownerPhone});
-    if(error)throw error; return Array.isArray(data)?data:[];
+    const currentSlug = getSlug();
+    if (!currentSlug) throw new Error("identifiant_manquant");
+
+    const S = await needSB();
+    const { data, error } = await S.rpc("loc_wave_payments_list_owner", {
+      p_slug: currentSlug,
+      p_owner_phone: ownerPhone
+    });
+
+    if (error) throw error;
+    return Array.isArray(data) ? data : [];
   }
 
   async function loadWave(){
-    refreshRouteUI(); const sessOk=refreshSessionUI();
-    if(!sessOk){showNote("noteWave","🔒 Connecte-toi via PIN pour voir ton suivi Wave.","warn");if($("waveList"))$("waveList").innerHTML="";return;}
-    const sess=getSession(); const ownerPhone=sess.phone||""; const currentSlug=getSlug();
-    /* ━━━ AVANT : "Téléphone ou slug manquant" → "Identifiant manquant" ━━━ */
-    if(!ownerPhone||!currentSlug){showNote("noteWave","⚠️ Téléphone ou identifiant manquant.","bad");if($("waveList"))$("waveList").innerHTML="";return;}
-    try{
-      showNote("noteWave","⏳ Chargement des paiements…","warn");
-      const st=await loadStats(ownerPhone);
-      $("stTotal").textContent=String(st.total_declared??0); $("stVerified").textContent=String(st.total_verified??0);
-      $("stSumTotal").textContent=money(st.sum_declared_fcfa??0); $("stSumVerified").textContent=money(st.sum_verified_fcfa??0);
-      const rows=await loadList(ownerPhone); renderList(rows); showNote("noteWave","","");
-    }catch(e){ console.error(e); showNote("noteWave","❌ Erreur Wave : "+(e?.message||e),"bad"); }
+    refreshRouteUI();
+    const sessOk = refreshSessionUI();
+
+    if (!sessOk) {
+      showNote("noteWave", "🔒 Connecte-toi via PIN pour voir ton suivi Wave.", "warn");
+      if ($("waveList")) $("waveList").innerHTML = "";
+      return;
+    }
+
+    const sess = getSession();
+    const ownerPhone = sess.phone || "";
+    const currentSlug = getSlug();
+
+    if (!ownerPhone || !currentSlug) {
+      showNote("noteWave", "⚠️ Téléphone ou identifiant manquant.", "bad");
+      if ($("waveList")) $("waveList").innerHTML = "";
+      return;
+    }
+
+    try {
+      showNote("noteWave", "⏳ Chargement des paiements…", "warn");
+
+      const st = await loadStats(ownerPhone);
+      $("stTotal").textContent = String(st.total_declared ?? 0);
+      $("stVerified").textContent = String(st.total_verified ?? 0);
+      $("stSumTotal").textContent = money(st.sum_declared_fcfa ?? 0);
+      $("stSumVerified").textContent = money(st.sum_verified_fcfa ?? 0);
+
+      const rows = await loadList(ownerPhone);
+      renderList(rows);
+      showNote("noteWave", "", "");
+    } catch (e) {
+      console.error(e);
+      showNote("noteWave", "❌ Erreur Wave : " + (e?.message || e), "bad");
+    }
   }
 
   function renderClaw(rows){
-    const box=$("clawList"); if(!box)return;
-    if(!rows||!rows.length){box.innerHTML=`<div class="clawEmpty">Pas de conseil DIGIY pour le moment.</div>`;return;}
-    box.innerHTML=rows.map(r=>{
-      const title=r.title||"Conseil DIGIY"; const summary=r.summary||r.rationale||"Suggestion disponible.";
-      const rationale=r.rationale?`<div class="clawText" style="margin-top:8px">${escapeHtml(r.rationale)}</div>`:"";
-      const action=r.proposed_action?`<div class="clawText" style="margin-top:8px"><strong>Action :</strong> ${escapeHtml(r.proposed_action)}</div>`:"";
-      const meta=[r.recommendation_type||"suggestion",r.confidence_score!=null?`confiance ${r.confidence_score}`:"",r.risk_level?`risque ${r.risk_level}`:""].filter(Boolean).join(" • ");
-      return `<div class="clawItem"><div class="clawTitle">${escapeHtml(title)}</div><div class="clawText">${escapeHtml(summary)}</div>${rationale}${action}${meta?`<div class="clawMeta">${escapeHtml(meta)}</div>`:""}</div>`;
+    const box = $("clawList");
+    if (!box) return;
+
+    if (!rows || !rows.length) {
+      box.innerHTML = `<div class="clawEmpty">Pas de conseil DIGIY pour le moment.</div>`;
+      return;
+    }
+
+    box.innerHTML = rows.map(r => {
+      const title = r.title || "Conseil DIGIY";
+      const summary = r.summary || r.rationale || "Suggestion disponible.";
+      const rationale = r.rationale
+        ? `<div class="clawText" style="margin-top:8px">${escapeHtml(r.rationale)}</div>`
+        : "";
+      const action = r.proposed_action
+        ? `<div class="clawText" style="margin-top:8px"><strong>Action :</strong> ${escapeHtml(r.proposed_action)}</div>`
+        : "";
+
+      const meta = [
+        r.recommendation_type || "suggestion",
+        r.confidence_score != null ? `confiance ${r.confidence_score}` : "",
+        r.risk_level ? `risque ${r.risk_level}` : ""
+      ].filter(Boolean).join(" • ");
+
+      return `
+        <div class="clawItem">
+          <div class="clawTitle">${escapeHtml(title)}</div>
+          <div class="clawText">${escapeHtml(summary)}</div>
+          ${rationale}
+          ${action}
+          ${meta ? `<div class="clawMeta">${escapeHtml(meta)}</div>` : ""}
+        </div>`;
     }).join("");
   }
 
   async function loadClaw(){
-    const currentSlug=getSlug(); const stateEl=$("clawState"); const box=$("clawList");
-    if(!stateEl||!box)return;
-    if(!currentSlug){
-      /* ━━━ AVANT : "Slug manquant. L'aide DIGIY attend le rail propriétaire." → bannis ━━━ */
-      stateEl.textContent="Identifiant manquant. L'aide DIGIY attend la connexion.";
-      box.innerHTML=""; return;
+    const currentSlug = getSlug();
+    const stateEl = $("clawState");
+    const box = $("clawList");
+
+    if (!stateEl || !box) return;
+
+    if (!currentSlug) {
+      stateEl.textContent = "Identifiant manquant. L'aide DIGIY attend la connexion.";
+      box.innerHTML = "";
+      return;
     }
-    try{
-      stateEl.textContent="Chargement de l'aide DIGIY…";
-      const S=await needSB();
-      const{data,error}=await S.from("digiy_claw_recommendations").select("id,slug,module,recommendation_type,title,summary,rationale,proposed_action,confidence_score,risk_level,status,created_at").eq("module","LOC").eq("slug",currentSlug).in("status",["approved","published","ready","active","validated"]).order("confidence_score",{ascending:false}).order("created_at",{ascending:false}).limit(3);
-      if(error)throw error;
-      renderClaw(Array.isArray(data)?data:[]);
-      /* ━━━ AVANT : "CLAW et lue sur le SQL existant" → banni ━━━ */
-      stateEl.textContent="Analyse DIGIY chargée.";
-    }catch(e){
-      console.error(e); stateEl.textContent="Aide DIGIY momentanément indisponible.";
-      /* ━━━ AVANT : "Le rail CLAW existe, mais…" → banni ━━━ */
-      box.innerHTML=`<div class="clawEmpty">L'analyse DIGIY n'a pas abouti pour le moment. Recharge la page.</div>`;
+
+    try {
+      stateEl.textContent = "Chargement de l'aide DIGIY…";
+
+      const S = await needSB();
+      const { data, error } = await S
+        .from("digiy_claw_recommendations")
+        .select("id,slug,module,recommendation_type,title,summary,rationale,proposed_action,confidence_score,risk_level,status,created_at")
+        .eq("module", "LOC")
+        .eq("slug", currentSlug)
+        .in("status", ["approved","published","ready","active","validated"])
+        .order("confidence_score", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+
+      renderClaw(Array.isArray(data) ? data : []);
+      stateEl.textContent = "Analyse DIGIY chargée.";
+    } catch (e) {
+      console.error(e);
+      stateEl.textContent = "Aide DIGIY momentanément indisponible.";
+      box.innerHTML = `<div class="clawEmpty">L'analyse DIGIY n'a pas abouti pour le moment. Recharge la page.</div>`;
     }
   }
 
-  $("btnToggleTools")?.addEventListener("click",()=>{ const box=$("toolsBox"); if(!box)return; box.hidden=!box.hidden; });
-  $("btnGoPlanning")?.addEventListener("click",()=>{ location.href=withSlug("./planning.html"); });
-  $("btnBack")?.addEventListener("click",(e)=>{ e.preventDefault(); if(history.length>1){history.back();return;} location.href=withSlug("./pin.html"); });
-  $("btnLogout")?.addEventListener("click",()=>{ window.DIGIY_GUARD?.logout?.(); });
-
-  $("btnRefresh")?.addEventListener("click",async()=>{
-    refreshRouteUI(); refreshSessionUI();
-    if(getSession().ok&&getSlug()){
-      showNote("noteMain","✅ App propriétaire active.\nPlanning au centre.\nPré-fiche locale rangée derrière.\nAnalyse DIGIY active.","ok");
-    }else{
-      showNote("noteMain","⚠️ Session propriétaire absente. Reconnecte-toi via PIN.","warn");
-    }
-    await loadClaw(); await loadWave();
+  $("btnToggleTools")?.addEventListener("click", () => {
+    const box = $("toolsBox");
+    if (!box) return;
+    box.hidden = !box.hidden;
   });
 
-  $("btnDeclareOwner")?.addEventListener("click",async()=>{
-    refreshRouteUI(); const sessOk=refreshSessionUI(); if(!sessOk)return;
-    const sess=getSession(); const ownerPhone=sess.phone||""; const currentSlug=getSlug();
-    /* ━━━ AVANT : "Téléphone ou slug manquant" → banni ━━━ */
-    if(!ownerPhone||!currentSlug){showNote("noteWave","⚠️ Téléphone ou identifiant manquant.","bad");return;}
-    const amount=prompt("Montant reçu (FCFA) ?"); if(!amount)return;
-    const amt=Number(String(amount).replace(/[^\d]/g,""));
-    if(!Number.isFinite(amt)||amt<=0){showNote("noteWave","❌ Montant invalide.","bad");return;}
-    const clientName=prompt("Nom du client (optionnel) ?")||"";
-    const clientPhone=prompt("Téléphone client (optionnel) ?")||"";
-    const note=prompt("Note (dates, info) (optionnel) ?")||"";
-    try{
-      showNote("noteWave","⏳ Déclaration en cours…","warn");
-      const S=await needSB();
-      const{data,error}=await S.rpc("loc_wave_payment_declare_owner",{p_slug:currentSlug,p_owner_phone:ownerPhone,p_amount_fcfa:amt,p_client_name:clientName,p_client_phone:clientPhone,p_note:note});
-      if(error)throw error; if(!data?.ok)throw new Error(data?.reason||"declare_failed");
-      showNote("noteWave","✅ Paiement déclaré. Tu peux le vérifier ensuite.","ok"); await loadWave();
-    }catch(e){
-      console.error(e); showNote("noteWave","❌ Impossible d'enregistrer.\nDétail: "+(e?.message||e),"bad");
+  $("btnGoPlanning")?.addEventListener("click", () => {
+    location.href = withSlug("./planning.html");
+  });
+
+  $("btnBack")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (history.length > 1) {
+      history.back();
+      return;
+    }
+    location.href = withSlug("./pin.html");
+  });
+
+  $("btnLogout")?.addEventListener("click", () => {
+    window.DIGIY_GUARD?.logout?.();
+  });
+
+  $("btnRefresh")?.addEventListener("click", async () => {
+    refreshRouteUI();
+    refreshSessionUI();
+
+    if (getSession().ok && getSlug()) {
+      showNote(
+        "noteMain",
+        "✅ App propriétaire active.\nPlanning au centre.\nPré-fiche locale rangée derrière.\nAnalyse DIGIY active.",
+        "ok"
+      );
+    } else {
+      showNote("noteMain", "⚠️ Session propriétaire absente. Reconnecte-toi via PIN.", "warn");
+    }
+
+    await loadClaw();
+    await loadWave();
+  });
+
+  $("btnDeclareOwner")?.addEventListener("click", async () => {
+    refreshRouteUI();
+    const sessOk = refreshSessionUI();
+    if (!sessOk) return;
+
+    const sess = getSession();
+    const ownerPhone = sess.phone || "";
+    const currentSlug = getSlug();
+
+    if (!ownerPhone || !currentSlug) {
+      showNote("noteWave", "⚠️ Téléphone ou identifiant manquant.", "bad");
+      return;
+    }
+
+    const amount = prompt("Montant reçu (FCFA) ?");
+    if (!amount) return;
+
+    const amt = Number(String(amount).replace(/[^\d]/g, ""));
+    if (!Number.isFinite(amt) || amt <= 0) {
+      showNote("noteWave", "❌ Montant invalide.", "bad");
+      return;
+    }
+
+    const clientName = prompt("Nom du client (optionnel) ?") || "";
+    const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
+    const note = prompt("Note (dates, info) (optionnel) ?") || "";
+
+    try {
+      showNote("noteWave", "⏳ Déclaration en cours…", "warn");
+
+      const S = await needSB();
+      const { data, error } = await S.rpc("loc_wave_payment_declare_owner", {
+        p_slug: currentSlug,
+        p_owner_phone: ownerPhone,
+        p_amount_fcfa: amt,
+        p_client_name: clientName,
+        p_client_phone: clientPhone,
+        p_note: note
+      });
+
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.reason || "declare_failed");
+
+      showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
+      await loadWave();
+    } catch (e) {
+      console.error(e);
+      showNote("noteWave", "❌ Impossible d'enregistrer.\nDétail: " + (e?.message || e), "bad");
     }
   });
 
-  try{
-    await bootGuard(); refreshRouteUI(); const sessOk=refreshSessionUI();
-    if(!getSlug()){
-      /* ━━━ AVANT : "Slug propriétaire introuvable" → banni ━━━ */
-      showNote("noteMain","❌ Identifiant propriétaire introuvable. Reconnecte-toi via PIN.","bad");
-    }else if(!sessOk){
-      /* ━━━ AVANT : "Slug trouvé mais session propriétaire non validée" → banni ━━━ */
-      showNote("noteMain","⚠️ Identifiant trouvé mais session non validée.","warn");
-    }else{
-      showNote("noteMain","✅ App propriétaire active.\nPré-fiche locale rangée derrière.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAnalyse DIGIY active.","ok");
+  try {
+    await bootGuard();
+    refreshRouteUI();
+    const sessOk = refreshSessionUI();
+
+    if (!getSlug()) {
+      showNote("noteMain", "❌ Identifiant propriétaire introuvable. Reconnecte-toi via PIN.", "bad");
+    } else if (!sessOk) {
+      showNote("noteMain", "⚠️ Identifiant trouvé mais session non validée.", "warn");
+    } else {
+      showNote(
+        "noteMain",
+        "✅ App propriétaire active.\nPré-fiche locale rangée derrière.\nPlanning, dates bloquées, RESA, tarifs et paiement devant.\nAnalyse DIGIY active.",
+        "ok"
+      );
     }
-    await loadClaw(); await loadWave();
-  }catch(e){
-    console.error(e); refreshRouteUI(); refreshSessionUI();
-    showNote("noteMain","❌ Guard non prêt. Recharge la page ou reconnecte-toi via PIN.","bad");
-    showNote("noteWave","🔒 Accès Wave indisponible tant que la session propriétaire n'est pas prête.","warn");
-    if($("waveList"))$("waveList").innerHTML="";
-    const stateEl=$("clawState");
-    if(stateEl)stateEl.textContent="Aide DIGIY indisponible tant que la session n'est pas prête.";
+
+    await loadClaw();
+    await loadWave();
+  } catch (e) {
+    console.error(e);
+    refreshRouteUI();
+    refreshSessionUI();
+
+    showNote("noteMain", "❌ Guard non prêt. Recharge la page ou reconnecte-toi via PIN.", "bad");
+    showNote("noteWave", "🔒 Accès Wave indisponible tant que la session propriétaire n'est pas prête.", "warn");
+
+    if ($("waveList")) $("waveList").innerHTML = "";
+
+    const stateEl = $("clawState");
+    if (stateEl) stateEl.textContent = "Aide DIGIY indisponible tant que la session n'est pas prête.";
   }
 })();
 </script>
