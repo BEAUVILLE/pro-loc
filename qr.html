@@ -4,7 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1020" />
-  <title>DIGIY LOC PRO — QR</title>
+  <meta name="description" content="Je loue — prépare et partage ton QR d’accès DIGIY pour ouvrir ton espace, ta fiche publique et ton entrée sécurisée." />
+  <title>Je loue • Mon QR</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 
   <script>
     window.DIGIY_MODULE = "LOC";
@@ -18,7 +23,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script src="./guard.js?v=locpro-final"></script>
+  <script src="./guard.js?v=locpro-final-human-front"></script>
 
   <style>
     :root{
@@ -34,7 +39,7 @@
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
       background:
         radial-gradient(circle at 10% 10%, rgba(250,204,21,.09), transparent 40%),
         radial-gradient(circle at 90% 100%, rgba(34,197,94,.10), transparent 45%),
@@ -43,8 +48,8 @@
       min-height:100vh;
     }
     .wrap{max-width:760px;margin:auto;padding:18px}
-    h1{font-size:1.4rem;margin-bottom:6px}
-    p{color:var(--muted);margin-bottom:14px;line-height:1.35}
+    h1{font-size:1.42rem;margin-bottom:6px;font-weight:950}
+    p{color:var(--muted);margin-bottom:14px;line-height:1.4;font-weight:700}
 
     .card{
       background:rgba(255,255,255,0.03);
@@ -71,6 +76,7 @@
       align-items:center;
       justify-content:center;
       transition:transform .12s ease, filter .12s ease, opacity .12s ease;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
     }
     .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.05)}
     .btn:disabled{opacity:.55;cursor:not-allowed}
@@ -86,7 +92,13 @@
       color:#bbf7d0;
     }
 
-    .mini{margin-top:10px;color:var(--muted);font-size:.9rem}
+    .mini{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:700;
+      line-height:1.35;
+    }
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
 
     .note{
@@ -131,8 +143,9 @@
       border-radius:12px;
       border:1px solid var(--line);
       background:rgba(0,0,0,0.12);
-      line-height:1.35;
+      line-height:1.4;
       word-break:break-all;
+      font-weight:800;
     }
     .label b{color:#fff}
     .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:12px}
@@ -161,33 +174,33 @@
 
 <body>
 <div class="wrap">
-  <h1>📎 QR du logement</h1>
-  <p>Un seul QR = <b>QR-PRO</b>. Derrière, QR-PRO propose APP / Public / Accès.</p>
+  <h1>📎 Mon QR</h1>
+  <p>Un seul QR pour ouvrir ton espace, ta fiche publique et ton entrée sécurisée. Tu peux le partager ou l’imprimer.</p>
 
   <div class="card">
     <div class="pillRow">
-      <div class="pill" id="pillSlug">slug: —</div>
-      <div class="pill" id="pillState">session: —</div>
+      <div class="pill" id="pillSlug">identifiant : —</div>
+      <div class="pill" id="pillState">accès : —</div>
     </div>
 
     <div class="row">
-      <button class="btn ghost" id="btnBack" type="button">⬅️ Retour cockpit</button>
-      <button class="btn primary" id="btnCopy" type="button">📋 Copier lien QR-PRO</button>
+      <button class="btn ghost" id="btnBack" type="button">⬅️ Retour à mon espace</button>
+      <button class="btn primary" id="btnCopy" type="button">📋 Copier mon lien</button>
     </div>
 
     <div class="row">
-      <button class="btn good" id="btnOpen" type="button">↗️ Ouvrir QR-PRO</button>
-      <button class="btn primary" id="btnDownload" type="button">⬇️ Télécharger QR (PNG)</button>
-      <button class="btn ghost" id="btnSticker" type="button">🟩 Télécharger Sticker XL (PNG)</button>
+      <button class="btn good" id="btnOpen" type="button">↗️ Ouvrir mon lien</button>
+      <button class="btn primary" id="btnDownload" type="button">⬇️ Télécharger mon QR</button>
+      <button class="btn ghost" id="btnSticker" type="button">🟩 Télécharger sticker XL</button>
     </div>
 
     <div class="qrbox">
       <a id="qrAnchor" href="#" target="_blank" rel="noopener">
-        <img id="qrImg" class="qrImg" alt="QR DIGIY QR PRO" />
+        <img id="qrImg" class="qrImg" alt="QR DIGIY" />
       </a>
     </div>
 
-    <div class="label mono" id="urlBox">URL: —</div>
+    <div class="label mono" id="urlBox">Lien : —</div>
     <div class="note warn" id="note"></div>
 
     <div class="hr"></div>
@@ -271,10 +284,25 @@
     return String(sess.phone || qsTel || "").trim();
   }
 
-  function withSlug(path){
-    const u = new URL(path, location.href);
-    if(slug) u.searchParams.set("slug", slug);
+  function buildSafeUrl(path, params){
+    let u;
+    try{
+      u = new URL(path, location.href);
+    }catch{
+      u = new URL(location.href);
+      u.pathname = path;
+      u.search = "";
+      u.hash = "";
+    }
+    Object.entries(params || {}).forEach(([k,v]) => {
+      if(v == null || v === "") return;
+      u.searchParams.set(k, String(v));
+    });
     return u.toString();
+  }
+
+  function withSlug(path){
+    return buildSafeUrl(path, slug ? { slug } : {});
   }
 
   function syncOwnSlug(){
@@ -377,36 +405,36 @@
   phone = getPhoneSafe();
 
   if(!slug){
-    alert("❌ slug manquant. Ouvre via le cockpit LOC (slug obligatoire).");
+    alert("❌ Identifiant manquant. Ouvre cette page depuis ton espace.");
     return;
   }
 
   const sess = getGuardSession();
-  pillSlug.textContent = "slug: " + slug;
+  pillSlug.textContent = "identifiant : " + slug;
   pillState.textContent = sess.ok
-    ? ("session: OK" + (phone ? " · " + phone : ""))
-    : "session: aperçu / slug";
+    ? ("accès : ouvert" + (phone ? " · " + phone : ""))
+    : "accès : aperçu";
 
   syncOwnSlug();
 
   const qrProUrl = new URL(QR_PRO_BASE);
-qrProUrl.searchParams.set("slug", slug);
-qrProUrl.searchParams.set("module", "LOC");
-if (phone) qrProUrl.searchParams.set("tel", phone);
+  qrProUrl.searchParams.set("slug", slug);
+  qrProUrl.searchParams.set("module", "LOC");
+  if (phone) qrProUrl.searchParams.set("tel", phone);
 
-const appUrl = new URL("./app.html", location.href);
-appUrl.searchParams.set("slug", slug);
+  const appUrl = new URL("./app.html", location.href);
+  appUrl.searchParams.set("slug", slug);
 
-const publicUrl = new URL("./fiche.html", location.href);
-publicUrl.searchParams.set("slug", slug);
+  const publicUrl = new URL("./fiche.html", location.href);
+  publicUrl.searchParams.set("slug", slug);
 
-qrProUrl.searchParams.set("return", appUrl.toString());
-qrProUrl.searchParams.set("public", publicUrl.toString());
+  qrProUrl.searchParams.set("return", appUrl.toString());
+  qrProUrl.searchParams.set("public", publicUrl.toString());
 
-url = qrProUrl.toString();
+  url = qrProUrl.toString();
 
-  urlBox.textContent = "URL: " + url;
-  dbgEl.textContent = "slug: " + slug + " | module: LOC | qr-base: " + QR_PRO_BASE + (phone ? " | tel: " + phone : "");
+  urlBox.textContent = "Lien : " + url;
+  dbgEl.textContent = "identifiant: " + slug + " | activité: LOC | qr-base: " + QR_PRO_BASE + (phone ? " | téléphone: " + phone : "");
 
   qrAnchor.href = url;
   note("⏳ Préparation du QR local…", "warn");
@@ -422,7 +450,7 @@ url = qrProUrl.toString();
     qrXLDataUrl = await makeQrDataUrl(url, 900);
 
     qrImg.onload = () => {
-      note("✅ QR-PRO prêt. Test téléphone avant impression.", "ok");
+      note("✅ Ton QR est prêt. Teste-le au téléphone avant impression.", "ok");
     };
 
     qrImg.onerror = () => {
@@ -444,10 +472,10 @@ url = qrProUrl.toString();
   btnCopy.onclick = async () => {
     try{
       await copyText(url);
-      note("✅ Lien QR-PRO copié.", "ok");
+      note("✅ Ton lien a bien été copié.", "ok");
     }catch(e){
       console.error(e);
-      note("⚠️ Clipboard bloqué. Copie manuelle dans l’URL.", "warn");
+      note("⚠️ La copie a été bloquée. Copie manuelle dans le lien affiché.", "warn");
     }
   };
 
@@ -458,17 +486,17 @@ url = qrProUrl.toString();
   btnDownload.onclick = async () => {
     if(busy) return;
     if(!qrNormalDataUrl){
-      note("❌ QR normal non prêt.", "bad");
+      note("❌ Le QR n’est pas encore prêt.", "bad");
       return;
     }
     setBusy(true);
     try{
       note("⏳ Préparation du PNG…", "warn");
       directDownload(qrNormalDataUrl, `DIGIY_QR_PRO_LOC_${slug}.png`);
-      note("⬇️ Téléchargement lancé (QR normal).", "ok");
+      note("⬇️ Téléchargement lancé.", "ok");
     }catch(e){
       console.error(e);
-      note("❌ Download KO: " + (e?.message || e), "bad");
+      note("❌ Téléchargement impossible : " + (e?.message || e), "bad");
     }finally{
       setBusy(false);
     }
@@ -477,17 +505,17 @@ url = qrProUrl.toString();
   btnSticker.onclick = async () => {
     if(busy) return;
     if(!qrXLDataUrl){
-      note("❌ Sticker XL non prêt.", "bad");
+      note("❌ Le sticker XL n’est pas encore prêt.", "bad");
       return;
     }
     setBusy(true);
     try{
-      note("🟩 Préparation Sticker XL…", "warn");
+      note("🟩 Préparation du sticker XL…", "warn");
       directDownload(qrXLDataUrl, `DIGIY_STICKER_XL_LOC_${slug}.png`);
       note("⬇️ Sticker XL téléchargé.", "ok");
     }catch(e){
       console.error(e);
-      note("❌ Sticker XL KO: " + (e?.message || e), "bad");
+      note("❌ Sticker XL impossible : " + (e?.message || e), "bad");
     }finally{
       setBusy(false);
     }
