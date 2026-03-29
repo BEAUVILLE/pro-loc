@@ -15,7 +15,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra-v4"></script>
+<script src="./guard.js?v=locpro-wave-ultra-v5"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -28,21 +28,44 @@
   --fontA:"Outfit",system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:var(--fontA);color:var(--ink);background:radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),linear-gradient(180deg, var(--bg2), var(--bg));}
+body{
+  min-height:100vh;
+  font-family:var(--fontA);
+  color:var(--ink);
+  background:
+    radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+    radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
+    linear-gradient(180deg, var(--bg2), var(--bg));
+}
 a{color:inherit}
 .wrap{max-width:1100px;margin:0 auto;padding:14px}
-.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow);}
+.top{
+  display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  padding:10px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow);
+}
 .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));border:1px solid rgba(250,204,21,.35);box-shadow:0 0 22px rgba(250,204,21,.12);}
+.logo{
+  width:40px;height:40px;border-radius:14px;
+  background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+  border:1px solid rgba(250,204,21,.35);box-shadow:0 0 22px rgba(250,204,21,.12);
+}
 .brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
 .brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
 .brand .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:2px}
 .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.pill{border:1px solid rgba(148,163,184,.35);padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);color:var(--muted);font-weight:900;font-size:.86rem;}
+.pill{
+  border:1px solid rgba(148,163,184,.35);padding:7px 10px;border-radius:999px;
+  background:rgba(255,255,255,.02);color:var(--muted);font-weight:900;font-size:.86rem;
+}
 .pill strong{color:#fff}
 .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
 .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-.btn{border:0;cursor:pointer;border-radius:14px;padding:11px 12px;font-weight:1000;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--muted);transition:all 0.2s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-family:var(--fontA);}
+.btn{
+  border:0;cursor:pointer;border-radius:14px;padding:11px 12px;font-weight:1000;
+  background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--muted);
+  transition:all 0.2s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--fontA);
+}
 .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .btn:active:not(:disabled){transform:translateY(0)}
 .btn:disabled{opacity:0.5;cursor:not-allowed}
@@ -51,17 +74,31 @@ a{color:inherit}
 .btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
 .btn.ghost{background:rgba(255,255,255,.02)}
 .btn.small{padding:9px 10px;border-radius:12px;min-height:44px}
-.navRow{width:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px;}
+.navRow{
+  width:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px;
+}
 .navLeft,.navRight{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.navLabel{color:var(--muted);font-weight:900;font-size:.86rem;padding:7px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.02);}
+.navLabel{
+  color:var(--muted);font-weight:900;font-size:.86rem;padding:7px 10px;border-radius:999px;
+  border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.02);
+}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 @media(max-width:980px){.grid{grid-template-columns:1fr}}
-.card{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
-.cardHead{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));}
+.card{
+  border:1px solid var(--line);background:rgba(255,255,255,.03);
+  border-radius:20px;box-shadow:var(--shadow);overflow:hidden;
+}
+.cardHead{
+  padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+}
 .cardHead h2{margin:0;font-size:1.02rem}
 .cardHead small{color:var(--muted);font-weight:800}
 .cardBody{padding:14px}
-.note{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.03);color:var(--muted);white-space:pre-wrap;display:none;}
+.note{
+  margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.03);color:var(--muted);white-space:pre-wrap;display:none;
+}
 .note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
 .note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
 .note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
@@ -85,11 +122,21 @@ a{color:inherit}
 .rowTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
 .row b{font-weight:1100}
 .mini{font-size:12px;color:var(--muted);font-weight:850;line-height:1.35}
-.badge{padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.02);font-weight:950;font-size:12px;color:var(--muted);}
+.badge{
+  padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.02);font-weight:950;font-size:12px;color:var(--muted);
+}
 .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
 .badge.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
-@media(max-width:720px){.wrap{padding:12px}.btn{width:100%}.navRight .btn{width:100%}.kv{grid-template-columns:1fr}.quickGrid{grid-template-columns:1fr}.toolsGrid{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .wrap{padding:12px}
+  .btn{width:100%}
+  .navRight .btn{width:100%}
+  .kv{grid-template-columns:1fr}
+  .quickGrid{grid-template-columns:1fr}
+  .toolsGrid{grid-template-columns:1fr}
+}
 </style>
 </head>
 
@@ -211,10 +258,17 @@ a{color:inherit}
 (async function(){
   "use strict";
 
-  const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-  const SB_URL = String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
-  const SB_ANON = String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3").trim();
+  const SB_URL = String(
+    window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co"
+  ).trim();
+
+  const SB_ANON = String(
+    window.DIGIY_SUPABASE_ANON ||
+    window.DIGIY_SUPABASE_ANON_KEY ||
+    "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3"
+  ).trim();
 
   let sb = null;
 
@@ -250,77 +304,92 @@ a{color:inherit}
     return window.DIGIY_GUARD?.state || {};
   }
 
+  function getRawSession(){
+    return window.DIGIY_GUARD?.getSession?.() || {};
+  }
+
   function getSlug(){
     const st = getGuardState();
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    const raw = getRawSession();
     return String(st.slug || raw.slug || "").trim();
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    const raw = getRawSession();
+    return String(st.phone || raw.phone || "").trim();
   }
 
   function getSession(){
     const st = getGuardState();
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    const raw = getRawSession();
+
+    const access = !!(
+      st.access === true ||
+      st.access_ok === true ||
+      raw.access === true ||
+      raw.ok === true
+    );
+
     return {
-      ok: !!st.access_ok,
-      access_ok: !!st.access_ok,
+      ok: access,
+      access_ok: access,
       reason: st.reason || "",
       module: st.module || raw.module || "LOC",
       slug: String(st.slug || raw.slug || "").trim(),
       phone: String(st.phone || raw.phone || "").trim(),
-      exp: raw.exp || "",
-      expires_at: raw.expires_at || ""
+      validated_at: raw.validated_at || st.validated_at || "",
+      session_token: raw.session_token || st.session_token || ""
     };
   }
 
   function buildSafeUrl(base, params){
-    const baseStr = (base == null ? "" : String(base)).trim();
-    if (!baseStr) return location.href;
-
-    let u;
-    try {
-      if (/^https?:\/\//i.test(baseStr)) {
-        u = new URL(baseStr);
-      } else {
-        const origin = location.protocol + "//" + location.host;
-        const full = baseStr.startsWith("/") ? (origin + baseStr) : (origin + "/" + baseStr);
-        u = new URL(full);
-      }
-    } catch (e) {
-      console.warn("[LOC PRO] buildSafeUrl KO:", baseStr, e.message);
-      return baseStr;
-    }
-
-    try {
+    try{
+      const u = new URL(String(base || "").trim(), window.location.href);
       Object.entries(params || {}).forEach(([k, v]) => {
-        if (v !== null && v !== undefined && String(v) !== "") {
-          u.searchParams.set(k, String(v));
+        if (v !== null && v !== undefined && String(v).trim() !== "") {
+          u.searchParams.set(k, String(v).trim());
         }
       });
-    } catch (_e) {}
-
-    return u.toString();
+      return u.toString();
+    }catch(e){
+      console.warn("[LOC PRO] buildSafeUrl KO:", base, e?.message || e);
+      return String(base || "#");
+    }
   }
 
-  function withSlug(path){
-    const currentSlug = getSlug();
-    if (!currentSlug) return path;
-    return buildSafeUrl(path, { slug: currentSlug });
+  function withContext(path){
+    const slug = getSlug();
+    const phone = getPhone();
+    const params = {};
+    if (slug) params.slug = slug;
+    if (phone) params.phone = phone;
+    return buildSafeUrl(path, params);
   }
 
   async function bootGuard(){
     if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
       throw new Error("guard_missing");
     }
-    await window.DIGIY_GUARD.ready();
+
+    await window.DIGIY_GUARD.ready({
+      redirect: true,
+      preserve_validation: true,
+      allow_soft_session: true
+    });
+
     return window.DIGIY_GUARD.state || {};
   }
 
-  function formatExpiry(expRaw){
-    if (!expRaw) return "";
-    const str = String(expRaw).trim();
+  function formatDateTime(value){
+    if (!value) return "";
+
     let d = null;
+    const str = String(value).trim();
 
     if (/^\d+$/.test(str)) {
-      d = new Date(Number(str));
+      const n = Number(str);
+      d = new Date(n < 100000000000 ? n * 1000 : n);
     } else {
       d = new Date(str);
     }
@@ -358,26 +427,29 @@ a{color:inherit}
 
     links.forEach(([id, path]) => {
       const el = $(id);
-      if (el && el.tagName === "A") el.href = withSlug(path);
+      if (el && el.tagName === "A") {
+        el.href = withContext(path);
+      }
     });
 
-    const pub = buildSafeUrl("./go-pin-public.html", currentSlug ? { slug: currentSlug } : {});
-    if ($("btnPublic")) $("btnPublic").href = pub;
+    if ($("btnPublic")) {
+      $("btnPublic").href = buildSafeUrl("./go-pin-public.html", currentSlug ? { slug: currentSlug } : {});
+    }
   }
 
   function refreshSessionUI(){
     const sess = getSession();
-    const phone = sess?.phone || "—";
-    const expText = formatExpiry(sess?.expires_at || sess?.exp);
+    const phone = sess.phone || "—";
+    const validatedText = formatDateTime(sess.validated_at);
 
     if ($("kvPhone")) $("kvPhone").textContent = phone;
     if ($("kvSess")) {
-      $("kvSess").textContent = sess?.ok
-        ? ("OK" + (expText ? " (expire : " + expText + ")" : ""))
+      $("kvSess").textContent = sess.ok
+        ? ("OK" + (validatedText ? " • validée : " + validatedText : ""))
         : "—";
     }
 
-    if (sess?.ok && sess?.phone) {
+    if (sess.ok && sess.phone) {
       if ($("pillUser")) $("pillUser").innerHTML = `👤 <strong>${escapeHtml(phone)}</strong>`;
       if ($("pillState")) {
         $("pillState").textContent = "✅ Connecté";
@@ -401,7 +473,13 @@ a{color:inherit}
   function getLocalSupabase(){
     if (sb?.rpc) return sb;
     if (!window.supabase?.createClient) throw new Error("Supabase JS indisponible.");
-    sb = window.supabase.createClient(SB_URL, SB_ANON);
+    sb = window.supabase.createClient(SB_URL, SB_ANON, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
     return sb;
   }
 
@@ -410,9 +488,9 @@ a{color:inherit}
   }
 
   function rowBadge(status){
-    status = String(status || "declared").toLowerCase();
-    if (status === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
-    if (status === "rejected") return `<span class="badge bad">⛔ Refusé</span>`;
+    const s = String(status || "declared").toLowerCase();
+    if (s === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
+    if (s === "rejected") return `<span class="badge bad">⛔ Refusé</span>`;
     return `<span class="badge warn">⏳ Déclaré</span>`;
   }
 
@@ -444,17 +522,17 @@ a{color:inherit}
 
       const status = String(r.status || "declared").toLowerCase();
       const amt = getAmountAny(r);
-      const amtTxt = (amt > 0) ? (amt.toLocaleString("fr-FR") + " F") : "—";
-      const verifyBtn = (status === "verified")
+      const amtTxt = amt > 0 ? (amt.toLocaleString("fr-FR") + " F") : "—";
+      const verifyBtn = status === "verified"
         ? `<button class="btn small" disabled>✅ Déjà vérifié</button>`
-        : `<button class="btn small primary jsVerify" data-id="${r.id}">✅ Vérifier</button>`;
+        : `<button class="btn small primary jsVerify" data-id="${escapeAttr(r.id)}">✅ Vérifier</button>`;
 
       return `
         <div class="row">
           <div class="rowTop">
             <div>
               <b>${amtTxt}</b>
-              <div class="mini">${dt}</div>
+              <div class="mini">${escapeHtml(dt)}</div>
             </div>
             ${rowBadge(status)}
           </div>
@@ -467,7 +545,7 @@ a{color:inherit}
 
     box.querySelectorAll(".jsVerify").forEach(btn => {
       btn.addEventListener("click", async () => {
-        const id = Number(btn.getAttribute("data-id"));
+        const id = btn.getAttribute("data-id");
         if (!id) return;
 
         const sess = getSession();
@@ -566,6 +644,7 @@ a{color:inherit}
 
       const rows = await loadList(ownerPhone);
       renderList(rows);
+
       showNote("noteWave", "", "");
     } catch (e) {
       console.error(e);
@@ -654,7 +733,7 @@ a{color:inherit}
   });
 
   $("btnGoPlanning")?.addEventListener("click", () => {
-    location.href = withSlug("./planning.html");
+    location.href = withContext("./planning.html");
   });
 
   $("btnBack")?.addEventListener("click", (e) => {
@@ -663,7 +742,7 @@ a{color:inherit}
       history.back();
       return;
     }
-    location.href = withSlug("./pin.html");
+    location.href = withContext("./pin.html");
   });
 
   $("btnLogout")?.addEventListener("click", () => {
@@ -741,6 +820,7 @@ a{color:inherit}
 
   try {
     await bootGuard();
+
     refreshRouteUI();
     const sessOk = refreshSessionUI();
 
@@ -760,6 +840,7 @@ a{color:inherit}
     await loadWave();
   } catch (e) {
     console.error(e);
+
     refreshRouteUI();
     refreshSessionUI();
 
