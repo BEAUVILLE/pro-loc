@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-photos-final-v4"></script>
+  <script src="./guard.js?v=locpro-photos-clean-20260329"></script>
 
   <style>
     :root{
@@ -31,9 +31,11 @@
       --warn:#f59e0b;
       --shadow:0 22px 55px rgba(0,0,0,.45);
     }
+
     *{box-sizing:border-box;margin:0;padding:0}
+
     body{
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:Outfit,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.12), transparent 60%),
         radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
@@ -41,7 +43,9 @@
       color:var(--text);
       min-height:100vh;
     }
+
     .wrap{max-width:880px;margin:auto;padding:18px}
+
     .top{
       background:var(--card);
       border:1px solid var(--line);
@@ -49,28 +53,33 @@
       padding:16px;
       box-shadow:var(--shadow);
     }
+
     .title{
       font-size:1.35rem;
       font-weight:1100;
       margin-bottom:6px;
     }
+
     .sub{
       color:var(--muted);
-      line-height:1.4;
+      line-height:1.45;
       font-weight:850;
     }
+
     .nav{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       margin-top:14px;
     }
+
     .pillbar{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       margin-top:12px;
     }
+
     .pill{
       display:inline-flex;
       align-items:center;
@@ -83,12 +92,15 @@
       font-weight:950;
       font-size:.86rem;
     }
+
     .pill strong{color:#fff}
+
     .pill.ok{
       border-color:rgba(34,197,94,.35);
       background:rgba(34,197,94,.10);
       color:#bbf7d0;
     }
+
     .pill.warn{
       border-color:rgba(250,204,21,.35);
       background:rgba(250,204,21,.10);
@@ -120,24 +132,29 @@
       min-height:46px;
       transition:.15s ease;
     }
+
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
     .btn:disabled{opacity:.55;cursor:not-allowed}
+
     .btn.primary{
       background:var(--accent);
       color:#022c22;
       border-color:rgba(250,204,21,.35);
     }
+
     .btn.ghost{
       background:transparent;
-      border-color:rgba(250,204,21,0.35);
+      border-color:rgba(250,204,21,.35);
       color:#fff;
     }
+
     .btn.ok{
       background:rgba(34,197,94,.10);
       border-color:rgba(34,197,94,.35);
       color:#bbf7d0;
     }
+
     .btn.bad{
       background:rgba(239,68,68,.10);
       border-color:rgba(239,68,68,.35);
@@ -157,15 +174,17 @@
       gap:10px;
       margin-top:14px;
     }
+
     .tile{
       position:relative;
       border-radius:16px;
       overflow:hidden;
       aspect-ratio:1/1;
-      border:1px solid rgba(250,204,21,0.14);
+      border:1px solid rgba(250,204,21,.14);
       background:#022c22;
       user-select:none;
     }
+
     .tile img{
       width:100%;
       height:100%;
@@ -173,6 +192,7 @@
       display:block;
       background:#02150d;
     }
+
     .empty{
       display:flex;
       align-items:center;
@@ -182,21 +202,26 @@
       color:var(--accent);
       height:100%;
     }
+
     .badge{
       position:absolute;
-      top:8px;left:8px;
-      background:rgba(0,0,0,0.65);
+      top:8px;
+      left:8px;
+      background:rgba(0,0,0,.65);
       padding:5px 9px;
       font-size:.72rem;
       border-radius:999px;
-      border:1px solid rgba(250,204,21,0.35);
+      border:1px solid rgba(250,204,21,.35);
       font-weight:800;
       z-index:3;
     }
+
     .iconbtn{
       position:absolute;
-      top:8px;right:8px;
-      width:34px;height:34px;
+      top:8px;
+      right:8px;
+      width:34px;
+      height:34px;
       border-radius:10px;
       border:none;
       font-weight:1000;
@@ -205,12 +230,18 @@
       color:#fff;
       z-index:4;
     }
+
     .menu{
       position:absolute;
-      left:8px; right:8px; bottom:8px;
-      display:flex; gap:6px; flex-wrap:wrap;
+      left:8px;
+      right:8px;
+      bottom:8px;
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
       z-index:4;
     }
+
     .chip{
       flex:1;
       border-radius:12px;
@@ -226,6 +257,7 @@
       justify-content:center;
       gap:8px;
     }
+
     .chip.gold{border-color:rgba(250,204,21,.35)}
     .chip.ok{border-color:rgba(34,197,94,.35)}
     .chip:disabled{opacity:.55;cursor:not-allowed}
@@ -240,18 +272,21 @@
       line-height:1.35;
       font-weight:900;
     }
+
     .note.ok{
       display:block;
       border-color:rgba(34,197,94,.35);
       background:rgba(34,197,94,.09);
       color:#bbf7d0;
     }
+
     .note.bad{
       display:block;
       border-color:rgba(239,68,68,.35);
       background:rgba(239,68,68,.09);
       color:#fecaca;
     }
+
     .note.warn{
       display:block;
       border-color:rgba(250,204,21,.35);
@@ -259,30 +294,56 @@
       color:#fde68a;
     }
 
-    .mini{margin-top:12px;color:var(--muted);font-size:.9rem}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .mini{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
     .help{
       margin-top:14px;
       color:var(--muted);
       font-size:.93rem;
       line-height:1.45;
     }
+
     .help b{color:#fff}
-    .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:14px}
+
+    .hr{
+      height:1px;
+      background:rgba(148,163,184,0.18);
+      margin-top:14px;
+    }
+
     .kv{
       display:grid;
       grid-template-columns:150px 1fr;
       gap:8px;
       margin-top:12px;
     }
+
     .kv div{
       padding:9px 10px;
       border:1px solid rgba(148,163,184,.18);
       border-radius:12px;
       background:rgba(255,255,255,.02);
     }
-    .kv .k{color:var(--muted);font-weight:950}
-    .kv .v{font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    .kv .k{
+      color:var(--muted);
+      font-weight:950;
+    }
+
+    .kv .v{
+      font-weight:1000;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
 
     @media(max-width:620px){
       .gallery{grid-template-columns:repeat(2,1fr)}
@@ -299,8 +360,8 @@
   <div class="top">
     <div class="title">🖼️ DIGIY LOC PRO — Photos</div>
     <div class="sub">
-      Ici on ne stocke que des <b>URLs d’images</b>.  
-      Logique terrain : l’abo t’envoie ses photos → toi tu les ranges sur <b>WordPress</b> → tu lui renvoies les liens → il termine sa fiche.
+      Ici on ne stocke que des <b>URLs d’images</b>.<br>
+      Rail DIGIY : bibliothèque WordPress → URLs propres → collage ici → sauvegarde réelle sur le logement.
     </div>
 
     <div class="pillbar">
@@ -340,7 +401,7 @@
     <div class="help">
       ✅ <b>Stockage léger :</b> seules les URLs sont gardées.<br/>
       ⛔️ <b>Jamais</b> d’image binaire, base64 ou upload direct depuis cette page.<br/><br/>
-      📲 <b>Méthode DIGIY :</b> le pro t’envoie ses photos → tu les poses dans la bibliothèque WordPress → tu colles les URLs ici.<br/>
+      📲 <b>Méthode DIGIY :</b> le pro t’envoie ses photos → tu les poses dans WordPress → tu colles les URLs ici.<br/>
       💡 Utilise des liens <b>https://</b> stables, propres, idéalement en <b>.jpg</b>, <b>.png</b> ou <b>.webp</b>.
     </div>
   </div>
@@ -357,10 +418,12 @@
   const State = {
     slug: "",
     phone: "",
-    mode: "preview", // preview | live
+    mode: "preview",
     reason: "booting",
     photos: []
   };
+
+  let sb = null;
 
   function show(msg, cls){
     const el = $("note");
@@ -376,9 +439,53 @@
   }
 
   function esc(s){
-    return String(s || "").replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
+    return String(s || "").replace(/[&<>"']/g, function(m){
+      return ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        "\"":"&quot;",
+        "'":"&#39;"
+      })[m];
+    });
+  }
+
+  function storageGet(key){
+    try{
+      const v1 = sessionStorage.getItem(key);
+      if(v1) return v1;
+    }catch(_){}
+    try{
+      const v2 = localStorage.getItem(key);
+      if(v2) return v2;
+    }catch(_){}
+    return "";
+  }
+
+  function digitsOnly(v){
+    return String(v || "").replace(/\D/g, "");
+  }
+
+  function normPhone(v){
+    let p = String(v || "").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+    if(p.startsWith("00221")) p = "+221" + p.slice(5);
+    if(!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
+    if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
+    return p;
+  }
+
+  function phoneDigits(v){
+    return digitsOnly(normPhone(v));
+  }
+
+  function cleanSlug(v){
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9\-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
   }
 
   function getGuardState(){
@@ -399,27 +506,58 @@
       ok: !!st.access_ok,
       access_ok: !!st.access_ok,
       preview: !!st.preview,
-      slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
-      phone: String(st.phone || raw.phone || "").trim(),
+      slug: String(
+        st.slug ||
+        raw.slug ||
+        storageGet("digiy_loc_slug") ||
+        storageGet("digiy_last_slug") ||
+        ""
+      ).trim().toLowerCase(),
+      phone: String(
+        st.phone ||
+        raw.phone ||
+        storageGet("DIGIY_PHONE") ||
+        storageGet("DIGIY_LOC_PHONE") ||
+        ""
+      ).trim(),
       reason: String(st.reason || raw.reason || "").trim(),
       module: String(st.module || raw.module || MODULE).trim()
     };
   }
 
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
+
+    const ready = window.DIGIY_GUARD.ready;
+
+    if(typeof ready === "function"){
+      const maybe = ready(8000);
+      if(maybe && typeof maybe.then === "function") return await maybe;
+      return maybe;
+    }
+
+    if(ready && typeof ready.then === "function"){
+      return await ready;
+    }
+
+    if(ready) return true;
+    throw new Error("guard_not_ready");
+  }
+
   function getSlug(){
     const sess = getSession();
-    if (sess.slug) return sess.slug;
+    if(sess.slug) return cleanSlug(sess.slug);
 
     try{
-      return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
-    }catch{
+      return cleanSlug(String(new URL(location.href).searchParams.get("slug") || ""));
+    }catch(_){
       return "";
     }
   }
 
   function getPhone(){
     const sess = getSession();
-    return String(sess.phone || "").trim();
+    return normPhone(sess.phone || "");
   }
 
   function withSlug(url){
@@ -431,7 +569,7 @@
       u.searchParams.set("slug", slug);
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
-    }catch{
+    }catch(_){
       const sep = url.includes("?") ? "&" : "?";
       return url + sep + "slug=" + encodeURIComponent(slug);
     }
@@ -456,14 +594,42 @@
     return u;
   }
 
+  function normalizeGalleryUrls(raw){
+    if(Array.isArray(raw)){
+      return raw
+        .map(x => normalizeUrl(x))
+        .filter(Boolean);
+    }
+
+    if(typeof raw === "string"){
+      const text = raw.trim();
+      if(!text) return [];
+
+      try{
+        const parsed = JSON.parse(text);
+        if(Array.isArray(parsed)){
+          return parsed.map(x => normalizeUrl(x)).filter(Boolean);
+        }
+      }catch(_){}
+
+      return text
+        .split(/\r?\n|,/)
+        .map(x => normalizeUrl(x))
+        .filter(Boolean);
+    }
+
+    return [];
+  }
+
   function getLSKey(){
-    return "DIGIY_LOC_PHOTOS_CACHE_V1:" + (State.slug || "noslug");
+    return "DIGIY_LOC_PHOTOS_CACHE_V2:" + (State.slug || "noslug");
   }
 
   function saveLocal(){
     try{
       localStorage.setItem(getLSKey(), JSON.stringify({
         slug: State.slug,
+        phone: State.phone,
         photos: State.photos,
         ts: Date.now()
       }));
@@ -476,7 +642,7 @@
       if(!raw) return [];
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed?.photos) ? parsed.photos : [];
-    }catch{
+    }catch(_){
       return [];
     }
   }
@@ -485,24 +651,27 @@
     let found = false;
 
     const cleaned = (list || [])
-      .map((x, idx)=>({
-        url: normalizeUrl(x?.url || ""),
-        cover: !!x?.cover,
-        _idx: idx
-      }))
+      .map(function(x){
+        return {
+          url: normalizeUrl(x?.url || ""),
+          cover: !!x?.cover
+        };
+      })
       .filter(x => x.url);
 
-    return cleaned.map((x, idx)=>{
+    return cleaned.map(function(x, idx){
       let cover = x.cover;
       if(cover && !found){
         found = true;
       }else{
         cover = false;
       }
+
       if(idx === 0 && !found){
         cover = true;
         found = true;
       }
+
       return {
         url: x.url,
         cover
@@ -510,21 +679,37 @@
     });
   }
 
+  function mergeRemotePhotos(photoUrl, galleryUrls){
+    const list = [];
+    const main = normalizeUrl(photoUrl || "");
+    const gallery = normalizeGalleryUrls(galleryUrls);
+
+    if(main){
+      list.push({ url: main, cover: true });
+    }
+
+    gallery.forEach(function(url){
+      if(!list.some(x => x.url === url)){
+        list.push({ url, cover: false });
+      }
+    });
+
+    return uniqueCover(list);
+  }
+
   function refreshTopUi(){
     const sess = getSession();
 
-    $("pillPhone").innerHTML = `📞 <strong>${esc(State.phone || "—")}</strong>`;
-    $("pillSlug").innerHTML = `🏷️ <strong>${esc(State.slug || "—")}</strong>`;
+    $("pillPhone").innerHTML = "📞 <strong>" + esc(State.phone || "—") + "</strong>";
+    $("pillSlug").innerHTML = "🏷️ <strong>" + esc(State.slug || "—") + "</strong>";
 
     const pillState = $("pillState");
     if(isLive()){
       pillState.textContent = "✅ Connecté";
-      pillState.classList.remove("warn");
-      pillState.classList.add("ok");
+      pillState.className = "pill ok";
     }else{
       pillState.textContent = "🔒 Aperçu";
-      pillState.classList.remove("ok");
-      pillState.classList.add("warn");
+      pillState.className = "pill warn";
     }
 
     $("kvMode").textContent = isLive() ? "live" : "preview";
@@ -536,7 +721,11 @@
     $("btnPrefiche").href = withSlug("./fiche-abo.html");
 
     dbg(
-      `mode=${State.mode} • slug=${State.slug || "—"} • phone=${State.phone || "—"} • access_ok=${sess.access_ok ? "true" : "false"} • photos=${State.photos.length}`
+      "mode=" + State.mode +
+      " • slug=" + (State.slug || "—") +
+      " • phone=" + (State.phone || "—") +
+      " • access_ok=" + (sess.access_ok ? "true" : "false") +
+      " • photos=" + State.photos.length
     );
   }
 
@@ -549,13 +738,13 @@
     if(!State.photos.length){
       const tile = document.createElement("div");
       tile.className = "tile";
-      tile.innerHTML = `<div class="empty">+</div>`;
+      tile.innerHTML = "<div class='empty'>+</div>";
       box.appendChild(tile);
       refreshTopUi();
       return;
     }
 
-    State.photos.forEach((photo, idx)=>{
+    State.photos.forEach(function(photo, idx){
       const tile = document.createElement("div");
       tile.className = "tile";
 
@@ -580,11 +769,12 @@
       del.textContent = "×";
       del.disabled = !isLive();
       del.title = isLive() ? "Supprimer" : "Mode aperçu";
-      del.addEventListener("click", ()=>{
+      del.addEventListener("click", function(){
         if(!isLive()){
           show("👁️ En aperçu, suppression désactivée.", "warn");
           return;
         }
+
         State.photos.splice(idx, 1);
         State.photos = uniqueCover(State.photos);
         saveLocal();
@@ -600,15 +790,19 @@
       bCover.type = "button";
       bCover.disabled = !isLive();
       bCover.textContent = photo.cover ? "⭐ Cover" : "Mettre cover";
-      bCover.addEventListener("click", ()=>{
+      bCover.addEventListener("click", function(){
         if(!isLive()){
           show("👁️ En aperçu, action désactivée.", "warn");
           return;
         }
-        State.photos = State.photos.map((p, i)=>({
-          url: p.url,
-          cover: i === idx
-        }));
+
+        State.photos = State.photos.map(function(p, i){
+          return {
+            url: p.url,
+            cover: i === idx
+          };
+        });
+
         saveLocal();
         render();
         show("✅ Cover définie. Pense à sauvegarder les URLs.", "ok");
@@ -618,7 +812,7 @@
       bOpen.className = "chip ok";
       bOpen.type = "button";
       bOpen.textContent = "Ouvrir";
-      bOpen.addEventListener("click", ()=>{
+      bOpen.addEventListener("click", function(){
         window.open(photo.url, "_blank", "noopener,noreferrer");
       });
 
@@ -667,7 +861,115 @@
     State.photos = uniqueCover(State.photos);
     saveLocal();
     render();
-    show("✅ URL photo ajoutée en cache local. Clique sur Sauvegarder.", "ok");
+    show("✅ URL photo ajoutée. Clique maintenant sur Sauvegarder.", "ok");
+  }
+
+  async function readRemotePhotos(){
+    const S = getSb();
+    if(!S) return { ok:false, reason:"supabase_not_ready" };
+    if(!State.slug) return { ok:false, reason:"slug_missing" };
+
+    try{
+      const { data, error } = await S
+        .from("digiy_loc_rooms")
+        .select("slug,phone,photo_url,gallery_urls")
+        .eq("slug", State.slug)
+        .single();
+
+      if(error) throw error;
+
+      return {
+        ok:true,
+        photos: mergeRemotePhotos(data?.photo_url, data?.gallery_urls),
+        row:data
+      };
+    }catch(e){
+      return { ok:false, reason:String(e?.message || e) };
+    }
+  }
+
+  async function saveRemotePhotos(){
+    const S = getSb();
+    if(!S) return { ok:false, reason:"supabase_not_ready" };
+    if(!State.slug) return { ok:false, reason:"slug_missing" };
+
+    const clean = uniqueCover(State.photos);
+    const coverUrl = clean.find(x => x.cover)?.url || clean[0]?.url || null;
+    const galleryUrls = clean.map(x => x.url);
+
+    const payload = {
+      photo_url: coverUrl,
+      gallery_urls: galleryUrls
+    };
+
+    const slug = State.slug;
+    const phone = phoneDigits(State.phone);
+
+    const attempts = [];
+
+    if(phone){
+      attempts.push(async function(){
+        return await S
+          .from("digiy_loc_rooms")
+          .update(payload)
+          .eq("slug", slug)
+          .eq("phone", phone)
+          .select("slug,photo_url,gallery_urls")
+          .single();
+      });
+    }
+
+    attempts.push(async function(){
+      return await S
+        .from("digiy_loc_rooms")
+        .update(payload)
+        .eq("slug", slug)
+        .select("slug,photo_url,gallery_urls")
+        .single();
+    });
+
+    let lastErr = null;
+
+    for(const run of attempts){
+      try{
+        const { data, error } = await run();
+        if(error) throw error;
+
+        return {
+          ok:true,
+          row:data
+        };
+      }catch(e){
+        lastErr = e;
+      }
+    }
+
+    return { ok:false, reason:String(lastErr?.message || lastErr || "save_failed") };
+  }
+
+  function getSb(){
+    try{
+      const guardSb = window.DIGIY_GUARD?.getSb?.();
+      if(guardSb) return guardSb;
+    }catch(_){}
+
+    if(sb) return sb;
+
+    if(!window.supabase?.createClient) return null;
+
+    sb = window.supabase.createClient(
+      String(window.DIGIY_SUPABASE_URL || "").trim(),
+      String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim(),
+      {
+        auth:{
+          persistSession:false,
+          autoRefreshToken:false,
+          detectSessionInUrl:false
+        }
+      }
+    );
+
+    return sb;
   }
 
   async function savePhotos(){
@@ -676,12 +978,27 @@
       return;
     }
 
+    State.photos = uniqueCover(State.photos);
     saveLocal();
+    render();
 
-    show(
-      "✅ URLs sauvegardées en cache local.\nAucune image n’est envoyée depuis cette page.\nRail actuel : bibliothèque WordPress → URL propre → collage ici.",
-      "ok"
-    );
+    show("⏳ Sauvegarde réelle en cours…", "warn");
+
+    const res = await saveRemotePhotos();
+    if(!res.ok){
+      show(
+        "⚠️ Cache local mis à jour, mais la sauvegarde réelle a échoué.\nDétail: " + (res.reason || "save_failed"),
+        "bad"
+      );
+      return;
+    }
+
+    const remotePhotos = mergeRemotePhotos(res.row?.photo_url, res.row?.gallery_urls);
+    State.photos = remotePhotos;
+    saveLocal();
+    render();
+
+    show("✅ URLs sauvegardées sur le logement.", "ok");
   }
 
   function disablePreviewUi(reason){
@@ -711,32 +1028,37 @@
     show("✅ Accès OK. Tu peux gérer les URLs photos.", "ok");
   }
 
+  function bindUi(){
+    $("btnAdd").addEventListener("click", addPhoto);
+    $("btnSave").addEventListener("click", savePhotos);
+  }
+
   async function init(){
-    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
+    bindUi();
+
+    State.photos = uniqueCover(loadLocal());
+    State.slug = getSlug();
+    State.phone = getPhone();
+    refreshTopUi();
+    render();
+
+    if(!window.DIGIY_GUARD){
       show("❌ Guard absent ou non chargé.", "bad");
-      State.photos = uniqueCover(loadLocal());
-      render();
       return;
     }
 
     try{
-      await window.DIGIY_GUARD.ready();
+      await waitGuardReady();
     }catch(e){
       console.error(e);
       show("❌ Guard non prêt.", "bad");
-      State.photos = uniqueCover(loadLocal());
-      render();
       return;
     }
 
     State.slug = getSlug();
     State.phone = getPhone();
     State.reason = getSession().reason || "preview";
-    State.photos = uniqueCover(loadLocal());
-
-    $("btnAdd").addEventListener("click", addPhoto);
-    $("btnSave").addEventListener("click", savePhotos);
-
+    refreshTopUi();
     render();
 
     if(!State.slug){
@@ -753,6 +1075,24 @@
 
     enableLiveUi();
     refreshTopUi();
+
+    show("⏳ Lecture réelle des photos…", "warn");
+
+    const remote = await readRemotePhotos();
+    if(!remote.ok){
+      State.photos = uniqueCover(loadLocal());
+      render();
+      show(
+        "⚠️ Lecture réelle impossible pour le moment.\nJe garde le cache local comme secours.\nDétail: " + (remote.reason || "read_failed"),
+        "warn"
+      );
+      return;
+    }
+
+    State.photos = remote.photos;
+    saveLocal();
+    render();
+    show("✅ Photos chargées depuis le logement.", "ok");
   }
 
   init();
