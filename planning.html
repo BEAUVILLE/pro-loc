@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-touch-v1"></script>
+  <script src="./guard.js?v=locpro-calendar-touch-v2"></script>
 
   <style>
     :root{
@@ -69,11 +69,16 @@
       --booked-bg:#dbeafe;
       --booked-ink:#1d4ed8;
 
-      --bar-h:96px;
+      --price-card-bg:rgba(255,255,255,.72);
+      --price-card-line:rgba(120,95,56,.16);
+      --price-card-shadow:0 1px 0 rgba(255,255,255,.45) inset;
+
+      --bar-h:108px;
     }
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
+
     body{
       font-family:"Outfit",system-ui,-apple-system,sans-serif;
       color:var(--text);
@@ -160,8 +165,11 @@
       user-select:none;
       touch-action:manipulation;
     }
+
     .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .btn:active{transform:translateY(0)}
+    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
     .btn.ok{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.10)}
     .btn.warn{border-color:rgba(217,119,6,.55);background:rgba(217,119,6,.10)}
     .btn.bad{border-color:rgba(220,38,38,.50);background:rgba(220,38,38,.10)}
@@ -194,6 +202,7 @@
       line-height:1.35;
       display:none;
     }
+
     .note.show{display:block}
     .note.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
     .note.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
@@ -236,7 +245,8 @@
     .monthSub{
       color:#5b4a35;
       font-weight:950;
-      line-height:1.25;
+      line-height:1.28;
+      max-width:560px;
     }
 
     .monthNav{
@@ -251,6 +261,7 @@
       color:#241a10;
       border-color:rgba(120,95,56,.18);
     }
+
     .calendarHead .btn.small:hover{background:rgba(255,255,255,.74)}
 
     .legend{
@@ -272,9 +283,20 @@
       font-size:.78rem;
     }
 
-    .dot{
-      width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 auto;
+    .legendItem.priceLegend{
+      background:rgba(250,204,21,.16);
+      border-color:rgba(202,138,4,.24);
+      font-weight:1100;
     }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      display:inline-block;
+      flex:0 0 auto;
+    }
+
     .dot.free{background:#9ca3af}
     .dot.booked{background:var(--blue)}
     .dot.closed{background:var(--bad)}
@@ -296,7 +318,7 @@
     }
 
     .day{
-      min-height:92px;
+      min-height:104px;
       border-radius:14px;
       border:1px solid var(--day-line);
       background:var(--day-bg);
@@ -315,35 +337,44 @@
       position:relative;
       overflow:hidden;
     }
+
     .day:hover{background:var(--day-hover);transform:translateY(-1px)}
+
     .day.mutedDay{
       background:var(--day-muted);
       color:var(--day-muted-text);
     }
+
     .day.today{
       border-color:var(--day-today-line);
       background:var(--day-today);
     }
+
     .day.booked{
       background:var(--booked-bg);
       color:var(--booked-ink);
       border-color:rgba(37,99,235,.25);
     }
+
     .day.closed{
       background:var(--closed-bg);
       color:var(--closed-ink);
       border-color:rgba(220,38,38,.25);
     }
+
     .day.selected{
       box-shadow:0 0 0 2px var(--sel-line) inset;
       background:var(--sel-bg);
     }
+
     .day.booked.selected{
       background:linear-gradient(180deg, #dbeafe, #dff3ff);
     }
+
     .day.closed.selected{
       background:linear-gradient(180deg, #fde7e7, #dff3ff);
     }
+
     .day.locked::after{
       content:"";
       position:absolute;
@@ -370,7 +401,7 @@
       font-weight:1100;
       padding:3px 6px;
       border-radius:999px;
-      background:rgba(255,255,255,.55);
+      background:rgba(255,255,255,.58);
       color:inherit;
       white-space:nowrap;
     }
@@ -378,30 +409,58 @@
     .dayMid{
       display:flex;
       flex-direction:column;
-      gap:4px;
-      min-height:28px;
+      gap:5px;
+      min-height:44px;
       justify-content:center;
     }
 
-    .price{
-      font-size:.90rem;
-      font-weight:1100;
-      line-height:1;
-      white-space:nowrap;
+    .priceWrap{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:2px;
+      padding:8px 8px 7px;
+      border-radius:12px;
+      background:var(--price-card-bg);
+      border:1px solid var(--price-card-line);
+      box-shadow:var(--price-card-shadow);
     }
 
-    .price small{
-      font-size:.66rem;
-      font-weight:1000;
-      opacity:.72;
-      margin-left:2px;
+    .day.booked .priceWrap{
+      background:rgba(255,255,255,.76);
+      border-color:rgba(37,99,235,.22);
+    }
+
+    .day.closed .priceWrap{
+      background:rgba(255,255,255,.68);
+      border-color:rgba(220,38,38,.18);
+    }
+
+    .priceMain{
+      font-size:1.10rem;
+      font-weight:1200;
+      line-height:.95;
+      letter-spacing:-.03em;
+      color:#1a120b;
+    }
+
+    .day.booked .priceMain{color:#133f9d}
+    .day.closed .priceMain{color:#7f1d1d}
+
+    .priceUnit{
+      font-size:.62rem;
+      font-weight:1100;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      opacity:.84;
+      line-height:1;
     }
 
     .daySub{
-      font-size:.70rem;
-      line-height:1.15;
-      font-weight:1000;
-      opacity:.78;
+      font-size:.68rem;
+      line-height:1.12;
+      font-weight:1050;
+      opacity:.82;
     }
 
     .calendarFoot{
@@ -450,6 +509,7 @@
     }
 
     .itemTitle{font-weight:1100}
+
     .itemMeta{
       margin-top:4px;
       color:var(--muted);
@@ -471,6 +531,7 @@
       font-size:.82rem;
       white-space:nowrap;
     }
+
     .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
     .badge.warn{border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.08);color:#fed7aa}
     .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
@@ -479,11 +540,14 @@
 
     .actionBar{
       position:fixed;
-      left:0;right:0;bottom:0;
+      left:0;
+      right:0;
+      bottom:0;
       z-index:50;
       padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
       display:none;
     }
+
     .actionBar.show{display:block}
 
     .actionBarInner{
@@ -511,6 +575,14 @@
       font-weight:1100;
       font-size:.98rem;
       line-height:1.2;
+    }
+
+    .selectionPrice{
+      font-weight:1200;
+      font-size:1.12rem;
+      line-height:1.05;
+      color:#fde68a;
+      letter-spacing:-.02em;
     }
 
     .selectionSub{
@@ -556,12 +628,14 @@
       .top{padding:12px}
       .monthLine{align-items:flex-start}
       .calendarGrid{gap:5px;padding:8px}
-      .day{min-height:84px;padding:6px}
-      .price{font-size:.82rem}
-      .daySub{font-size:.66rem}
+      .day{min-height:94px;padding:6px}
+      .priceMain{font-size:.98rem}
+      .priceUnit{font-size:.58rem}
+      .daySub{font-size:.64rem}
       .stateTag{font-size:.62rem;padding:2px 5px}
       .barBtns{grid-template-columns:1fr 1fr}
       .barBtns .btn:last-child{grid-column:1 / -1}
+      .selectionPrice{font-size:1.02rem}
     }
   </style>
 </head>
@@ -593,7 +667,7 @@
         <div class="monthLine">
           <div>
             <div class="monthTitle" id="calendarTitle">Mois</div>
-            <div class="monthSub" id="calendarSub">Glisse sur les dates pour ouvrir, fermer ou changer le prix.</div>
+            <div class="monthSub" id="calendarSub">Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.</div>
           </div>
           <div class="monthNav">
             <button class="btn small" id="btnPrevMonth" type="button">←</button>
@@ -606,7 +680,7 @@
           <span class="legendItem"><span class="dot free"></span> Ouvert</span>
           <span class="legendItem"><span class="dot booked"></span> Occupé</span>
           <span class="legendItem"><span class="dot closed"></span> Fermé</span>
-          <span class="legendItem"><span class="dot price"></span> Prix visible</span>
+          <span class="legendItem priceLegend"><span class="dot price"></span> Prix du jour bien visible</span>
         </div>
       </div>
 
@@ -634,7 +708,7 @@
         <button class="btn warn" id="btnSupport" type="button">💬 Support</button>
       </div>
 
-      <div class="note show ok" id="noteRight">Le calendrier sert à agir vite. Le reste vient après.</div>
+      <div class="note show ok" id="noteRight">Le calendrier sert à agir vite. Le prix doit sauter aux yeux.</div>
     </div>
   </div>
 
@@ -642,6 +716,7 @@
     <div class="actionBarInner">
       <div class="selectionInfo">
         <div class="selectionTitle" id="selectionTitle">Aucune sélection</div>
+        <div class="selectionPrice" id="selectionPrice">Le prix choisi apparaîtra ici.</div>
         <div class="selectionSub" id="selectionSub">Choisis une ou plusieurs dates.</div>
       </div>
       <div class="barBtns">
@@ -859,16 +934,6 @@
     return new Intl.NumberFormat("fr-FR", { maximumFractionDigits:0 }).format(n);
   }
 
-  function priceLabel(amount){
-    const n = Number(amount || 0);
-    if(!Number.isFinite(n) || n <= 0) return "—";
-    if(n >= 1000){
-      const k = Math.round(n / 1000);
-      return `${k}k`;
-    }
-    return String(n);
-  }
-
   function rangeInclusive(startYmd, endYmd){
     const a = localDateFromYmd(startYmd);
     const b = localDateFromYmd(endYmd);
@@ -907,7 +972,7 @@
   }
 
   function getStorageKey(){
-    return "DIGIY_LOC_CALENDAR_TOUCH_V1:" + (getSlug() || "noslug");
+    return "DIGIY_LOC_CALENDAR_TOUCH_V2:" + (getSlug() || "noslug");
   }
 
   function seedDemoIfEmpty(){
@@ -983,6 +1048,12 @@
     return "open";
   }
 
+  function getDaySubLabel(rec){
+    if(rec.status === "booked") return "Réservation protégée";
+    if(rec.status === "closed") return "Fermé manuellement";
+    return "Disponible à ce prix";
+  }
+
   function getCalendarCells(year, month){
     const first = new Date(year, month, 1);
     const firstDay = (first.getDay() + 6) % 7;
@@ -1026,10 +1097,12 @@
       return {
         title:"Aucune sélection",
         sub:"Choisis une ou plusieurs dates.",
+        price:"Le prix choisi apparaîtra ici.",
         hasBooked:false,
         count:0
       };
     }
+
     const sorted = keys.slice().sort(compareYmd);
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
@@ -1043,6 +1116,23 @@
       title = `${formatDateFr(first)} → ${formatDateFr(last)}`;
     }
 
+    const prices = sorted
+      .map((ymd)=>Number(getDayRecord(ymd).price || 0))
+      .filter((n)=>Number.isFinite(n) && n > 0);
+
+    const uniquePrices = [...new Set(prices)];
+    let price = "Prix non défini";
+
+    if(sorted.length === 1 && prices.length){
+      price = `💰 ${formatAmount(prices[0])} F CFA`;
+    }else if(uniquePrices.length === 1 && prices.length){
+      price = `💰 Prix commun : ${formatAmount(uniquePrices[0])} F CFA`;
+    }else if(prices.length){
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      price = `💰 Fourchette : ${formatAmount(min)} → ${formatAmount(max)} F CFA`;
+    }
+
     const sub = hasBooked
       ? `${sorted.length} date(s) choisies · ${lockedCount} occupée(s) protégée(s)`
       : `${sorted.length} date(s) choisies`;
@@ -1050,6 +1140,7 @@
     return {
       title,
       sub,
+      price,
       hasBooked,
       count:sorted.length
     };
@@ -1060,6 +1151,7 @@
     const info = selectionSummary(keys);
 
     $("selectionTitle").textContent = info.title;
+    $("selectionPrice").textContent = info.price;
     $("selectionSub").textContent = info.sub;
 
     const showBar = keys.length > 0;
@@ -1107,8 +1199,11 @@
           <div class="stateTag">${esc(getStatusLabel(rec.status))}</div>
         </div>
         <div class="dayMid">
-          <div class="price">${esc(priceLabel(rec.price))}<small>F</small></div>
-          <div class="daySub">${rec.status === "booked" ? "Protégé" : rec.status === "closed" ? "Fermé manuellement" : "Disponible"}</div>
+          <div class="priceWrap">
+            <div class="priceMain">${esc(formatAmount(rec.price))}</div>
+            <div class="priceUnit">F CFA</div>
+          </div>
+          <div class="daySub">${esc(getDaySubLabel(rec))}</div>
         </div>
       `;
 
@@ -1120,11 +1215,11 @@
     if(keys.length){
       const info = selectionSummary(keys);
       foot.textContent = info.hasBooked
-        ? "Les dates occupées restent protégées. Ouvrir et fermer ne toucheront pas aux réservations."
-        : "Choisis ton action : ouvrir, fermer ou changer le prix.";
+        ? `${info.price} · Les dates occupées restent protégées.`
+        : `${info.price} · Choisis ton action : ouvrir, fermer ou changer le prix.`;
     }else if(MONTH_STATE.focusedDate){
       const rec = getDayRecord(MONTH_STATE.focusedDate);
-      foot.textContent = `${formatDateFr(MONTH_STATE.focusedDate)} · ${getStatusLabel(rec.status)} · ${formatAmount(rec.price)} F`;
+      foot.textContent = `💰 ${formatAmount(rec.price)} F CFA · ${formatDateFr(MONTH_STATE.focusedDate)} · ${getStatusLabel(rec.status)}`;
     }else{
       foot.textContent = "Touchez une date ou glissez sur plusieurs jours.";
     }
@@ -1158,7 +1253,7 @@
             <div class="itemTitle">Date occupée</div>
             <div class="itemMeta">
               📅 ${esc(formatDateFr(day))}<br>
-              💰 ${esc(formatAmount(rec.price))} F<br>
+              💰 ${esc(formatAmount(rec.price))} F CFA<br>
               ${rec.note ? "📝 " + esc(rec.note) : "Client confirmé"}
             </div>
           </div>
@@ -1175,7 +1270,7 @@
             <div class="itemTitle">Date fermée</div>
             <div class="itemMeta">
               📅 ${esc(formatDateFr(day))}<br>
-              💰 ${esc(formatAmount(rec.price))} F<br>
+              💰 ${esc(formatAmount(rec.price))} F CFA<br>
               ${rec.note ? "📝 " + esc(rec.note) : "Indisponible"}
             </div>
           </div>
@@ -1191,7 +1286,7 @@
           <div class="itemTitle">Date ouverte</div>
           <div class="itemMeta">
             📅 ${esc(formatDateFr(day))}<br>
-            💰 ${esc(formatAmount(rec.price))} F<br>
+            💰 ${esc(formatAmount(rec.price))} F CFA<br>
             Disponible à la réservation
           </div>
         </div>
