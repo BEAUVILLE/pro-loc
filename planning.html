@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-real-v4-touch-clean"></script>
+  <script src="./guard.js?v=locpro-calendar-real-v6-range-touch-clean"></script>
 
   <style>
     :root{
@@ -207,6 +207,75 @@
     .note.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
     .note.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
     .note.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
+
+    .programCard{
+      margin-top:12px;
+      padding:12px;
+    }
+
+    .programTitle{
+      font-weight:1100;
+      font-size:1rem;
+      margin-bottom:4px;
+    }
+
+    .programSub{
+      color:var(--muted);
+      font-weight:900;
+      line-height:1.35;
+      margin-bottom:12px;
+    }
+
+    .rangeGrid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .field label{
+      color:var(--muted);
+      font-size:.80rem;
+      font-weight:1000;
+    }
+
+    .field input{
+      width:100%;
+      min-height:46px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      font:inherit;
+      font-weight:1000;
+      outline:none;
+    }
+
+    .field input:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.10);
+    }
+
+    .rangeActions{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+    }
+
+    .rangeHint{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:.84rem;
+      font-weight:900;
+      line-height:1.35;
+    }
 
     .calendarCard{
       margin-top:12px;
@@ -621,6 +690,9 @@
     @media (max-width:700px){
       .topActions{grid-template-columns:repeat(2,minmax(0,1fr))}
       .miniTools{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .rangeGrid{grid-template-columns:1fr 1fr}
+      .rangeActions{grid-template-columns:1fr 1fr}
+      .rangeActions .btn:last-child{grid-column:1 / -1}
     }
 
     @media (max-width:560px){
@@ -636,6 +708,8 @@
       .barBtns{grid-template-columns:1fr 1fr}
       .barBtns .btn:last-child{grid-column:1 / -1}
       .selectionPrice{font-size:1.02rem}
+      .rangeGrid{grid-template-columns:1fr}
+      .rangeActions{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -660,6 +734,34 @@
       </div>
 
       <div class="note" id="note"></div>
+    </div>
+
+    <div class="card programCard">
+      <div class="programTitle">Programmer une plage</div>
+      <div class="programSub">Pour aller vite : choisis un début, une fin, puis ouvre, ferme ou mets un prix sur toute la période.</div>
+
+      <div class="rangeGrid">
+        <div class="field">
+          <label for="rangeStart">Date de début</label>
+          <input id="rangeStart" type="date"/>
+        </div>
+        <div class="field">
+          <label for="rangeEnd">Date de fin</label>
+          <input id="rangeEnd" type="date"/>
+        </div>
+        <div class="field">
+          <label for="rangePrice">Prix / nuit (F CFA)</label>
+          <input id="rangePrice" type="number" min="0" inputmode="numeric" placeholder="ex : 25000"/>
+        </div>
+      </div>
+
+      <div class="rangeActions">
+        <button class="btn ok" id="btnOpenProgram" type="button">✅ Ouvrir la plage</button>
+        <button class="btn bad" id="btnCloseProgram" type="button">⛔ Fermer la plage</button>
+        <button class="btn gold" id="btnPriceProgram" type="button">💰 Appliquer le prix</button>
+      </div>
+
+      <div class="rangeHint" id="rangeHint">Astuce : touche une date ou glisse sur plusieurs jours pour remplir la plage plus vite.</div>
     </div>
 
     <div class="calendarCard">
@@ -1132,10 +1234,11 @@
 
   function getDayRecord(ymd){
     if(DATA.daily[ymd]) return DATA.daily[ymd];
+    const base = getEffectiveBaseNight();
     return {
       day: ymd,
-      price_night: getEffectiveBaseNight(),
-      base_price_night: getEffectiveBaseNight(),
+      price_night: base,
+      base_price_night: base,
       is_booked: false,
       is_closed: false,
       status: "open",
@@ -1156,11 +1259,11 @@
     MONTH_STATE.dragging = false;
     MONTH_STATE.dragStart = "";
     MONTH_STATE.dragCurrent = "";
+    MONTH_STATE.selectedKeys = [];
     MONTH_STATE.pointerId = null;
     MONTH_STATE.dragMoved = false;
     MONTH_STATE.startX = 0;
     MONTH_STATE.startY = 0;
-    MONTH_STATE.selectedKeys = [];
     if(renderToo) render();
   }
 
@@ -1251,6 +1354,80 @@
     };
   }
 
+  function syncRangeFormFromSelection(){
+    const keys = getSelectedKeys().slice().sort(compareYmd);
+    const startEl = $("rangeStart");
+    const endEl = $("rangeEnd");
+    const priceEl = $("rangePrice");
+    if(!startEl || !endEl || !priceEl) return;
+
+    if(!keys.length){
+      if(!priceEl.value){
+        const base = getEffectiveBaseNight();
+        if(base > 0) priceEl.value = String(base);
+      }
+      return;
+    }
+
+    startEl.value = keys[0] || "";
+    endEl.value = keys[keys.length - 1] || "";
+
+    const firstPrice = Number(getDayRecord(keys[0]).price_night || 0) || 0;
+    if(firstPrice > 0){
+      priceEl.value = String(firstPrice);
+    }else{
+      const base = getEffectiveBaseNight();
+      priceEl.value = base > 0 ? String(base) : "";
+    }
+  }
+
+  function setProgramDefaults(){
+    const startEl = $("rangeStart");
+    const endEl = $("rangeEnd");
+    const priceEl = $("rangePrice");
+    const today = ymdFromDate(new Date());
+
+    if(startEl && !startEl.value) startEl.value = today;
+    if(endEl && !endEl.value) endEl.value = today;
+    if(priceEl && !priceEl.value){
+      const base = getEffectiveBaseNight();
+      if(base > 0) priceEl.value = String(base);
+    }
+  }
+
+  function setActionButtonsEnabled(enabled){
+    [
+      "btnOpenRange","btnCloseRange","btnPriceRange","btnCancelRange",
+      "btnOpenProgram","btnCloseProgram","btnPriceProgram",
+      "rangeStart","rangeEnd","rangePrice"
+    ].forEach((id)=>{
+      const el = $(id);
+      if(el) el.disabled = !enabled;
+    });
+  }
+
+  function getProgramRange(){
+    const start = String($("rangeStart")?.value || "").trim();
+    const end = String($("rangeEnd")?.value || "").trim();
+
+    if(!start || !end){
+      throw new Error("Choisis une date de début et une date de fin.");
+    }
+    if(compareYmd(start, end) > 0){
+      throw new Error("La date de fin doit être après la date de début.");
+    }
+    return { start, end };
+  }
+
+  function getProgramPrice(){
+    const raw = String($("rangePrice")?.value || "").trim();
+    const amount = Number(raw.replace(/[^\d]/g, ""));
+    if(!Number.isFinite(amount) || amount <= 0){
+      throw new Error("Mets un prix valide.");
+    }
+    return amount;
+  }
+
   function renderActionBar(){
     const keys = getSelectedKeys();
     const info = selectionSummary(keys);
@@ -1262,9 +1439,9 @@
     const showBar = keys.length > 0;
     $("actionBar").classList.toggle("show", showBar);
 
-    $("btnOpenRange").disabled = !showBar;
-    $("btnCloseRange").disabled = !showBar;
-    $("btnPriceRange").disabled = !showBar;
+    $("btnOpenRange").disabled = !showBar || !getSession().access_ok;
+    $("btnCloseRange").disabled = !showBar || !getSession().access_ok;
+    $("btnPriceRange").disabled = !showBar || !getSession().access_ok;
   }
 
   function renderCalendar(){
@@ -1274,15 +1451,13 @@
     const roomLabel = DATA.room?.room_name || ROOM_CTX.roomName || "";
     const baseNight = getEffectiveBaseNight();
 
-    if(roomLabel){
-      $("calendarSub").textContent = baseNight > 0
-        ? `${roomLabel} • prix du jour devant • base ${formatAmount(baseNight)} F CFA • ${monthLabel}`
-        : `${roomLabel} • prix du jour devant • ${monthLabel}`;
-    }else{
-      $("calendarSub").textContent = baseNight > 0
-        ? `Le prix du jour passe devant. Base actuelle : ${formatAmount(baseNight)} F CFA.`
-        : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.";
-    }
+    $("calendarSub").textContent = roomLabel
+      ? (baseNight > 0
+          ? `${roomLabel} • base ${formatAmount(baseNight)} F CFA • ${monthLabel}`
+          : `${roomLabel} • ${monthLabel}`)
+      : (baseNight > 0
+          ? `Le prix du jour passe devant. Base actuelle : ${formatAmount(baseNight)} F CFA.`
+          : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.");
 
     const grid = $("calendarGrid");
     const foot = $("calendarFoot");
@@ -1422,6 +1597,7 @@
     renderCalendar();
     renderActionBar();
     renderBookings();
+    syncRangeFormFromSelection();
   }
 
   function getDayButtonFromPoint(clientX, clientY){
@@ -1718,7 +1894,7 @@
 
     const tariffHint = getTariffHintMessage();
     if(keepMessage && tariffHint){
-      showRight(`${keepMessage}\n${tariffHint}`, "ok");
+      showRight(keepMessage + "\n" + tariffHint, "ok");
     }else if(keepMessage){
       showRight(keepMessage, "ok");
     }else if(tariffHint){
@@ -1738,7 +1914,7 @@
     const phone = sess.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
 
     if(!roomSlug || !phone){
-      showRight("Accès incomplet. Reviens par ton PIN.", "warn");
+      showRight("Accès incomplet. Reviens par ton accès.", "warn");
       return;
     }
 
@@ -1803,16 +1979,92 @@
     }
   }
 
+  async function applyProgramRange(action){
+    if(!getSession().access_ok){
+      showRight("Ouvre ton accès pour agir sur les dates.", "warn");
+      return;
+    }
+
+    let start = "";
+    let end = "";
+    let amount = null;
+
+    try{
+      const range = getProgramRange();
+      start = range.start;
+      end = range.end;
+      if(action === "price"){
+        amount = getProgramPrice();
+      }
+    }catch(e){
+      showRight(String(e?.message || e), "warn");
+      return;
+    }
+
+    const keys = rangeInclusive(start, end);
+    if(keys.some((ymd)=>getDayRecord(ymd).status === "booked")){
+      showRight("Les dates occupées restent protégées.", "warn");
+      return;
+    }
+
+    const sess = getSession();
+    const roomSlug = getCalendarSlug();
+    const phone = sess.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+
+    if(!roomSlug || !phone){
+      showRight("Accès incomplet. Reviens par ton accès.", "warn");
+      return;
+    }
+
+    try{
+      showRight("⏳ Mise à jour de la plage…", "warn");
+
+      const out = await rpc("digiy_loc_calendar_apply_range", {
+        p_slug: roomSlug,
+        p_owner_phone: phone,
+        p_start: start,
+        p_end: end,
+        p_action: action,
+        p_price: action === "price" ? amount : null,
+        p_note: action === "price"
+          ? "tarif programmé"
+          : action === "close"
+            ? "fermeture programmée"
+            : "réouverture programmée"
+      });
+
+      if(!out?.ok){
+        throw new Error(out?.reason || "calendar_apply_failed");
+      }
+
+      MONTH_STATE.focusedDate = end;
+      MONTH_STATE.selectedKeys = keys;
+
+      const label = action === "price"
+        ? `💰 Prix appliqué sur ${out.changed_count || 0} date(s).`
+        : action === "close"
+          ? `⛔ ${out.changed_count || 0} date(s) fermée(s).`
+          : `✅ ${out.changed_count || 0} date(s) ouverte(s).`;
+
+      await reloadCurrentMonth(label);
+    }catch(e){
+      console.error(e);
+      showRight("❌ Impossible de mettre à jour : " + (e?.message || e), "bad");
+    }
+  }
+
   function renderPreview(reason){
     UX_MODE = "preview";
     UX_REASON = reason || "preview";
-    setSub("👁️ Aperçu du calendrier");
+    setSub("🔐 Ouvre ton accès pour agir");
+    setActionButtonsEnabled(false);
     show(
       reason === "slug_missing"
-        ? "Aucun identifiant détecté.\nTu vois un aperçu propre du calendrier."
-        : "Ton identifiant est là, mais l’accès n’est pas encore confirmé.\nTu vois un aperçu sans mur brutal.",
+        ? "Identifiant manquant. Ouvre cette page depuis ton accès pour agir sur tes dates."
+        : "Session non reconnue pour le moment. Ouvre ton accès pour modifier les dates, les prix et les plages.",
       "warn"
     );
+    showRight("Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
   }
 
   function renderLiveHeader(){
@@ -1825,6 +2077,7 @@
 
     UX_MODE = "live";
     UX_REASON = "ok";
+    setActionButtonsEnabled(true);
     setSub(`✅ Accès ouvert · ${phone}`);
     show("Calendrier réel prêt. Ouvrir, fermer, tarifer.", "ok");
   }
@@ -1903,8 +2156,13 @@ Merci. — DIGIY`;
     $("btnCloseRange").addEventListener("click", ()=>applyAction("close"));
     $("btnPriceRange").addEventListener("click", ()=>applyAction("price"));
 
+    $("btnOpenProgram").addEventListener("click", ()=>applyProgramRange("open"));
+    $("btnCloseProgram").addEventListener("click", ()=>applyProgramRange("close"));
+    $("btnPriceProgram").addEventListener("click", ()=>applyProgramRange("price"));
+
     $("btnCancelRange").addEventListener("click", ()=>{
       clearSelection(false);
+      setProgramDefaults();
       render();
       showRight("Sélection annulée.", "ok");
     });
@@ -1914,6 +2172,8 @@ Merci. — DIGIY`;
     document.addEventListener("pointercancel", handleGlobalPointerCancel);
 
     $("pillSlug").textContent = "identifiant accès : " + (getAccessSlug() || "—");
+    setProgramDefaults();
+    setActionButtonsEnabled(false);
 
     if(!window.DIGIY_GUARD){
       setSub("❌ Ton accès n’est pas disponible.");
@@ -1953,6 +2213,7 @@ Merci. — DIGIY`;
       loadOfflineTariffs();
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
       await reloadCurrentMonth();
+      setProgramDefaults();
     }catch(e){
       console.error(e);
       show("❌ Impossible de charger le calendrier réel : " + (e?.message || e), "bad");
