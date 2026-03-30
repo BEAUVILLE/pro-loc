@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue • Vue du jour</title>
   <meta name="theme-color" content="#0b1020"/>
-  <meta name="description" content="Je loue — vue du jour pour suivre les arrivées, les départs, les logements occupés, les rappels et les paiements."/>
+  <meta name="description" content="Je loue — vue du jour pour suivre les arrivées du jour, les départs, les logements occupés et toutes les arrivées futures."/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -15,21 +15,33 @@
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-today-human-front-v7"></script>
+  <script src="./guard.js?v=locpro-today-human-future-v1"></script>
 
   <style>
     :root{
-      --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
-      --line:#1f2937; --ink:#f9fafb; --muted:#cbd5f5;
-      --gold:#facc15; --green:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+      --bg:#020617;
+      --bg2:#0b1020;
+      --card:rgba(255,255,255,.03);
+      --line:#1f2937;
+      --ink:#f9fafb;
+      --muted:#cbd5f5;
+      --gold:#facc15;
+      --green:#22c55e;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --blue:#2563eb;
       --shadow:0 22px 50px rgba(0,0,0,.55);
     }
+
     *{box-sizing:border-box}
     body{
-      margin:0; color:var(--ink);
+      margin:0;
+      color:var(--ink);
       font-family:"Outfit",system-ui,-apple-system,sans-serif;
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
@@ -37,34 +49,61 @@
         linear-gradient(180deg, var(--bg2), var(--bg));
       min-height:100vh;
     }
-    .wrap{max-width:1150px;margin:0 auto;padding:14px}
+
+    .wrap{max-width:1200px;margin:0 auto;padding:14px}
+
     .top{
-      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-      padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--card);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--card);
       box-shadow:var(--shadow);
     }
+
     .brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .logo{
-      width:40px;height:40px;border-radius:14px;
+      width:40px;
+      height:40px;
+      border-radius:14px;
       background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
       border:1px solid rgba(250,204,21,.35);
       box-shadow:0 0 22px rgba(250,204,21,.12);
     }
+
     h1{margin:0;font-size:1.05rem;font-weight:1000}
-    .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:4px;line-height:1.2}
+    .sub{
+      color:var(--muted);
+      font-weight:800;
+      font-size:.92rem;
+      margin-top:4px;
+      line-height:1.25;
+    }
+
     .pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .pill{
       border:1px solid rgba(148,163,184,.35);
-      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
-      color:var(--muted);font-weight:900;font-size:.86rem;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      font-weight:900;
+      font-size:.86rem;
     }
     .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
     .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
 
     .btn{
-      border:0; cursor:pointer; border-radius:14px;
-      padding:11px 12px; font-weight:1000;
+      border:0;
+      cursor:pointer;
+      border-radius:14px;
+      padding:11px 12px;
+      font-weight:1000;
       background:rgba(255,255,255,.03);
       border:1px solid var(--line);
       color:var(--muted);
@@ -92,18 +131,27 @@
       overflow:hidden;
       grid-column:span 12;
     }
+
     .head{
-      padding:12px 14px;border-bottom:1px solid var(--line);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
     }
     .head h2{margin:0;font-size:1.02rem}
     .head small{color:var(--muted);font-weight:800}
+
     .body{padding:14px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
     .note{
-      margin-top:10px; padding:10px 12px; border-radius:14px;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
       border:1px solid rgba(148,163,184,.25);
       background:rgba(255,255,255,.03);
       color:var(--muted);
@@ -124,16 +172,23 @@
     }
     .itemTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .itemTitle{font-weight:1000}
-    .itemMeta{color:var(--muted);font-weight:850;font-size:.92rem;margin-top:5px;line-height:1.35}
+    .itemMeta{color:var(--muted);font-weight:850;font-size:.92rem;margin-top:5px;line-height:1.4}
+
     .tag{
-      display:inline-flex;align-items:center;gap:7px;
-      padding:6px 9px;border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:6px 9px;
+      border-radius:999px;
       border:1px solid rgba(148,163,184,.25);
-      color:var(--muted);font-weight:950;font-size:.82rem;
+      color:var(--muted);
+      font-weight:950;
+      font-size:.82rem;
     }
     .tag.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
     .tag.warn{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10);color:#fde68a}
     .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+    .tag.blue{border-color:rgba(37,99,235,.35);background:rgba(37,99,235,.10);color:#bfdbfe}
 
     .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
     .stat{
@@ -145,6 +200,12 @@
     }
     .stat .num{font-size:1.7rem;font-weight:1100;color:var(--gold)}
     .stat .lbl{color:var(--muted);font-weight:850;font-size:.82rem;margin-top:4px}
+
+    .futureDate{
+      color:#fde68a;
+      font-weight:1000;
+      font-size:.88rem;
+    }
 
     @media(min-width:980px){
       .col6{grid-column:span 6}
@@ -192,7 +253,7 @@
       <div class="logo"></div>
       <div>
         <h1>Je loue • Vue du jour</h1>
-        <div class="sub">Arrivées • Départs • Logements occupés • Rappels • Paiements</div>
+        <div class="sub">Arrivées du jour • Départs du jour • Occupés • Toutes les arrivées à venir</div>
       </div>
     </div>
 
@@ -210,13 +271,26 @@
     <section class="card col4">
       <div class="head">
         <div>
-          <h2>📊 Résumé du jour</h2>
+          <h2>📊 Résumé</h2>
           <small id="lblDay">Aujourd’hui</small>
         </div>
       </div>
       <div class="body">
         <div class="stats" id="stats"></div>
         <div class="note" id="noteStats"></div>
+      </div>
+    </section>
+
+    <section class="card col4">
+      <div class="head">
+        <div>
+          <h2>💳 Paiements</h2>
+          <small>preuves récentes</small>
+        </div>
+      </div>
+      <div class="body">
+        <div class="list" id="payList"></div>
+        <div class="note" id="notePay"></div>
       </div>
     </section>
 
@@ -238,23 +312,10 @@
       </div>
     </section>
 
-    <section class="card col4">
-      <div class="head">
-        <div>
-          <h2>💳 Paiements</h2>
-          <small>preuves récentes</small>
-        </div>
-      </div>
-      <div class="body">
-        <div class="list" id="payList"></div>
-        <div class="note" id="notePay"></div>
-      </div>
-    </section>
-
     <section class="card col6">
       <div class="head">
         <div>
-          <h2>🧳 Mouvements du jour</h2>
+          <h2>🧳 Aujourd’hui</h2>
           <small>arrivées, départs et logements occupés</small>
         </div>
       </div>
@@ -265,6 +326,19 @@
     </section>
 
     <section class="card col6">
+      <div class="head">
+        <div>
+          <h2>🔭 Arrivées à venir</h2>
+          <small>toutes les prochaines arrivées confirmées</small>
+        </div>
+      </div>
+      <div class="body">
+        <div class="list" id="futureList"></div>
+        <div class="note" id="noteFuture"></div>
+      </div>
+    </section>
+
+    <section class="card col12">
       <div class="head">
         <div>
           <h2>⏳ Réservations à confirmer</h2>
@@ -294,6 +368,7 @@
     arrivals: 0,
     departures: 0,
     occupied: 0,
+    futureArrivals: 0,
     pulseQueued: 0,
     pulseSent: 0,
     pulseFailed: 0
@@ -565,6 +640,7 @@
     setNote("notePulse", "Connecte-toi d’abord.", "warn");
     setNote("notePay", "Connecte-toi d’abord.", "warn");
     setNote("noteArrDep", "Connecte-toi d’abord.", "warn");
+    setNote("noteFuture", "Connecte-toi d’abord.", "warn");
     setNote("notePending", "Connecte-toi d’abord.", "warn");
   }
 
@@ -573,6 +649,7 @@
     setNote("notePulse", "", "");
     setNote("notePay", "", "");
     setNote("noteArrDep", "", "");
+    setNote("noteFuture", "", "");
     setNote("notePending", "", "");
   }
 
@@ -580,6 +657,7 @@
     Summary.arrivals = 0;
     Summary.departures = 0;
     Summary.occupied = 0;
+    Summary.futureArrivals = 0;
     Summary.pulseQueued = 0;
     Summary.pulseSent = 0;
     Summary.pulseFailed = 0;
@@ -589,9 +667,10 @@
     $("stats").innerHTML = "";
 
     const cards = [
-      ["Arrivées", Summary.arrivals],
-      ["Départs", Summary.departures],
+      ["Arrivées du jour", Summary.arrivals],
+      ["Départs du jour", Summary.departures],
       ["Occupés", Summary.occupied],
+      ["Arrivées à venir", Summary.futureArrivals],
       ["Rappels à venir", Summary.pulseQueued],
       ["Rappels en échec", Summary.pulseFailed],
       ["Rappels envoyés", Summary.pulseSent],
@@ -615,6 +694,7 @@
     $("pulseList").innerHTML = "";
     $("payList").innerHTML = "";
     $("arrdepList").innerHTML = "";
+    $("futureList").innerHTML = "";
     $("pendingList").innerHTML = "";
 
     $("pulseQueued").textContent = "0";
@@ -632,101 +712,26 @@
     return data;
   }
 
-  function normalizeOwnerContext(raw){
-    if (!raw || typeof raw !== "object") return null;
+  async function resolveRoomBySlug(slug){
+    if(!slug) return null;
 
-    const owner_id = raw.owner_id || raw.ownerId || raw.id || null;
-    if (!owner_id) return null;
+    try{
+      const sb = getSB();
+      const { data, error } = await sb
+        .from("digiy_loc_rooms")
+        .select("id, slug, nom, owner_id, phone")
+        .eq("slug", slug)
+        .limit(1)
+        .maybeSingle();
 
-    return {
-      owner_id,
-      business_code: raw.business_code || raw.businessCode || raw.code || "",
-      business_name: raw.business_name || raw.businessName || raw.name || ""
-    };
-  }
-
-  function ownerContextFromStorage(){
-    const owner_id =
-      storageGet("DIGIY_LOC_OWNER_ID") ||
-      storageGet("digiy_loc_owner_id") ||
-      storageGet("DIGIY_OWNER_ID") ||
-      storageGet("owner_id") ||
-      "";
-
-    if (!owner_id) return null;
-
-    return normalizeOwnerContext({
-      owner_id,
-      business_code:
-        storageGet("DIGIY_LOC_BUSINESS_CODE") ||
-        storageGet("DIGIY_BUSINESS_CODE") ||
-        "",
-      business_name:
-        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-        storageGet("DIGIY_BUSINESS_NAME") ||
-        ""
-    });
-  }
-
-  async function ownerContextFromRpc(slug){
-    const attempts = [
-      "digiy_loc_owner_context",
-      "digiy_loc_get_owner_context",
-      "digiy_loc_resolve_owner_context"
-    ];
-
-    for (const fn of attempts) {
-      try {
-        const data = await rpc(fn, {
-          p_phone: getGuardState().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "",
-          p_slug: slug || getSlug() || "",
-          p_module: MODULE
-        });
-
-        const ctx = normalizeOwnerContext(data);
-        if (ctx?.owner_id) return ctx;
-      } catch (_) {}
+      if(error) throw error;
+      return data || null;
+    }catch{
+      return null;
     }
-
-    return null;
-  }
-
-  async function resolveOwnerContext(slug){
-    const fromStorage = ownerContextFromStorage();
-    if (fromStorage?.owner_id) return fromStorage;
-
-    const fromRpc = await ownerContextFromRpc(slug);
-    if (fromRpc?.owner_id) {
-      try { localStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-      try { sessionStorage.setItem("DIGIY_LOC_OWNER_ID", fromRpc.owner_id); } catch {}
-
-      if (fromRpc.business_code) {
-        try { localStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code); } catch {}
-        try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_CODE", fromRpc.business_code); } catch {}
-        try { localStorage.setItem("DIGIY_BUSINESS_CODE", fromRpc.business_code); } catch {}
-        try { sessionStorage.setItem("DIGIY_BUSINESS_CODE", fromRpc.business_code); } catch {}
-      }
-
-      if (fromRpc.business_name) {
-        try { localStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name); } catch {}
-        try { sessionStorage.setItem("DIGIY_LOC_BUSINESS_NAME", fromRpc.business_name); } catch {}
-        try { localStorage.setItem("DIGIY_BUSINESS_NAME", fromRpc.business_name); } catch {}
-        try { sessionStorage.setItem("DIGIY_BUSINESS_NAME", fromRpc.business_name); } catch {}
-      }
-
-      return fromRpc;
-    }
-
-    return null;
   }
 
   async function tryGetBusinessCode(slug){
-    const fromStorage =
-      storageGet("DIGIY_LOC_BUSINESS_CODE") ||
-      storageGet("DIGIY_BUSINESS_CODE") ||
-      "";
-
-    if (fromStorage) return String(fromStorage).trim().toUpperCase();
     if(!slug) return null;
 
     try{
@@ -740,18 +745,18 @@
   function renderArrDepFromDayListing(payload){
     $("arrdepList").innerHTML = "";
 
-    const arr = payload?.arrivals || [];
-    const dep = payload?.departures || [];
-    const occ = payload?.occupied || [];
+    const arr = Array.isArray(payload?.arrivals) ? payload.arrivals : [];
+    const dep = Array.isArray(payload?.departures) ? payload.departures : [];
+    const occ = Array.isArray(payload?.occupied) ? payload.occupied : [];
     const all = [];
 
     arr.forEach(r=>{
       all.push({
         type: "Arrivée",
         tag: "ok",
-        title: r.guest_name || "Client",
-        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-        right: r.unit_title || ""
+        title: r.client_name || r.guest_name || "Client",
+        meta: `📅 ${esc(r.checkin || r.start_date || "—")} → ${esc(r.checkout || r.end_date || "—")} • 💰 ${esc(fmtMoney(r.amount_total || r.total_amount || 0))}`,
+        right: payload?.room_name || ""
       });
     });
 
@@ -759,19 +764,19 @@
       all.push({
         type: "Départ",
         tag: "warn",
-        title: r.guest_name || "Client",
-        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-        right: r.unit_title || ""
+        title: r.client_name || r.guest_name || "Client",
+        meta: `📅 ${esc(r.checkin || r.start_date || "—")} → ${esc(r.checkout || r.end_date || "—")} • 💰 ${esc(fmtMoney(r.amount_total || r.total_amount || 0))}`,
+        right: payload?.room_name || ""
       });
     });
 
     occ.forEach(r=>{
       all.push({
         type: "Occupé",
-        tag: "warn",
-        title: r.guest_name || "Client",
-        meta: `📅 ${esc(r.start_date || "—")} → ${esc(r.end_date || "—")} • 💰 ${esc(fmtMoney(r.total_amount))}`,
-        right: r.unit_title || ""
+        tag: "blue",
+        title: r.client_name || r.guest_name || "Client",
+        meta: `📅 ${esc(r.checkin || r.start_date || "—")} → ${esc(r.checkout || r.end_date || "—")} • 💰 ${esc(fmtMoney(r.amount_total || r.total_amount || 0))}`,
+        right: payload?.room_name || ""
       });
     });
 
@@ -794,65 +799,33 @@
     });
   }
 
-  function renderArrDepFallback(rows, day){
-    $("arrdepList").innerHTML = "";
+  function renderFutureArrivals(rows, roomName){
+    $("futureList").innerHTML = "";
 
-    const active = rows.filter(r => !String(r.status || "").toLowerCase().includes("cancel"));
-    const items = [];
+    Summary.futureArrivals = Array.isArray(rows) ? rows.length : 0;
+    renderStats();
 
-    active.forEach(r=>{
-      const ci = String(r.date_arrivee || "");
-      const co = String(r.date_depart || "");
-      const labelRoom = r.logement_nom || "Logement";
-      const labelClient = r.client_nom || "Client";
-
-      if(ci === day){
-        items.push({
-          type:"Arrivée",
-          tag:"ok",
-          title:labelClient,
-          meta:`📅 ${esc(ci)} → ${esc(co)} • 💰 ${esc(fmtMoney(r.montant_total))}`,
-          right:labelRoom
-        });
-      }
-
-      if(co === day){
-        items.push({
-          type:"Départ",
-          tag:"warn",
-          title:labelClient,
-          meta:`📅 ${esc(ci)} → ${esc(co)} • 💰 ${esc(fmtMoney(r.montant_total))}`,
-          right:labelRoom
-        });
-      }
-
-      if(ci <= day && co > day){
-        items.push({
-          type:"Occupé",
-          tag:"warn",
-          title:labelClient,
-          meta:`📅 ${esc(ci)} → ${esc(co)} • 💰 ${esc(fmtMoney(r.montant_total))}`,
-          right:labelRoom
-        });
-      }
-    });
-
-    if(!items.length){
-      setNote("noteArrDep","Journée calme pour l’instant. Aucun mouvement logement aujourd’hui.","warn");
+    if(!rows || !rows.length){
+      setNote("noteFuture","Aucune arrivée future confirmée pour le moment.","warn");
       return;
     }
 
-    items.slice(0,40).forEach(r=>{
+    rows.forEach(r=>{
       const div = document.createElement("div");
       div.className = "item";
       div.innerHTML = `
         <div class="itemTop">
-          <div class="itemTitle">${esc(r.type)} — ${esc(r.title)} <span class="tag ${esc(r.tag)}">${esc(r.type.toUpperCase())}</span></div>
-          <div class="tag">${esc(r.right || "")}</div>
+          <div class="itemTitle">${esc(r.client_name || "Client")}</div>
+          <div class="futureDate">📅 ${esc(prettyDateFR(r.checkin || ""))}</div>
         </div>
-        <div class="itemMeta">${r.meta}</div>
+        <div class="itemMeta">
+          🏠 ${esc(roomName || "Logement")}<br>
+          📞 ${esc(r.phone || "—")}<br>
+          🛏️ ${esc(r.checkin || "—")} → ${esc(r.checkout || "—")}<br>
+          💰 ${esc(fmtMoney(r.amount_total || 0))}
+        </div>
       `;
-      $("arrdepList").appendChild(div);
+      $("futureList").appendChild(div);
     });
   }
 
@@ -959,10 +932,13 @@
       const payload = await rpc("digiy_loc_day_listing", { p_slug: slug, p_day: dayISO });
 
       if(payload?.ok){
-        const st = payload.stats || {};
-        Summary.arrivals = st.arr_count ?? (payload.arrivals || []).length;
-        Summary.departures = st.dep_count ?? (payload.departures || []).length;
-        Summary.occupied = st.occ_count ?? (payload.occupied || []).length;
+        const arr = Array.isArray(payload.arrivals) ? payload.arrivals : [];
+        const dep = Array.isArray(payload.departures) ? payload.departures : [];
+        const occ = Array.isArray(payload.occupied) ? payload.occupied : [];
+
+        Summary.arrivals = arr.length;
+        Summary.departures = dep.length;
+        Summary.occupied = occ.length;
         renderStats();
 
         renderArrDepFromDayListing(payload);
@@ -972,6 +948,34 @@
       return { ok:false, error: payload?.reason || "DAY_LISTING_NOT_OK" };
     }catch(e){
       return { ok:false, error: e?.message || String(e) };
+    }
+  }
+
+  async function loadFutureArrivals(roomId, roomName, dayISO){
+    setNote("noteFuture", "", "");
+    $("futureList").innerHTML = "";
+
+    if(!roomId){
+      setNote("noteFuture","Impossible de lire les arrivées futures pour le moment.","warn");
+      return;
+    }
+
+    try{
+      const sb = getSB();
+      const { data, error } = await sb
+        .from("digiy_loc_reservations")
+        .select("id, client_name, phone, checkin, checkout, amount_total, status, payment_status")
+        .eq("room_id", roomId)
+        .gt("checkin", dayISO)
+        .in("status", ["confirmed","active","paid"])
+        .order("checkin", { ascending:true })
+        .limit(200);
+
+      if(error) throw error;
+
+      renderFutureArrivals(data || [], roomName || "");
+    }catch(e){
+      setNote("noteFuture","Arrivées futures indisponibles :\n" + (e?.message || e), "warn");
     }
   }
 
@@ -1056,7 +1060,7 @@
 
     if(!businessCode){
       setNote("notePending","Impossible de retrouver les réservations pour le moment.","warn");
-      return [];
+      return;
     }
 
     try{
@@ -1070,96 +1074,31 @@
         .limit(18);
 
       if(error) throw error;
-      const rows = data || [];
-      renderPending(rows);
-      return rows;
+      renderPending(data || []);
     }catch(e){
       setNote("notePending","Réservations indisponibles :\n" + (e?.message || e),"warn");
-      return [];
-    }
-  }
-
-  async function fallbackReservations(businessCode){
-    if(!businessCode) return [];
-
-    try{
-      const sb = getSB();
-      const { data, error } = await sb
-        .from("digiy_reservations")
-        .select("id, client_nom, client_phone, date_arrivee, date_depart, nb_nuits, montant_total, status, tracking_code, created_at, business_code, logement_nom")
-        .eq("business_code", businessCode)
-        .order("date_arrivee", { ascending:true })
-        .limit(120);
-
-      if(error) throw error;
-      return data || [];
-    }catch{
-      return [];
-    }
-  }
-
-  async function fallbackStatsAndArrDep(businessCode, day){
-    if(!businessCode){
-      renderStats();
-      return;
-    }
-
-    try{
-      const [outboxRes, reservations] = await Promise.all([
-        (async ()=>{
-          const sb = getSB();
-          const { data, error } = await sb
-            .from("digiy_loc_outbox")
-            .select("id,status,business_code")
-            .eq("business_code", businessCode)
-            .limit(600);
-          if(error) throw error;
-          return data || [];
-        })(),
-        fallbackReservations(businessCode)
-      ]);
-
-      Summary.pulseQueued = outboxRes.filter(r => r.status === "queued" || r.status === "sending").length;
-      Summary.pulseSent = outboxRes.filter(r => r.status === "sent").length;
-      Summary.pulseFailed = outboxRes.filter(r => r.status === "failed").length;
-
-      const active = reservations.filter(r => !String(r.status || "").toLowerCase().includes("cancel"));
-      Summary.arrivals = active.filter(r => String(r.date_arrivee) === day).length;
-      Summary.departures = active.filter(r => String(r.date_depart) === day).length;
-      Summary.occupied = active.filter(r => {
-        const ci = String(r.date_arrivee || "");
-        const co = String(r.date_depart || "");
-        return ci <= day && co > day;
-      }).length;
-
-      renderStats();
-      renderArrDepFallback(reservations, day);
-    }catch(e){
-      setNote("noteStats","Résumé indisponible :\n" + (e?.message || e),"warn");
     }
   }
 
   async function tryGetBusinessAndLoad(slug, day){
-    const ownerCtx = await resolveOwnerContext(slug);
-    const ownerId = ownerCtx?.owner_id || "";
-    const businessCode = (
-      ownerCtx?.business_code ||
-      await tryGetBusinessCode(slug) ||
-      ""
-    );
+    const room = await resolveRoomBySlug(slug);
+    const roomId = room?.id || "";
+    const roomName = room?.nom || "";
+    const ownerId = room?.owner_id || "";
+    const businessCode = await tryGetBusinessCode(slug);
 
     const dayRes = await loadDayListing(slug, day);
 
-    await Promise.allSettled([
-      loadPulse(businessCode),
-      loadPayments(ownerId),
-      loadPending(businessCode),
-    ]);
-
     if(!dayRes.ok){
       setNote("noteArrDep","La lecture directe du jour est indisponible pour le moment.\n" + (dayRes.error || "—"),"warn");
-      await fallbackStatsAndArrDep(businessCode, day);
     }
+
+    await Promise.allSettled([
+      loadFutureArrivals(roomId, roomName, day),
+      loadPulse(businessCode),
+      loadPayments(ownerId),
+      loadPending(businessCode)
+    ]);
   }
 
   function goBackSmart(){
