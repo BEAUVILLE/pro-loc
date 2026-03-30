@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-real-v1"></script>
+  <script src="./guard.js?v=locpro-calendar-real-v2"></script>
 
   <style>
     :root{
@@ -649,7 +649,7 @@
           <div class="sub" id="sub">🧭 Vérification de ton accès…</div>
         </div>
         <div class="row" style="justify-content:flex-end">
-          <span class="pill mono" id="pillSlug">identifiant : —</span>
+          <span class="pill mono" id="pillSlug">identifiant accès : —</span>
         </div>
       </div>
 
@@ -757,6 +757,12 @@
     room: null,
     daily: {},
     bookingsByDay: {}
+  };
+
+  const ROOM_CTX = {
+    roomSlug: "",
+    roomName: "",
+    roomId: ""
   };
 
   function digits(v){
@@ -870,13 +876,15 @@
     };
   }
 
-  function getSlug(){
+  function getAccessSlug(){
     const sess = getSession();
     if(sess.slug) return sess.slug;
+
     try{
       const qsSlug = new URL(location.href).searchParams.get("slug") || "";
       if(qsSlug) return String(qsSlug).trim().toLowerCase();
     }catch{}
+
     return (
       readStoredSlug("digiy_loc_slug") ||
       readStoredSlug("digiy_loc_last_slug") ||
@@ -887,8 +895,12 @@
     );
   }
 
+  function getCalendarSlug(){
+    return ROOM_CTX.roomSlug || getAccessSlug();
+  }
+
   function withSlug(path){
-    const slug = getSlug();
+    const slug = getAccessSlug();
     return buildSafeUrl(path, slug ? { slug } : {});
   }
 
@@ -897,14 +909,16 @@
   }
 
   function isLive(){
-    return !!getSlug();
+    return UX_MODE === "live" && !!getSession().access_ok && !!getAccessSlug();
   }
 
   function getSupabase(){
-    if(sb) return sb;
+    if(sb?.rpc) return sb;
+
     if(!window.supabase?.createClient){
       throw new Error("supabase_missing");
     }
+
     sb = window.supabase.createClient(
       window.DIGIY_SUPABASE_URL,
       window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY,
@@ -916,6 +930,7 @@
         }
       }
     );
+
     return sb;
   }
 
@@ -1314,7 +1329,7 @@
     el.addEventListener("pointerup", onUp);
     el.addEventListener("pointercancel", onUp);
 
-    el.addEventListener("click", (ev)=>{
+    el.addEventListener("click", async (ev)=>{
       if(MONTH_STATE.selectedKeys.length > 1){
         ev.preventDefault();
         return;
@@ -1322,19 +1337,112 @@
       MONTH_STATE.focusedDate = ymd;
       MONTH_STATE.selectedKeys = [ymd];
       render();
-      loadDayDetails(ymd).catch((e)=>{
+      try{
+        await loadDayDetails(ymd);
+      }catch(e){
         console.error(e);
-      });
+      }
     });
   }
 
+  async function resolveCalendarRoom(){
+    if(ROOM_CTX.roomSlug) return ROOM_CTX;
+
+    const accessSlug = getAccessSlug();
+
+    if(/^loc-room-/i.test(accessSlug)){
+      ROOM_CTX.roomSlug = accessSlug;
+      try{
+        const { data, error } = await getSupabase()
+          .from("digiy_loc_rooms")
+          .select("id, slug, nom")
+          .eq("slug", accessSlug)
+          .limit(1)
+          .maybeSingle();
+        if(!error && data){
+          ROOM_CTX.roomId = String(data.id || "").trim();
+          ROOM_CTX.roomName = String(data.nom || "").trim();
+        }
+      }catch{}
+      return ROOM_CTX;
+    }
+
+    const cached =
+      storageGet("DIGIY_LOC_ROOM_SLUG") ||
+      storageGet("digiy_loc_room_slug") ||
+      "";
+
+    if(/^loc-room-/i.test(cached)){
+      ROOM_CTX.roomSlug = cached.trim().toLowerCase();
+      try{
+        const { data, error } = await getSupabase()
+          .from("digiy_loc_rooms")
+          .select("id, slug, nom")
+          .eq("slug", ROOM_CTX.roomSlug)
+          .limit(1)
+          .maybeSingle();
+        if(!error && data){
+          ROOM_CTX.roomId = String(data.id || "").trim();
+          ROOM_CTX.roomName = String(data.nom || "").trim();
+        }
+      }catch{}
+      return ROOM_CTX;
+    }
+
+    const sess = getSession();
+    const phoneRaw =
+      sess.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      "";
+
+    const phone = String(phoneRaw).trim();
+    if(!phone) throw new Error("room_phone_missing");
+
+    const S = getSupabase();
+
+    let data = null;
+    let error = null;
+
+    ({ data, error } = await S
+      .from("digiy_loc_rooms")
+      .select("id, slug, nom, status, updated_at, phone")
+      .eq("phone", phone)
+      .in("status", ["active", "actif"])
+      .order("updated_at", { ascending:false })
+      .limit(1));
+
+    if((!data || !data.length) && !phone.startsWith("+")){
+      ({ data, error } = await S
+        .from("digiy_loc_rooms")
+        .select("id, slug, nom, status, updated_at, phone")
+        .eq("phone", "+" + phone)
+        .in("status", ["active", "actif"])
+        .order("updated_at", { ascending:false })
+        .limit(1));
+    }
+
+    if(error) throw error;
+    if(!data || !data.length) throw new Error("room_slug_not_found");
+
+    ROOM_CTX.roomId = String(data[0].id || "").trim();
+    ROOM_CTX.roomSlug = String(data[0].slug || "").trim().toLowerCase();
+    ROOM_CTX.roomName = String(data[0].nom || "").trim();
+
+    try{ localStorage.setItem("DIGIY_LOC_ROOM_SLUG", ROOM_CTX.roomSlug); }catch{}
+    try{ sessionStorage.setItem("DIGIY_LOC_ROOM_SLUG", ROOM_CTX.roomSlug); }catch{}
+
+    return ROOM_CTX;
+  }
+
   async function loadMonth(){
-    const slug = getSlug();
-    if(!slug) throw new Error("slug_missing");
+    const room = await resolveCalendarRoom();
+    const roomSlug = room.roomSlug;
+    if(!roomSlug) throw new Error("room_slug_missing");
 
     const monthDate = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
     const data = await rpc("digiy_loc_calendar_month", {
-      p_slug: slug,
+      p_slug: roomSlug,
       p_month: monthDate
     });
 
@@ -1342,23 +1450,32 @@
 
     DATA.room = {
       room_id: data.room_id,
-      room_name: data.room_name,
-      base_price_night: Array.isArray(data.days) && data.days[0] ? Number(data.days[0].base_price_night || 0) || 0 : 0
+      room_name: data.room_name || room.roomName || "",
+      base_price_night: Array.isArray(data.days) && data.days[0]
+        ? Number(data.days[0].base_price_night || 0) || 0
+        : 0
     };
+
+    ROOM_CTX.roomId = String(data.room_id || ROOM_CTX.roomId || "");
+    ROOM_CTX.roomName = String(data.room_name || ROOM_CTX.roomName || "");
 
     DATA.daily = {};
     (Array.isArray(data.days) ? data.days : []).forEach((day)=>{
       const rec = normalizeDay(day);
       if(rec.day) DATA.daily[rec.day] = rec;
     });
+
+    if($("pillSlug")){
+      $("pillSlug").textContent = "identifiant logement : " + roomSlug;
+    }
   }
 
   async function loadDayDetails(ymd){
-    const slug = getSlug();
-    if(!slug || !ymd) return;
+    const roomSlug = getCalendarSlug();
+    if(!roomSlug || !ymd) return;
 
     const data = await rpc("digiy_loc_day_listing", {
-      p_slug: slug,
+      p_slug: roomSlug,
       p_day: ymd
     });
 
@@ -1382,12 +1499,17 @@
   async function reloadCurrentMonth(keepMessage){
     await loadMonth();
     const targetDay = MONTH_STATE.focusedDate || ymdFromDate(new Date());
+
     if(DATA.daily[targetDay]){
       MONTH_STATE.focusedDate = targetDay;
       await loadDayDetails(targetDay);
-    } else {
+    }else{
       MONTH_STATE.focusedDate = Object.keys(DATA.daily)[0] || targetDay;
+      if(DATA.daily[MONTH_STATE.focusedDate]){
+        await loadDayDetails(MONTH_STATE.focusedDate);
+      }
     }
+
     render();
     if(keepMessage) showRight(keepMessage, "ok");
   }
@@ -1400,10 +1522,10 @@
     }
 
     const sess = getSession();
-    const slug = getSlug();
+    const roomSlug = getCalendarSlug();
     const phone = sess.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
 
-    if(!slug || !phone){
+    if(!roomSlug || !phone){
       showRight("Accès incomplet. Reviens par ton PIN.", "warn");
       return;
     }
@@ -1442,7 +1564,7 @@
       showRight("⏳ Mise à jour du calendrier…", "warn");
 
       const out = await rpc("digiy_loc_calendar_apply_range", {
-        p_slug: slug,
+        p_slug: roomSlug,
         p_owner_phone: phone,
         p_start: keys[0],
         p_end: keys[keys.length - 1],
@@ -1522,7 +1644,7 @@
     });
 
     $("btnSupport").addEventListener("click", ()=>{
-      const slug = getSlug();
+      const accessSlug = getAccessSlug();
       const sess = getSession();
       const phone =
         sess.phone ||
@@ -1534,7 +1656,8 @@
 `DIGIY LOC • Support
 
 Page : calendrier
-Identifiant : ${slug || "—"}
+Identifiant accès : ${accessSlug || "—"}
+Identifiant logement : ${getCalendarSlug() || "—"}
 Téléphone : ${phone || "—"}
 
 Merci. — DIGIY`;
@@ -1581,8 +1704,7 @@ Merci. — DIGIY`;
       }
     });
 
-    const slug = getSlug();
-    $("pillSlug").textContent = "identifiant : " + (slug || "—");
+    $("pillSlug").textContent = "identifiant accès : " + (getAccessSlug() || "—");
 
     if(!window.DIGIY_GUARD){
       setSub("❌ Ton accès n’est pas disponible.");
@@ -1599,8 +1721,17 @@ Merci. — DIGIY`;
       return;
     }
 
-    if(!slug){
+    const accessSlug = getAccessSlug();
+
+    if(!accessSlug){
       renderPreview("slug_missing");
+      MONTH_STATE.focusedDate = ymdFromDate(new Date());
+      render();
+      return;
+    }
+
+    if(!getSession().access_ok){
+      renderPreview("has_access_false");
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
       render();
       return;
@@ -1609,6 +1740,7 @@ Merci. — DIGIY`;
     renderLiveHeader();
 
     try{
+      await resolveCalendarRoom();
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
       await reloadCurrentMonth();
     }catch(e){
