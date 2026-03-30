@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Mon planning</title>
+  <title>Je loue • Mon calendrier</title>
   <meta name="theme-color" content="#d6c29a"/>
-  <meta name="description" content="Je loue — mon planning terrain pour suivre les dates, les arrivées, les occupations, les blocages et les fermetures."/>
+  <meta name="description" content="Je loue — calendrier mobile simple pour ouvrir, fermer et modifier le prix des dates."/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-planning-human-front-v7"></script>
+  <script src="./guard.js?v=locpro-calendar-touch-v1"></script>
 
   <style>
     :root{
@@ -29,16 +29,13 @@
       --card:#10251d;
       --line:rgba(255,255,255,.12);
       --text:#f6f8f2;
-      --muted:rgba(246,248,242,.80);
+      --muted:rgba(246,248,242,.78);
 
       --ok:#16a34a;
       --warn:#d97706;
       --bad:#dc2626;
+      --blue:#2563eb;
       --gold:#facc15;
-      --blue:#38bdf8;
-
-      --radius:18px;
-      --shadow:0 22px 55px rgba(0,0,0,.34);
 
       --sand-1:#f5ecd9;
       --sand-2:#efe2c5;
@@ -47,44 +44,61 @@
       --sand-ink:#241a10;
       --sand-muted:#5c4b36;
 
+      --radius:18px;
+      --shadow:0 22px 55px rgba(0,0,0,.34);
+
       --cal-wrap-bg:linear-gradient(180deg, #f7efdd, #efdfbf);
       --cal-wrap-line:rgba(120,95,56,.20);
 
-      --cal-day-bg:#fffaf0;
-      --cal-day-bg-hover:#fff3dc;
-      --cal-day-line:rgba(120,95,56,.22);
+      --day-bg:#fffaf0;
+      --day-line:rgba(120,95,56,.22);
+      --day-hover:#fff3dc;
+      --day-muted:#eadcbc;
+      --day-muted-text:#7c6548;
 
-      --cal-day-muted-bg:#efe4cb;
-      --cal-day-muted-text:#867054;
+      --day-today:#fff2be;
+      --day-today-line:rgba(202,138,4,.48);
 
-      --cal-day-today-bg:#fff2be;
-      --cal-day-today-line:rgba(202,138,4,.48);
+      --sel-bg:#dff3ff;
+      --sel-line:rgba(56,189,248,.65);
 
-      --cal-day-selected-bg:#e0f2fe;
-      --cal-day-selected-line:rgba(56,189,248,.52);
+      --free-bg:#fffaf0;
+      --free-ink:#241a10;
+      --closed-bg:#fde7e7;
+      --closed-ink:#7f1d1d;
+      --booked-bg:#dbeafe;
+      --booked-ink:#1d4ed8;
+
+      --bar-h:96px;
     }
 
     *{box-sizing:border-box}
-
+    html,body{margin:0;padding:0}
     body{
-      margin:0;
       font-family:"Outfit",system-ui,-apple-system,sans-serif;
+      color:var(--text);
       background:
         radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.08), transparent 60%),
         radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.08), transparent 60%),
         linear-gradient(180deg, var(--bg2), var(--bg));
-      color:var(--text);
+      padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom, 0px) + 22px);
     }
 
-    .wrap{ max-width:1160px; margin:0 auto; padding:16px; }
+    .wrap{max-width:860px;margin:0 auto;padding:14px 14px 28px}
 
     .card{
       background:rgba(255,255,255,.04);
       border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:14px;
+      border-radius:18px;
       box-shadow:var(--shadow);
       backdrop-filter:blur(3px);
+    }
+
+    .top{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
 
     .row{
@@ -95,79 +109,78 @@
       flex-wrap:wrap;
     }
 
-    .muted{
-      color:var(--muted);
-      font-weight:850;
-      line-height:1.4;
+    .title{
+      font-size:1.22rem;
+      font-weight:1100;
+      line-height:1.1;
     }
 
-    .btn{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:14px;
-      cursor:pointer;
-      font-weight:1000;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      min-height:44px;
-      transition:.15s ease;
-      user-select:none;
-      touch-action:manipulation;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
+    .sub{
+      color:var(--muted);
+      font-weight:900;
+      line-height:1.35;
+      margin-top:4px;
     }
-    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-    .btn:active{transform:translateY(0)}
-    .btn.ok{ border-color:rgba(34,197,94,.6); background:rgba(34,197,94,.10); }
-    .btn.warn{ border-color:rgba(217,119,6,.6); background:rgba(217,119,6,.10); }
-    .btn.bad{ border-color:rgba(220,38,38,.55); background:rgba(220,38,38,.10); }
-    .btn.gold{ border-color:rgba(250,204,21,.55); background:rgba(250,204,21,.12); color:#fde68a; }
-    .btn.blue{ border-color:rgba(56,189,248,.50); background:rgba(56,189,248,.12); color:#d7f2ff; }
-    .btn.small{min-height:38px;padding:8px 10px;border-radius:12px}
 
     .pill{
       display:inline-flex;
-      gap:8px;
       align-items:center;
+      gap:8px;
       padding:8px 10px;
-      border:1px solid rgba(148,163,184,.22);
       border-radius:999px;
+      border:1px solid rgba(148,163,184,.22);
       background:rgba(255,255,255,.05);
       color:var(--muted);
-      font-weight:950;
-      font-size:.86rem;
+      font-weight:1000;
+      font-size:.84rem;
       white-space:nowrap;
     }
-    .pill strong{color:#fff}
 
     .mono{
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-      margin-top:12px;
-    }
-    @media(min-width:980px){
-      .grid{grid-template-columns:1.25fr .75fr;}
-    }
-
-    .h{ font-weight:1100; font-size:18px; }
-
-    .kpi{
-      border:1px solid rgba(148,163,184,.22);
-      border-radius:16px;
-      padding:12px;
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
       background:rgba(255,255,255,.04);
+      color:var(--text);
+      min-height:46px;
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:1000;
+      font-family:"Outfit",system-ui,-apple-system,sans-serif;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition:.15s ease;
+      user-select:none;
+      touch-action:manipulation;
     }
-    .kpi .big{font-weight:1100;margin-top:6px}
-    .kpi .mono{display:block;margin-top:6px;opacity:.95}
+    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn.ok{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.10)}
+    .btn.warn{border-color:rgba(217,119,6,.55);background:rgba(217,119,6,.10)}
+    .btn.bad{border-color:rgba(220,38,38,.50);background:rgba(220,38,38,.10)}
+    .btn.blue{border-color:rgba(37,99,235,.45);background:rgba(37,99,235,.12)}
+    .btn.gold{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12);color:#fde68a}
+    .btn.small{min-height:40px;padding:8px 12px;border-radius:12px}
+
+    .topActions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+    }
+
+    .topActions .btn{
+      width:100%;
+      min-height:44px;
+      padding:10px 8px;
+      font-size:.92rem;
+    }
 
     .note{
       margin-top:12px;
@@ -178,40 +191,253 @@
       color:var(--muted);
       font-weight:950;
       white-space:pre-wrap;
-      display:none;
       line-height:1.35;
+      display:none;
     }
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
+    .note.show{display:block}
+    .note.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
+    .note.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .note.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
 
-    .panel{
+    .calendarCard{
       margin-top:12px;
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:16px;
-      background:rgba(255,255,255,.03);
+      border:1px solid var(--cal-wrap-line);
+      border-radius:18px;
+      background:var(--cal-wrap-bg);
+      color:var(--sand-ink);
+      overflow:hidden;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.28),
+        0 8px 20px rgba(0,0,0,.08);
+    }
+
+    .calendarHead{
+      padding:12px;
+      border-bottom:1px solid rgba(120,95,56,.14);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .monthLine{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .monthTitle{
+      font-weight:1100;
+      font-size:1.10rem;
+      text-transform:capitalize;
+      color:#2f2417;
+    }
+
+    .monthSub{
+      color:#5b4a35;
+      font-weight:950;
+      line-height:1.25;
+    }
+
+    .monthNav{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .calendarHead .btn.small{
+      background:rgba(255,255,255,.60);
+      color:#241a10;
+      border-color:rgba(120,95,56,.18);
+    }
+    .calendarHead .btn.small:hover{background:rgba(255,255,255,.74)}
+
+    .legend{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .legendItem{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(120,95,56,.18);
+      background:rgba(255,255,255,.55);
+      color:#241a10;
+      font-weight:1000;
+      font-size:.78rem;
+    }
+
+    .dot{
+      width:8px;height:8px;border-radius:999px;display:inline-block;flex:0 0 auto;
+    }
+    .dot.free{background:#9ca3af}
+    .dot.booked{background:var(--blue)}
+    .dot.closed{background:var(--bad)}
+    .dot.price{background:var(--gold)}
+
+    .calendarGrid{
+      padding:10px;
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      gap:6px;
+    }
+
+    .dow{
+      text-align:center;
+      color:#2f2417;
+      font-size:.78rem;
+      font-weight:1100;
+      padding:4px 0;
+    }
+
+    .day{
+      min-height:92px;
+      border-radius:14px;
+      border:1px solid var(--day-line);
+      background:var(--day-bg);
+      color:var(--free-ink);
+      padding:7px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:6px;
+      cursor:pointer;
+      transition:.15s ease;
+      box-shadow:0 1px 0 rgba(255,255,255,.25) inset;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action:none;
+      position:relative;
       overflow:hidden;
     }
-    .panelHead{
-      padding:10px 12px;
-      border-bottom:1px solid rgba(148,163,184,.14);
+    .day:hover{background:var(--day-hover);transform:translateY(-1px)}
+    .day.mutedDay{
+      background:var(--day-muted);
+      color:var(--day-muted-text);
+    }
+    .day.today{
+      border-color:var(--day-today-line);
+      background:var(--day-today);
+    }
+    .day.booked{
+      background:var(--booked-bg);
+      color:var(--booked-ink);
+      border-color:rgba(37,99,235,.25);
+    }
+    .day.closed{
+      background:var(--closed-bg);
+      color:var(--closed-ink);
+      border-color:rgba(220,38,38,.25);
+    }
+    .day.selected{
+      box-shadow:0 0 0 2px var(--sel-line) inset;
+      background:var(--sel-bg);
+    }
+    .day.booked.selected{
+      background:linear-gradient(180deg, #dbeafe, #dff3ff);
+    }
+    .day.closed.selected{
+      background:linear-gradient(180deg, #fde7e7, #dff3ff);
+    }
+    .day.locked::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg, transparent 0 44%, rgba(220,38,38,.14) 44% 56%, transparent 56% 100%);
+      pointer-events:none;
+    }
+
+    .dayTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:6px;
+    }
+
+    .dayNum{
+      font-size:.96rem;
+      font-weight:1100;
+      line-height:1;
+    }
+
+    .stateTag{
+      font-size:.68rem;
+      font-weight:1100;
+      padding:3px 6px;
+      border-radius:999px;
+      background:rgba(255,255,255,.55);
+      color:inherit;
+      white-space:nowrap;
+    }
+
+    .dayMid{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-height:28px;
+      justify-content:center;
+    }
+
+    .price{
+      font-size:.90rem;
+      font-weight:1100;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .price small{
+      font-size:.66rem;
+      font-weight:1000;
+      opacity:.72;
+      margin-left:2px;
+    }
+
+    .daySub{
+      font-size:.70rem;
+      line-height:1.15;
+      font-weight:1000;
+      opacity:.78;
+    }
+
+    .calendarFoot{
+      padding:0 12px 12px;
+      color:#5c4b36;
+      font-weight:950;
+      font-size:.84rem;
+      line-height:1.3;
+    }
+
+    .section{
+      margin-top:12px;
+      padding:12px;
+    }
+
+    .sectionHead{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
       flex-wrap:wrap;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      margin-bottom:10px;
     }
-    .panelHead b{font-weight:1100}
-    .panelBody{padding:12px}
+
+    .sectionTitle{
+      font-weight:1100;
+      font-size:1rem;
+    }
 
     .list{
-      margin-top:10px;
       display:flex;
       flex-direction:column;
       gap:10px;
     }
-    .it{
+
+    .item{
       border:1px solid rgba(148,163,184,.18);
       background:rgba(255,255,255,.04);
       border-radius:14px;
@@ -222,20 +448,14 @@
       gap:10px;
       flex-wrap:wrap;
     }
-    .itL{min-width:220px}
-    .itTitle{font-weight:1100}
-    .itMeta{
+
+    .itemTitle{font-weight:1100}
+    .itemMeta{
       margin-top:4px;
       color:var(--muted);
       font-weight:850;
-      font-size:.9rem;
+      font-size:.90rem;
       line-height:1.35;
-    }
-    .itR{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
     }
 
     .badge{
@@ -254,399 +474,182 @@
     .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
     .badge.warn{border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.08);color:#fed7aa}
     .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
+    .badge.blue{border-color:rgba(37,99,235,.35);background:rgba(37,99,235,.12);color:#bfdbfe}
     .badge.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
-    .badge.blue{border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.10);color:#bae6fd}
-    .badge.occupe{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.10);color:#bfdbfe}
 
-    .tools{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:10px;
+    .actionBar{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:50;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      display:none;
     }
+    .actionBar.show{display:block}
 
-    input,select{
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:11px 12px;
-      font-weight:950;
-      outline:none;
-      min-width:220px;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
-    }
-    input::placeholder{color:rgba(246,248,242,.62)}
-    input:focus,select:focus{
-      border-color:rgba(250,204,21,.55);
-      box-shadow:0 0 0 3px rgba(250,204,21,.14);
-    }
-
-    .sep{
-      height:1px;
-      background:rgba(148,163,184,.14);
-      margin:12px 0;
-    }
-
-    .calendarWrap{
-      border:1px solid var(--cal-wrap-line);
-      border-radius:16px;
-      background:var(--cal-wrap-bg);
-      padding:12px;
-      margin-bottom:12px;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.28),
-        0 8px 20px rgba(0,0,0,.08);
-      color:var(--sand-ink);
-    }
-
-    .calendarTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .calendarTitle{
-      font-weight:1100;
-      font-size:1.05rem;
-      color:#2f2417;
-      text-transform:capitalize;
-    }
-
-    .calendarSubText{
-      color:#5b4a35;
-      font-weight:950;
-      margin-top:4px;
-      line-height:1.35;
-    }
-
-    .calendarNav{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .calendarLegend{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-
-    .legendItem{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 9px;
-      border-radius:999px;
-      border:1px solid rgba(120,95,56,.18);
-      background:rgba(255,255,255,.52);
-      color:#241a10;
-      font-size:.80rem;
-      font-weight:1000;
-    }
-
-    .calendarWrap .pill{
-      border:1px solid rgba(120,95,56,.18);
-      background:rgba(255,255,255,.58);
-      color:#241a10;
-      font-weight:1000;
-    }
-
-    .calendarWrap .pill strong{
-      color:#1b140d;
-    }
-
-    .calendarWrap .btn.small{
-      background:rgba(255,255,255,.58);
-      border:1px solid rgba(120,95,56,.18);
-      color:#241a10;
-    }
-
-    .calendarWrap .btn.small:hover{
-      background:rgba(255,255,255,.72);
-    }
-
-    .calendarWrap .btn.small.gold{
-      background:#f6df8b;
-      border-color:rgba(202,138,4,.34);
-      color:#2b1d08;
-    }
-
-    .calendarWrap .btn.small.blue{
-      background:#d9eefb;
-      border-color:rgba(56,189,248,.30);
-      color:#163247;
-    }
-
-    .dot{
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      display:inline-block;
-      flex:0 0 auto;
-    }
-    .dot.arrivee{background:var(--ok)}
-    .dot.occupe{background:#60a5fa}
-    .dot.bloque{background:var(--bad)}
-    .dot.ferme{background:var(--warn)}
-    .dot.depart{background:#d1d5db}
-    .dot.info{background:#94a3b8}
-
-    .calendarGrid{
-      margin-top:12px;
+    .actionBarInner{
+      max-width:860px;
+      margin:0 auto;
+      background:rgba(11,26,20,.94);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow:0 18px 46px rgba(0,0,0,.36);
+      backdrop-filter:blur(10px);
+      padding:10px;
       display:grid;
-      grid-template-columns:repeat(7,minmax(0,1fr));
-      gap:8px;
+      grid-template-columns:1fr;
+      gap:10px;
     }
 
-    .dow{
-      text-align:center;
-      color:#2f2417;
-      font-size:.80rem;
-      font-weight:1000;
-      padding:4px 0;
-      opacity:1;
-    }
-
-    .day{
-      min-height:86px;
-      border-radius:14px;
-      border:1px solid var(--cal-day-line);
-      background:var(--cal-day-bg);
-      padding:8px;
-      cursor:pointer;
+    .selectionInfo{
       display:flex;
       flex-direction:column;
-      gap:6px;
-      transition:.15s ease;
-      color:#2f2417;
-      box-shadow:0 1px 0 rgba(255,255,255,.25) inset;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
-    }
-    .day:hover{
-      background:var(--cal-day-bg-hover);
-      transform:translateY(-1px);
-    }
-
-    .day.mutedDay{
-      opacity:1;
-      background:#eadcbc;
-      color:#776247;
-    }
-
-    .day.today{
-      border-color:var(--cal-day-today-line);
-      background:var(--cal-day-today-bg);
-      box-shadow:0 0 0 1px rgba(202,138,4,.10) inset;
-    }
-
-    .day.selected{
-      border-color:var(--cal-day-selected-line);
-      background:var(--cal-day-selected-bg);
-      box-shadow:0 0 0 1px rgba(56,189,248,.12) inset;
-    }
-
-    .dayTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:6px;
-    }
-
-    .dayNum{
-      font-weight:1100;
-      font-size:.96rem;
-      color:#241a10;
-    }
-
-    .dayCount{
-      font-size:.74rem;
-      color:#1d4ed8;
-      font-weight:1000;
-    }
-
-    .dayDots{
-      display:flex;
       gap:4px;
-      flex-wrap:wrap;
-      min-height:12px;
+      min-width:0;
     }
 
-    .dayText{
-      font-size:.76rem;
-      line-height:1.22;
-      color:#5c4b36;
-      font-weight:950;
+    .selectionTitle{
+      font-weight:1100;
+      font-size:.98rem;
+      line-height:1.2;
     }
 
-    @media(max-width:760px){
-      .calendarGrid{gap:6px}
-      .day{min-height:74px;padding:7px}
-      .dayText{display:none}
+    .selectionSub{
+      color:var(--muted);
+      font-weight:900;
+      font-size:.84rem;
+      line-height:1.25;
     }
 
-    @media(max-width:620px){
-      input,select{min-width:100%}
-      .btn{width:100%;justify-content:center}
-      .calendarNav .btn{width:auto}
+    .barBtns{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+    }
+
+    .barBtns .btn{
+      width:100%;
+      min-height:48px;
+      padding:10px 8px;
+    }
+
+    .miniTools{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .miniTools .btn{
+      width:100%;
+      min-height:44px;
+      padding:10px 8px;
+      font-size:.90rem;
+    }
+
+    @media (max-width:700px){
+      .topActions{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .miniTools{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media (max-width:560px){
+      .wrap{padding:10px 10px 24px}
+      .top{padding:12px}
+      .monthLine{align-items:flex-start}
+      .calendarGrid{gap:5px;padding:8px}
+      .day{min-height:84px;padding:6px}
+      .price{font-size:.82rem}
+      .daySub{font-size:.66rem}
+      .stateTag{font-size:.62rem;padding:2px 5px}
+      .barBtns{grid-template-columns:1fr 1fr}
+      .barBtns .btn:last-child{grid-column:1 / -1}
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-
-    <div class="card">
+    <div class="card top">
       <div class="row">
         <div>
-          <div class="h">Je loue • Mon planning</div>
-          <div class="muted" id="sub">🧭 Vérification de ton accès…</div>
+          <div class="title">Je loue • Mon calendrier</div>
+          <div class="sub" id="sub">🧭 Vérification de ton accès…</div>
         </div>
-
         <div class="row" style="justify-content:flex-end">
           <span class="pill mono" id="pillSlug">identifiant : —</span>
-          <span class="pill">activité : <span class="mono" id="pillModule">Je loue</span></span>
         </div>
       </div>
 
-      <div class="row" style="margin-top:10px;justify-content:flex-start">
+      <div class="topActions">
         <a class="btn gold" id="btnDashboard" href="./app.html">🏠 Mon espace</a>
         <a class="btn blue" id="btnReservations" href="./reservations.html">📆 Réservations</a>
-        <a class="btn" id="btnTarifs" href="./tarifs.html">💰 Mes tarifs</a>
-        <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Mes photos</a>
+        <button class="btn bad" id="btnLogout" type="button">🚪 Sortir</button>
+      </div>
+
+      <div class="note" id="note"></div>
+    </div>
+
+    <div class="calendarCard">
+      <div class="calendarHead">
+        <div class="monthLine">
+          <div>
+            <div class="monthTitle" id="calendarTitle">Mois</div>
+            <div class="monthSub" id="calendarSub">Glisse sur les dates pour ouvrir, fermer ou changer le prix.</div>
+          </div>
+          <div class="monthNav">
+            <button class="btn small" id="btnPrevMonth" type="button">←</button>
+            <button class="btn small gold" id="btnTodayMonth" type="button">Aujourd’hui</button>
+            <button class="btn small" id="btnNextMonth" type="button">→</button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span class="legendItem"><span class="dot free"></span> Ouvert</span>
+          <span class="legendItem"><span class="dot booked"></span> Occupé</span>
+          <span class="legendItem"><span class="dot closed"></span> Fermé</span>
+          <span class="legendItem"><span class="dot price"></span> Prix visible</span>
+        </div>
+      </div>
+
+      <div class="calendarGrid" id="calendarGrid"></div>
+
+      <div class="calendarFoot" id="calendarFoot">
+        Touchez une date ou glissez sur plusieurs jours.
+      </div>
+    </div>
+
+    <div class="card section">
+      <div class="sectionHead">
+        <div class="sectionTitle">Réservations du jour choisi</div>
+        <span class="pill" id="pickedDayPill">Jour choisi : aucun</span>
+      </div>
+
+      <div class="list" id="bookingsList"></div>
+
+      <div class="miniTools">
+        <a class="btn blue" id="btnTarifs" href="./tarifs.html">💰 Tarifs</a>
+        <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
         <a class="btn" id="btnListing" href="./listing.html">📋 Ma fiche</a>
         <a class="btn" id="btnWave" href="./pin-wave.html">🌊 Code Wave</a>
         <a class="btn" id="btnPin" href="./pin.html">🔐 Mon accès</a>
-        <button class="btn bad" id="btnLogout" type="button">🚪 Me déconnecter</button>
+        <button class="btn warn" id="btnSupport" type="button">💬 Support</button>
       </div>
 
-      <div class="note warn" id="note"></div>
+      <div class="note show ok" id="noteRight">Le calendrier sert à agir vite. Le reste vient après.</div>
     </div>
+  </div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="row">
-          <div style="font-weight:1100">🗓️ Mon planning terrain</div>
-          <span class="pill" id="pillToday">—</span>
-        </div>
-
-        <div class="muted" style="margin-top:6px">
-          Ici tu poses le vrai terrain : <b>arrivée</b>, <b>occupé</b>, <b>bloqué</b>, <b>fermé</b>.
-          Le <b>départ</b> reste surtout dans le journal du jour pour ne pas brouiller la lecture du calendrier.
-        </div>
-
-        <div class="panel">
-          <div class="panelHead">
-            <b>📌 Dates & états</b>
-            <div class="row" style="justify-content:flex-end">
-              <button class="btn" id="btnReload" type="button">↻ Recharger</button>
-              <button class="btn ok" id="btnAdd" type="button">➕ Ajouter</button>
-              <button class="btn bad" id="btnClear" type="button">🧹 Vider</button>
-            </div>
-          </div>
-
-          <div class="panelBody">
-            <div class="calendarWrap">
-              <div class="calendarTop">
-                <div>
-                  <div class="calendarTitle" id="calendarTitle">Mois</div>
-                  <div class="calendarSubText" id="calendarSub">Lecture compacte du terrain.</div>
-                </div>
-
-                <div class="calendarNav">
-                  <button class="btn small" id="btnPrevMonth" type="button">← Mois -1</button>
-                  <button class="btn small gold" id="btnTodayMonth" type="button">Aujourd’hui</button>
-                  <button class="btn small" id="btnNextMonth" type="button">Mois +1 →</button>
-                </div>
-              </div>
-
-              <div class="calendarLegend">
-                <span class="legendItem"><span class="dot arrivee"></span> Arrivée</span>
-                <span class="legendItem"><span class="dot occupe"></span> Occupé</span>
-                <span class="legendItem"><span class="dot bloque"></span> Bloqué</span>
-                <span class="legendItem"><span class="dot ferme"></span> Fermé</span>
-              </div>
-
-              <div class="row" style="margin-top:10px;justify-content:flex-start">
-                <span class="pill" id="selectedDayPill">Jour choisi : tout le mois</span>
-                <button class="btn small blue" id="btnActionDay" type="button">⚙️ Agir sur ce jour</button>
-                <button class="btn small" id="btnClearDayFilter" type="button">♻️ Effacer le filtre jour</button>
-              </div>
-
-              <div class="calendarGrid" id="calendarGrid"></div>
-            </div>
-
-            <div class="tools">
-              <input id="q" placeholder="Recherche : nom, date, téléphone, note…" />
-              <select id="filterStatus">
-                <option value="">Tous les états</option>
-                <option value="arrivee">Arrivée</option>
-                <option value="occupe">Occupé</option>
-                <option value="bloque">Bloqué</option>
-                <option value="ferme">Fermé</option>
-                <option value="resa">Réservation</option>
-                <option value="depart">Départ (journal)</option>
-              </select>
-              <button class="btn ok" id="btnSearch" type="button">🔎 Chercher</button>
-            </div>
-
-            <div class="sep"></div>
-
-            <div class="list" id="list"></div>
-
-            <div class="kpi" style="margin-top:12px">
-              <div class="muted">Lien à garder</div>
-              <div class="big">Toujours avec ton identifiant :</div>
-              <span class="mono" id="officialUrl">/planning.html?slug=...</span>
-            </div>
-          </div>
-        </div>
+  <div class="actionBar" id="actionBar">
+    <div class="actionBarInner">
+      <div class="selectionInfo">
+        <div class="selectionTitle" id="selectionTitle">Aucune sélection</div>
+        <div class="selectionSub" id="selectionSub">Choisis une ou plusieurs dates.</div>
       </div>
-
-      <div class="card">
-        <div style="font-weight:1100">🧩 Mon accès & mon aide</div>
-        <div class="muted" style="margin-top:6px">
-          Si tu changes de téléphone ou de propriétaire, déconnecte-toi puis reconnecte-toi avec le bon numéro.
-          Ton accès garde ta session, ton identifiant et ton droit d’entrée.
-        </div>
-
-        <div class="kpi" style="margin-top:12px">
-          <div class="muted">Ma connexion</div>
-          <div class="big" id="who">—</div>
-          <div class="muted" style="margin-top:6px" id="abo">—</div>
-        </div>
-
-        <div class="row" style="margin-top:12px">
-          <a class="btn warn" id="btnSupport" href="#" role="button">💬 Support WhatsApp</a>
-          <a class="btn gold" id="btnBackDashboard" href="./app.html">⬅️ Retour espace</a>
-        </div>
-
-        <div class="kpi" style="margin-top:12px">
-          <div class="muted">Lecture simple</div>
-          <div class="muted" style="margin-top:6px">
-            ✅ <b>Arrivée</b> = entrée à surveiller.<br>
-            ✅ <b>Occupé</b> = logement pris.<br>
-            ✅ <b>Bloqué</b> = gardé hors circuit.<br>
-            ✅ <b>Fermé</b> = indisponible volontairement.<br>
-            ✅ <b>Départ</b> = journal du jour / suivi.
-          </div>
-        </div>
-
-        <div class="kpi" style="margin-top:12px">
-          <div class="muted">Lecture compacte</div>
-          <div class="muted" style="margin-top:6px">
-            Clique un jour du calendrier pour filtrer la liste du bas.
-            <br>Le calendrier sert à <b>voir vite</b>, la liste sert à <b>agir</b>.
-          </div>
-        </div>
-
-        <div class="note ok" id="noteRight"></div>
+      <div class="barBtns">
+        <button class="btn ok" id="btnOpenRange" type="button">✅ Ouvrir</button>
+        <button class="btn bad" id="btnCloseRange" type="button">⛔ Fermer</button>
+        <button class="btn gold" id="btnPriceRange" type="button">💰 Prix</button>
       </div>
+      <button class="btn" id="btnCancelRange" type="button">Annuler</button>
     </div>
   </div>
 
@@ -656,9 +659,9 @@
 
   const MODULE = "LOC";
   const SUPPORT_WA = "+221771342889";
+  const DEFAULT_PRICE = 25000;
   const $ = (id)=>document.getElementById(id);
 
-  let ITEMS = [];
   let UX_MODE = "preview";
   let UX_REASON = "booting";
 
@@ -667,27 +670,18 @@
     return {
       year: d.getFullYear(),
       month: d.getMonth(),
-      selectedDate: ""
+      focusedDate: "",
+      dragging: false,
+      dragStart: "",
+      dragCurrent: "",
+      selectedKeys: []
     };
   })();
 
-  function setSub(text){
-    $("sub").textContent = text;
-  }
-
-  function show(msg, cls){
-    const el = $("note");
-    el.className = "note " + (cls || "warn");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-  }
-
-  function showRight(msg, cls){
-    const el = $("noteRight");
-    el.className = "note " + (cls || "ok");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-  }
+  const DATA = {
+    daily: {},
+    bookings: []
+  };
 
   function digits(v){
     return String(v || "").replace(/\D/g, "");
@@ -699,14 +693,31 @@
     }[m]));
   }
 
+  function setSub(text){
+    $("sub").textContent = text;
+  }
+
+  function show(msg, cls){
+    const el = $("note");
+    el.className = "note show " + (cls || "warn");
+    el.textContent = msg || "";
+    if(!msg) el.className = "note";
+  }
+
+  function showRight(msg, cls){
+    const el = $("noteRight");
+    el.className = "note show " + (cls || "ok");
+    el.textContent = msg || "";
+  }
+
   function storageGet(key){
     try{
       const s = sessionStorage.getItem(key);
-      if (s) return s;
+      if(s) return s;
     }catch{}
     try{
       const l = localStorage.getItem(key);
-      if (l) return l;
+      if(l) return l;
     }catch{}
     return "";
   }
@@ -715,15 +726,12 @@
     try{
       const raw = sessionStorage.getItem(key) || localStorage.getItem(key) || "";
       if(!raw) return "";
-
       const txt = String(raw).trim();
       if(!txt) return "";
-
       if(txt.startsWith("{")){
         const obj = JSON.parse(txt);
         return String(obj.slug || obj.last_slug || "").trim().toLowerCase();
       }
-
       return txt.trim().toLowerCase();
     }catch{
       return "";
@@ -733,25 +741,20 @@
   function buildSafeUrl(path, extraParams){
     const rawPath = String(path || "").trim() || "./";
     let url;
-
     try{
       url = new URL(rawPath, location.href);
     }catch{
       const basePath = location.pathname.replace(/[^/]*$/, "");
-      const cleanPath = rawPath
-        .replace(/^\.\//, "")
-        .replace(/^\/+/, "");
+      const cleanPath = rawPath.replace(/^\.\//, "").replace(/^\/+/, "");
       url = new URL(basePath + cleanPath, location.origin);
     }
-
     const params = extraParams && typeof extraParams === "object" ? extraParams : {};
-    Object.entries(params).forEach(([key, value]) => {
+    Object.entries(params).forEach(([key, value])=>{
       if(value == null) return;
       const text = String(value).trim();
       if(!text) return;
       url.searchParams.set(key, text);
     });
-
     if(url.origin === location.origin){
       return url.pathname + url.search + url.hash;
     }
@@ -759,7 +762,7 @@
   }
 
   async function waitGuardReady(){
-    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
+    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
       throw new Error("guard_missing");
     }
     await window.DIGIY_GUARD.ready();
@@ -780,7 +783,6 @@
   function getSession(){
     const st = getGuardState();
     const raw = window.DIGIY_GUARD?.getSession?.() || {};
-
     return {
       ok: !!st.access_ok,
       access_ok: !!st.access_ok,
@@ -794,13 +796,11 @@
 
   function getSlug(){
     const sess = getSession();
-    if (sess.slug) return sess.slug;
-
+    if(sess.slug) return sess.slug;
     try{
       const qsSlug = new URL(location.href).searchParams.get("slug") || "";
-      if (qsSlug) return String(qsSlug).trim().toLowerCase();
+      if(qsSlug) return String(qsSlug).trim().toLowerCase();
     }catch{}
-
     return (
       readStoredSlug("digiy_loc_slug") ||
       readStoredSlug("digiy_loc_last_slug") ||
@@ -824,8 +824,8 @@
     return UX_MODE === "live" && !!getSession().access_ok && !!getSlug();
   }
 
-  function makeItemId(){
-    return "locplan_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+  function makeId(prefix){
+    return String(prefix || "id") + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
   }
 
   function ymdFromDate(d){
@@ -842,172 +842,145 @@
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
-  function normalizeDateValue(v){
-    const raw = String(v || "").trim();
-    if(!raw) return "";
-
-    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-
-    const d = new Date(raw);
-    if(Number.isNaN(d.getTime())) return raw;
-    return ymdFromDate(d);
-  }
-
-  function normalizeStatus(v){
-    const x = String(v || "").trim().toLowerCase();
-    if (["resa","reservation","réservation"].includes(x)) return "resa";
-    if (["occupe","occupé","occupied"].includes(x)) return "occupe";
-    if (["bloque","bloqué","blocked"].includes(x)) return "bloque";
-    if (["ferme","fermé","closed"].includes(x)) return "ferme";
-    if (["arrivee","arrivée","checkin"].includes(x)) return "arrivee";
-    if (["depart","départ","checkout"].includes(x)) return "depart";
-    return "info";
-  }
-
-  function calendarStatusForItem(item){
-    const st = normalizeStatus(item?.status);
-    if(st === "depart") return "";
-    if(st === "resa") return "occupe";
-    return st;
-  }
-
-  function normalizeItems(items){
-    if (!Array.isArray(items)) return [];
-    return items
-      .filter(Boolean)
-      .map((x) => ({
-        id: String(x.id || makeItemId()),
-        name: String(x.name || "").trim(),
-        date: normalizeDateValue(x.date || ""),
-        phone: String(x.phone || "").trim(),
-        status: normalizeStatus(x.status || "info"),
-        note: String(x.note || "").trim()
-      }));
-  }
-
-  function renderPreview(reason){
-    UX_MODE = "preview";
-    UX_REASON = reason || "preview";
-
-    setSub("👁️ Aperçu de ton planning");
-    show(
-      reason === "slug_missing"
-        ? "👁️ Aucun identifiant détecté.\n➡️ Tu vois un aperçu propre de ton planning."
-        : reason === "has_access_false"
-        ? "👁️ Ton identifiant est bien là, mais ton accès n’est pas encore actif.\n➡️ Tu gardes un aperçu propre, sans mur brutal."
-        : "👁️ Planning en aperçu.\n➡️ Passe par ton accès pour ouvrir le mode vivant.",
-      "warn"
-    );
-
-    $("who").textContent = "👁️ Aperçu";
-    $("abo").textContent = "Accès réel non confirmé.";
-  }
-
-  function renderLiveHeader(){
-    const sess = getSession();
-    const phone =
-      sess.phone ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      "—";
-
-    UX_MODE = "live";
-    UX_REASON = "ok";
-
-    setSub("✅ Ton accès est ouvert.");
-    $("who").textContent = "✅ Connecté · " + phone;
-    $("abo").textContent = "Ton accès est bien actif.";
-    show("✅ Planning prêt.\nCalendrier compact + liste terrain active.", "ok");
-  }
-
-  function getLSKey(){
-    return "DIGIY_LOC_PLANNING_CACHE_V3:" + (getSlug() || "noslug");
-  }
-
-  function saveLS(){
-    try{
-      localStorage.setItem(getLSKey(), JSON.stringify({
-        slug: getSlug(),
-        items: ITEMS,
-        ts: Date.now()
-      }));
-    }catch(_){}
-  }
-
-  function loadLS(){
-    try{
-      const raw = localStorage.getItem(getLSKey());
-      if(!raw) return null;
-      return JSON.parse(raw);
-    }catch(_){
-      return null;
-    }
-  }
-
-  function badgeStatus(st){
-    const v = normalizeStatus(st);
-    if(v === "resa") return `<span class="badge blue">📆 Réservation</span>`;
-    if(v === "occupe") return `<span class="badge occupe">🛏️ Occupé</span>`;
-    if(v === "bloque") return `<span class="badge bad">⛔ Bloqué</span>`;
-    if(v === "ferme") return `<span class="badge warn">🚫 Fermé</span>`;
-    if(v === "arrivee") return `<span class="badge ok">✅ Arrivée</span>`;
-    if(v === "depart") return `<span class="badge gold">🚪 Départ</span>`;
-    return `<span class="badge">• Info</span>`;
-  }
-
-  function statusLabel(st){
-    const v = normalizeStatus(st);
-    if(v === "resa") return "Réservation";
-    if(v === "occupe") return "Occupé";
-    if(v === "bloque") return "Bloqué";
-    if(v === "ferme") return "Fermé";
-    if(v === "arrivee") return "Arrivée";
-    if(v === "depart") return "Départ";
-    return "Info";
-  }
-
-  function getFilteredSortedRows(){
-    const q = ($("q").value || "").trim().toLowerCase();
-    const f = normalizeStatus($("filterStatus").value || "");
-    let rows = Array.isArray(ITEMS) ? ITEMS.slice() : [];
-
-    if(MONTH_STATE.selectedDate){
-      rows = rows.filter(x => String(x.date || "") === MONTH_STATE.selectedDate);
-    }
-
-    if(q){
-      rows = rows.filter(x => JSON.stringify(x || {}).toLowerCase().includes(q));
-    }
-
-    if(f && f !== "info"){
-      rows = rows.filter(x => normalizeStatus(x.status) === f);
-    }
-
-    rows.sort((a,b)=>{
-      const da = Date.parse(a.date || "") || 0;
-      const db = Date.parse(b.date || "") || 0;
-      return da - db;
-    });
-
-    return rows;
-  }
-
-  function getDayMap(){
-    const map = new Map();
-
-    for(const item of ITEMS){
-      const key = normalizeDateValue(item.date);
-      if(!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) continue;
-      if(!map.has(key)) map.set(key, []);
-      map.get(key).push(item);
-    }
-
-    return map;
-  }
-
   function formatMonthYear(year, month){
     const d = new Date(year, month, 1);
     return d.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
+  }
+
+  function formatDateFr(ymd){
+    const d = localDateFromYmd(ymd);
+    if(!d) return ymd || "—";
+    return d.toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
+  }
+
+  function formatAmount(amount){
+    const n = Number(amount || 0);
+    if(!Number.isFinite(n) || n <= 0) return "—";
+    return new Intl.NumberFormat("fr-FR", { maximumFractionDigits:0 }).format(n);
+  }
+
+  function priceLabel(amount){
+    const n = Number(amount || 0);
+    if(!Number.isFinite(n) || n <= 0) return "—";
+    if(n >= 1000){
+      const k = Math.round(n / 1000);
+      return `${k}k`;
+    }
+    return String(n);
+  }
+
+  function rangeInclusive(startYmd, endYmd){
+    const a = localDateFromYmd(startYmd);
+    const b = localDateFromYmd(endYmd);
+    if(!a || !b) return [];
+    const start = a <= b ? a : b;
+    const end = a <= b ? b : a;
+    const out = [];
+    const d = new Date(start);
+    while(d <= end){
+      out.push(ymdFromDate(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+
+  function compareYmd(a, b){
+    return String(a || "").localeCompare(String(b || ""));
+  }
+
+  function normalizeDailyRecord(rec){
+    const out = Object.assign({
+      date: "",
+      status: "open",
+      price: DEFAULT_PRICE,
+      note: "",
+      booking_id: ""
+    }, rec || {});
+
+    const status = String(out.status || "open").trim().toLowerCase();
+    out.status = status === "booked" ? "booked" : status === "closed" ? "closed" : "open";
+    out.date = String(out.date || "").trim();
+    out.price = Number(out.price || DEFAULT_PRICE) || DEFAULT_PRICE;
+    out.note = String(out.note || "").trim();
+    out.booking_id = String(out.booking_id || "").trim();
+    return out;
+  }
+
+  function getStorageKey(){
+    return "DIGIY_LOC_CALENDAR_TOUCH_V1:" + (getSlug() || "noslug");
+  }
+
+  function seedDemoIfEmpty(){
+    if(Object.keys(DATA.daily).length) return;
+    const base = new Date(MONTH_STATE.year, MONTH_STATE.month, 1);
+
+    const mark = (offset, patch) => {
+      const d = new Date(base);
+      d.setDate(offset);
+      const ymd = ymdFromDate(d);
+      DATA.daily[ymd] = normalizeDailyRecord(Object.assign({ date: ymd }, patch || {}));
+    };
+
+    mark(3,  { status:"closed", price:22000, note:"Fermé volontairement" });
+    mark(4,  { status:"closed", price:22000 });
+    mark(5,  { status:"booked", price:28000, booking_id:makeId("book"), note:"Client confirmé" });
+    mark(6,  { status:"booked", price:28000, booking_id:makeId("book"), note:"Client confirmé" });
+    mark(10, { status:"closed", price:30000, note:"Maintenance" });
+    mark(12, { status:"open", price:32000 });
+    mark(13, { status:"open", price:32000 });
+    mark(20, { status:"booked", price:35000, booking_id:makeId("book"), note:"Réservation" });
+    mark(21, { status:"booked", price:35000, booking_id:makeId("book"), note:"Réservation" });
+    mark(22, { status:"booked", price:35000, booking_id:makeId("book"), note:"Réservation" });
+  }
+
+  function saveLocal(){
+    try{
+      localStorage.setItem(getStorageKey(), JSON.stringify({
+        slug: getSlug(),
+        ts: Date.now(),
+        daily: DATA.daily,
+        bookings: DATA.bookings
+      }));
+    }catch{}
+  }
+
+  function loadLocal(){
+    try{
+      const raw = localStorage.getItem(getStorageKey());
+      if(!raw) return false;
+      const parsed = JSON.parse(raw);
+      DATA.daily = {};
+      const daily = parsed?.daily || {};
+      Object.keys(daily).forEach((k)=>{
+        DATA.daily[k] = normalizeDailyRecord(daily[k]);
+      });
+      DATA.bookings = Array.isArray(parsed?.bookings) ? parsed.bookings : [];
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function getDayRecord(ymd){
+    if(DATA.daily[ymd]) return DATA.daily[ymd];
+    return normalizeDailyRecord({ date: ymd, status:"open", price: DEFAULT_PRICE });
+  }
+
+  function setDayRecord(ymd, patch){
+    const current = getDayRecord(ymd);
+    DATA.daily[ymd] = normalizeDailyRecord(Object.assign({}, current, patch || {}, { date: ymd }));
+  }
+
+  function getStatusLabel(status){
+    if(status === "booked") return "Occupé";
+    if(status === "closed") return "Fermé";
+    return "Ouvert";
+  }
+
+  function getStatusClass(status){
+    if(status === "booked") return "booked";
+    if(status === "closed") return "closed";
+    return "open";
   }
 
   function getCalendarCells(year, month){
@@ -1015,7 +988,6 @@
     const firstDay = (first.getDay() + 6) % 7;
     const start = new Date(year, month, 1 - firstDay);
     const cells = [];
-
     for(let i = 0; i < 42; i++){
       const d = new Date(start);
       d.setDate(start.getDate() + i);
@@ -1028,362 +1000,370 @@
     return cells;
   }
 
-  function describeDay(items){
-    if(!items.length) return "";
+  function getSelectedKeys(){
+    return Array.isArray(MONTH_STATE.selectedKeys) ? MONTH_STATE.selectedKeys.slice() : [];
+  }
 
-    const statuses = Array.from(
-      new Set(items.map(calendarStatusForItem).filter(Boolean))
-    );
+  function isSelected(ymd){
+    return getSelectedKeys().includes(ymd);
+  }
 
-    if(!statuses.length) return "";
+  function clearSelection(renderToo = true){
+    MONTH_STATE.dragging = false;
+    MONTH_STATE.dragStart = "";
+    MONTH_STATE.dragCurrent = "";
+    MONTH_STATE.selectedKeys = [];
+    if(renderToo) render();
+  }
 
-    if(statuses.length === 1){
-      const s = statuses[0];
-      if(s === "occupe") return `${items.length} occupé`;
-      if(s === "bloque") return `${items.length} bloqué`;
-      if(s === "ferme") return `${items.length} fermé`;
-      if(s === "arrivee") return `${items.length} arrivée`;
+  function setSelectionFromRange(startYmd, endYmd){
+    const all = rangeInclusive(startYmd, endYmd);
+    MONTH_STATE.selectedKeys = all;
+  }
+
+  function selectionSummary(keys){
+    if(!keys.length){
+      return {
+        title:"Aucune sélection",
+        sub:"Choisis une ou plusieurs dates.",
+        hasBooked:false,
+        count:0
+      };
+    }
+    const sorted = keys.slice().sort(compareYmd);
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    const hasBooked = sorted.some((ymd)=>getDayRecord(ymd).status === "booked");
+    const lockedCount = sorted.filter((ymd)=>getDayRecord(ymd).status === "booked").length;
+
+    let title = "";
+    if(sorted.length === 1){
+      title = formatDateFr(first);
+    }else{
+      title = `${formatDateFr(first)} → ${formatDateFr(last)}`;
     }
 
-    return `${items.length} action(s)`;
+    const sub = hasBooked
+      ? `${sorted.length} date(s) choisies · ${lockedCount} occupée(s) protégée(s)`
+      : `${sorted.length} date(s) choisies`;
+
+    return {
+      title,
+      sub,
+      hasBooked,
+      count:sorted.length
+    };
+  }
+
+  function renderActionBar(){
+    const keys = getSelectedKeys();
+    const info = selectionSummary(keys);
+
+    $("selectionTitle").textContent = info.title;
+    $("selectionSub").textContent = info.sub;
+
+    const showBar = keys.length > 0;
+    $("actionBar").classList.toggle("show", showBar);
+
+    $("btnOpenRange").disabled = !showBar;
+    $("btnCloseRange").disabled = !showBar;
+    $("btnPriceRange").disabled = !showBar;
   }
 
   function renderCalendar(){
+    $("calendarTitle").textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
     const grid = $("calendarGrid");
-    const title = $("calendarTitle");
-    const sub = $("calendarSub");
-    const selectedPill = $("selectedDayPill");
-
-    title.textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
-
-    if(MONTH_STATE.selectedDate){
-      selectedPill.textContent = "Jour choisi : " + MONTH_STATE.selectedDate;
-      sub.textContent = "Clique un autre jour pour lire vite, ou efface le filtre jour.";
-    } else {
-      selectedPill.textContent = "Jour choisi : tout le mois";
-      sub.textContent = "Lecture compacte du terrain. Clique un jour pour filtrer la liste.";
-    }
-
-    const dayMap = getDayMap();
-    const cells = getCalendarCells(MONTH_STATE.year, MONTH_STATE.month);
+    const foot = $("calendarFoot");
     const todayYmd = ymdFromDate(new Date());
+    const cells = getCalendarCells(MONTH_STATE.year, MONTH_STATE.month);
 
     grid.innerHTML = "";
-
-    ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach(label => {
+    ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach((label)=>{
       const el = document.createElement("div");
       el.className = "dow";
       el.textContent = label;
       grid.appendChild(el);
     });
 
-    cells.forEach(cell => {
-      const items = dayMap.get(cell.ymd) || [];
-      const statuses = Array.from(
-        new Set(items.map(calendarStatusForItem).filter(Boolean))
-      );
-
+    cells.forEach((cell)=>{
+      const rec = getDayRecord(cell.ymd);
+      const statusClass = getStatusClass(rec.status);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className =
-        "day" +
-        (cell.inMonth ? "" : " mutedDay") +
-        (cell.ymd === todayYmd ? " today" : "") +
-        (MONTH_STATE.selectedDate && MONTH_STATE.selectedDate === cell.ymd ? " selected" : "");
+      btn.className = [
+        "day",
+        cell.inMonth ? "" : "mutedDay",
+        cell.ymd === todayYmd ? "today" : "",
+        statusClass === "booked" ? "booked locked" : "",
+        statusClass === "closed" ? "closed" : "",
+        isSelected(cell.ymd) ? "selected" : ""
+      ].join(" ").trim();
 
-      const dots = statuses.slice(0, 4)
-        .map(st => `<span class="dot ${esc(st)}"></span>`)
-        .join("");
-
-      const extra = statuses.length > 4 ? `<span class="dot info"></span>` : "";
+      btn.dataset.date = cell.ymd;
 
       btn.innerHTML = `
         <div class="dayTop">
           <div class="dayNum">${cell.date.getDate()}</div>
-          <div class="dayCount">${statuses.length ? statuses.length : ""}</div>
+          <div class="stateTag">${esc(getStatusLabel(rec.status))}</div>
         </div>
-        <div class="dayDots">${dots}${extra}</div>
-        <div class="dayText">${esc(describeDay(items))}</div>
+        <div class="dayMid">
+          <div class="price">${esc(priceLabel(rec.price))}<small>F</small></div>
+          <div class="daySub">${rec.status === "booked" ? "Protégé" : rec.status === "closed" ? "Fermé manuellement" : "Disponible"}</div>
+        </div>
       `;
 
-      btn.addEventListener("click", () => {
-        MONTH_STATE.year = cell.date.getFullYear();
-        MONTH_STATE.month = cell.date.getMonth();
-        MONTH_STATE.selectedDate = cell.ymd;
-        render();
-        showRight(`📅 Jour choisi : ${cell.ymd}`, "ok");
-      });
-
+      bindDayPointer(btn, cell.ymd);
       grid.appendChild(btn);
     });
+
+    const keys = getSelectedKeys();
+    if(keys.length){
+      const info = selectionSummary(keys);
+      foot.textContent = info.hasBooked
+        ? "Les dates occupées restent protégées. Ouvrir et fermer ne toucheront pas aux réservations."
+        : "Choisis ton action : ouvrir, fermer ou changer le prix.";
+    }else if(MONTH_STATE.focusedDate){
+      const rec = getDayRecord(MONTH_STATE.focusedDate);
+      foot.textContent = `${formatDateFr(MONTH_STATE.focusedDate)} · ${getStatusLabel(rec.status)} · ${formatAmount(rec.price)} F`;
+    }else{
+      foot.textContent = "Touchez une date ou glissez sur plusieurs jours.";
+    }
+  }
+
+  function renderBookings(){
+    const day = MONTH_STATE.focusedDate || "";
+    $("pickedDayPill").textContent = day ? `Jour choisi : ${day}` : "Jour choisi : aucun";
+
+    const list = $("bookingsList");
+
+    if(!day){
+      list.innerHTML = `
+        <div class="item">
+          <div>
+            <div class="itemTitle">Choisis une date</div>
+            <div class="itemMeta">Appuie sur une date pour lire ce qu’il y a dessus.</div>
+          </div>
+          <div><span class="badge">📅 Calendrier</span></div>
+        </div>
+      `;
+      return;
+    }
+
+    const rec = getDayRecord(day);
+
+    if(rec.status === "booked"){
+      list.innerHTML = `
+        <div class="item">
+          <div>
+            <div class="itemTitle">Date occupée</div>
+            <div class="itemMeta">
+              📅 ${esc(formatDateFr(day))}<br>
+              💰 ${esc(formatAmount(rec.price))} F<br>
+              ${rec.note ? "📝 " + esc(rec.note) : "Client confirmé"}
+            </div>
+          </div>
+          <div><span class="badge blue">🛏️ Occupé</span></div>
+        </div>
+      `;
+      return;
+    }
+
+    if(rec.status === "closed"){
+      list.innerHTML = `
+        <div class="item">
+          <div>
+            <div class="itemTitle">Date fermée</div>
+            <div class="itemMeta">
+              📅 ${esc(formatDateFr(day))}<br>
+              💰 ${esc(formatAmount(rec.price))} F<br>
+              ${rec.note ? "📝 " + esc(rec.note) : "Indisponible"}
+            </div>
+          </div>
+          <div><span class="badge bad">⛔ Fermé</span></div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = `
+      <div class="item">
+        <div>
+          <div class="itemTitle">Date ouverte</div>
+          <div class="itemMeta">
+            📅 ${esc(formatDateFr(day))}<br>
+            💰 ${esc(formatAmount(rec.price))} F<br>
+            Disponible à la réservation
+          </div>
+        </div>
+        <div><span class="badge ok">✅ Ouvert</span></div>
+      </div>
+    `;
   }
 
   function render(){
-    const el = $("list");
-    const rows = getFilteredSortedRows();
-
     renderCalendar();
-
-    if(!rows.length){
-      const txt = MONTH_STATE.selectedDate
-        ? `Aucune ligne pour le ${MONTH_STATE.selectedDate} avec ce filtre.`
-        : `Ajoute une arrivée, un occupé, un bloqué, une fermeture ou un départ.`;
-
-      el.innerHTML = `
-        <div class="it">
-          <div class="itL">
-            <div class="itTitle">— aucune date —</div>
-            <div class="itMeta">${esc(txt)}</div>
-          </div>
-          <div class="itR">
-            <span class="badge">🧪 Local</span>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    el.innerHTML = rows.map((x)=>{
-      const date = esc(x.date || "");
-      const name = esc(x.name || "Sans nom");
-      const tel = esc(x.phone || "");
-      const note = esc(x.note || "");
-      const label = statusLabel(x.status);
-
-      return `
-        <div class="it">
-          <div class="itL">
-            <div class="itTitle">${name}</div>
-            <div class="itMeta">
-              📅 ${date || "—"}<br>
-              🏷️ ${esc(label)}${tel ? "<br>📞 " + tel : ""}${note ? "<br>📝 " + note : ""}
-            </div>
-          </div>
-          <div class="itR">
-            ${badgeStatus(x.status)}
-            <button class="btn bad small" data-del-id="${esc(x.id)}">🗑️</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    el.querySelectorAll("[data-del-id]").forEach(b=>{
-      b.addEventListener("click", ()=>{
-        if(!isLive()){
-          showRight("👁️ En aperçu, tu peux consulter mais pas modifier le terrain réel.", "warn");
-          return;
-        }
-
-        const id = String(b.getAttribute("data-del-id") || "").trim();
-        if(!id) return;
-
-        ITEMS = ITEMS.filter(item => String(item.id) !== id);
-        saveLS();
-        render();
-        showRight("✅ Ligne supprimée.", "ok");
-      });
-    });
+    renderActionBar();
+    renderBookings();
   }
 
-  function askStatus(){
-    const raw = prompt("État : Arrivée / Occupé / Bloqué / Fermé / Départ / Réservation", "Occupé");
-    if(raw == null) return null;
-    const st = normalizeStatus(raw);
-    return st === "info" ? "occupe" : st;
-  }
-
-  function actionSelectedDay(){
-    if(!isLive()){
-      showRight("👁️ Passe par ton accès pour modifier le terrain.", "warn");
-      return;
-    }
-
-    if(!MONTH_STATE.selectedDate){
-      showRight("⚠️ Choisis d’abord un jour dans le calendrier.", "warn");
-      return;
-    }
-
-    const ymd = MONTH_STATE.selectedDate;
-
-    const choice = prompt(
-`Action pour ${ymd}
-
-1 = Arrivée
-2 = Occupé
-3 = Bloqué
-4 = Fermé
-5 = Départ (journal du jour)
-6 = Effacer toutes les lignes de ce jour
-
-Entre 1, 2, 3, 4, 5 ou 6`,
-      "2"
-    );
-
-    if(choice == null) return;
-
-    const c = String(choice).trim();
-
-    if(c === "6"){
-      if(!confirm(`Effacer toutes les lignes du ${ymd} ?`)) return;
-      ITEMS = ITEMS.filter(x => String(x.date || "") !== ymd);
-      saveLS();
+  function bindDayPointer(el, ymd){
+    const onDown = (ev) => {
+      ev.preventDefault();
+      MONTH_STATE.dragging = true;
+      MONTH_STATE.dragStart = ymd;
+      MONTH_STATE.dragCurrent = ymd;
+      MONTH_STATE.focusedDate = ymd;
+      setSelectionFromRange(ymd, ymd);
       render();
-      showRight(`🧹 Journée effacée : ${ymd}`, "warn");
-      return;
-    }
-
-    const map = {
-      "1": { status:"arrivee", name:"Arrivée" },
-      "2": { status:"occupe",  name:"Occupé" },
-      "3": { status:"bloque",  name:"Date bloquée" },
-      "4": { status:"ferme",   name:"Fermeture" },
-      "5": { status:"depart",  name:"Départ" }
+      try{ el.setPointerCapture(ev.pointerId); }catch{}
     };
 
-    const picked = map[c];
-    if(!picked){
-      showRight("⚠️ Action non reconnue.", "warn");
+    const onEnter = (ev) => {
+      if(!MONTH_STATE.dragging) return;
+      ev.preventDefault();
+      MONTH_STATE.dragCurrent = ymd;
+      setSelectionFromRange(MONTH_STATE.dragStart, ymd);
+      render();
+    };
+
+    const onUp = (ev) => {
+      if(!MONTH_STATE.dragging) return;
+      ev.preventDefault();
+      MONTH_STATE.dragging = false;
+      MONTH_STATE.dragCurrent = ymd;
+      setSelectionFromRange(MONTH_STATE.dragStart, ymd);
+      if(getSelectedKeys().length === 1){
+        MONTH_STATE.focusedDate = getSelectedKeys()[0];
+      }
+      render();
+      try{ el.releasePointerCapture(ev.pointerId); }catch{}
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerenter", onEnter);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+
+    el.addEventListener("click", (ev)=>{
+      if(MONTH_STATE.selectedKeys.length > 1){
+        ev.preventDefault();
+        return;
+      }
+      MONTH_STATE.focusedDate = ymd;
+      MONTH_STATE.selectedKeys = [ymd];
+      render();
+    });
+  }
+
+  function applyStatusToSelection(status){
+    const keys = getSelectedKeys();
+    if(!keys.length){
+      showRight("Choisis d’abord une ou plusieurs dates.", "warn");
+      return;
+    }
+    if(!isLive()){
+      showRight("Passe par ton accès pour modifier le calendrier réel.", "warn");
       return;
     }
 
-    const name = (prompt("Libellé", picked.name) || "").trim() || picked.name;
-    const phone = (prompt("Téléphone (optionnel)") || "").trim();
-    const note = (prompt("Note (optionnel)") || "").trim();
+    let changed = 0;
+    let protectedCount = 0;
 
-    ITEMS.push({
-      id: makeItemId(),
-      name,
-      date: ymd,
-      phone,
-      status: picked.status,
-      note
+    keys.forEach((ymd)=>{
+      const rec = getDayRecord(ymd);
+      if(rec.status === "booked"){
+        protectedCount += 1;
+        return;
+      }
+      setDayRecord(ymd, {
+        status,
+        note: status === "closed" ? "Fermé manuellement" : ""
+      });
+      changed += 1;
     });
 
-    saveLS();
+    saveLocal();
     render();
-    showRight(`✅ ${picked.name} ajouté le ${ymd}.`, "ok");
+
+    if(changed && protectedCount){
+      showRight(`✅ ${changed} date(s) mises à jour. ${protectedCount} date(s) occupée(s) sont restées protégées.`, "ok");
+      return;
+    }
+    if(changed){
+      showRight(`✅ ${changed} date(s) ${status === "closed" ? "fermée(s)" : "ouverte(s)"}.`, "ok");
+      return;
+    }
+    showRight("Aucune date modifiable dans cette sélection.", "warn");
   }
 
-  function addItem(){
+  function applyPriceToSelection(){
+    const keys = getSelectedKeys();
+    if(!keys.length){
+      showRight("Choisis d’abord une ou plusieurs dates.", "warn");
+      return;
+    }
     if(!isLive()){
-      showRight("👁️ Passe par ton accès avant d’ajouter une date.", "warn");
+      showRight("Passe par ton accès pour modifier le calendrier réel.", "warn");
       return;
     }
 
-    const defaultDate = MONTH_STATE.selectedDate || ymdFromDate(new Date());
-    const date = normalizeDateValue(prompt("Date (YYYY-MM-DD)", defaultDate) || "");
-    if(!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
-      showRight("⚠️ Date invalide. Utilise YYYY-MM-DD.", "warn");
+    const current = getDayRecord(keys[0]).price || DEFAULT_PRICE;
+    const raw = prompt("Nouveau prix en F CFA pour les dates choisies", String(current));
+    if(raw == null) return;
+
+    const amount = Number(String(raw).replace(/[^\d.]/g, ""));
+    if(!Number.isFinite(amount) || amount <= 0){
+      showRight("Prix invalide.", "warn");
       return;
     }
 
-    const status = askStatus();
-    if(!status) return;
-
-    const nameDefault =
-      status === "resa" ? "Réservation" :
-      status === "occupe" ? "Occupé" :
-      status === "bloque" ? "Date bloquée" :
-      status === "ferme" ? "Fermeture" :
-      status === "arrivee" ? "Arrivée" :
-      status === "depart" ? "Départ" :
-      "Info";
-
-    const name = (prompt("Nom / libellé", nameDefault) || "").trim() || nameDefault;
-    const phone = (prompt("Téléphone (optionnel)") || "").trim();
-    const note = (prompt("Note (optionnel)") || "").trim();
-
-    ITEMS.push({
-      id: makeItemId(),
-      name,
-      date,
-      phone,
-      status,
-      note
+    keys.forEach((ymd)=>{
+      const rec = getDayRecord(ymd);
+      setDayRecord(ymd, { price: Math.round(amount), status: rec.status });
     });
 
-    const d = localDateFromYmd(date);
-    if(d){
-      MONTH_STATE.year = d.getFullYear();
-      MONTH_STATE.month = d.getMonth();
-      MONTH_STATE.selectedDate = date;
-    }
-
-    saveLS();
+    saveLocal();
     render();
-    showRight("✅ Date ajoutée.", "ok");
+    showRight(`💰 Prix appliqué sur ${keys.length} date(s).`, "ok");
   }
 
-  function clearAll(){
-    if(!isLive()){
-      showRight("👁️ En aperçu, on ne vide rien.", "warn");
-      return;
-    }
-
-    if(!confirm("Vider le mini planning local ?")) return;
-    ITEMS = [];
-    MONTH_STATE.selectedDate = "";
-    saveLS();
-    render();
-    showRight("🧹 Mini planning vidé.", "warn");
+  function renderPreview(reason){
+    UX_MODE = "preview";
+    UX_REASON = reason || "preview";
+    setSub("👁️ Aperçu du calendrier");
+    show(
+      reason === "slug_missing"
+        ? "Aucun identifiant détecté.\nTu vois un aperçu propre du calendrier."
+        : "Ton identifiant est là, mais l’accès n’est pas encore confirmé.\nTu vois un aperçu sans mur brutal.",
+      "warn"
+    );
   }
 
-  function reload(){
-    const cached = loadLS();
-    ITEMS = normalizeItems(cached?.items);
-    saveLS();
-    render();
-    showRight("↻ Rechargé.", "ok");
+  function renderLiveHeader(){
+    const sess = getSession();
+    const phone =
+      sess.phone ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      "—";
+
+    UX_MODE = "live";
+    UX_REASON = "ok";
+    setSub(`✅ Accès ouvert · ${phone}`);
+    show("Calendrier prêt. Ouvrir, fermer, tarifer.", "ok");
   }
 
   function gotoTodayMonth(){
     const d = new Date();
     MONTH_STATE.year = d.getFullYear();
     MONTH_STATE.month = d.getMonth();
-    MONTH_STATE.selectedDate = "";
+    clearSelection(false);
+    MONTH_STATE.focusedDate = ymdFromDate(d);
     render();
-    showRight("📍 Retour au mois courant.", "ok");
   }
 
   async function init(){
-    $("pillModule").textContent = "Je loue";
-
-    const today = new Date();
-    const fmt = new Intl.DateTimeFormat("fr-FR", {
-      weekday:"long",
-      year:"numeric",
-      month:"long",
-      day:"numeric"
-    });
-    $("pillToday").textContent = fmt.format(today);
-
-    if(!window.DIGIY_GUARD){
-      setSub("❌ Ton accès n’est pas disponible.");
-      show("❌ Le fichier d’accès n’est pas chargé.\n➡️ Vérifie ./guard.js", "bad");
-      return;
-    }
-
-    try{
-      await waitGuardReady();
-    }catch(e){
-      console.error(e);
-      setSub("❌ Ton accès ne répond pas.");
-      show("❌ Ton accès n’a pas pu s’initialiser.", "bad");
-      $("pillSlug").textContent = "identifiant : —";
-      $("who").textContent = "❌ Accès indisponible";
-      $("abo").textContent = "Recharge la page ou reconnecte-toi.";
-      return;
-    }
-
-    const sess = getSession();
-    const slug = getSlug();
-
-    $("pillSlug").textContent = "identifiant : " + (slug || "—");
-
-    $("officialUrl").textContent = buildSafeUrl("./planning.html", slug ? { slug } : {});
-
     $("btnDashboard").href = withSlug("./app.html");
-    $("btnBackDashboard").href = withSlug("./app.html");
     $("btnReservations").href = withSlug("./reservations.html");
     $("btnTarifs").href = withSlug("./tarifs.html");
     $("btnPhotos").href = withSlug("./photos.html");
@@ -1394,14 +1374,14 @@ Entre 1, 2, 3, 4, 5 ou 6`,
     $("btnLogout").addEventListener("click", ()=>{
       try{
         window.DIGIY_GUARD?.logout?.();
-      }catch(_){
+      }catch{
         location.replace(pinUrl());
       }
     });
 
-    $("btnSupport").addEventListener("click", (e)=>{
-      e.preventDefault();
-
+    $("btnSupport").addEventListener("click", ()=>{
+      const slug = getSlug();
+      const sess = getSession();
       const phone =
         sess.phone ||
         storageGet("DIGIY_PHONE") ||
@@ -1411,64 +1391,92 @@ Entre 1, 2, 3, 4, 5 ou 6`,
       const txt =
 `DIGIY LOC • Support
 
-Activité : location
+Page : calendrier
 Identifiant : ${slug || "—"}
 Téléphone : ${phone || "—"}
-Page : planning
 
 Merci. — DIGIY`;
 
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
     });
 
-    $("btnAdd").addEventListener("click", addItem);
-    $("btnActionDay").addEventListener("click", actionSelectedDay);
-    $("btnClear").addEventListener("click", clearAll);
-    $("btnReload").addEventListener("click", reload);
-    $("btnSearch").addEventListener("click", render);
-    $("q").addEventListener("keydown", (e)=>{ if(e.key === "Enter") render(); });
-    $("q").addEventListener("input", render);
-    $("filterStatus").addEventListener("change", render);
-
-    $("btnPrevMonth").addEventListener("click", () => {
+    $("btnPrevMonth").addEventListener("click", ()=>{
       MONTH_STATE.month -= 1;
       if(MONTH_STATE.month < 0){
         MONTH_STATE.month = 11;
         MONTH_STATE.year -= 1;
       }
+      clearSelection(false);
       render();
     });
 
-    $("btnNextMonth").addEventListener("click", () => {
+    $("btnNextMonth").addEventListener("click", ()=>{
       MONTH_STATE.month += 1;
       if(MONTH_STATE.month > 11){
         MONTH_STATE.month = 0;
         MONTH_STATE.year += 1;
       }
+      clearSelection(false);
       render();
     });
 
     $("btnTodayMonth").addEventListener("click", gotoTodayMonth);
 
-    $("btnClearDayFilter").addEventListener("click", () => {
-      MONTH_STATE.selectedDate = "";
+    $("btnOpenRange").addEventListener("click", ()=>applyStatusToSelection("open"));
+    $("btnCloseRange").addEventListener("click", ()=>applyStatusToSelection("closed"));
+    $("btnPriceRange").addEventListener("click", applyPriceToSelection);
+    $("btnCancelRange").addEventListener("click", ()=>{
+      clearSelection(false);
       render();
-      showRight("♻️ Filtre jour effacé.", "ok");
+      showRight("Sélection annulée.", "ok");
     });
 
-    reload();
+    document.addEventListener("pointerup", ()=>{
+      if(MONTH_STATE.dragging){
+        MONTH_STATE.dragging = false;
+        render();
+      }
+    });
 
-    if(!slug){
-      renderPreview("slug_missing");
+    const slug = getSlug();
+    $("pillSlug").textContent = "identifiant : " + (slug || "—");
+
+    if(!window.DIGIY_GUARD){
+      setSub("❌ Ton accès n’est pas disponible.");
+      show("Le fichier d’accès n’est pas chargé.\nVérifie ./guard.js", "bad");
       return;
     }
 
-    if(!sess.access_ok){
+    try{
+      await waitGuardReady();
+    }catch(e){
+      console.error(e);
+      setSub("❌ Ton accès ne répond pas.");
+      show("Ton accès n’a pas pu s’initialiser.", "bad");
+      return;
+    }
+
+    loadLocal();
+    seedDemoIfEmpty();
+    saveLocal();
+
+    if(!slug){
+      renderPreview("slug_missing");
+      MONTH_STATE.focusedDate = ymdFromDate(new Date());
+      render();
+      return;
+    }
+
+    if(!getSession().access_ok){
       renderPreview("has_access_false");
+      MONTH_STATE.focusedDate = ymdFromDate(new Date());
+      render();
       return;
     }
 
     renderLiveHeader();
+    MONTH_STATE.focusedDate = ymdFromDate(new Date());
+    render();
   }
 
   init();
