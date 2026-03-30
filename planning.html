@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-real-v2"></script>
+  <script src="./guard.js?v=locpro-calendar-real-v3-sync-tarifs"></script>
 
   <style>
     :root{
@@ -765,6 +765,18 @@
     roomId: ""
   };
 
+  const LOCAL_TARIFFS = {
+    loaded: false,
+    key: "",
+    sourceSlug: "",
+    night: 0,
+    week: 0,
+    month: 0,
+    clean: 0,
+    deposit: 0,
+    ts: 0
+  };
+
   function digits(v){
     return String(v || "").replace(/\D/g, "");
   }
@@ -802,6 +814,14 @@
       if(l) return l;
     }catch{}
     return "";
+  }
+
+  function safeJsonParse(raw){
+    try{
+      return JSON.parse(raw);
+    }catch{
+      return null;
+    }
   }
 
   function readStoredSlug(key){
@@ -1021,11 +1041,100 @@
     };
   }
 
+  function getTariffStorageCandidates(){
+    const accessSlug = getAccessSlug();
+    const roomSlug = ROOM_CTX.roomSlug || "";
+    return [
+      accessSlug ? `DIGIY_LOC_TARIFS_V2:${accessSlug}` : "",
+      roomSlug && roomSlug !== accessSlug ? `DIGIY_LOC_TARIFS_V2:${roomSlug}` : "",
+      "DIGIY_LOC_TARIFS_V2:noslug"
+    ].filter(Boolean);
+  }
+
+  function loadOfflineTariffs(){
+    LOCAL_TARIFFS.loaded = false;
+    LOCAL_TARIFFS.key = "";
+    LOCAL_TARIFFS.sourceSlug = "";
+    LOCAL_TARIFFS.night = 0;
+    LOCAL_TARIFFS.week = 0;
+    LOCAL_TARIFFS.month = 0;
+    LOCAL_TARIFFS.clean = 0;
+    LOCAL_TARIFFS.deposit = 0;
+    LOCAL_TARIFFS.ts = 0;
+
+    for(const key of getTariffStorageCandidates()){
+      const parsed = safeJsonParse(storageGet(key));
+      if(!parsed || typeof parsed !== "object") continue;
+
+      LOCAL_TARIFFS.loaded = true;
+      LOCAL_TARIFFS.key = key;
+      LOCAL_TARIFFS.sourceSlug = key.split(":").slice(1).join(":");
+      LOCAL_TARIFFS.night = Number(parsed.night || 0) || 0;
+      LOCAL_TARIFFS.week = Number(parsed.week || 0) || 0;
+      LOCAL_TARIFFS.month = Number(parsed.month || 0) || 0;
+      LOCAL_TARIFFS.clean = Number(parsed.clean || 0) || 0;
+      LOCAL_TARIFFS.deposit = Number(parsed.deposit || 0) || 0;
+      LOCAL_TARIFFS.ts = Number(parsed.ts || 0) || 0;
+      break;
+    }
+
+    return LOCAL_TARIFFS;
+  }
+
+  function getEffectiveBaseNight(){
+    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
+    if(localNight > 0) return localNight;
+    return Number(DATA.room?.base_price_night || 0) || 0;
+  }
+
+  function applyOfflineTariffsToDay(rec){
+    const day = normalizeDay(rec || {});
+    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
+
+    if(localNight > 0){
+      const oldBase = Number(day.base_price_night || 0) || 0;
+      const oldPrice = Number(day.price_night || 0) || 0;
+      const shouldUseLocalBasePrice = !oldPrice || oldPrice === oldBase;
+
+      day.base_price_night = localNight;
+
+      if(shouldUseLocalBasePrice){
+        day.price_night = localNight;
+      }
+    }
+
+    return day;
+  }
+
+  function applyOfflineTariffsOverlay(){
+    loadOfflineTariffs();
+
+    if(!DATA.room) DATA.room = {};
+
+    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
+    if(localNight > 0){
+      DATA.room.base_price_night = localNight;
+    }
+
+    Object.keys(DATA.daily).forEach((ymd)=>{
+      DATA.daily[ymd] = applyOfflineTariffsToDay(DATA.daily[ymd]);
+    });
+  }
+
+  function getTariffHintMessage(){
+    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
+    if(localNight > 0){
+      return `💰 Tarif de base repris depuis Tarifs : ${formatAmount(localNight)} F CFA.`;
+    }
+    return "";
+  }
+
   function getDayRecord(ymd){
-    return DATA.daily[ymd] || {
+    if(DATA.daily[ymd]) return DATA.daily[ymd];
+    return {
       day: ymd,
-      price_night: Number(DATA.room?.base_price_night || 0) || 0,
-      base_price_night: Number(DATA.room?.base_price_night || 0) || 0,
+      price_night: getEffectiveBaseNight(),
+      base_price_night: getEffectiveBaseNight(),
       is_booked: false,
       is_closed: false,
       status: "open",
@@ -1148,9 +1257,18 @@
     $("calendarTitle").textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
 
     const monthLabel = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
-    $("calendarSub").textContent = DATA.room?.room_name
-      ? `${DATA.room.room_name} • prix du jour devant • ${monthLabel}`
-      : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.";
+    const roomLabel = DATA.room?.room_name || ROOM_CTX.roomName || "";
+    const baseNight = getEffectiveBaseNight();
+
+    if(roomLabel){
+      $("calendarSub").textContent = baseNight > 0
+        ? `${roomLabel} • prix du jour devant • base ${formatAmount(baseNight)} F CFA • ${monthLabel}`
+        : `${roomLabel} • prix du jour devant • ${monthLabel}`;
+    }else{
+      $("calendarSub").textContent = baseNight > 0
+        ? `Le prix du jour passe devant. Base actuelle : ${formatAmount(baseNight)} F CFA.`
+        : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.";
+    }
 
     const grid = $("calendarGrid");
     const foot = $("calendarFoot");
@@ -1465,6 +1583,8 @@
       if(rec.day) DATA.daily[rec.day] = rec;
     });
 
+    applyOfflineTariffsOverlay();
+
     if($("pillSlug")){
       $("pillSlug").textContent = "identifiant logement : " + roomSlug;
     }
@@ -1482,7 +1602,7 @@
     if(!data?.ok) return;
 
     DATA.bookingsByDay[ymd] = Array.isArray(data.bookings) ? data.bookings : [];
-    DATA.daily[ymd] = {
+    DATA.daily[ymd] = applyOfflineTariffsToDay({
       day: ymd,
       price_night: Number(data.price_night || 0) || 0,
       base_price_night: Number(data.base_price_night || 0) || 0,
@@ -1491,7 +1611,7 @@
       status: String(data.status || "open").trim().toLowerCase(),
       bookings_count: Array.isArray(data.bookings) ? data.bookings.length : 0,
       note: DATA.daily[ymd]?.note || null
-    };
+    });
 
     render();
   }
@@ -1511,7 +1631,15 @@
     }
 
     render();
-    if(keepMessage) showRight(keepMessage, "ok");
+
+    const tariffHint = getTariffHintMessage();
+    if(keepMessage && tariffHint){
+      showRight(`${keepMessage}\n${tariffHint}`, "ok");
+    }else if(keepMessage){
+      showRight(keepMessage, "ok");
+    }else if(tariffHint){
+      showRight(tariffHint, "ok");
+    }
   }
 
   async function applyAction(action){
@@ -1539,7 +1667,7 @@
     let pNote = null;
 
     if(action === "price"){
-      const current = getDayRecord(keys[0]).price_night || DATA.room?.base_price_night || 0;
+      const current = getDayRecord(keys[0]).price_night || getEffectiveBaseNight() || 0;
       const raw = prompt("Nouveau prix en F CFA pour les dates choisies", String(current || ""));
       if(raw == null) return;
 
@@ -1741,6 +1869,7 @@ Merci. — DIGIY`;
 
     try{
       await resolveCalendarRoom();
+      loadOfflineTariffs();
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
       await reloadCurrentMonth();
     }catch(e){
