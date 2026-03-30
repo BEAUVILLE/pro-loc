@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-real-v6-range-touch-clean"></script>
+  <script src="./guard.js?v=locpro-calendar-real-v7-owner-room-split"></script>
 
   <style>
     :root{
@@ -836,11 +836,42 @@
 
   const MODULE = "LOC";
   const SUPPORT_WA = "+221771342889";
+  const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
   const $ = (id)=>document.getElementById(id);
 
   let sb = null;
   let UX_MODE = "preview";
   let UX_REASON = "booting";
+
+  const SESSION_KEYS = [
+    "digiy_loc_session",
+    "digiy_loc_guard_session",
+    "digiy_guard_loc_session",
+    "DIGIY_LOC_SESSION",
+    "digiy_session_loc",
+    "DIGIY_SESSION_LOC",
+    "digiy_guard_session_loc",
+    "digiy_guard_session_LOC",
+    "digiy_guard_session",
+    "DIGIY_SESSION",
+    "digiy_session"
+  ];
+
+  const ACCESS_SLUG_KEYS = [
+    "digiy_loc_last_slug",
+    "digiy_loc_slug",
+    "DIGIY_LOC_SLUG",
+    "digiy_last_slug",
+    "DIGIY_SLUG"
+  ];
+
+  const ACCESS_PHONE_KEYS = [
+    "digiy_loc_phone",
+    "digiy_loc_last_phone",
+    "DIGIY_LOC_PHONE",
+    "digiy_phone",
+    "DIGIY_PHONE"
+  ];
 
   const MONTH_STATE = (() => {
     const d = new Date();
@@ -894,6 +925,43 @@
     }[m]));
   }
 
+  function normalizePhone(value){
+    const raw = String(value || "").trim();
+    if(!raw) return "";
+    const keepPlus = raw.startsWith("+");
+    const digitsOnly = raw.replace(/[^\d]/g, "");
+    return keepPlus ? ("+" + digitsOnly) : digitsOnly;
+  }
+
+  function normalizeSlug(value){
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function parseDateMs(value){
+    if(!value) return 0;
+
+    if(typeof value === "number" && Number.isFinite(value)){
+      return value < 100000000000 ? value * 1000 : value;
+    }
+
+    const str = String(value).trim();
+    if(!str) return 0;
+
+    if(/^\d+$/.test(str)){
+      const n = Number(str);
+      return n < 100000000000 ? n * 1000 : n;
+    }
+
+    const t = Date.parse(str);
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function isSessionFresh(validatedAt){
+    const ts = parseDateMs(validatedAt);
+    if(!ts) return false;
+    return (Date.now() - ts) <= SESSION_MAX_AGE_MS;
+  }
+
   function setSub(text){
     $("sub").textContent = text;
   }
@@ -923,6 +991,13 @@
     return "";
   }
 
+  function storageSet(key, value){
+    if(value == null || String(value).trim() === "") return;
+    const v = String(value).trim();
+    try{ sessionStorage.setItem(key, v); }catch{}
+    try{ localStorage.setItem(key, v); }catch{}
+  }
+
   function safeJsonParse(raw){
     try{
       return JSON.parse(raw);
@@ -931,51 +1006,105 @@
     }
   }
 
-  function readStoredSlug(key){
-    try{
-      const raw = sessionStorage.getItem(key) || localStorage.getItem(key) || "";
-      if(!raw) return "";
-      const txt = String(raw).trim();
-      if(!txt) return "";
-      if(txt.startsWith("{")){
-        const obj = JSON.parse(txt);
-        return String(obj.slug || obj.last_slug || "").trim().toLowerCase();
+  function firstText(keys){
+    for(const key of keys){
+      const v = storageGet(key);
+      if(v) return String(v).trim();
+    }
+    return "";
+  }
+
+  function pickFrom(obj, keys){
+    if(!obj || typeof obj !== "object") return "";
+    for(const key of keys){
+      const v = obj[key];
+      if(v != null && String(v).trim() !== "") return String(v).trim();
+    }
+    return "";
+  }
+
+  function normalizeSessionCandidate(candidate){
+    if(!candidate || typeof candidate !== "object") return null;
+
+    const nested = [
+      candidate,
+      candidate.session,
+      candidate.state,
+      candidate.data,
+      candidate.payload,
+      candidate.guard_state
+    ].filter(Boolean);
+
+    let slug = "";
+    let phone = "";
+    let validated_at = "";
+    let session_token = "";
+    let module = "";
+    let reason = "";
+    let accessFlag = false;
+
+    for(const src of nested){
+      if(!slug) slug = pickFrom(src, ["slug", "last_slug", "place_slug", "workspace_slug"]);
+      if(!phone) phone = pickFrom(src, ["phone", "owner_phone", "user_phone", "p_phone"]);
+      if(!validated_at) validated_at = pickFrom(src, ["validated_at", "validatedAt", "ts", "timestamp"]);
+      if(!session_token) session_token = pickFrom(src, ["session_token", "token"]);
+      if(!module) module = pickFrom(src, ["module", "digiy_module"]);
+      if(!reason) reason = pickFrom(src, ["reason", "error", "message"]);
+
+      if(
+        src.access === true ||
+        src.access_ok === true ||
+        src.ok === true ||
+        src.valid === true ||
+        src.authenticated === true
+      ){
+        accessFlag = true;
       }
-      return txt.trim().toLowerCase();
+    }
+
+    return {
+      slug: normalizeSlug(slug),
+      phone: normalizePhone(phone),
+      validated_at: String(validated_at || "").trim(),
+      session_token: String(session_token || "").trim(),
+      module: String(module || MODULE).trim().toUpperCase(),
+      reason: String(reason || "").trim(),
+      accessFlag
+    };
+  }
+
+  function getStoredSession(){
+    for(const key of SESSION_KEYS){
+      const parsed = safeJsonParse(storageGet(key));
+      const normalized = normalizeSessionCandidate(parsed);
+      if(normalized && (normalized.slug || normalized.phone || normalized.validated_at || normalized.accessFlag)){
+        return normalized;
+      }
+    }
+    return normalizeSessionCandidate({});
+  }
+
+  function readQueryParam(name){
+    try{
+      const u = new URL(location.href);
+      const v = u.searchParams.get(name);
+      return v ? String(v).trim() : "";
     }catch{
       return "";
     }
   }
 
-  function buildSafeUrl(path, extraParams){
-    const rawPath = String(path || "").trim() || "./";
-    let url;
-    try{
-      url = new URL(rawPath, location.href);
-    }catch{
-      const basePath = location.pathname.replace(/[^/]*$/, "");
-      const cleanPath = rawPath.replace(/^\.\//, "").replace(/^\/+/, "");
-      url = new URL(basePath + cleanPath, location.origin);
-    }
-    const params = extraParams && typeof extraParams === "object" ? extraParams : {};
-    Object.entries(params).forEach(([key, value])=>{
-      if(value == null) return;
-      const text = String(value).trim();
-      if(!text) return;
-      url.searchParams.set(key, text);
-    });
-    if(url.origin === location.origin){
-      return url.pathname + url.search + url.hash;
-    }
-    return url.toString();
-  }
+  function readRoomSlugFromQuery(){
+    const a = normalizeSlug(readQueryParam("room_slug"));
+    if(a) return a;
 
-  async function waitGuardReady(){
-    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
-      throw new Error("guard_missing");
-    }
-    await window.DIGIY_GUARD.ready();
-    return window.DIGIY_GUARD.state || {};
+    const b = normalizeSlug(readQueryParam("room"));
+    if(b) return b;
+
+    const qSlug = normalizeSlug(readQueryParam("slug"));
+    if(/^loc-room-/i.test(qSlug)) return qSlug;
+
+    return "";
   }
 
   function getGuardState(){
@@ -989,50 +1118,175 @@
     };
   }
 
-  function getSession(){
-    const st = getGuardState();
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
-    return {
-      ok: !!st.access_ok,
-      access_ok: !!st.access_ok,
-      preview: !!st.preview,
-      reason: String(st.reason || raw.reason || "").trim(),
-      slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
-      phone: String(st.phone || raw.phone || "").trim(),
-      module: String(st.module || raw.module || MODULE).trim()
-    };
+  function getGuardSession(){
+    try{
+      return window.DIGIY_GUARD?.getSession?.() || {};
+    }catch{
+      return {};
+    }
   }
 
   function getAccessSlug(){
-    const sess = getSession();
-    if(sess.slug) return sess.slug;
+    const st = normalizeSessionCandidate(getGuardState()) || {};
+    const gs = normalizeSessionCandidate(getGuardSession()) || {};
+    const ss = getStoredSession() || {};
 
-    try{
-      const qsSlug = new URL(location.href).searchParams.get("slug") || "";
-      if(qsSlug) return String(qsSlug).trim().toLowerCase();
-    }catch{}
+    const querySlug = normalizeSlug(readQueryParam("slug"));
+    const storedSlug = normalizeSlug(firstText(ACCESS_SLUG_KEYS));
 
-    return (
-      readStoredSlug("digiy_loc_slug") ||
-      readStoredSlug("digiy_loc_last_slug") ||
-      readStoredSlug("DIGIY_LOC_SESSION") ||
-      readStoredSlug("DIGIY_LOC_ACCESS") ||
-      readStoredSlug("DIGIY_SLUG") ||
-      ""
-    );
+    const candidates = [
+      st.slug,
+      gs.slug,
+      ss.slug,
+      storedSlug,
+      querySlug
+    ].filter(Boolean);
+
+    for(const slug of candidates){
+      if(!/^loc-room-/i.test(slug)) return slug;
+    }
+
+    return candidates[0] || "";
   }
 
-  function getCalendarSlug(){
-    return ROOM_CTX.roomSlug || getAccessSlug();
+  function getAccessPhone(){
+    const q = normalizePhone(readQueryParam("phone"));
+    if(q) return q;
+
+    const st = normalizeSessionCandidate(getGuardState()) || {};
+    if(st.phone) return st.phone;
+
+    const gs = normalizeSessionCandidate(getGuardSession()) || {};
+    if(gs.phone) return gs.phone;
+
+    const ss = getStoredSession() || {};
+    if(ss.phone) return ss.phone;
+
+    return normalizePhone(firstText(ACCESS_PHONE_KEYS));
   }
 
-  function withSlug(path){
+  function getSession(){
+    const st = normalizeSessionCandidate(getGuardState()) || {};
+    const gs = normalizeSessionCandidate(getGuardSession()) || {};
+    const ss = getStoredSession() || {};
+
     const slug = getAccessSlug();
-    return buildSafeUrl(path, slug ? { slug } : {});
+    const phone = getAccessPhone();
+    const validated_at = st.validated_at || gs.validated_at || ss.validated_at || "";
+    const session_token = st.session_token || gs.session_token || ss.session_token || "";
+    const reason = st.reason || gs.reason || ss.reason || "";
+    const module = String(st.module || gs.module || ss.module || MODULE).trim().toUpperCase();
+
+    const explicitAccess = !!(st.accessFlag || gs.accessFlag || ss.accessFlag);
+    const inferredAccess = !!(
+      slug &&
+      phone &&
+      module === MODULE &&
+      isSessionFresh(validated_at)
+    );
+
+    const ok = explicitAccess || inferredAccess;
+
+    return {
+      ok,
+      access_ok: ok,
+      preview: !ok,
+      reason,
+      module,
+      slug,
+      phone,
+      validated_at,
+      session_token
+    };
+  }
+
+  function syncStoredAccessContext(){
+    const slug = getAccessSlug();
+    const phone = getAccessPhone();
+
+    if(slug){
+      storageSet("digiy_loc_last_slug", slug);
+      storageSet("digiy_loc_slug", slug);
+      storageSet("DIGIY_LOC_SLUG", slug);
+      storageSet("digiy_last_slug", slug);
+      storageSet("DIGIY_SLUG", slug);
+    }
+
+    if(phone){
+      storageSet("digiy_loc_phone", phone);
+      storageSet("digiy_loc_last_phone", phone);
+      storageSet("DIGIY_LOC_PHONE", phone);
+      storageSet("digiy_phone", phone);
+      storageSet("DIGIY_PHONE", phone);
+    }
+  }
+
+  function buildSafeUrl(path, extraParams){
+    const rawPath = String(path || "").trim() || "./";
+    let url;
+    try{
+      url = new URL(rawPath, location.href);
+    }catch{
+      const basePath = location.pathname.replace(/[^/]*$/, "");
+      const cleanPath = rawPath.replace(/^\.\//, "").replace(/^\/+/, "");
+      url = new URL(basePath + cleanPath, location.origin);
+    }
+
+    const params = extraParams && typeof extraParams === "object" ? extraParams : {};
+    Object.entries(params).forEach(([key, value])=>{
+      if(value == null) return;
+      const text = String(value).trim();
+      if(!text) return;
+      url.searchParams.set(key, text);
+    });
+
+    if(url.origin === location.origin){
+      return url.pathname + url.search + url.hash;
+    }
+    return url.toString();
+  }
+
+  function withAccess(path){
+    const slug = getAccessSlug();
+    const phone = getAccessPhone();
+    const params = {};
+    if(slug) params.slug = slug;
+    if(phone) params.phone = phone;
+    return buildSafeUrl(path, params);
   }
 
   function pinUrl(){
-    return withSlug("./pin.html");
+    const slug = getAccessSlug();
+    const phone = getAccessPhone();
+    const roomSlug = ROOM_CTX.roomSlug || readRoomSlugFromQuery();
+    const params = {};
+    if(slug) params.slug = slug;
+    if(phone) params.phone = phone;
+    if(roomSlug) params.room_slug = roomSlug;
+    return buildSafeUrl("./pin.html", params);
+  }
+
+  function getCalendarSlug(){
+    return ROOM_CTX.roomSlug || readRoomSlugFromQuery() || "";
+  }
+
+  async function waitGuardReady(){
+    const guard = window.DIGIY_GUARD;
+    if(!guard || typeof guard.ready !== "function"){
+      throw new Error("guard_missing");
+    }
+
+    try{
+      await guard.ready({
+        redirect:false,
+        preserve_validation:true,
+        allow_soft_session:true
+      });
+    }catch{
+      await guard.ready();
+    }
+
+    return guard.state || {};
   }
 
   function getSupabase(){
@@ -1449,6 +1703,7 @@
 
     const monthLabel = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
     const roomLabel = DATA.room?.room_name || ROOM_CTX.roomName || "";
+    const roomSlug = ROOM_CTX.roomSlug || "";
     const baseNight = getEffectiveBaseNight();
 
     $("calendarSub").textContent = roomLabel
@@ -1458,6 +1713,10 @@
       : (baseNight > 0
           ? `Le prix du jour passe devant. Base actuelle : ${formatAmount(baseNight)} F CFA.`
           : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.");
+
+    if(roomSlug){
+      $("rangeHint").textContent = `Astuce : touche une date ou glisse sur plusieurs jours pour remplir la plage plus vite. • Logement : ${roomSlug}`;
+    }
 
     const grid = $("calendarGrid");
     const foot = $("calendarFoot");
@@ -1726,15 +1985,14 @@
   async function resolveCalendarRoom(){
     if(ROOM_CTX.roomSlug) return ROOM_CTX;
 
-    const accessSlug = getAccessSlug();
-
-    if(/^loc-room-/i.test(accessSlug)){
-      ROOM_CTX.roomSlug = accessSlug;
+    const queryRoomSlug = readRoomSlugFromQuery();
+    if(/^loc-room-/i.test(queryRoomSlug)){
+      ROOM_CTX.roomSlug = queryRoomSlug;
       try{
         const { data, error } = await getSupabase()
           .from("digiy_loc_rooms")
           .select("id, slug, nom")
-          .eq("slug", accessSlug)
+          .eq("slug", queryRoomSlug)
           .limit(1)
           .maybeSingle();
         if(!error && data){
@@ -1745,13 +2003,14 @@
       return ROOM_CTX;
     }
 
-    const cached =
+    const cached = normalizeSlug(
       storageGet("DIGIY_LOC_ROOM_SLUG") ||
       storageGet("digiy_loc_room_slug") ||
-      "";
+      ""
+    );
 
     if(/^loc-room-/i.test(cached)){
-      ROOM_CTX.roomSlug = cached.trim().toLowerCase();
+      ROOM_CTX.roomSlug = cached;
       try{
         const { data, error } = await getSupabase()
           .from("digiy_loc_rooms")
@@ -1804,11 +2063,11 @@
     if(!data || !data.length) throw new Error("room_slug_not_found");
 
     ROOM_CTX.roomId = String(data[0].id || "").trim();
-    ROOM_CTX.roomSlug = String(data[0].slug || "").trim().toLowerCase();
+    ROOM_CTX.roomSlug = normalizeSlug(data[0].slug);
     ROOM_CTX.roomName = String(data[0].nom || "").trim();
 
-    try{ localStorage.setItem("DIGIY_LOC_ROOM_SLUG", ROOM_CTX.roomSlug); }catch{}
-    try{ sessionStorage.setItem("DIGIY_LOC_ROOM_SLUG", ROOM_CTX.roomSlug); }catch{}
+    storageSet("DIGIY_LOC_ROOM_SLUG", ROOM_CTX.roomSlug);
+    storageSet("digiy_loc_room_slug", ROOM_CTX.roomSlug);
 
     return ROOM_CTX;
   }
@@ -1845,8 +2104,20 @@
 
     applyOfflineTariffsOverlay();
 
-    if($("pillSlug")){
-      $("pillSlug").textContent = "identifiant logement : " + roomSlug;
+    // On garde le badge sur l’identifiant d’accès propriétaire.
+    $("pillSlug").textContent = "identifiant accès : " + (getAccessSlug() || "—");
+
+    const extra = ROOM_CTX.roomSlug
+      ? `📍 Logement chargé : ${ROOM_CTX.roomSlug}${ROOM_CTX.roomName ? " • " + ROOM_CTX.roomName : ""}`
+      : "";
+
+    const tariffHint = getTariffHintMessage();
+    if(extra && tariffHint){
+      showRight(extra + "\n" + tariffHint, "ok");
+    }else if(extra){
+      showRight(extra, "ok");
+    }else if(tariffHint){
+      showRight(tariffHint, "ok");
     }
   }
 
@@ -1892,13 +2163,14 @@
 
     render();
 
-    const tariffHint = getTariffHintMessage();
-    if(keepMessage && tariffHint){
-      showRight(keepMessage + "\n" + tariffHint, "ok");
-    }else if(keepMessage){
-      showRight(keepMessage, "ok");
-    }else if(tariffHint){
-      showRight(tariffHint, "ok");
+    if(keepMessage){
+      const roomLine = ROOM_CTX.roomSlug
+        ? `📍 Logement : ${ROOM_CTX.roomSlug}${ROOM_CTX.roomName ? " • " + ROOM_CTX.roomName : ""}`
+        : "";
+      const tariffHint = getTariffHintMessage();
+
+      const parts = [keepMessage, roomLine, tariffHint].filter(Boolean);
+      showRight(parts.join("\n"), "ok");
     }
   }
 
@@ -1940,13 +2212,8 @@
       pNote = "tarif manuel";
     }
 
-    if(action === "close"){
-      pNote = "fermeture manuelle";
-    }
-
-    if(action === "open"){
-      pNote = "réouverture manuelle";
-    }
+    if(action === "close") pNote = "fermeture manuelle";
+    if(action === "open") pNote = "réouverture manuelle";
 
     try{
       showRight("⏳ Mise à jour du calendrier…", "warn");
@@ -2058,13 +2325,19 @@
     UX_REASON = reason || "preview";
     setSub("🔐 Ouvre ton accès pour agir");
     setActionButtonsEnabled(false);
+
     show(
       reason === "slug_missing"
-        ? "Identifiant manquant. Ouvre cette page depuis ton accès pour agir sur tes dates."
-        : "Session non reconnue pour le moment. Ouvre ton accès pour modifier les dates, les prix et les plages.",
+        ? "Identifiant d’accès introuvable. Ouvre cette page depuis ton espace pour agir sur tes dates."
+        : "Mode lecture seulement tant que l’accès n’est pas ouvert.",
       "warn"
     );
-    showRight("Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
+
+    const roomLine = ROOM_CTX.roomSlug ? `📍 Logement : ${ROOM_CTX.roomSlug}` : "";
+    showRight(
+      ["Mode lecture seulement tant que l’accès n’est pas ouvert.", roomLine].filter(Boolean).join("\n"),
+      "warn"
+    );
   }
 
   function renderLiveHeader(){
@@ -2092,12 +2365,14 @@
   }
 
   async function init(){
-    $("btnDashboard").href = withSlug("./app.html");
-    $("btnReservations").href = withSlug("./reservations.html");
-    $("btnTarifs").href = withSlug("./tarifs.html");
-    $("btnPhotos").href = withSlug("./photos.html");
-    $("btnListing").href = withSlug("./listing.html");
-    $("btnWave").href = withSlug("./pin-wave.html");
+    syncStoredAccessContext();
+
+    $("btnDashboard").href = withAccess("./app.html");
+    $("btnReservations").href = withAccess("./reservations.html");
+    $("btnTarifs").href = withAccess("./tarifs.html");
+    $("btnPhotos").href = withAccess("./photos.html");
+    $("btnListing").href = withAccess("./listing.html");
+    $("btnWave").href = withAccess("./pin-wave.html");
     $("btnPin").href = pinUrl();
 
     $("btnLogout").addEventListener("click", ()=>{
@@ -2110,6 +2385,7 @@
 
     $("btnSupport").addEventListener("click", ()=>{
       const accessSlug = getAccessSlug();
+      const roomSlug = ROOM_CTX.roomSlug || readRoomSlugFromQuery() || "—";
       const sess = getSession();
       const phone =
         sess.phone ||
@@ -2122,7 +2398,7 @@
 
 Page : calendrier
 Identifiant accès : ${accessSlug || "—"}
-Identifiant logement : ${getCalendarSlug() || "—"}
+Identifiant logement : ${roomSlug}
 Téléphone : ${phone || "—"}
 
 Merci. — DIGIY`;
@@ -2190,9 +2466,12 @@ Merci. — DIGIY`;
       return;
     }
 
+    syncStoredAccessContext();
+
     const accessSlug = getAccessSlug();
 
     if(!accessSlug){
+      try{ await resolveCalendarRoom(); }catch{}
       renderPreview("slug_missing");
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
       render();
@@ -2200,6 +2479,7 @@ Merci. — DIGIY`;
     }
 
     if(!getSession().access_ok){
+      try{ await resolveCalendarRoom(); }catch{}
       renderPreview("has_access_false");
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
       render();
