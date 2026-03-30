@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-real-v3-sync-tarifs"></script>
+  <script src="./guard.js?v=locpro-calendar-real-v4-touch-clean"></script>
 
   <style>
     :root{
@@ -749,7 +749,12 @@
       dragging: false,
       dragStart: "",
       dragCurrent: "",
-      selectedKeys: []
+      selectedKeys: [],
+      pointerId: null,
+      dragMoved: false,
+      startX: 0,
+      startY: 0,
+      suppressClickUntil: 0
     };
   })();
 
@@ -926,10 +931,6 @@
 
   function pinUrl(){
     return withSlug("./pin.html");
-  }
-
-  function isLive(){
-    return UX_MODE === "live" && !!getSession().access_ok && !!getAccessSlug();
   }
 
   function getSupabase(){
@@ -1155,13 +1156,26 @@
     MONTH_STATE.dragging = false;
     MONTH_STATE.dragStart = "";
     MONTH_STATE.dragCurrent = "";
+    MONTH_STATE.pointerId = null;
+    MONTH_STATE.dragMoved = false;
+    MONTH_STATE.startX = 0;
+    MONTH_STATE.startY = 0;
     MONTH_STATE.selectedKeys = [];
     if(renderToo) render();
   }
 
+  function resetDragState(){
+    MONTH_STATE.dragging = false;
+    MONTH_STATE.dragStart = "";
+    MONTH_STATE.dragCurrent = "";
+    MONTH_STATE.pointerId = null;
+    MONTH_STATE.dragMoved = false;
+    MONTH_STATE.startX = 0;
+    MONTH_STATE.startY = 0;
+  }
+
   function setSelectionFromRange(startYmd, endYmd){
-    const all = rangeInclusive(startYmd, endYmd);
-    MONTH_STATE.selectedKeys = all;
+    MONTH_STATE.selectedKeys = rangeInclusive(startYmd, endYmd);
   }
 
   function getStatusLabel(status){
@@ -1298,6 +1312,7 @@
       ].join(" ").trim();
 
       btn.dataset.date = cell.ymd;
+      btn.setAttribute("aria-label", `${formatDateFr(cell.ymd)} • ${getStatusLabel(rec.status)} • ${formatAmount(rec.price_night)} F CFA`);
 
       btn.innerHTML = `
         <div class="dayTop">
@@ -1409,58 +1424,127 @@
     renderBookings();
   }
 
-  function bindDayPointer(el, ymd){
-    const onDown = (ev) => {
-      ev.preventDefault();
-      MONTH_STATE.dragging = true;
-      MONTH_STATE.dragStart = ymd;
-      MONTH_STATE.dragCurrent = ymd;
-      MONTH_STATE.focusedDate = ymd;
-      setSelectionFromRange(ymd, ymd);
-      render();
-      try{ el.setPointerCapture(ev.pointerId); }catch{}
-    };
+  function getDayButtonFromPoint(clientX, clientY){
+    if(!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+    const el = document.elementFromPoint(clientX, clientY);
+    if(!el || typeof el.closest !== "function") return null;
+    return el.closest(".day[data-date]");
+  }
 
-    const onEnter = (ev) => {
-      if(!MONTH_STATE.dragging) return;
-      ev.preventDefault();
-      MONTH_STATE.dragCurrent = ymd;
-      setSelectionFromRange(MONTH_STATE.dragStart, ymd);
-      render();
-    };
+  function getYmdFromPoint(clientX, clientY){
+    const btn = getDayButtonFromPoint(clientX, clientY);
+    return btn ? String(btn.dataset.date || "").trim() : "";
+  }
 
-    const onUp = (ev) => {
-      if(!MONTH_STATE.dragging) return;
-      ev.preventDefault();
-      MONTH_STATE.dragging = false;
-      MONTH_STATE.dragCurrent = ymd;
-      setSelectionFromRange(MONTH_STATE.dragStart, ymd);
-      if(getSelectedKeys().length === 1){
-        MONTH_STATE.focusedDate = getSelectedKeys()[0];
-      }
-      render();
-      try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    };
+  async function selectSingleDay(ymd){
+    if(!ymd) return;
+    resetDragState();
+    MONTH_STATE.focusedDate = ymd;
+    MONTH_STATE.selectedKeys = [ymd];
+    render();
+    try{
+      await loadDayDetails(ymd);
+    }catch(e){
+      console.error(e);
+    }
+  }
 
-    el.addEventListener("pointerdown", onDown);
-    el.addEventListener("pointerenter", onEnter);
-    el.addEventListener("pointerup", onUp);
-    el.addEventListener("pointercancel", onUp);
+  async function finalizePointerSelection(finalYmd){
+    const startYmd = MONTH_STATE.dragStart || finalYmd || "";
+    const endYmd = finalYmd || MONTH_STATE.dragCurrent || startYmd || "";
+    const wasRange = !!MONTH_STATE.dragMoved;
 
-    el.addEventListener("click", async (ev)=>{
-      if(MONTH_STATE.selectedKeys.length > 1){
-        ev.preventDefault();
-        return;
-      }
-      MONTH_STATE.focusedDate = ymd;
-      MONTH_STATE.selectedKeys = [ymd];
+    MONTH_STATE.suppressClickUntil = Date.now() + 350;
+    resetDragState();
+
+    if(!startYmd) return;
+
+    if(wasRange && endYmd){
+      setSelectionFromRange(startYmd, endYmd);
+      MONTH_STATE.focusedDate = endYmd;
       render();
       try{
-        await loadDayDetails(ymd);
+        await loadDayDetails(endYmd);
       }catch(e){
         console.error(e);
       }
+      return;
+    }
+
+    await selectSingleDay(startYmd);
+  }
+
+  function bindDayPointer(el, ymd){
+    el.addEventListener("pointerdown", (ev)=>{
+      if(ev.pointerType === "mouse" && ev.button !== 0) return;
+
+      MONTH_STATE.dragging = true;
+      MONTH_STATE.pointerId = ev.pointerId;
+      MONTH_STATE.dragStart = ymd;
+      MONTH_STATE.dragCurrent = ymd;
+      MONTH_STATE.dragMoved = false;
+      MONTH_STATE.startX = Number(ev.clientX || 0);
+      MONTH_STATE.startY = Number(ev.clientY || 0);
+      MONTH_STATE.focusedDate = ymd;
+
+      try{ el.setPointerCapture(ev.pointerId); }catch{}
     });
+
+    el.addEventListener("click", (ev)=>{
+      if(Date.now() < MONTH_STATE.suppressClickUntil){
+        ev.preventDefault();
+        ev.stopPropagation();
+        return;
+      }
+      selectSingleDay(ymd);
+    });
+
+    el.addEventListener("keydown", (ev)=>{
+      if(ev.key === "Enter" || ev.key === " "){
+        ev.preventDefault();
+        selectSingleDay(ymd);
+      }
+    });
+  }
+
+  function handleGlobalPointerMove(ev){
+    if(!MONTH_STATE.dragging) return;
+    if(MONTH_STATE.pointerId != null && ev.pointerId !== MONTH_STATE.pointerId) return;
+
+    const clientX = Number(ev.clientX || 0);
+    const clientY = Number(ev.clientY || 0);
+    const dx = Math.abs(clientX - MONTH_STATE.startX);
+    const dy = Math.abs(clientY - MONTH_STATE.startY);
+    const currentYmd = getYmdFromPoint(clientX, clientY) || MONTH_STATE.dragCurrent || MONTH_STATE.dragStart;
+
+    if((dx > 8 || dy > 8 || currentYmd !== MONTH_STATE.dragStart) && currentYmd){
+      MONTH_STATE.dragMoved = true;
+
+      if(currentYmd !== MONTH_STATE.dragCurrent || getSelectedKeys().length === 0){
+        MONTH_STATE.dragCurrent = currentYmd;
+        MONTH_STATE.focusedDate = currentYmd;
+        setSelectionFromRange(MONTH_STATE.dragStart, currentYmd);
+        render();
+      }
+
+      ev.preventDefault();
+    }
+  }
+
+  async function handleGlobalPointerUp(ev){
+    if(!MONTH_STATE.dragging) return;
+    if(MONTH_STATE.pointerId != null && ev.pointerId !== MONTH_STATE.pointerId) return;
+
+    const clientX = Number(ev.clientX || 0);
+    const clientY = Number(ev.clientY || 0);
+    const currentYmd = getYmdFromPoint(clientX, clientY) || MONTH_STATE.dragCurrent || MONTH_STATE.dragStart;
+
+    await finalizePointerSelection(currentYmd);
+  }
+
+  async function handleGlobalPointerCancel(){
+    if(!MONTH_STATE.dragging) return;
+    await finalizePointerSelection(MONTH_STATE.dragCurrent || MONTH_STATE.dragStart);
   }
 
   async function resolveCalendarRoom(){
@@ -1643,7 +1727,7 @@
   }
 
   async function applyAction(action){
-    const keys = getSelectedKeys();
+    const keys = getSelectedKeys().slice().sort(compareYmd);
     if(!keys.length){
       showRight("Choisis d’abord une ou plusieurs dates.", "warn");
       return;
@@ -1825,12 +1909,9 @@ Merci. — DIGIY`;
       showRight("Sélection annulée.", "ok");
     });
 
-    document.addEventListener("pointerup", ()=>{
-      if(MONTH_STATE.dragging){
-        MONTH_STATE.dragging = false;
-        render();
-      }
-    });
+    document.addEventListener("pointermove", handleGlobalPointerMove, { passive:false });
+    document.addEventListener("pointerup", handleGlobalPointerUp);
+    document.addEventListener("pointercancel", handleGlobalPointerCancel);
 
     $("pillSlug").textContent = "identifiant accès : " + (getAccessSlug() || "—");
 
