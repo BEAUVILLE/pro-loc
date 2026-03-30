@@ -15,7 +15,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra-v7"></script>
+<script src="./guard.js?v=locpro-wave-ultra-v8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -446,6 +446,8 @@ a{color:inherit}
 
   const SESSION_KEYS = [
     "digiy_loc_session",
+    "digiy_loc_guard_session",
+    "digiy_guard_loc_session",
     "DIGIY_LOC_SESSION",
     "digiy_session_loc",
     "DIGIY_SESSION_LOC",
@@ -915,7 +917,7 @@ a{color:inherit}
       if (sess.ok) {
         $("kvSess").textContent = "OK" + (validatedText ? " • validée : " + validatedText : "");
       } else if (hasPreview) {
-        $("kvSess").textContent = "Aperçu";
+        $("kvSess").textContent = "Lecture seule";
       } else {
         $("kvSess").textContent = "—";
       }
@@ -938,7 +940,7 @@ a{color:inherit}
     if ($("pillState")) {
       $("pillState").classList.remove("ok");
       $("pillState").classList.add("warn");
-      $("pillState").textContent = hasPreview ? "👁️ Aperçu" : "🔒 Accès fermé";
+      $("pillState").textContent = hasPreview ? "👁️ Lecture seule" : "🔒 Accès fermé";
     }
 
     if ($("btnLogout")) {
@@ -1256,7 +1258,7 @@ a{color:inherit}
         "ok"
       );
     } else if (getSlug()) {
-      showNote("noteMain", "👁️ Identifiant trouvé, mais accès non confirmé. Reconnecte-toi via PIN si besoin.", "warn");
+      showNote("noteMain", "👁️ Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
     } else {
       showNote("noteMain", "⚠️ Identifiant introuvable. Reconnecte-toi via PIN.", "warn");
     }
@@ -1328,7 +1330,7 @@ a{color:inherit}
   if (!getSlug()) {
     showNote("noteMain", "❌ Identifiant introuvable. Reconnecte-toi via PIN.", "bad");
   } else if (!sessOk) {
-    showNote("noteMain", "👁️ Identifiant trouvé, mais accès non confirmé. Le cockpit reste visible sans mur brutal.", "warn");
+    showNote("noteMain", "👁️ Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
   } else {
     showNote(
       "noteMain",
@@ -1337,6 +1339,12 @@ a{color:inherit}
     );
   }
 
+  await loadClaw();
+  await loadWave();
+})();
+</script>
+</body>
+</html>
   await loadClaw();
   await loadWave();
 })();
