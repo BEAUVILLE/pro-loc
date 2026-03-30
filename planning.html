@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-touch-v2"></script>
+  <script src="./guard.js?v=locpro-calendar-real-v1"></script>
 
   <style>
     :root{
@@ -734,9 +734,9 @@
 
   const MODULE = "LOC";
   const SUPPORT_WA = "+221771342889";
-  const DEFAULT_PRICE = 25000;
   const $ = (id)=>document.getElementById(id);
 
+  let sb = null;
   let UX_MODE = "preview";
   let UX_REASON = "booting";
 
@@ -754,8 +754,9 @@
   })();
 
   const DATA = {
+    room: null,
     daily: {},
-    bookings: []
+    bookingsByDay: {}
   };
 
   function digits(v){
@@ -896,11 +897,33 @@
   }
 
   function isLive(){
-    return UX_MODE === "live" && !!getSession().access_ok && !!getSlug();
+    return !!getSlug();
   }
 
-  function makeId(prefix){
-    return String(prefix || "id") + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+  function getSupabase(){
+    if(sb) return sb;
+    if(!window.supabase?.createClient){
+      throw new Error("supabase_missing");
+    }
+    sb = window.supabase.createClient(
+      window.DIGIY_SUPABASE_URL,
+      window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY,
+      {
+        auth:{
+          persistSession:false,
+          autoRefreshToken:false,
+          detectSessionInUrl:false
+        }
+      }
+    );
+    return sb;
+  }
+
+  async function rpc(name, params){
+    const S = getSupabase();
+    const { data, error } = await S.rpc(name, params || {});
+    if(error) throw error;
+    return data;
   }
 
   function ymdFromDate(d){
@@ -953,107 +976,6 @@
     return String(a || "").localeCompare(String(b || ""));
   }
 
-  function normalizeDailyRecord(rec){
-    const out = Object.assign({
-      date: "",
-      status: "open",
-      price: DEFAULT_PRICE,
-      note: "",
-      booking_id: ""
-    }, rec || {});
-
-    const status = String(out.status || "open").trim().toLowerCase();
-    out.status = status === "booked" ? "booked" : status === "closed" ? "closed" : "open";
-    out.date = String(out.date || "").trim();
-    out.price = Number(out.price || DEFAULT_PRICE) || DEFAULT_PRICE;
-    out.note = String(out.note || "").trim();
-    out.booking_id = String(out.booking_id || "").trim();
-    return out;
-  }
-
-  function getStorageKey(){
-    return "DIGIY_LOC_CALENDAR_TOUCH_V2:" + (getSlug() || "noslug");
-  }
-
-  function seedDemoIfEmpty(){
-    if(Object.keys(DATA.daily).length) return;
-    const base = new Date(MONTH_STATE.year, MONTH_STATE.month, 1);
-
-    const mark = (offset, patch) => {
-      const d = new Date(base);
-      d.setDate(offset);
-      const ymd = ymdFromDate(d);
-      DATA.daily[ymd] = normalizeDailyRecord(Object.assign({ date: ymd }, patch || {}));
-    };
-
-    mark(3,  { status:"closed", price:22000, note:"Fermé volontairement" });
-    mark(4,  { status:"closed", price:22000 });
-    mark(5,  { status:"booked", price:28000, booking_id:makeId("book"), note:"Client confirmé" });
-    mark(6,  { status:"booked", price:28000, booking_id:makeId("book"), note:"Client confirmé" });
-    mark(10, { status:"closed", price:30000, note:"Maintenance" });
-    mark(12, { status:"open", price:32000 });
-    mark(13, { status:"open", price:32000 });
-    mark(20, { status:"booked", price:35000, booking_id:makeId("book"), note:"Réservation" });
-    mark(21, { status:"booked", price:35000, booking_id:makeId("book"), note:"Réservation" });
-    mark(22, { status:"booked", price:35000, booking_id:makeId("book"), note:"Réservation" });
-  }
-
-  function saveLocal(){
-    try{
-      localStorage.setItem(getStorageKey(), JSON.stringify({
-        slug: getSlug(),
-        ts: Date.now(),
-        daily: DATA.daily,
-        bookings: DATA.bookings
-      }));
-    }catch{}
-  }
-
-  function loadLocal(){
-    try{
-      const raw = localStorage.getItem(getStorageKey());
-      if(!raw) return false;
-      const parsed = JSON.parse(raw);
-      DATA.daily = {};
-      const daily = parsed?.daily || {};
-      Object.keys(daily).forEach((k)=>{
-        DATA.daily[k] = normalizeDailyRecord(daily[k]);
-      });
-      DATA.bookings = Array.isArray(parsed?.bookings) ? parsed.bookings : [];
-      return true;
-    }catch{
-      return false;
-    }
-  }
-
-  function getDayRecord(ymd){
-    if(DATA.daily[ymd]) return DATA.daily[ymd];
-    return normalizeDailyRecord({ date: ymd, status:"open", price: DEFAULT_PRICE });
-  }
-
-  function setDayRecord(ymd, patch){
-    const current = getDayRecord(ymd);
-    DATA.daily[ymd] = normalizeDailyRecord(Object.assign({}, current, patch || {}, { date: ymd }));
-  }
-
-  function getStatusLabel(status){
-    if(status === "booked") return "Occupé";
-    if(status === "closed") return "Fermé";
-    return "Ouvert";
-  }
-
-  function getStatusClass(status){
-    if(status === "booked") return "booked";
-    if(status === "closed") return "closed";
-    return "open";
-  }
-
-  function getDaySubLabel(rec){
-    if(rec.status === "booked") return "Réservation protégée";
-    if(rec.status === "closed") return "Fermé manuellement";
-    return "Disponible à ce prix";
-  }
-
   function getCalendarCells(year, month){
     const first = new Date(year, month, 1);
     const firstDay = (first.getDay() + 6) % 7;
@@ -1069,6 +991,32 @@
       });
     }
     return cells;
+  }
+
+  function normalizeDay(rec){
+    return {
+      day: String(rec?.day || "").trim(),
+      price_night: Number(rec?.price_night || 0) || 0,
+      base_price_night: Number(rec?.base_price_night || 0) || 0,
+      is_booked: !!rec?.is_booked,
+      is_closed: !!rec?.is_closed,
+      status: String(rec?.status || "open").trim().toLowerCase(),
+      bookings_count: Number(rec?.bookings_count || 0) || 0,
+      note: String(rec?.note || "").trim() || null
+    };
+  }
+
+  function getDayRecord(ymd){
+    return DATA.daily[ymd] || {
+      day: ymd,
+      price_night: Number(DATA.room?.base_price_night || 0) || 0,
+      base_price_night: Number(DATA.room?.base_price_night || 0) || 0,
+      is_booked: false,
+      is_closed: false,
+      status: "open",
+      bookings_count: 0,
+      note: null
+    };
   }
 
   function getSelectedKeys(){
@@ -1090,6 +1038,25 @@
   function setSelectionFromRange(startYmd, endYmd){
     const all = rangeInclusive(startYmd, endYmd);
     MONTH_STATE.selectedKeys = all;
+  }
+
+  function getStatusLabel(status){
+    if(status === "booked") return "Occupé";
+    if(status === "closed") return "Fermé";
+    return "Ouvert";
+  }
+
+  function getStatusClass(status){
+    if(status === "booked") return "booked";
+    if(status === "closed") return "closed";
+    return "open";
+  }
+
+  function getDaySubLabel(rec){
+    if(rec.status === "booked") return "Réservation protégée";
+    if(rec.status === "closed") return "Fermé manuellement";
+    if(rec.note) return rec.note;
+    return "Disponible à ce prix";
   }
 
   function selectionSummary(keys){
@@ -1117,7 +1084,7 @@
     }
 
     const prices = sorted
-      .map((ymd)=>Number(getDayRecord(ymd).price || 0))
+      .map((ymd)=>Number(getDayRecord(ymd).price_night || 0))
       .filter((n)=>Number.isFinite(n) && n > 0);
 
     const uniquePrices = [...new Set(prices)];
@@ -1164,6 +1131,12 @@
 
   function renderCalendar(){
     $("calendarTitle").textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
+
+    const monthLabel = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
+    $("calendarSub").textContent = DATA.room?.room_name
+      ? `${DATA.room.room_name} • prix du jour devant • ${monthLabel}`
+      : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.";
+
     const grid = $("calendarGrid");
     const foot = $("calendarFoot");
     const todayYmd = ymdFromDate(new Date());
@@ -1200,7 +1173,7 @@
         </div>
         <div class="dayMid">
           <div class="priceWrap">
-            <div class="priceMain">${esc(formatAmount(rec.price))}</div>
+            <div class="priceMain">${esc(formatAmount(rec.price_night))}</div>
             <div class="priceUnit">F CFA</div>
           </div>
           <div class="daySub">${esc(getDaySubLabel(rec))}</div>
@@ -1219,7 +1192,7 @@
         : `${info.price} · Choisis ton action : ouvrir, fermer ou changer le prix.`;
     }else if(MONTH_STATE.focusedDate){
       const rec = getDayRecord(MONTH_STATE.focusedDate);
-      foot.textContent = `💰 ${formatAmount(rec.price)} F CFA · ${formatDateFr(MONTH_STATE.focusedDate)} · ${getStatusLabel(rec.status)}`;
+      foot.textContent = `💰 ${formatAmount(rec.price_night)} F CFA · ${formatDateFr(MONTH_STATE.focusedDate)} · ${getStatusLabel(rec.status)}`;
     }else{
       foot.textContent = "Touchez une date ou glissez sur plusieurs jours.";
     }
@@ -1245,21 +1218,23 @@
     }
 
     const rec = getDayRecord(day);
+    const bookings = Array.isArray(DATA.bookingsByDay[day]) ? DATA.bookingsByDay[day] : [];
 
-    if(rec.status === "booked"){
-      list.innerHTML = `
+    if(bookings.length){
+      list.innerHTML = bookings.map((b)=>`
         <div class="item">
           <div>
-            <div class="itemTitle">Date occupée</div>
+            <div class="itemTitle">${esc(b.client_name || "Client")}</div>
             <div class="itemMeta">
               📅 ${esc(formatDateFr(day))}<br>
-              💰 ${esc(formatAmount(rec.price))} F CFA<br>
-              ${rec.note ? "📝 " + esc(rec.note) : "Client confirmé"}
+              🛏️ ${esc(b.checkin || "—")} → ${esc(b.checkout || "—")}<br>
+              💰 ${esc(formatAmount(b.amount_total || 0))} F CFA<br>
+              📞 ${esc(b.phone || "—")}
             </div>
           </div>
           <div><span class="badge blue">🛏️ Occupé</span></div>
         </div>
-      `;
+      `).join("");
       return;
     }
 
@@ -1270,7 +1245,7 @@
             <div class="itemTitle">Date fermée</div>
             <div class="itemMeta">
               📅 ${esc(formatDateFr(day))}<br>
-              💰 ${esc(formatAmount(rec.price))} F CFA<br>
+              💰 ${esc(formatAmount(rec.price_night))} F CFA<br>
               ${rec.note ? "📝 " + esc(rec.note) : "Indisponible"}
             </div>
           </div>
@@ -1286,7 +1261,7 @@
           <div class="itemTitle">Date ouverte</div>
           <div class="itemMeta">
             📅 ${esc(formatDateFr(day))}<br>
-            💰 ${esc(formatAmount(rec.price))} F CFA<br>
+            💰 ${esc(formatAmount(rec.price_night))} F CFA<br>
             Disponible à la réservation
           </div>
         </div>
@@ -1347,79 +1322,151 @@
       MONTH_STATE.focusedDate = ymd;
       MONTH_STATE.selectedKeys = [ymd];
       render();
+      loadDayDetails(ymd).catch((e)=>{
+        console.error(e);
+      });
     });
   }
 
-  function applyStatusToSelection(status){
+  async function loadMonth(){
+    const slug = getSlug();
+    if(!slug) throw new Error("slug_missing");
+
+    const monthDate = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
+    const data = await rpc("digiy_loc_calendar_month", {
+      p_slug: slug,
+      p_month: monthDate
+    });
+
+    if(!data?.ok) throw new Error(data?.reason || "calendar_month_failed");
+
+    DATA.room = {
+      room_id: data.room_id,
+      room_name: data.room_name,
+      base_price_night: Array.isArray(data.days) && data.days[0] ? Number(data.days[0].base_price_night || 0) || 0 : 0
+    };
+
+    DATA.daily = {};
+    (Array.isArray(data.days) ? data.days : []).forEach((day)=>{
+      const rec = normalizeDay(day);
+      if(rec.day) DATA.daily[rec.day] = rec;
+    });
+  }
+
+  async function loadDayDetails(ymd){
+    const slug = getSlug();
+    if(!slug || !ymd) return;
+
+    const data = await rpc("digiy_loc_day_listing", {
+      p_slug: slug,
+      p_day: ymd
+    });
+
+    if(!data?.ok) return;
+
+    DATA.bookingsByDay[ymd] = Array.isArray(data.bookings) ? data.bookings : [];
+    DATA.daily[ymd] = {
+      day: ymd,
+      price_night: Number(data.price_night || 0) || 0,
+      base_price_night: Number(data.base_price_night || 0) || 0,
+      is_booked: !!data.is_booked,
+      is_closed: !!data.is_closed,
+      status: String(data.status || "open").trim().toLowerCase(),
+      bookings_count: Array.isArray(data.bookings) ? data.bookings.length : 0,
+      note: DATA.daily[ymd]?.note || null
+    };
+
+    render();
+  }
+
+  async function reloadCurrentMonth(keepMessage){
+    await loadMonth();
+    const targetDay = MONTH_STATE.focusedDate || ymdFromDate(new Date());
+    if(DATA.daily[targetDay]){
+      MONTH_STATE.focusedDate = targetDay;
+      await loadDayDetails(targetDay);
+    } else {
+      MONTH_STATE.focusedDate = Object.keys(DATA.daily)[0] || targetDay;
+    }
+    render();
+    if(keepMessage) showRight(keepMessage, "ok");
+  }
+
+  async function applyAction(action){
     const keys = getSelectedKeys();
     if(!keys.length){
       showRight("Choisis d’abord une ou plusieurs dates.", "warn");
       return;
     }
-    if(!isLive()){
-      showRight("Passe par ton accès pour modifier le calendrier réel.", "warn");
+
+    const sess = getSession();
+    const slug = getSlug();
+    const phone = sess.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+
+    if(!slug || !phone){
+      showRight("Accès incomplet. Reviens par ton PIN.", "warn");
       return;
     }
 
-    let changed = 0;
-    let protectedCount = 0;
+    if(keys.some((ymd)=>getDayRecord(ymd).status === "booked")){
+      showRight("Les dates occupées restent protégées.", "warn");
+      return;
+    }
 
-    keys.forEach((ymd)=>{
-      const rec = getDayRecord(ymd);
-      if(rec.status === "booked"){
-        protectedCount += 1;
+    let pPrice = null;
+    let pNote = null;
+
+    if(action === "price"){
+      const current = getDayRecord(keys[0]).price_night || DATA.room?.base_price_night || 0;
+      const raw = prompt("Nouveau prix en F CFA pour les dates choisies", String(current || ""));
+      if(raw == null) return;
+
+      const amount = Number(String(raw).replace(/[^\d]/g, ""));
+      if(!Number.isFinite(amount) || amount <= 0){
+        showRight("Prix invalide.", "warn");
         return;
       }
-      setDayRecord(ymd, {
-        status,
-        note: status === "closed" ? "Fermé manuellement" : ""
+      pPrice = amount;
+      pNote = "tarif manuel";
+    }
+
+    if(action === "close"){
+      pNote = "fermeture manuelle";
+    }
+
+    if(action === "open"){
+      pNote = "réouverture manuelle";
+    }
+
+    try{
+      showRight("⏳ Mise à jour du calendrier…", "warn");
+
+      const out = await rpc("digiy_loc_calendar_apply_range", {
+        p_slug: slug,
+        p_owner_phone: phone,
+        p_start: keys[0],
+        p_end: keys[keys.length - 1],
+        p_action: action,
+        p_price: pPrice,
+        p_note: pNote
       });
-      changed += 1;
-    });
 
-    saveLocal();
-    render();
+      if(!out?.ok){
+        throw new Error(out?.reason || "calendar_apply_failed");
+      }
 
-    if(changed && protectedCount){
-      showRight(`✅ ${changed} date(s) mises à jour. ${protectedCount} date(s) occupée(s) sont restées protégées.`, "ok");
-      return;
+      const label = action === "price"
+        ? `💰 Prix appliqué sur ${out.changed_count || 0} date(s).`
+        : action === "close"
+          ? `⛔ ${out.changed_count || 0} date(s) fermée(s).`
+          : `✅ ${out.changed_count || 0} date(s) ouverte(s).`;
+
+      clearSelection(false);
+      await reloadCurrentMonth(label);
+    }catch(e){
+      console.error(e);
+      showRight("❌ Impossible de mettre à jour : " + (e?.message || e), "bad");
     }
-    if(changed){
-      showRight(`✅ ${changed} date(s) ${status === "closed" ? "fermée(s)" : "ouverte(s)"}.`, "ok");
-      return;
-    }
-    showRight("Aucune date modifiable dans cette sélection.", "warn");
-  }
-
-  function applyPriceToSelection(){
-    const keys = getSelectedKeys();
-    if(!keys.length){
-      showRight("Choisis d’abord une ou plusieurs dates.", "warn");
-      return;
-    }
-    if(!isLive()){
-      showRight("Passe par ton accès pour modifier le calendrier réel.", "warn");
-      return;
-    }
-
-    const current = getDayRecord(keys[0]).price || DEFAULT_PRICE;
-    const raw = prompt("Nouveau prix en F CFA pour les dates choisies", String(current));
-    if(raw == null) return;
-
-    const amount = Number(String(raw).replace(/[^\d.]/g, ""));
-    if(!Number.isFinite(amount) || amount <= 0){
-      showRight("Prix invalide.", "warn");
-      return;
-    }
-
-    keys.forEach((ymd)=>{
-      const rec = getDayRecord(ymd);
-      setDayRecord(ymd, { price: Math.round(amount), status: rec.status });
-    });
-
-    saveLocal();
-    render();
-    showRight(`💰 Prix appliqué sur ${keys.length} date(s).`, "ok");
   }
 
   function renderPreview(reason){
@@ -1445,16 +1492,16 @@
     UX_MODE = "live";
     UX_REASON = "ok";
     setSub(`✅ Accès ouvert · ${phone}`);
-    show("Calendrier prêt. Ouvrir, fermer, tarifer.", "ok");
+    show("Calendrier réel prêt. Ouvrir, fermer, tarifer.", "ok");
   }
 
-  function gotoTodayMonth(){
+  async function gotoTodayMonth(){
     const d = new Date();
     MONTH_STATE.year = d.getFullYear();
     MONTH_STATE.month = d.getMonth();
     clearSelection(false);
     MONTH_STATE.focusedDate = ymdFromDate(d);
-    render();
+    await reloadCurrentMonth();
   }
 
   async function init(){
@@ -1495,31 +1542,32 @@ Merci. — DIGIY`;
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
     });
 
-    $("btnPrevMonth").addEventListener("click", ()=>{
+    $("btnPrevMonth").addEventListener("click", async ()=>{
       MONTH_STATE.month -= 1;
       if(MONTH_STATE.month < 0){
         MONTH_STATE.month = 11;
         MONTH_STATE.year -= 1;
       }
       clearSelection(false);
-      render();
+      await reloadCurrentMonth();
     });
 
-    $("btnNextMonth").addEventListener("click", ()=>{
+    $("btnNextMonth").addEventListener("click", async ()=>{
       MONTH_STATE.month += 1;
       if(MONTH_STATE.month > 11){
         MONTH_STATE.month = 0;
         MONTH_STATE.year += 1;
       }
       clearSelection(false);
-      render();
+      await reloadCurrentMonth();
     });
 
     $("btnTodayMonth").addEventListener("click", gotoTodayMonth);
 
-    $("btnOpenRange").addEventListener("click", ()=>applyStatusToSelection("open"));
-    $("btnCloseRange").addEventListener("click", ()=>applyStatusToSelection("closed"));
-    $("btnPriceRange").addEventListener("click", applyPriceToSelection);
+    $("btnOpenRange").addEventListener("click", ()=>applyAction("open"));
+    $("btnCloseRange").addEventListener("click", ()=>applyAction("close"));
+    $("btnPriceRange").addEventListener("click", ()=>applyAction("price"));
+
     $("btnCancelRange").addEventListener("click", ()=>{
       clearSelection(false);
       render();
@@ -1551,10 +1599,6 @@ Merci. — DIGIY`;
       return;
     }
 
-    loadLocal();
-    seedDemoIfEmpty();
-    saveLocal();
-
     if(!slug){
       renderPreview("slug_missing");
       MONTH_STATE.focusedDate = ymdFromDate(new Date());
@@ -1562,16 +1606,16 @@ Merci. — DIGIY`;
       return;
     }
 
-    if(!getSession().access_ok){
-      renderPreview("has_access_false");
-      MONTH_STATE.focusedDate = ymdFromDate(new Date());
-      render();
-      return;
-    }
-
     renderLiveHeader();
-    MONTH_STATE.focusedDate = ymdFromDate(new Date());
-    render();
+
+    try{
+      MONTH_STATE.focusedDate = ymdFromDate(new Date());
+      await reloadCurrentMonth();
+    }catch(e){
+      console.error(e);
+      show("❌ Impossible de charger le calendrier réel : " + (e?.message || e), "bad");
+      showRight("Recharge la page ou repasse par ton accès.", "warn");
+    }
   }
 
   init();
