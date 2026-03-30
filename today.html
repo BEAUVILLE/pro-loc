@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-today-human-future-v1"></script>
+  <script src="./guard.js?v=locpro-today-human-future-v2"></script>
 
   <style>
     :root{
@@ -207,9 +207,39 @@
       font-size:.88rem;
     }
 
+    .futureGroup{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .futureGroupHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(250,204,21,.18);
+      background:rgba(250,204,21,.08);
+    }
+
+    .futureGroupTitle{
+      font-weight:1100;
+      color:#fde68a;
+    }
+
+    .futureGroupCount{
+      color:#fef3c7;
+      font-weight:900;
+      font-size:.84rem;
+    }
+
     @media(min-width:980px){
       .col6{grid-column:span 6}
       .col4{grid-column:span 4}
+      .col12{grid-column:span 12}
     }
 
     #accessGate{
@@ -799,6 +829,16 @@
     });
   }
 
+  function groupByDate(rows){
+    const map = new Map();
+    rows.forEach((row)=>{
+      const key = String(row.checkin || "");
+      if(!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    });
+    return Array.from(map.entries()).sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+  }
+
   function renderFutureArrivals(rows, roomName){
     $("futureList").innerHTML = "";
 
@@ -810,22 +850,39 @@
       return;
     }
 
-    rows.forEach(r=>{
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <div class="itemTop">
-          <div class="itemTitle">${esc(r.client_name || "Client")}</div>
-          <div class="futureDate">📅 ${esc(prettyDateFR(r.checkin || ""))}</div>
-        </div>
-        <div class="itemMeta">
-          🏠 ${esc(roomName || "Logement")}<br>
-          📞 ${esc(r.phone || "—")}<br>
-          🛏️ ${esc(r.checkin || "—")} → ${esc(r.checkout || "—")}<br>
-          💰 ${esc(fmtMoney(r.amount_total || 0))}
-        </div>
+    const groups = groupByDate(rows);
+
+    groups.forEach(([dateKey, entries])=>{
+      const group = document.createElement("div");
+      group.className = "futureGroup";
+
+      const head = document.createElement("div");
+      head.className = "futureGroupHead";
+      head.innerHTML = `
+        <div class="futureGroupTitle">📅 ${esc(prettyDateFR(dateKey))}</div>
+        <div class="futureGroupCount">${esc(entries.length)} arrivée(s)</div>
       `;
-      $("futureList").appendChild(div);
+      group.appendChild(head);
+
+      entries.forEach((r)=>{
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div class="itemTop">
+            <div class="itemTitle">${esc(r.client_name || "Client")}</div>
+            <div class="futureDate">Arrivée</div>
+          </div>
+          <div class="itemMeta">
+            🏠 ${esc(roomName || "Logement")}<br>
+            📞 ${esc(r.phone || "—")}<br>
+            🛏️ ${esc(r.checkin || "—")} → ${esc(r.checkout || "—")}<br>
+            💰 ${esc(fmtMoney(r.amount_total || 0))}
+          </div>
+        `;
+        group.appendChild(div);
+      });
+
+      $("futureList").appendChild(group);
     });
   }
 
