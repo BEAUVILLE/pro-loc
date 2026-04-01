@@ -200,11 +200,9 @@
       </a>
     </div>
 
-    <div class="label mono" id="urlBox">Lien : —</div>
     <div class="note warn" id="note"></div>
 
     <div class="hr"></div>
-    <div class="mini mono" id="dbg"></div>
   </div>
 </div>
 
@@ -216,9 +214,7 @@
 
   const qrImg = document.getElementById("qrImg");
   const qrAnchor = document.getElementById("qrAnchor");
-  const urlBox = document.getElementById("urlBox");
   const noteEl = document.getElementById("note");
-  const dbgEl = document.getElementById("dbg");
   const pillSlug = document.getElementById("pillSlug");
   const pillState = document.getElementById("pillState");
 
@@ -432,9 +428,6 @@
   qrProUrl.searchParams.set("public", publicUrl.toString());
 
   url = qrProUrl.toString();
-
-  urlBox.textContent = "Lien : " + url;
-  dbgEl.textContent = "identifiant: " + slug + " | activité: LOC | qr-base: " + QR_PRO_BASE + (phone ? " | téléphone: " + phone : "");
 
   qrAnchor.href = url;
   note("⏳ Préparation du QR local…", "warn");

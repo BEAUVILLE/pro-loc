@@ -267,13 +267,13 @@
     <div class="brand">
       <div class="ico">🏷️</div>
       <div>
-        <div class="title">DIGIY LOC — Tarifs</div>
+        <div class="title">Je loue — Tarifs</div>
         <div class="sub">Prix direct propriétaire</div>
       </div>
     </div>
 
     <div class="actions">
-      <div class="pill" id="pillSlug">identifiant : —</div>
+      <div class="pill" id="pillSlug">lieu : —</div>
       <div class="pill warn" id="pillState">aperçu</div>
       <button class="btn" id="goCockpit" type="button">← Ma gestion</button>
       <button class="btn blue" id="goMenu" type="button">🦅 Mon activité</button>
@@ -332,7 +332,7 @@
       <div class="stack">
         <button class="btn green" id="btnSave" type="button">💾 Enregistrer</button>
         <button class="btn gold" id="btnAuto" type="button">⚡ Calcul automatique</button>
-        <button class="btn" id="btnSupabase" type="button">☁️ Sauvegarde étendue (phase 2)</button>
+        <button class="btn" id="btnSupabase" type="button">☁️ Préparer la sauvegarde complète</button>
       </div>
 
       <div class="note" id="note"></div>
@@ -535,7 +535,7 @@
   }
 
   function updateSlugUI(){
-    $("pillSlug").textContent = "identifiant : " + (State.slug || "—");
+    $("pillSlug").textContent = "lieu : " + (State.slug || "—");
   }
 
   function setStatePill(text, cls){
@@ -616,7 +616,7 @@
   }
 
   async function saveSupabase(){
-    show("☁️ Phase 2 : futur RPC tarifs si on décide de le brancher.", "warn");
+    show("☁️ La sauvegarde complète sera branchée ici si on l’ouvre plus tard.", "warn");
   }
 
   function setPreview(reason){

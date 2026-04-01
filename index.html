@@ -237,7 +237,7 @@ window.addEventListener("load", async function(){
 
     <div class="grid">
       <div class="card">
-        <h2>Navigation</h2>
+        <h2>Accès rapide</h2>
         <div class="nav">
           <a class="btn" data-go="__back__" href="#">⬅️ Retour</a>
           <a class="btn" data-go="today.html" href="#">📅 Vue du jour</a>
@@ -245,7 +245,7 @@ window.addEventListener("load", async function(){
           <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
           <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
           <a class="btn gold" data-go="manage-links.html" href="#">🔗 Mes liens utiles</a>
-          <a class="btn" id="btnCheckAccess" href="#">🧪 Vérifier mon accès</a>
+          <a class="btn" id="btnCheckAccess" href="#">✅ Contrôler mon accès</a>
           <button class="btn" id="btnReload" type="button">↻ Recharger</button>
         </div>
         <div class="note warn" id="note"></div>
@@ -480,9 +480,9 @@ window.addEventListener("load", async function(){
 
     show(
       reason === "slug_missing"
-        ? "👁️ Aucun identifiant détecté.\n➡️ Ouvre depuis ton lien d’entrée ou ajoute ?slug=..."
+        ? "👁️ Aucun lieu détecté.\n➡️ Ouvre depuis ton lien d’entrée ou repasse par ton accès."
         : reason === "has_access_false"
-        ? "👁️ Slug présent mais accès non actif.\n➡️ Passe par PIN ou active l’accès."
+        ? "👁️ Lieu reconnu mais accès non actif.\n➡️ Passe par ton code ou active l’accès."
         : "👁️ Mode aperçu.\n➡️ L’espace reste visible, mais l’accès réel n’est pas encore confirmé.",
       "warn"
     );
@@ -547,10 +547,10 @@ window.addEventListener("load", async function(){
       if(error) throw error;
 
       alert(
-        "✅ SESSION\n" +
-        "slug = " + slug + "\n" +
-        "phone = " + phone + "\n" +
-        "access = " + (data ? "true" : "false")
+        "✅ ACCÈS\n" +
+        "lieu = " + slug + "\n" +
+        "téléphone = " + phone + "\n" +
+        "ouvert = " + (data ? "oui" : "non")
       );
     }catch(err){
       alert("❌ KO\n" + (err?.message || String(err)));
@@ -575,7 +575,7 @@ window.addEventListener("load", async function(){
       $("vSess").textContent = "—";
       $("btnLogout").style.display = "none";
       sbState();
-      show("⚠️ Lien incomplet.\n➡️ Ouvre via ton QR / lien.\nExemple : https://pro-loc.digiylyfe.com/?slug=loc-22177...", "bad");
+      show("⚠️ Lien incomplet.\n➡️ Ouvre cette page via ton QR, ton lien d’entrée ou ton accès.", "bad");
       return;
     }
 

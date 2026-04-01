@@ -319,7 +319,7 @@ a{color:inherit}
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>DIGIY LOC <span class="infinity">∞</span></h1>
+        <h1>Je loue <span class="infinity">∞</span></h1>
         <div class="sub">Mon espace • simple • terrain • planning au centre</div>
       </div>
     </div>
@@ -354,9 +354,9 @@ a{color:inherit}
       </div>
       <div class="cardBody">
         <div class="kv">
-          <div class="k">Identifiant</div><div class="v" id="kvSlug">—</div>
+          <div class="k">Mon lieu</div><div class="v" id="kvSlug">—</div>
           <div class="k">Téléphone</div><div class="v" id="kvPhone">—</div>
-          <div class="k">Session</div><div class="v" id="kvSess">—</div>
+          <div class="k">Accès</div><div class="v" id="kvSess">—</div>
         </div>
 
         <div class="quickGrid">
@@ -367,7 +367,7 @@ a{color:inherit}
         <div class="note" id="noteMain"></div>
 
         <div class="toolsBox" id="toolsBox" hidden>
-          <div class="mini">Outils complémentaires, rangés derrière.</div>
+          <div class="mini">Actions complémentaires, rangées derrière.</div>
           <div class="toolsGrid">
             <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
             <a class="btn small" id="goReservations" href="#">📆 Réservations</a>
@@ -415,7 +415,7 @@ a{color:inherit}
   <section class="card" style="margin-top:14px">
     <div class="cardHead">
       <div>
-        <h2>✨ Analyse DIGIY</h2>
+        <h2>✨ Lecture activité</h2>
         <small>Conseils branchés sur tes données réelles.</small>
       </div>
     </div>
@@ -1204,10 +1204,10 @@ a{color:inherit}
       if (error) throw error;
 
       renderClaw(Array.isArray(data) ? data : []);
-      stateEl.textContent = "Analyse DIGIY chargée.";
+      stateEl.textContent = "Lecture activité chargée.";
     } catch (e) {
       console.error(e);
-      stateEl.textContent = "Analyse DIGIY momentanément indisponible.";
+      stateEl.textContent = "Lecture activité momentanément indisponible.";
       box.innerHTML = `<div class="clawEmpty">L’analyse DIGIY n’a pas abouti pour le moment. Recharge la page.</div>`;
     }
   }

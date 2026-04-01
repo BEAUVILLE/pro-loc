@@ -365,13 +365,13 @@
     </div>
 
     <div class="card">
-      <div style="font-weight:950">⬇️ QR</div>
-      <div class="tiny">QR-PRO → <span class="mono" id="qrProUrl">—</span></div>
+      <div style="font-weight:950">⬇️ Mon QR</div>
+      <div class="tiny">Lien de partage → <span class="mono" id="qrProUrl">—</span></div>
       <div class="row" style="margin-top:10px">
         <button class="btn" id="btnQrApp" type="button">⬇️ QR espace</button>
         <button class="btn" id="btnQrPublic" type="button">⬇️ QR Public</button>
         <button class="btn" id="btnQrPin" type="button">⬇️ QR Accès</button>
-        <button class="btn" id="btnCopyQr" type="button">📋 Copier QR-PRO</button>
+        <button class="btn" id="btnCopyQr" type="button">📋 Copier le lien QR</button>
       </div>
       <div class="tiny" id="qrInfo" style="margin-top:10px">—</div>
     </div>
@@ -917,8 +917,8 @@
     setPill("Connecté ✅", "ok");
     $("who").textContent =
       "Téléphone : " + phone +
-      " · PIN4 auto : " + pin4FromPhone(phone) +
-      " · contrôle rapide de session";
+      " · code détecté : " + pin4FromPhone(phone) +
+      " · contrôle rapide de l’accès";
 
     ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id => {
       if($(id)) $(id).disabled = false;
@@ -971,7 +971,7 @@ PIN: ${pinUrl.toString()}
       if(slug) u.searchParams.set("slug", slug);
       if(type) u.searchParams.set("t", type);
       window.open(u.toString(), "_blank", "noopener,noreferrer");
-      $("qrInfo").textContent = "Ouvert QR-PRO (" + (type || "—") + ") → " + u.toString();
+      $("qrInfo").textContent = "Lien QR ouvert pour : " + (type || "—");
     }
 
     $("btnQrApp").addEventListener("click", () => openQrPro("app"));
@@ -980,7 +980,7 @@ PIN: ${pinUrl.toString()}
 
     $("btnCopyQr").addEventListener("click", async () => {
       const ok = await copyText(qrPro.toString());
-      show(ok ? "✅ Lien QR-PRO copié." : "❌ Copie impossible.", ok ? "ok" : "bad");
+      show(ok ? "✅ Lien QR copié." : "❌ Copie impossible.", ok ? "ok" : "bad");
     });
 
     $("btnAdd").addEventListener("click", () => {
