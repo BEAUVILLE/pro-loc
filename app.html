@@ -338,10 +338,7 @@ a{color:inherit}
       </div>
       <div class="navRight">
         <a class="btn small primary" id="goPlanning" href="#">🗓️ Planning</a>
-        <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
-        <a class="btn small" id="goReservations" href="#">📆 Réservations</a>
-        <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
-        <a class="btn small" id="goPinWave" href="#">🌊 Déclarations Wave</a>
+        <button class="btn small ghost" id="btnToggleToolsTop" type="button">🧰 Plus d’actions</button>
       </div>
     </div>
   </div>
@@ -363,11 +360,8 @@ a{color:inherit}
         </div>
 
         <div class="quickGrid">
-          <a class="btn quickBtn" id="btnOpenPin" href="#">🔑 Mon accès</a>
-          <a class="btn gold quickBtn" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ Accès public</a>
-          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Plus d’outils</button>
-          <button class="btn quickBtn" id="btnGoPlanning" type="button">📍 Ouvrir le planning</button>
-          <a class="btn quickBtn" id="goNdimbalLocMain" href="#">🏠 Entraide LOC</a>
+          <button class="btn primary quickBtn" id="btnGoPlanning" type="button">📍 Ouvrir le planning</button>
+          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Ouvrir les autres actions</button>
         </div>
 
         <div class="note" id="noteMain"></div>
@@ -375,6 +369,12 @@ a{color:inherit}
         <div class="toolsBox" id="toolsBox" hidden>
           <div class="mini">Outils complémentaires, rangés derrière.</div>
           <div class="toolsGrid">
+            <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
+            <a class="btn small" id="goReservations" href="#">📆 Réservations</a>
+            <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
+            <a class="btn small" id="goPinWave" href="#">🌊 Déclarations Wave</a>
+            <a class="btn small" id="btnOpenPin" href="#">🔑 Mon accès</a>
+            <a class="btn small" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ Accès public</a>
             <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche</a>
             <a class="btn small" id="goListing" href="#">📋 Mon listing</a>
             <a class="btn small" id="goPhotos" href="#">🖼️ Mes photos</a>
@@ -385,6 +385,7 @@ a{color:inherit}
             <a class="btn small" id="goQrFactory" href="#">🏭 Mes accès QR</a>
             <a class="btn small" id="goNdimbal" href="#">🤝 Entraide</a>
             <a class="btn small" id="goNdimbalLoc" href="#">🏠 Entraide logement</a>
+            <a class="btn small" id="goNdimbalLocMain" href="#">🏠 Entraide LOC</a>
           </div>
         </div>
       </div>
@@ -1227,6 +1228,11 @@ a{color:inherit}
   }
 
   $("btnToggleTools")?.addEventListener("click", () => {
+    const box = $("toolsBox");
+    if (!box) return;
+    box.hidden = !box.hidden;
+  });
+  $("btnToggleToolsTop")?.addEventListener("click", () => {
     const box = $("toolsBox");
     if (!box) return;
     box.hidden = !box.hidden;
