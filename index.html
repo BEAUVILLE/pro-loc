@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO ♾️</title>
+  <title>Je loue • Accès rapide</title>
   <meta name="theme-color" content="#0b1020"/>
 
   <!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
@@ -222,8 +222,8 @@ window.addEventListener("load", async function(){
       <div class="brand">
         <div class="logo">∞</div>
         <div>
-          <div class="h1">DIGIY LOC PRO ∞</div>
-          <div class="sub">Cockpit propriétaire • sécurisé • 0% commission • paiement direct</div>
+          <div class="h1">Je loue ∞</div>
+          <div class="sub">Mon espace logement • sécurisé • 0% commission • paiement direct</div>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ window.addEventListener("load", async function(){
         <div class="nav">
           <a class="btn" data-go="__back__" href="#">⬅️ Retour</a>
           <a class="btn" data-go="today.html" href="#">📅 Vue du jour</a>
-          <a class="btn primary" data-go="app.html" href="#">🏠 APP</a>
+          <a class="btn primary" data-go="app.html" href="#">🏠 Mon espace</a>
           <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
           <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
           <a class="btn gold" data-go="manage-links.html" href="#">🔗 Liens / QR</a>
@@ -263,20 +263,20 @@ window.addEventListener("load", async function(){
           <div class="k">Session</div>
           <div class="v" id="vSess">—</div>
 
-          <div class="k">Supabase</div>
+          <div class="k">Connexion live</div>
           <div class="v" id="vSb">—</div>
         </div>
 
         <div class="miniActions">
-          <a class="btn" data-go="go-pin-public.html" href="#">👁️ GO PIN public</a>
+          <a class="btn" data-go="go-pin-public.html" href="#">👁️ Ouvrir la fiche publique</a>
           <a class="btn" data-go="pin.html" href="#">🔑 Ouvrir l'accès (PIN)</a>
-          <a class="btn gold" data-go="wave.html" href="#">💳 Cockpit Wave</a>
+          <a class="btn gold" data-go="wave.html" href="#">💳 Paiements Wave</a>
         </div>
 
         <div class="sep"></div>
 
         <div class="sub" style="margin:0">
-          Si tu vois "Supabase pas prêt", c'est juste le guard qui n'a pas fini de booter.
+          Si tu vois "connexion pas prête", c'est juste l’accès qui finit de se brancher.
           Clique ↻ Recharger ou repasse par PIN.
         </div>
       </div>
@@ -480,10 +480,10 @@ window.addEventListener("load", async function(){
 
     show(
       reason === "slug_missing"
-        ? "👁️ Aucun slug détecté.\n➡️ Ouvre via ton lien GO PIN ou ajoute ?slug=..."
+        ? "👁️ Aucun identifiant détecté.\n➡️ Ouvre depuis ton lien d’entrée ou ajoute ?slug=..."
         : reason === "has_access_false"
         ? "👁️ Slug présent mais accès non actif.\n➡️ Passe par PIN ou active l’accès."
-        : "👁️ Mode aperçu.\n➡️ Le cockpit reste visible, mais l’accès réel n’est pas confirmé.",
+        : "👁️ Mode aperçu.\n➡️ L’espace reste visible, mais l’accès réel n’est pas encore confirmé.",
       "warn"
     );
   }
@@ -506,7 +506,7 @@ window.addEventListener("load", async function(){
     if(sbState()){
       show("", "warn");
     } else {
-      show("⚠️ Supabase pas prêt.\n➡️ Clique ↻ Recharger ou repasse par PIN.", "warn");
+      show("⚠️ Connexion pas encore prête.\n➡️ Clique ↻ Recharger ou repasse par ton code.", "warn");
     }
   }
 

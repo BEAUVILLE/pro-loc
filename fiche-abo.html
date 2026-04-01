@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC — Pré-fiche locale propriétaire</title>
+  <title>Je prépare mon logement</title>
   <meta name="theme-color" content="#0b1020"/>
   <meta
     name="description"
-    content="DIGIY LOC — Pré-fiche locale propriétaire, sécurisée côté propriétaire, sans upload photo Supabase, avec brouillon local par identifiant."
+    content="Je prépare mon logement, avec un brouillon gardé sur cet appareil et des photos préparées sans frais inutiles."
   />
 
   <script>
@@ -645,8 +645,8 @@
     <div class="title">
       <div class="logo">🏠</div>
       <div>
-        <h1>DIGIY LOC — Pré-fiche locale propriétaire</h1>
-        <p>Accès protégé • brouillon local par identifiant • zéro upload photo Supabase</p>
+        <h1>Je prépare mon logement</h1>
+        <p>Accès protégé • brouillon gardé sur cet appareil • photos préparées sans frais inutiles</p>
       </div>
     </div>
 
@@ -668,20 +668,20 @@
   </div>
 
   <div class="banner">
-    ⚠️ <b>Pré-fiche logement DIGIY LOC</b><br><br>
+    ⚠️ <b>Préparation du logement</b><br><br>
     Ici, les photos restent <b>sur l’appareil du propriétaire</b> pour éviter les frais de stockage inutiles.<br><br>
     1️⃣ Le propriétaire remplit la pré-fiche et prépare son dossier.<br>
     2️⃣ Les photos sont envoyées humainement à DIGIY par WhatsApp / email si besoin.<br>
     3️⃣ DIGIY traite, héberge et renvoie les <b>URLs officielles</b>.<br>
     4️⃣ Le propriétaire colle ensuite ces URLs dans la zone prévue.<br><br>
     ✔ Parcours voulu : <b>pré-fiche locale → traitement humain DIGIY → URLs officielles → publication</b>.<br>
-    ✔ Protection marge DIGIY : <b>pas de commission, pas de taxe stockage Supabase inutile</b>.
+    ✔ Protection marge DIGIY : <b>pas de commission, pas de frais de stockage inutiles</b>.
   </div>
 
   <div class="grid">
     <section class="card">
       <div class="head">
-        <h2>Dossier propriétaire</h2>
+        <h2>Vos informations</h2>
         <p>Prépare la pré-fiche, garde les photos en local, puis envoie seulement ce qu’il faut à DIGIY.</p>
       </div>
 
@@ -761,7 +761,7 @@
             <div class="dropTop">
               <div>
                 <div style="font-weight:950;color:#fff">Photos du logement</div>
-                <div class="mini">Prévisualisation locale uniquement. Rien n’est envoyé vers Supabase ici.</div>
+                <div class="mini">Prévisualisation locale uniquement. Rien n’est envoyé ailleurs depuis cette page.</div>
               </div>
               <label class="btn btn-secondary" style="cursor:pointer">
                 📷 Ajouter photos
@@ -803,7 +803,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
         <div class="status" id="statusBox"></div>
 
         <div class="assistant" id="assistantBox" style="display:none">
-          <div class="assistantTitle">✨ Analyse DIGIY Pré-fiche</div>
+          <div class="assistantTitle">✨ Lecture DIGIY</div>
           <div class="assistantText" id="assistantIntro"></div>
           <div class="assistantList" id="assistantList"></div>
         </div>
@@ -831,12 +831,12 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
           </div>
           <div class="metaBox">
             <div class="metaK">Statut dossier</div>
-            <div class="metaV" id="metaState">Pré-fiche locale en attente</div>
+            <div class="metaV" id="metaState">Préparation en attente</div>
           </div>
         </div>
 
         <div class="note">
-          Parcours DIGIY LOC : <b>pré-fiche locale propriétaire → envoi humain DIGIY → traitement des photos → URLs officielles → fiche officielle publiable</b>.
+          Parcours DIGIY LOC : <b>préparation du logement → envoi humain DIGIY → traitement des photos → liens officiels → fiche prête à publier</b>.
         </div>
       </div>
     </section>
@@ -851,7 +851,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
             <div class="chips">
               <div class="chip gold" id="pvType">Type</div>
               <div class="chip" id="pvVille">Ville</div>
-              <div class="chip green" id="pvState">Pré-fiche locale en attente</div>
+              <div class="chip green" id="pvState">Préparation en attente</div>
             </div>
           </div>
         </div>
@@ -1130,7 +1130,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
   function currentStateLabel(){
     return hasOfficialUrls()
       ? "Fiche prête pour publication"
-      : "Pré-fiche locale en attente";
+      : "Préparation en attente";
   }
 
   function buildMessage(){
@@ -1169,7 +1169,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.",
       "",
       "NOTE",
-      "Les photos n'ont pas été uploadées dans Supabase depuis cette pré-fiche. Parcours local pour protéger les coûts."
+      "Les photos ne partent pas depuis cette page. Parcours local pour protéger les coûts."
     ];
 
     return lines.join("\n");
@@ -1184,7 +1184,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     els.pillPhone.innerHTML = `📞 <strong>${phone || "—"}</strong>`;
 
     els.metaSlug.textContent = slug || "—";
-    els.metaSession.textContent = sess.ok ? "Session propriétaire OK" : "Session en attente";
+    els.metaSession.textContent = sess.ok ? "Accès ouvert" : "Session en attente";
 
     if (sess.ok) {
       els.pillState.textContent = "✅ Connecté";
@@ -1262,7 +1262,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
   function validateBeforeSend(){
     if (!getSlug()) {
-      showStatus("Identifiant propriétaire introuvable. Reconnecte-toi via PIN.", "bad");
+      showStatus("Identifiant propriétaire introuvable. Reconnecte-toi avec ton code.", "bad");
       return false;
     }
 
@@ -1313,7 +1313,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       showStatus(
         "Brouillon sauvegardé localement ✅\n" +
         `Clé locale : ${draftKey()}\n` +
-        "Aucune photo n'a été envoyée vers Supabase.",
+        "Aucune photo n’a été envoyée depuis cette page.",
         "ok"
       );
     }catch(_){
@@ -1423,7 +1423,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     showStatus(
       "WhatsApp DIGIY ouvert ✅\n" +
       "Étape suivante : joins les photos humainement si besoin.\n" +
-      "Les photos ne passent pas par Supabase depuis cette page.",
+      "Les photos ne quittent pas cet écran depuis cette page.",
       "ok"
     );
   }
@@ -1459,7 +1459,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     if (state.photos.length) {
       showStatus(
         `${state.photos.length} photo(s) chargée(s) dans l’aperçu local ✅\n` +
-        "Aucun upload Supabase effectué.",
+        "Aucun envoi photo effectué.",
         "ok"
       );
     } else {
@@ -1553,7 +1553,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       return `<div class="assistantItem ${item.cls}">${item.text}</div>`;
     }).join("");
 
-    showStatus("Analyse DIGIY affichée ✅\nConseils locaux, sans upload Supabase, sans coût inutile.", "ok");
+    showStatus("Lecture DIGIY affichée ✅\nConseils locaux, sans envoi photo, sans coût inutile.", "ok");
   }
 
   function bind(){
@@ -1592,12 +1592,12 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       refreshContextUI();
 
       if (!getSlug()) {
-        showStatus("Identifiant propriétaire introuvable. Reviens par le PIN ou Ma gestion.", "bad");
+        showStatus("Identifiant propriétaire introuvable. Reviens par ton code ou par ton espace.", "bad");
       } else {
         showStatus(
-          "Pré-fiche propriétaire active ✅\n" +
-          "Brouillon local par identifiant.\n" +
-          "Aucun upload photo Supabase depuis cette page.",
+          "Préparation active ✅\n" +
+          "Brouillon gardé pour cet identifiant.\n" +
+          "Aucun envoi photo depuis cette page.",
           "ok"
         );
       }
@@ -1608,7 +1608,7 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
       refreshContextUI();
       showStatus(
         "Vérification non prête ou session indisponible.\n" +
-        "Recharge la page ou reconnecte-toi via PIN pour retrouver l’accès propriétaire.",
+        "Recharge la page ou reconnecte-toi avec ton code pour retrouver l’accès propriétaire.",
         "bad"
       );
     }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>DIGIY LOC PRO — Photos</title>
+  <title>Je loue • Photos</title>
   <meta name="theme-color" content="#0b1020" />
 
   <script>
@@ -358,10 +358,10 @@
 <div class="wrap">
 
   <div class="top">
-    <div class="title">🖼️ DIGIY LOC PRO — Photos</div>
+    <div class="title">🖼️ Je loue • Photos</div>
     <div class="sub">
-      Ici on ne stocke que des <b>URLs d’images</b>.<br>
-      Rail DIGIY : bibliothèque WordPress → URLs propres → collage ici → sauvegarde réelle sur le logement.
+      Ici on garde seulement des <b>liens photo</b>.<br>
+      Parcours simple : bibliothèque WordPress → liens propres → collage ici → sauvegarde sur le logement.
     </div>
 
     <div class="pillbar">
@@ -371,7 +371,7 @@
     </div>
 
     <div class="nav">
-      <a class="btn ghost" id="btnApp" href="./app.html">🏠 Retour app</a>
+      <a class="btn ghost" id="btnApp" href="./app.html">🏠 Retour à mon espace</a>
       <a class="btn ghost" id="btnPin" href="./pin.html">🔐 PIN</a>
       <a class="btn ghost" id="btnPrefiche" href="./fiche-abo.html">📝 Pré-fiche</a>
     </div>
@@ -382,12 +382,12 @@
 
     <div class="kv">
       <div class="k">Mode</div><div class="v" id="kvMode">—</div>
-      <div class="k">Slug</div><div class="v" id="kvSlug">—</div>
+      <div class="k">Identifiant</div><div class="v" id="kvSlug">—</div>
       <div class="k">Téléphone</div><div class="v" id="kvPhone">—</div>
     </div>
 
     <div class="actions">
-      <button class="btn primary" id="btnAdd" type="button">➕ Ajouter photo (URL)</button>
+      <button class="btn primary" id="btnAdd" type="button">➕ Ajouter une photo</button>
       <button class="btn ok" id="btnSave" type="button">💾 Sauvegarder les URLs</button>
     </div>
 
@@ -832,7 +832,7 @@
     if(!isLive()){
       show(
         !State.slug
-          ? "👁️ Aucun slug détecté. Passe par GO PIN."
+          ? "👁️ Aucun identifiant détecté. Passe par ton lien d’entrée."
           : "👁️ Mode aperçu. Passe par PIN pour gérer les URLs photos.",
         "warn"
       );
@@ -1010,7 +1010,7 @@
 
     show(
       reason === "slug_missing"
-        ? "👁️ Aucun slug détecté. Tu vois un aperçu propre.\n➡️ Ouvre la page depuis ton lien GO PIN."
+        ? "👁️ Aucun identifiant détecté. Tu vois un aperçu propre.\n➡️ Ouvre la page depuis ton lien d’entrée."
         : reason === "has_access_false"
         ? "👁️ Slug présent mais accès non actif.\n➡️ Passe par PIN ou active l’accès."
         : "👁️ Mode aperçu. Ajout et sauvegarde désactivés.",

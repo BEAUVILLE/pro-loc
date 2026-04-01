@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — Accès paiement</title>
+  <title>Je loue • Paiements</title>
   <meta name="theme-color" content="#16a34a"/>
 
   <script>
@@ -157,14 +157,14 @@
   <div class="box">
     <h2>🔐 Accès paiement</h2>
     <div class="sub">
-      Cette page sert de <b>pont propre</b> vers l’app propriétaire.<br>
-      Le cockpit paiement est déjà dans l’app.<br>
-      On garde toujours le <b>slug</b>.
+      Cette page sert de <b>passage rapide</b> vers tes paiements.<br>
+      Tout est déjà rangé dans ton espace.<br>
+      On garde toujours ton <b>identifiant</b>.
     </div>
 
     <div class="row" style="margin-bottom:12px">
-      <span class="pill">module: <span class="mono">LOC</span></span>
-      <span class="pill mono" id="pillSlug">slug: —</span>
+      <span class="pill">activité : <span class="mono">LOC</span></span>
+      <span class="pill mono" id="pillSlug">identifiant : —</span>
       <span class="pill warn" id="pillState">aperçu</span>
     </div>
 
@@ -180,19 +180,19 @@
     </div>
 
     <div class="row" style="margin-top:14px">
-      <button class="btn" id="goApp" type="button">🔓 Ouvrir mon app</button>
+      <button class="btn" id="goApp" type="button">🔓 Ouvrir mon espace</button>
     </div>
 
     <div class="row" style="margin-top:10px">
-      <button class="btn gold" id="goPin" type="button">🔐 Passer par le PIN principal</button>
-      <button class="btn ghost" id="back" type="button">⬅️ Retour app</button>
+      <button class="btn gold" id="goPin" type="button">🔐 Passer par mon code</button>
+      <button class="btn ghost" id="back" type="button">⬅️ Retour espace</button>
     </div>
 
     <div class="note warn" id="note"></div>
 
     <div class="small">
-      On évite ici la double vérification PIN.
-      Si la session n’est pas ouverte, cette page renvoie simplement vers le PIN principal.
+      On évite ici de redemander le code deux fois.
+      Si la session n’est pas ouverte, cette page renvoie simplement vers ton code principal.
     </div>
   </div>
 
@@ -282,7 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const slug = getSlug();
   const sess = getSession();
 
-  $("pillSlug").textContent = "slug: " + (slug || "—");
+  $("pillSlug").textContent = "identifiant : " + (slug || "—");
   $("slugValue").textContent = slug || "—";
   $("phoneValue").textContent = sess.phone || "—";
 
@@ -294,8 +294,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     pillState.textContent = "PIN requis";
     pillState.className = "pill warn";
-    $("accessValue").textContent = "Passe par le PIN principal";
-    show("🔐 La session n’est pas encore ouverte.\nPasse par le PIN principal puis reviens ici si besoin.", "warn");
+    $("accessValue").textContent = "Passe par ton code";
+    show("🔐 La session n’est pas encore ouverte.\nPasse par ton code puis reviens ici si besoin.", "warn");
   }
 
   $("goApp").addEventListener("click", () => {

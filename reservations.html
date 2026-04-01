@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC PRO — RESA</title>
+  <title>Je loue • Réservations</title>
   <meta name="theme-color" content="#061b14"/>
 
   <script>
@@ -268,15 +268,15 @@
     <div class="brand">
       <div class="ico">🧾</div>
       <div>
-        <div class="title">DIGIY LOC • PRO</div>
-        <div class="sub" id="topSub">RESA — lecture alignée sur le rail LOC PRO</div>
+        <div class="title">Je loue</div>
+        <div class="sub" id="topSub">Réservations liées à ton lieu</div>
       </div>
     </div>
 
     <div class="actions">
-      <div class="pill" id="pillSlug">slug: —</div>
+      <div class="pill" id="pillSlug">identifiant : —</div>
       <div class="pill warn" id="pillState">aperçu</div>
-      <a class="btn" id="btnBack" href="#">⬅️ App</a>
+      <a class="btn" id="btnBack" href="#">⬅️ Mon espace</a>
       <a class="btn blue" id="btnPlanning" href="#">📅 Planning</a>
       <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
     </div>
@@ -286,7 +286,7 @@
 
   <div class="card">
     <h2 style="margin:0 0 8px;font-size:18px">Filtres</h2>
-    <div class="muted">Lecture réelle sur les RESA du propriétaire lié au slug actif.</div>
+    <div class="muted">Lecture réelle sur les réservations liées à l’identifiant actif.</div>
 
     <div class="filters">
       <div class="f">
@@ -299,7 +299,7 @@
         <select id="source">
           <option value="all">Toutes</option>
           <option value="digiy">DIGIY</option>
-          <option value="resa">RESA externe</option>
+          <option value="resa">Réservation externe</option>
           <option value="autre">Autre canal</option>
         </select>
       </div>
@@ -327,7 +327,7 @@
     <div class="row" style="margin-top:12px">
       <button class="btn" id="reset" type="button">♻️ Réinitialiser</button>
       <button class="btn green" id="export" type="button">⬇️ Export CSV</button>
-      <span class="pill" id="count">0 RESA</span>
+      <span class="pill" id="count">0 réservation</span>
     </div>
 
     <div class="note" id="noteMain"></div>
@@ -335,21 +335,21 @@
 
   <div class="grid">
     <div class="card">
-      <h2 style="margin:0;font-size:18px">Liste des RESA</h2>
+      <h2 style="margin:0;font-size:18px">Liste des réservations</h2>
       <div class="muted" id="countSub" style="margin-top:6px">—</div>
 
       <div id="list" class="list"></div>
-      <div id="empty" class="empty">Aucune RESA ne correspond aux filtres.</div>
+      <div id="empty" class="empty">Aucune réservation ne correspond aux filtres.</div>
     </div>
 
     <div class="card">
       <h2 style="margin:0;font-size:18px">Vue rapide</h2>
       <div class="muted" style="margin-top:6px">
-        Clique une RESA à gauche pour voir le détail. En mode vivant, le contact ouvre le vrai numéro du client.
+        Clique une réservation à gauche pour voir le détail. En mode vivant, le contact ouvre le vrai numéro du client.
       </div>
 
       <div class="detailBox" id="detail">
-        Sélectionne une RESA à gauche.
+        Sélectionne une réservation à gauche.
       </div>
 
       <div class="row" style="margin-top:12px">
@@ -550,7 +550,7 @@
   }
 
   function refreshTopUi(){
-    $("pillSlug").textContent = "slug: " + (State.slug || "—");
+    $("pillSlug").textContent = "identifiant : " + (State.slug || "—");
 
     const pill = $("pillState");
     if(State.mode === "live"){
@@ -593,7 +593,7 @@
 
   function badgeSource(s){
     if(s==="digiy") return ["DIGIY","b-digiy"];
-    if(s==="resa") return ["RESA externe","b-resa"];
+    if(s==="resa") return ["Réservation externe","b-resa"];
     return ["Autre canal","b-autre"];
   }
 
@@ -610,7 +610,7 @@
 
   function resetDetail(){
     State.current = null;
-    $("detail").innerHTML = "Sélectionne une RESA à gauche.";
+    $("detail").innerHTML = "Sélectionne une réservation à gauche.";
     $("btnPay").disabled = true;
     $("btnContact").disabled = true;
     $("btnClose").disabled = true;
@@ -638,7 +638,7 @@
       <div class="smallbtns">
         <div class="smallchip">🧍 Client</div>
         <div class="smallchip">🏠 Bien</div>
-        <div class="smallchip">📆 RESA</div>
+        <div class="smallchip">📆 Réservation</div>
         <div class="smallchip">💸 Paiement</div>
       </div>
     `;
@@ -652,7 +652,7 @@
     const list = $("list");
     list.innerHTML = "";
 
-    $("count").textContent = rows.length + " RESA";
+    $("count").textContent = rows.length + " réservation(s)";
     $("countSub").textContent = rows.length
       ? `${rows.length} ligne(s) visibles dans ce filtre`
       : "Aucune ligne visible";
@@ -730,7 +730,7 @@
   function exportCSV(){
     const rows = State.filtered.length ? State.filtered : State.reservations;
     if(!rows.length){
-      setNoteMain("Aucune RESA à exporter.", "warn");
+      setNoteMain("Aucune réservation à exporter.", "warn");
       return;
     }
 
@@ -789,7 +789,7 @@
     renderList([]);
     resetDetail();
 
-    setNoteMain("Passe par PIN pour voir les vraies RESA du propriétaire.", "warn");
+    setNoteMain("Passe par ton code pour voir les vraies réservations du lieu.", "warn");
   }
 
   function setLive(){
@@ -917,15 +917,15 @@
     applyFilters();
 
     if(!State.reservations.length){
-      setNoteMain("✅ Accès vivant OK. Aucune RESA pour l’instant.", "ok");
+      setNoteMain("✅ Accès vivant OK. Aucune réservation pour l’instant.", "ok");
     }else{
-      setNoteMain(`✅ ${State.reservations.length} RESA chargée(s).`, "ok");
+      setNoteMain(`✅ ${State.reservations.length} réservation(s) chargée(s).`, "ok");
     }
   }
 
   async function reloadAll(){
     $("btnReload").disabled = true;
-    setNoteMain("⏳ Chargement des RESA…", "warn");
+    setNoteMain("⏳ Chargement des réservations…", "warn");
 
     try{
       const st = getSession();
@@ -964,7 +964,7 @@
 
     }catch(e){
       console.error(e);
-      setNoteMain("❌ Impossible de charger les RESA.\n" + (e?.message || e), "bad");
+      setNoteMain("❌ Impossible de charger les réservations.\n" + (e?.message || e), "bad");
       renderList([]);
       resetDetail();
     }finally{
@@ -1015,14 +1015,14 @@ RESA ${State.current._ref}
 Logement : ${State.current._room}
 Dates : ${fmtDate(State.current._checkin)} → ${fmtDate(State.current._checkout)}
 
-DIGIY LOC PRO`;
+Je loue`;
       window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
       setNoteSide("✅ WhatsApp client ouvert.", "ok");
     });
 
     $("btnClose").addEventListener("click", ()=>{
       if(!State.current) return;
-      setNoteSide("UI seulement pour l’instant. Aucun backend modifié.", "warn");
+      setNoteSide("Lecture seule pour l’instant. Rien n’est modifié en arrière-plan.", "warn");
     });
   }
 

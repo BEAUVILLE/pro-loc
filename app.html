@@ -339,7 +339,7 @@ a{color:inherit}
       <div class="navRight">
         <a class="btn small primary" id="goPlanning" href="#">🗓️ Planning</a>
         <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
-        <a class="btn small" id="goReservations" href="#">📆 RESA</a>
+        <a class="btn small" id="goReservations" href="#">📆 Réservations</a>
         <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
         <a class="btn small" id="goPinWave" href="#">🌊 Déclarations Wave</a>
       </div>
@@ -379,12 +379,12 @@ a{color:inherit}
             <a class="btn small" id="goListing" href="#">📋 Mon listing</a>
             <a class="btn small" id="goPhotos" href="#">🖼️ Mes photos</a>
             <a class="btn small" id="goLinks" href="#">🔗 Mes liens</a>
-            <a class="btn small" id="goReservationsPulse" href="#">📲 Messages RESA</a>
-            <a class="btn small" id="goGenerator" href="#">⚙️ Générateur</a>
+            <a class="btn small" id="goReservationsPulse" href="#">📲 Messages réservations</a>
+            <a class="btn small" id="goGenerator" href="#">⚙️ Préparer une fiche</a>
             <a class="btn small" id="goQr" href="#">🔳 Mon QR</a>
-            <a class="btn small" id="goQrFactory" href="#">🏭 Atelier QR</a>
+            <a class="btn small" id="goQrFactory" href="#">🏭 Mes accès QR</a>
             <a class="btn small" id="goNdimbal" href="#">🤝 Entraide</a>
-            <a class="btn small" id="goNdimbalLoc" href="#">🏠 Entraide LOC</a>
+            <a class="btn small" id="goNdimbalLoc" href="#">🏠 Entraide logement</a>
           </div>
         </div>
       </div>
@@ -1038,7 +1038,7 @@ a{color:inherit}
         const placeSlug = getSlug();
 
         if (!ownerPhone || !placeSlug) {
-          showNote("noteWave", "❌ Identifiant ou session manquants. Passe par ton PIN.", "bad");
+          showNote("noteWave", "❌ Identifiant ou session manquants. Passe par ton code.", "bad");
           return;
         }
 
@@ -1103,7 +1103,7 @@ a{color:inherit}
     const sessOk = refreshSessionUI();
 
     if (!sessOk) {
-      showNote("noteWave", "🔒 Passe par ton PIN pour voir tes paiements Wave.", "warn");
+      showNote("noteWave", "🔒 Passe par ton code pour voir tes paiements Wave.", "warn");
       if ($("waveList")) $("waveList").innerHTML = "";
       return;
     }
@@ -1133,7 +1133,7 @@ a{color:inherit}
       showNote("noteWave", "", "");
     } catch (e) {
       console.error(e);
-      showNote("noteWave", "❌ Erreur Wave : " + (e?.message || e), "bad");
+      showNote("noteWave", "❌ Erreur de lecture : " + (e?.message || e), "bad");
     }
   }
 
@@ -1254,13 +1254,13 @@ a{color:inherit}
     if (getSession().ok && getSlug()) {
       showNote(
         "noteMain",
-        "✅ Espace actif.\nPlanning au centre.\nPré-fiche rangée derrière.\nAnalyse DIGIY active.",
+        "✅ Espace actif.\nPlanning au centre.\nPréparation du logement rangée derrière.\nLecture utile prête.",
         "ok"
       );
     } else if (getSlug()) {
       showNote("noteMain", "👁️ Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
     } else {
-      showNote("noteMain", "⚠️ Identifiant introuvable. Reconnecte-toi via PIN.", "warn");
+      showNote("noteMain", "⚠️ Identifiant introuvable. Reconnecte-toi avec ton code.", "warn");
     }
 
     await loadClaw();
@@ -1328,13 +1328,13 @@ a{color:inherit}
   const sessOk = refreshSessionUI();
 
   if (!getSlug()) {
-    showNote("noteMain", "❌ Identifiant introuvable. Reconnecte-toi via PIN.", "bad");
+    showNote("noteMain", "❌ Identifiant introuvable. Reconnecte-toi avec ton code.", "bad");
   } else if (!sessOk) {
     showNote("noteMain", "👁️ Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
   } else {
     showNote(
       "noteMain",
-      "✅ Espace actif.\nPré-fiche rangée derrière.\nPlanning, dates bloquées, RESA, tarifs et paiements devant.\nAnalyse DIGIY active.",
+      "✅ Espace actif.\nPréparation du logement rangée derrière.\nPlanning, dates bloquées, réservations, tarifs et paiements devant.\nLecture utile prête.",
       "ok"
     );
   }

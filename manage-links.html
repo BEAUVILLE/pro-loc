@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY ♾️ — Liens / QR</title>
+  <title>Je loue • Liens et QR</title>
   <meta name="theme-color" content="#0b1020"/>
   <meta name="description" content="DIGIY LOC — gestion des liens et QR via session PIN réelle."/>
 
@@ -304,11 +304,11 @@
     <div class="brand">
       <div class="logo">∞</div>
       <div>
-        <h1>DIGIY ♾️ — Liens / QR</h1>
-        <div class="sub">Session PIN réelle • Liens terrain • QR centralisé</div>
+        <h1>Je loue • Liens et QR</h1>
+        <div class="sub">Code actif • liens utiles • QR rangés au même endroit</div>
       </div>
     </div>
-    <div class="pill" id="pillSlug">slug : —</div>
+    <div class="pill" id="pillSlug">identifiant : —</div>
   </div>
 
   <div class="grid">
@@ -324,14 +324,14 @@
         <button class="btn primary" id="btnLoad" type="button">↻ Charger</button>
         <button class="btn gold" id="btnSave" type="button">💾 Enregistrer</button>
         <button class="btn red" id="btnReset" type="button">🧹 Vider</button>
-        <a class="btn" id="btnBack" href="#">⬅️ Retour cockpit</a>
+        <a class="btn" id="btnBack" href="#">⬅️ Retour à mon espace</a>
       </div>
 
       <div class="row" style="margin-top:12px">
-        <a class="btn" id="btnOpenApp" href="#">🏠 Ouvrir APP</a>
+        <a class="btn" id="btnOpenApp" href="#">🏠 Ouvrir mon espace</a>
         <a class="btn" id="btnOpenPublic" href="#">👁️ Fiche publique</a>
         <a class="btn" id="btnOpenPin" href="#">🔑 Accès (PIN)</a>
-        <button class="btn" id="btnCopyAll" type="button">📋 Copier URLs</button>
+        <button class="btn" id="btnCopyAll" type="button">📋 Copier les liens</button>
       </div>
 
       <div class="note warn" id="note"></div>
@@ -368,7 +368,7 @@
       <div style="font-weight:950">⬇️ QR</div>
       <div class="tiny">QR-PRO → <span class="mono" id="qrProUrl">—</span></div>
       <div class="row" style="margin-top:10px">
-        <button class="btn" id="btnQrApp" type="button">⬇️ QR APP</button>
+        <button class="btn" id="btnQrApp" type="button">⬇️ QR espace</button>
         <button class="btn" id="btnQrPublic" type="button">⬇️ QR Public</button>
         <button class="btn" id="btnQrPin" type="button">⬇️ QR Accès</button>
         <button class="btn" id="btnCopyQr" type="button">📋 Copier QR-PRO</button>
@@ -805,8 +805,8 @@
     const sb = await getSB();
     const { slug, phone, pin4, access_ok } = getCreds();
 
-    if(!sb) return show("❌ Supabase pas prêt. Recharge.", "bad");
-    if(!slug) return show("❌ slug manquant. Ouvre depuis le cockpit.", "bad");
+    if(!sb) return show("❌ Connexion pas prête. Recharge.", "bad");
+    if(!slug) return show("❌ Identifiant manquant. Ouvre cette page depuis ton espace.", "bad");
     if(!access_ok) return show("👁️ Mode aperçu. Les liens réels demandent un accès actif.", "warn");
     if(!phone) return show("⚠️ Téléphone session manquant. Retour PIN.", "bad");
     if(!pin4) return show("⚠️ PIN4 absent. Vérifie le téléphone session.", "bad");
@@ -847,7 +847,7 @@
     const sb = await getSB();
     const { slug, phone, pin4, access_ok } = getCreds();
 
-    if(!sb) return show("❌ Supabase pas prêt.", "bad");
+    if(!sb) return show("❌ Connexion pas prête.", "bad");
     if(!slug) return show("❌ slug manquant.", "bad");
     if(!access_ok) return show("👁️ Mode aperçu. Enregistrement désactivé.", "warn");
     if(!phone) return show("⚠️ Téléphone session manquant.", "bad");
@@ -930,7 +930,7 @@
   function initStaticUi(){
     const slug = getSlug();
 
-    $("pillSlug").textContent = "slug : " + (slug || "—");
+    $("pillSlug").textContent = "identifiant : " + (slug || "—");
 
     const appUrl = new URL(PAGE_APP, location.href);
     const publicUrl = new URL(PAGE_PUBLIC, location.href);
@@ -950,9 +950,9 @@
     $("btnCopyAll").addEventListener("click", async () => {
       const pack =
 `DIGIY URLs
-slug: ${slug || "—"}
+identifiant : ${slug || "—"}
 
-APP: ${appUrl.toString()}
+Mon espace : ${appUrl.toString()}
 PUBLIC: ${publicUrl.toString()}
 PIN: ${pinUrl.toString()}
 `;
@@ -964,7 +964,7 @@ PIN: ${pinUrl.toString()}
     if(slug) qrPro.searchParams.set("slug", slug);
 
     $("qrProUrl").textContent = qrPro.toString();
-    $("qrInfo").textContent = "QR-PRO centralise APP / public / accès.";
+    $("qrInfo").textContent = "Ce QR rassemble ton espace, la fiche publique et l’accès.";
 
     function openQrPro(type){
       const u = new URL(QR_PRO_BASE);

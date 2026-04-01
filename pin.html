@@ -4,8 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#0b1f17"/>
-  <meta name="description" content="DIGIY LOC PRO — accès sécurisé par PIN"/>
-  <title>DIGIY LOC PRO — Accès PIN</title>
+  <meta name="description" content="Je loue — accès sécurisé par code"/>
+  <title>Je loue • Mon accès</title>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -300,10 +300,10 @@
     <a class="back" href="https://digiylyfe.com/" aria-label="Retour DIGIYLYFE">↩️ Retour DIGIYLYFE</a>
 
     <section class="hero">
-      <div class="badge">🏠 DIGIY LOC PRO</div>
-      <h1>Mon accès · session interne directe</h1>
+      <div class="badge">🏠 Je loue</div>
+      <h1>Mon accès</h1>
       <p class="lead">
-        Entre avec ton identifiant ou ton téléphone, puis ton PIN.
+        Entre avec ton identifiant ou ton téléphone, puis ton code.
         Une fois validé, tu entres directement dans ton espace propriétaire.
       </p>
     </section>
@@ -311,7 +311,7 @@
     <section class="card">
       <form id="pinForm" class="grid" autocomplete="on">
         <div class="field">
-          <label class="label" for="identifier">Identifiant boutique</label>
+          <label class="label" for="identifier">Identifiant du lieu</label>
           <div class="input-wrap">
             <input
               id="identifier"
@@ -356,7 +356,7 @@
           </div>
         </div>
 
-        <button id="submitBtn" class="btn btn-primary" type="submit">🔓 Ouvrir mon espace LOC</button>
+        <button id="submitBtn" class="btn btn-primary" type="submit">🔓 Ouvrir mon espace</button>
 
         <div class="actions">
           <a id="returnBtn" class="btn btn-secondary" href="./app.html">🧭 Mon espace</a>
@@ -374,7 +374,7 @@
 
       <div class="meta">
         <div class="meta-item">
-          <div class="meta-k">Module</div>
+          <div class="meta-k">Activité</div>
           <div class="meta-v" id="metaModule">LOC</div>
         </div>
         <div class="meta-item">
@@ -387,7 +387,7 @@
         </div>
       </div>
 
-      <p class="foot">DIGIYLYFE • LOC • Accès sécurisé</p>
+      <p class="foot">DIGIYLYFE • Je loue • Accès sécurisé</p>
     </section>
   </div>
 
@@ -657,10 +657,10 @@
           setStatus("ok", "Session déjà présente", "Une session LOC encore valide a été retrouvée sur cet appareil.");
         }else if (identifier){
           updateMetaSession("Contexte détecté");
-          setStatus("info", "Contexte prêt", "Slug ou téléphone détecté. Tu peux entrer ton PIN.");
+          setStatus("info", "Contexte prêt", "Identifiant ou téléphone détecté. Tu peux entrer ton code.");
         }else{
           updateMetaSession("Aucune");
-          setStatus("info", "Prêt", "Entre ton identifiant ou ton téléphone, puis ton PIN.");
+          setStatus("info", "Prêt", "Entre ton identifiant ou ton téléphone, puis ton code.");
         }
       }
 
@@ -682,12 +682,12 @@
           const pin = clean(els.pin.value);
 
           if (!pin){
-            setStatus("bad", "PIN manquant", "Entre ton PIN pour ouvrir l’espace LOC.");
+            setStatus("bad", "Code manquant", "Entre ton code pour ouvrir ton espace logement.");
             return;
           }
 
           if (!identifier && !phone){
-            setStatus("bad", "Identifiant manquant", "Entre un slug LOC ou un téléphone.");
+            setStatus("bad", "Identifiant manquant", "Entre l’identifiant du lieu ou un téléphone.");
             return;
           }
 
@@ -704,7 +704,7 @@
           }
 
           if (!phone && slug){
-            setStatus("info", "Résolution du téléphone", "Lecture du téléphone à partir du slug LOC…");
+            setStatus("info", "Recherche du téléphone", "On retrouve le téléphone à partir de l’identifiant du lieu…");
             phone = await resolvePhoneBySlug(slug);
           }
 
@@ -713,7 +713,7 @@
           }
 
           if (!phone){
-            setStatus("bad", "Téléphone introuvable", "Impossible de retrouver le téléphone lié à ce slug LOC.");
+            setStatus("bad", "Téléphone introuvable", "Impossible de retrouver le téléphone lié à cet identifiant.");
             return;
           }
 
@@ -742,7 +742,7 @@
           updateMetaSession("Session LOC ouverte");
           els.returnBtn.href = buildUrl(getReturnTarget(), finalSlug, finalPhone);
 
-          setStatus("ok", "Accès validé", "PIN accepté. Entrée directe vers l’espace propriétaire LOC.");
+          setStatus("ok", "Accès validé", "Code accepté. Entrée directe vers ton espace logement.");
 
           window.location.href = buildUrl(getReturnTarget(), finalSlug, finalPhone);
         }catch(err){

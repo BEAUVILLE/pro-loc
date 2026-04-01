@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NDIMBAL LOC — Activation logement</title>
+<title>NDIMBAL LOC — Activer un logement</title>
 <meta name="theme-color" content="#022c22"/>
 
 <script>
@@ -273,8 +273,8 @@
   </div>
 
   <div class="topPills">
-    <span class="pill">module: <span class="mono">LOC</span></span>
-    <span class="pill mono" id="pillSlug">slug: —</span>
+    <span class="pill">activité : <span class="mono">LOC</span></span>
+    <span class="pill mono" id="pillSlug">identifiant : —</span>
     <span class="pill warn" id="pillState">mode: aperçu</span>
   </div>
 
@@ -300,8 +300,8 @@
   </div>
 
   <div class="row">
-    <a class="btn secondary" id="appBtn" href="./app.html">⬅️ Retour app</a>
-    <a class="btn ghost" id="pinBtn" href="./pin.html">🔐 Ouvrir PIN</a>
+    <a class="btn secondary" id="appBtn" href="./app.html">⬅️ Retour espace</a>
+    <a class="btn ghost" id="pinBtn" href="./pin.html">🔐 Ouvrir mon code</a>
   </div>
 
   <div class="notice">
@@ -485,7 +485,7 @@
   }
 
   function paint(){
-    pillSlug.textContent = "slug: " + (State.slug || "—");
+    pillSlug.textContent = "identifiant : " + (State.slug || "—");
     metaSlug.textContent = State.slug || "—";
     metaPhone.textContent = State.phone || "—";
 

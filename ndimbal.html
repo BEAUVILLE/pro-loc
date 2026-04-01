@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>NDIMBAL LOC ♾️ — Bureau nomade</title>
+  <title>NDIMBAL LOC • Entraide nomade</title>
   <meta name="theme-color" content="#0b1020"/>
 
   <!-- ✅ CONFIG SUPABASE -->
@@ -126,8 +126,8 @@
       <div class="brand">
         <div class="logo">∞</div>
         <div>
-          <h1>NDIMBAL LOC — Bureau nomade</h1>
-          <div class="sub">Ton “lieu” = ton bureau de poche. On garde le slug, on garde la main.</div>
+          <h1>NDIMBAL LOC — Entraide nomade</h1>
+          <div class="sub">Ton lieu reste ton point d’appui. On garde l’identifiant, on garde la main.</div>
         </div>
       </div>
 
@@ -136,7 +136,7 @@
 
     <div class="card">
       <div class="row">
-        <a class="btn" id="btnBack" href="#">⬅️ Retour cockpit</a>
+        <a class="btn" id="btnBack" href="#">⬅️ Retour à mon espace</a>
         <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
         <span class="pill" id="pillCount">0 résultat</span>
       </div>
@@ -413,7 +413,7 @@
     clear();
 
     if(!SLUG){
-      show("⚠️ Lieu manquant.\n➡️ Ouvre NDIMBAL via le cockpit (slug obligatoire).", "bad");
+      show("⚠️ Lieu manquant.\n➡️ Ouvre NDIMBAL depuis ton espace avec un identifiant valide.", "bad");
       return;
     }
 
