@@ -6,35 +6,17 @@
   <title>Je loue • Accès rapide</title>
   <meta name="theme-color" content="#0b1020"/>
 
-  <!-- ✅ CONFIG SUPABASE (le guard lit ça) -->
   <script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-  window.DIGIY_MODULE = "LOC";
-  window.DIGIY_LOGIN_URL = "./pin.html";
-</script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+  </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=loc-20260328-10"></script>
-<script>
-window.addEventListener("load", async function(){
-  try{
-    console.log("[LOC] guard present ?", !!window.DIGIY_GUARD);
-    console.log("[LOC] guard object", window.DIGIY_GUARD);
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=loc-20260328-10"></script>
 
-    if(!window.DIGIY_GUARD){
-      throw new Error("guard_absent");
-    }
-
-    const result = await window.DIGIY_GUARD.ready({ redirect:false });
-    console.log("[LOC] guard ready result", result);
-    console.log("[LOC] guard state", window.DIGIY_GUARD.state);
-  }catch(err){
-    console.error("[LOC] init error", err);
-  }
-});
-</script>
   <style>
     :root{
       --bg:#020617; --bg2:#0b1020; --card:rgba(255,255,255,.03);
@@ -163,7 +145,6 @@ window.addEventListener("load", async function(){
       margin:12px 0;
     }
 
-    /* ✅ BOUTON FLOTTANT RETOUR SITE */
     .floating-site-btn{
       position:fixed;
       left:16px;
@@ -284,334 +265,355 @@ window.addEventListener("load", async function(){
   </div>
 
   <script>
-(() => {
-  "use strict";
+    (() => {
+      "use strict";
 
-  const $ = (id) => document.getElementById(id);
-  const SAVED_KEY = "digiy_loc_slug";
+      const $ = (id) => document.getElementById(id);
+      const SAVED_KEY = "digiy_loc_slug";
 
-  function getUrlSlug(){
-    try{
-      return (new URL(location.href)).searchParams.get("slug") || "";
-    }catch{
-      return "";
-    }
-  }
-
-  function getSavedSlug(){
-    try{
-      return localStorage.getItem(SAVED_KEY) || "";
-    }catch{
-      return "";
-    }
-  }
-
-  function getSlug(){
-    return (getUrlSlug() || getSavedSlug() || "").trim();
-  }
-
-  function saveSlug(slug){
-    if(!slug) return;
-    try{ localStorage.setItem(SAVED_KEY, slug); }catch(_){}
-    try{ localStorage.setItem("digiy_last_slug", slug); }catch(_){}
-  }
-
-  function ensureSlugInUrl(slug){
-    if(!slug) return;
-    try{
-      const u = new URL(location.href);
-      if(!u.searchParams.get("slug")){
-        u.searchParams.set("slug", slug);
-        history.replaceState({}, "", u.toString());
+      function getUrlSlug(){
+        try{
+          return (new URL(location.href)).searchParams.get("slug") || "";
+        }catch{
+          return "";
+        }
       }
-    }catch(_){}
-  }
 
-  function normPhone(p){
-    if(!p) return "";
-    let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
-    if (s.startsWith("00221")) s = "+221" + s.slice(5);
-    if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-    if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
-    return s;
-  }
-
-  function getHubPhone(){
-    try{
-      const u = new URL(location.href);
-      const phone = normPhone(u.searchParams.get("phone") || "");
-      if(phone){
-        try{ sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", phone); }catch(_){}
-        window.DIGIY_LOC_HUB_PHONE = phone;
+      function getSavedSlug(){
+        try{
+          return localStorage.getItem(SAVED_KEY) || "";
+        }catch{
+          return "";
+        }
       }
-      return phone || (window.DIGIY_LOC_HUB_PHONE || "");
-    }catch{
-      return window.DIGIY_LOC_HUB_PHONE || "";
-    }
-  }
 
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      reason: "guard_missing"
-    };
-  }
-
-  async function waitGuardReady(){
-    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
-
-    const r = window.DIGIY_GUARD.ready;
-
-    if(typeof r === "function"){
-      return await r(8000);
-    }
-
-    return await r;
-  }
-
-  function getSb(){
-    return window.DIGIY_GUARD?.getSb?.() || window.sb || null;
-  }
-
-  function withSlug(target){
-    const slug = getGuardState().slug || getSlug();
-    const phone = window.DIGIY_LOC_HUB_PHONE || "";
-
-    if(target === "__back__") return target;
-
-    try{
-      const u = new URL(target, location.href);
-      if(slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(phone && !u.searchParams.get("phone")) u.searchParams.set("phone", phone);
-
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      let out = target;
-      if(slug){
-        out += (out.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
+      function getSlug(){
+        return (getUrlSlug() || getSavedSlug() || "").trim();
       }
-      if(phone){
-        out += (out.includes("?") ? "&" : "?") + "phone=" + encodeURIComponent(phone);
+
+      function saveSlug(slug){
+        if(!slug) return;
+        try{ localStorage.setItem(SAVED_KEY, slug); }catch(_){}
+        try{ localStorage.setItem("digiy_last_slug", slug); }catch(_){}
       }
-      return out;
-    }
-  }
 
-  function show(msg, cls){
-    const el = $("note");
-    if(!el) return;
-    el.className = "note " + (cls || "warn");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-  }
+      function ensureSlugInUrl(slug){
+        if(!slug) return;
+        try{
+          const u = new URL(location.href);
+          if(!u.searchParams.get("slug")){
+            u.searchParams.set("slug", slug);
+            history.replaceState({}, "", u.toString());
+          }
+        }catch(_){}
+      }
 
-  function setPills({ phone, slug, ok, preview }){
-    $("pillLieu").textContent = "Lieu : " + (slug || "—");
-    $("vLieu").textContent = slug || "—";
+      function normPhone(p){
+        if(!p) return "";
+        let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+        if (s.startsWith("00221")) s = "+221" + s.slice(5);
+        if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+        if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
+        return s;
+      }
 
-    $("pillPhone").textContent = "👤 " + (phone || "—");
-    $("vPhone").textContent = phone || "—";
+      function getHubPhone(){
+        try{
+          const u = new URL(location.href);
+          const phone = normPhone(u.searchParams.get("phone") || "");
 
-    if(ok){
-      $("pillConn").className = "pill ok";
-      $("pillConn").textContent = "✅ Connecté";
-    } else if (preview) {
-      $("pillConn").className = "pill";
-      $("pillConn").textContent = "👁️ Aperçu";
-    } else {
-      $("pillConn").className = "pill bad";
-      $("pillConn").textContent = "Bloqué ❌";
-    }
-  }
+          if(phone){
+            try{ sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", phone); }catch(_){}
+            window.DIGIY_LOC_HUB_PHONE = phone;
+            return phone;
+          }
 
-  function sbState(){
-    const sb = getSb();
-    const ok = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-    $("vSb").textContent = ok ? "OK" : "Pas prêt";
-    return ok;
-  }
+          const saved = normPhone(
+            (window.DIGIY_LOC_HUB_PHONE || "") ||
+            (sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "")
+          );
 
-  function bindNav(){
-    document.querySelectorAll("[data-go]").forEach((el)=>{
-      if(el.__digiy_bound) return;
-      el.__digiy_bound = true;
+          if(saved) window.DIGIY_LOC_HUB_PHONE = saved;
+          return saved;
+        }catch{
+          try{
+            const saved = normPhone(
+              (window.DIGIY_LOC_HUB_PHONE || "") ||
+              (sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "")
+            );
+            if(saved) window.DIGIY_LOC_HUB_PHONE = saved;
+            return saved;
+          }catch{
+            return window.DIGIY_LOC_HUB_PHONE || "";
+          }
+        }
+      }
 
-      const targetRaw = (el.getAttribute("data-go") || "").trim();
-      const mode = (el.getAttribute("data-mode") || "assign").trim();
+      function getGuardState(){
+        return window.DIGIY_GUARD?.state || {
+          preview: true,
+          access_ok: false,
+          slug: "",
+          phone: "",
+          reason: "guard_missing"
+        };
+      }
 
-      el.addEventListener("click", (e)=>{
-        e.preventDefault();
-        if(!targetRaw) return;
+      async function waitGuardReady(){
+        if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
+          throw new Error("guard_absent");
+        }
+        return await window.DIGIY_GUARD.ready({ redirect:false, timeout:8000 });
+      }
 
-        if(targetRaw === "__back__"){
-          if(history.length > 1) return history.back();
-          const t = withSlug("app.html");
-          if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, "replace");
-          return location.replace(t);
+      function getSb(){
+        return window.DIGIY_GUARD?.getSb?.() || window.sb || null;
+      }
+
+      function withSlug(target){
+        const slug = getGuardState().slug || getSlug();
+        const phone = window.DIGIY_LOC_HUB_PHONE || getHubPhone() || "";
+
+        if(target === "__back__") return target;
+
+        try{
+          const u = new URL(target, location.href);
+          if(slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+          if(phone && !u.searchParams.get("phone")) u.searchParams.set("phone", phone);
+
+          if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+          return u.toString();
+        }catch{
+          let out = target;
+          if(slug){
+            out += (out.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
+          }
+          if(phone){
+            out += (out.includes("?") ? "&" : "?") + "phone=" + encodeURIComponent(phone);
+          }
+          return out;
+        }
+      }
+
+      function show(msg, cls){
+        const el = $("note");
+        if(!el) return;
+        el.className = "note " + (cls || "warn");
+        el.textContent = msg || "";
+        el.style.display = msg ? "block" : "none";
+      }
+
+      function setPills({ phone, slug, ok, preview }){
+        $("pillLieu").textContent = "Lieu : " + (slug || "—");
+        $("vLieu").textContent = slug || "—";
+
+        $("pillPhone").textContent = "👤 " + (phone || "—");
+        $("vPhone").textContent = phone || "—";
+
+        if(ok){
+          $("pillConn").className = "pill ok";
+          $("pillConn").textContent = "✅ Connecté";
+        } else if (preview) {
+          $("pillConn").className = "pill";
+          $("pillConn").textContent = "👁️ Aperçu";
+        } else {
+          $("pillConn").className = "pill bad";
+          $("pillConn").textContent = "Bloqué ❌";
+        }
+      }
+
+      function sbState(){
+        const sb = getSb();
+        const ok = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
+        $("vSb").textContent = ok ? "OK" : "Pas prêt";
+        return ok;
+      }
+
+      function bindNav(){
+        document.querySelectorAll("[data-go]").forEach((el)=>{
+          if(el.__digiy_bound) return;
+          el.__digiy_bound = true;
+
+          const targetRaw = (el.getAttribute("data-go") || "").trim();
+          const mode = (el.getAttribute("data-mode") || "assign").trim();
+
+          el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            if(!targetRaw) return;
+
+            if(targetRaw === "__back__"){
+              if(history.length > 1) return history.back();
+              const t = withSlug("app.html");
+              if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, "replace");
+              return location.replace(t);
+            }
+
+            const target = withSlug(targetRaw);
+
+            if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(target, mode);
+            if(mode === "replace") location.replace(target);
+            else location.assign(target);
+          });
+        });
+      }
+
+      function setPreviewUi(reason){
+        const st = getGuardState();
+        const slug = st.slug || getSlug();
+        const phone = st.phone || getHubPhone() || "";
+
+        setPills({
+          phone,
+          slug,
+          ok: false,
+          preview: true
+        });
+
+        $("vSess").textContent = "Aperçu";
+        $("btnLogout").style.display = "none";
+
+        show(
+          reason === "slug_missing"
+            ? "👁️ Aucun lieu détecté.\n➡️ Ouvre depuis ton lien d’entrée ou repasse par ton accès."
+            : reason === "has_access_false"
+            ? "👁️ Lieu reconnu mais accès non actif.\n➡️ Passe par ton code ou active l’accès."
+            : "👁️ Mode aperçu.\n➡️ L’espace reste visible, mais l’accès réel n’est pas encore confirmé.",
+          "warn"
+        );
+      }
+
+      function setLiveUi(){
+        const st = getGuardState();
+        const phone = (st.phone || getHubPhone() || "").trim();
+        const slug = (st.slug || getSlug() || "").trim();
+
+        setPills({
+          phone,
+          slug,
+          ok: !!st.access_ok,
+          preview: false
+        });
+
+        $("vSess").textContent = st.access_ok ? "OK" : "—";
+        $("btnLogout").style.display = "inline-flex";
+
+        if(sbState()){
+          show("", "warn");
+        } else {
+          show("⚠️ Connexion pas encore prête.\n➡️ Clique ↻ Recharger ou repasse par ton code.", "warn");
+        }
+      }
+
+      $("btnReload")?.addEventListener("click", ()=> location.reload());
+
+      $("btnLogout")?.addEventListener("click", async ()=>{
+        if(!confirm("Se déconnecter ?")) return;
+
+        const pinTarget = withSlug("pin.html");
+
+        try{
+          if(window.DIGIY_GUARD?.logout){
+            await window.DIGIY_GUARD.logout(pinTarget);
+            return;
+          }
+        }catch(err){
+          console.error("[LOC] logout error", err);
         }
 
-        const target = withSlug(targetRaw);
-
-        if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(target, mode);
-        if(mode === "replace") location.replace(target);
-        else location.assign(target);
-      });
-    });
-  }
-
-  function setPreviewUi(reason){
-    const st = getGuardState();
-    const slug = st.slug || getSlug();
-    const phone = st.phone || getHubPhone() || "";
-
-    setPills({
-      phone,
-      slug,
-      ok: false,
-      preview: true
-    });
-
-    $("vSess").textContent = "Aperçu";
-    $("btnLogout").style.display = "none";
-
-    show(
-      reason === "slug_missing"
-        ? "👁️ Aucun lieu détecté.\n➡️ Ouvre depuis ton lien d’entrée ou repasse par ton accès."
-        : reason === "has_access_false"
-        ? "👁️ Lieu reconnu mais accès non actif.\n➡️ Passe par ton code ou active l’accès."
-        : "👁️ Mode aperçu.\n➡️ L’espace reste visible, mais l’accès réel n’est pas encore confirmé.",
-      "warn"
-    );
-  }
-
-  function setLiveUi(){
-    const st = getGuardState();
-    const phone = (st.phone || getHubPhone() || "").trim();
-    const slug = (st.slug || getSlug() || "").trim();
-
-    setPills({
-      phone,
-      slug,
-      ok: !!st.access_ok,
-      preview: false
-    });
-
-    $("vSess").textContent = st.access_ok ? "OK" : "—";
-    $("btnLogout").style.display = "inline-flex";
-
-    if(sbState()){
-      show("", "warn");
-    } else {
-      show("⚠️ Connexion pas encore prête.\n➡️ Clique ↻ Recharger ou repasse par ton code.", "warn");
-    }
-  }
-
-  $("btnReload")?.addEventListener("click", ()=> location.reload());
-
-  $("btnLogout")?.addEventListener("click", ()=>{
-    if(!confirm("Se déconnecter ?")) return;
-
-    const pinTarget = withSlug("pin.html");
-
-    try{
-      if(window.DIGIY_GUARD?.logout) return window.DIGIY_GUARD.logout(pinTarget);
-    }catch(_){}
-
-    location.replace(pinTarget);
-  });
-
-  $("btnCheckAccess")?.addEventListener("click", async (e)=>{
-    e.preventDefault();
-
-    try{
-      await waitGuardReady();
-
-      const st = getGuardState();
-      const sb = getSb();
-      const slug = (st.slug || getSlug() || "").trim();
-      const phone = (st.phone || getHubPhone() || "").trim();
-
-      if(!slug) throw new Error("slug_missing");
-      if(!phone) throw new Error("phone_missing");
-      if(!sb || typeof sb.rpc !== "function") throw new Error("sb_missing");
-
-      const { data, error } = await sb.rpc("digiy_has_access", {
-        p_phone: phone,
-        p_module: "LOC"
+        location.replace(pinTarget);
       });
 
-      if(error) throw error;
+      $("btnCheckAccess")?.addEventListener("click", async (e)=>{
+        e.preventDefault();
 
-      alert(
-        "✅ ACCÈS\n" +
-        "lieu = " + slug + "\n" +
-        "téléphone = " + phone + "\n" +
-        "ouvert = " + (data ? "oui" : "non")
-      );
-    }catch(err){
-      alert("❌ KO\n" + (err?.message || String(err)));
-    }
-  });
+        try{
+          await waitGuardReady();
 
-  async function init(){
-    bindNav();
-    const mo = new MutationObserver(()=>bindNav());
-    mo.observe(document.documentElement, { childList:true, subtree:true });
+          const st = getGuardState();
+          const sb = getSb();
+          const slug = (st.slug || getSlug() || "").trim();
+          const phone = (st.phone || getHubPhone() || "").trim();
 
-    const hubPhone = getHubPhone();
-    const initialSlug = getSlug();
+          if(!slug) throw new Error("slug_missing");
+          if(!phone) throw new Error("phone_missing");
+          if(!sb || typeof sb.rpc !== "function") throw new Error("sb_missing");
 
-    if(initialSlug){
-      saveSlug(initialSlug);
-      ensureSlugInUrl(initialSlug);
-    }
+          const { data, error } = await sb.rpc("digiy_has_access", {
+            p_phone: phone,
+            p_module: "LOC"
+          });
 
-    if(!initialSlug){
-      setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
-      $("vSess").textContent = "—";
-      $("btnLogout").style.display = "none";
-      sbState();
-      show("⚠️ Lien incomplet.\n➡️ Ouvre cette page via ton QR, ton lien d’entrée ou ton accès.", "bad");
-      return;
-    }
+          if(error) throw error;
 
-    if(!window.DIGIY_GUARD){
-      throw new Error("guard_absent");
-    }
+          alert(
+            "✅ ACCÈS\n" +
+            "lieu = " + slug + "\n" +
+            "téléphone = " + phone + "\n" +
+            "ouvert = " + (data ? "oui" : "non")
+          );
+        }catch(err){
+          alert("❌ KO\n" + (err?.message || String(err)));
+        }
+      });
 
-    await waitGuardReady();
+      async function init(){
+        bindNav();
 
-    const st = getGuardState();
-    const finalSlug = (st.slug || initialSlug || "").trim();
+        const mo = new MutationObserver(() => bindNav());
+        mo.observe(document.querySelector(".wrap") || document.body, {
+          childList: true,
+          subtree: true
+        });
 
-    if(finalSlug){
-      saveSlug(finalSlug);
-      ensureSlugInUrl(finalSlug);
-    }
+        const hubPhone = getHubPhone();
+        const initialSlug = getSlug();
 
-    if(!st.access_ok){
-      setPreviewUi(st.reason || "preview");
-    } else {
-      setLiveUi();
-    }
-  }
+        if(initialSlug){
+          saveSlug(initialSlug);
+          ensureSlugInUrl(initialSlug);
+        }
 
-  init().catch((e)=>{
-    console.error(e);
-    const slug = getSlug();
-    const phone = getHubPhone();
-    show("🔴 Crash JS.\n" + (e?.message || e), "bad");
-    setPills({ phone, slug, ok:false, preview:false });
-    $("vSess").textContent = "KO";
-    $("btnLogout").style.display = "none";
-    sbState();
-  });
+        if(!initialSlug){
+          setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
+          $("vSess").textContent = "—";
+          $("btnLogout").style.display = "none";
+          sbState();
+          show("⚠️ Lien incomplet.\n➡️ Ouvre cette page via ton QR, ton lien d’entrée ou ton accès.", "bad");
+          return;
+        }
 
-})();
-</script>
+        if(!window.DIGIY_GUARD){
+          throw new Error("guard_absent");
+        }
+
+        await waitGuardReady();
+
+        const st = getGuardState();
+        const finalSlug = (st.slug || initialSlug || "").trim();
+
+        if(finalSlug){
+          saveSlug(finalSlug);
+          ensureSlugInUrl(finalSlug);
+        }
+
+        if(!st.access_ok){
+          setPreviewUi(st.reason || "preview");
+        } else {
+          setLiveUi();
+        }
+      }
+
+      init().catch((e)=>{
+        console.error(e);
+        const slug = getSlug();
+        const phone = getHubPhone();
+        show("🔴 Crash JS.\n" + (e?.message || e), "bad");
+        setPills({ phone, slug, ok:false, preview:false });
+        $("vSess").textContent = "KO";
+        $("btnLogout").style.display = "none";
+        sbState();
+      });
+    })();
+  </script>
 </body>
 </html>
