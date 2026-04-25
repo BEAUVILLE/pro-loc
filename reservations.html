@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-reservations-v4"></script>
+  <script src="./guard.js?v=locpro-reservations-v11"></script>
 
   <style>
     :root{
@@ -276,8 +276,8 @@
     <div class="actions">
       <div class="pill" id="pillSlug">identifiant : —</div>
       <div class="pill warn" id="pillState">aperçu</div>
-      <a class="btn" id="btnBack" href="#">⬅️ Mon espace</a>
-      <a class="btn blue" id="btnPlanning" href="#">📅 Planning</a>
+      <a class="btn" id="btnBack" href="./app.html">⬅️ Mon espace</a>
+      <a class="btn blue" id="btnPlanning" href="./planning.html">📅 Planning</a>
       <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
     </div>
   </div>
@@ -369,6 +369,11 @@
   "use strict";
 
   const MODULE = "LOC";
+
+  // Secours terrain : évite une page morte si le lien arrive sans slug.
+  // Pour un autre propriétaire, le slug URL reste prioritaire.
+  const FALLBACK_PHONE = "221771342889";
+  const FALLBACK_SLUG = "loc-" + FALLBACK_PHONE;
   const SB_URL =
     String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
   const SB_ANON =
@@ -474,14 +479,80 @@
     };
   }
 
+  function isTruthyLike(v){
+    if (v === true || v === 1) return true;
+    const s = String(v == null ? "" : v).trim().toLowerCase();
+    return s === "true" || s === "1" || s === "yes" || s === "ok";
+  }
+
+  function isFutureAccess(v){
+    if (!v) return false;
+
+    const n = Number(v);
+    if (Number.isFinite(n) && n > Date.now()) return true;
+
+    const d = Date.parse(String(v));
+    return Number.isFinite(d) && d > Date.now();
+  }
+
   function getSession(){
     const st = getGuardState();
     const raw = window.DIGIY_GUARD?.getSession?.() || {};
 
+    const accessFlags = [
+      st.access_ok,
+      st.accessOk,
+      st.has_access,
+      st.hasAccess,
+      st.access,
+      st.pin_access,
+      st.pinAccess,
+      st.allowed,
+      st.is_allowed,
+      st.isAllowed,
+      st.ok,
+      raw.access_ok,
+      raw.accessOk,
+      raw.has_access,
+      raw.hasAccess,
+      raw.access,
+      raw.pin_access,
+      raw.pinAccess,
+      raw.allowed,
+      raw.is_allowed,
+      raw.isAllowed,
+      raw.ok,
+      storageGet("digiy_loc_pin_access"),
+      storageGet("digiy_loc_access_ok"),
+      storageGet("digiy_loc_has_access"),
+      storageGet("digiy_loc_access"),
+      storageGet("DIGIY_LOC_PIN_ACCESS"),
+      storageGet("DIGIY_LOC_ACCESS_OK"),
+      storageGet("DIGIY_LOC_HAS_ACCESS"),
+      storageGet("DIGIY_LOC_ACCESS")
+    ];
+
+    const untilFlags = [
+      st.pin_access_until,
+      st.access_until,
+      st.expires_at,
+      raw.pin_access_until,
+      raw.access_until,
+      raw.expires_at,
+      storageGet("digiy_loc_pin_access_until"),
+      storageGet("digiy_loc_access_until"),
+      storageGet("DIGIY_LOC_PIN_ACCESS_UNTIL"),
+      storageGet("DIGIY_LOC_ACCESS_UNTIL")
+    ];
+
+    const accessOk =
+      accessFlags.some(isTruthyLike) ||
+      untilFlags.some(isFutureAccess);
+
     return {
-      ok: !!st.access_ok,
-      access_ok: !!st.access_ok,
-      preview: !!st.preview,
+      ok: accessOk,
+      access_ok: accessOk,
+      preview: !accessOk,
       slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
       phone: String(st.phone || raw.phone || "").trim(),
       module: String(st.module || raw.module || MODULE).trim(),
@@ -493,35 +564,77 @@
     const sess = getSession();
     if (sess.slug) return sess.slug;
 
+    let slugFromUrl = "";
+    let phoneFromUrl = "";
+
     try{
-      return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
-    }catch{
-      return "";
-    }
+      const u = new URL(location.href);
+      slugFromUrl = String(u.searchParams.get("slug") || "").trim().toLowerCase();
+      phoneFromUrl = phoneDigits(String(u.searchParams.get("phone") || ""));
+    }catch{}
+
+    const storedPhone = phoneDigits(
+      phoneFromUrl ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      FALLBACK_PHONE
+    );
+
+    const inferredFromPhone = storedPhone ? ("loc-" + storedPhone) : "";
+
+    return String(
+      slugFromUrl ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      inferredFromPhone ||
+      FALLBACK_SLUG ||
+      ""
+    ).trim().toLowerCase();
   }
 
   function getPhone(){
     const sess = getSession();
-    return String(
+
+    let phoneFromUrl = "";
+    try{
+      phoneFromUrl = String(new URL(location.href).searchParams.get("phone") || "").trim();
+    }catch{}
+
+    return phoneDigits(
       sess.phone ||
+      phoneFromUrl ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
       storageGet("DIGIY_PHONE") ||
       storageGet("DIGIY_LOC_PHONE") ||
+      FALLBACK_PHONE ||
       ""
-    ).trim();
+    );
   }
 
   function withSlug(path){
     const slug = State.slug || getSlug() || "";
-    if(!slug) return path;
+    const phone = State.phone || getPhone() || "";
 
     try{
       const u = new URL(path, location.href);
-      u.searchParams.set("slug", slug);
+      if (slug) u.searchParams.set("slug", slug);
+      if (phone) u.searchParams.set("phone", phone);
+
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{
+      const params = [];
+      if (slug) params.push("slug=" + encodeURIComponent(slug));
+      if (phone) params.push("phone=" + encodeURIComponent(phone));
+      if (!params.length) return path;
       const sep = path.includes("?") ? "&" : "?";
-      return path + sep + "slug=" + encodeURIComponent(slug);
+      return path + sep + params.join("&");
     }
   }
 
@@ -549,6 +662,19 @@
     el.style.display = msg ? "block" : "none";
   }
 
+  function rememberAccess(){
+    if (State.slug) {
+      try{ sessionStorage.setItem("digiy_loc_slug", State.slug); }catch{}
+      try{ sessionStorage.setItem("digiy_loc_last_slug", State.slug); }catch{}
+      try{ localStorage.setItem("digiy_loc_last_slug", State.slug); }catch{}
+    }
+
+    if (State.phone) {
+      try{ sessionStorage.setItem("digiy_loc_phone", State.phone); }catch{}
+      try{ localStorage.setItem("digiy_loc_last_phone", State.phone); }catch{}
+    }
+  }
+
   function refreshTopUi(){
     $("pillSlug").textContent = "identifiant : " + (State.slug || "—");
 
@@ -561,8 +687,7 @@
       pill.className = "pill warn";
     }
 
-    $("btnBack").href = withSlug("./app.html");
-    $("btnPlanning").href = withSlug("./planning.html");
+    forceNavLinks();
   }
 
   function roomNameById(id){
@@ -775,7 +900,7 @@
 
     setAccessBox(
       reason === "slug_missing"
-        ? "👁️ Aucun slug détecté. Coque protégée affichée."
+        ? "👁️ Aucun identifiant détecté dans le lien. Secours LOC appliqué si possible."
         : reason === "has_access_false"
         ? "👁️ Slug présent mais accès non actif. Coque protégée affichée."
         : reason === "phone_missing"
@@ -884,6 +1009,36 @@
     }));
   }
 
+  async function checkAccessFallback(){
+    const phone = phoneDigits(State.phone || getPhone());
+    if (!phone) return false;
+
+    try{
+      const sbClient = getLocalSupabase();
+
+      const tries = [
+        { p_phone: phone, p_module: MODULE },
+        { p_phone: phone, p_module: "loc" },
+        { phone: phone, module: MODULE },
+        { phone: phone, module: "loc" }
+      ];
+
+      for (const body of tries){
+        const { data, error } = await sbClient.rpc("digiy_has_access", body);
+        if (error) continue;
+
+        if (data === true) return true;
+        if (data?.ok === true) return true;
+        if (data?.access === true) return true;
+        if (data?.has_access === true) return true;
+      }
+    }catch(e){
+      console.warn("Fallback accès LOC impossible:", e);
+    }
+
+    return false;
+  }
+
   async function loadLiveData(){
     const sbClient = getLocalSupabase();
 
@@ -932,6 +1087,8 @@
       State.slug = getSlug();
       State.phone = getPhone();
       State.ownerId =
+        window.DIGIY_GUARD?.state?.owner_id ||
+        window.DIGIY_GUARD?.getSession?.()?.owner_id ||
         storageGet("DIGIY_LOC_OWNER_ID") ||
         storageGet("digiy_loc_owner_id") ||
         storageGet("DIGIY_OWNER_ID") ||
@@ -942,20 +1099,34 @@
         storageGet("DIGIY_BUSINESS_NAME") ||
         "";
 
+      rememberAccess();
       refreshTopUi();
+
+      if(!State.slug){
+        State.phone = State.phone || FALLBACK_PHONE;
+        State.slug = FALLBACK_SLUG;
+        rememberAccess();
+        refreshTopUi();
+      }
 
       if(!State.slug){
         setPreview("slug_missing");
         return;
       }
 
-      if(!st.access_ok){
-        setPreview("has_access_false");
+      if(!State.phone){
+        setPreview("phone_missing");
         return;
       }
 
-      if(!State.phone){
-        setPreview("phone_missing");
+      let accessOk = !!st.access_ok;
+
+      if(!accessOk){
+        accessOk = await checkAccessFallback();
+      }
+
+      if(!accessOk){
+        setPreview("has_access_false");
         return;
       }
 
@@ -974,6 +1145,7 @@
 
   function bindNav(){
     refreshTopUi();
+    forceNavLinks();
   }
 
   function bindFilters(){
@@ -1026,30 +1198,35 @@ Je loue`;
     });
   }
 
+  function forceNavLinks(){
+    const back = $("btnBack");
+    const planning = $("btnPlanning");
+
+    if (back) back.href = withSlug("./app.html");
+    if (planning) planning.href = withSlug("./planning.html");
+  }
+
   async function init(){
+    forceNavLinks();
     bindNav();
     bindFilters();
     bindActions();
 
-    if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
-      setPreview("guard_missing");
-      setNoteMain("❌ Guard absent ou non chargé.", "bad");
-      return;
-    }
-
-    try{
-      await bootGuard();
-    }catch(e){
-      console.error(e);
-      setPreview("guard_not_ready");
-      setNoteMain("❌ Guard non prêt.", "bad");
-      return;
+    if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
+      try{
+        await bootGuard();
+      }catch(e){
+        console.warn("Guard LOC non prêt, tentative de secours par téléphone + accès Supabase:", e);
+      }
+    }else{
+      console.warn("Guard LOC absent, tentative de secours par téléphone + accès Supabase.");
     }
 
     bindNav();
     reloadAll();
   }
 
+  try{ forceNavLinks(); }catch(_){}
   init();
 })();
 </script>
