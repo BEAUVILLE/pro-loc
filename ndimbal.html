@@ -9,13 +9,15 @@
   <!-- ✅ CONFIG SUPABASE -->
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
   <!-- Supabase + Guard -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-ndimbal-v2"></script>
+  <script src="./guard.js?v=locpro-ndimbal-v5"></script>
 
   <style>
     :root{
@@ -136,7 +138,7 @@
 
     <div class="card">
       <div class="row">
-        <a class="btn" id="btnBack" href="#">⬅️ Retour à mon espace</a>
+        <a class="btn" id="btnBack" href="./app.html">⬅️ Retour à mon espace</a>
         <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
         <span class="pill" id="pillCount">0 résultat</span>
       </div>
@@ -205,6 +207,34 @@
     return "";
   }
 
+  function isTruthyLike(v){
+    if (v === true || v === 1) return true;
+    const s = String(v == null ? "" : v).trim().toLowerCase();
+    return s === "true" || s === "1" || s === "yes" || s === "ok";
+  }
+
+  function isFutureAccess(v){
+    if (!v) return false;
+
+    const n = Number(v);
+    if (Number.isFinite(n) && n > Date.now()) return true;
+
+    const d = Date.parse(String(v));
+    return Number.isFinite(d) && d > Date.now();
+  }
+
+  function phoneDigits(v){
+    return String(v || "").replace(/[^\d]/g, "");
+  }
+
+  function normPhone(v){
+    const d = phoneDigits(v);
+    if (!d) return "";
+    if (d.startsWith("221") && d.length === 12) return d;
+    if (d.length === 9) return "221" + d;
+    return d;
+  }
+
   function getGuardState(){
     return window.DIGIY_GUARD?.state || {
       preview: true,
@@ -216,21 +246,20 @@
   }
 
   async function waitGuardReady(){
-    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
+    if(!window.DIGIY_GUARD) return null;
     const r = window.DIGIY_GUARD.ready;
 
     if(typeof r === "function"){
       const maybe = r(8000);
-      if (maybe && typeof maybe.then === "function") return await maybe;
+      if (maybe && typeof maybe.then === "function") return await maybe.catch(() => null);
       return maybe;
     }
 
     if(r && typeof r.then === "function"){
-      return await r;
+      return await r.catch(() => null);
     }
 
-    if(r) return true;
-    throw new Error("guard_not_ready");
+    return r || null;
   }
 
   function getSB(){
@@ -253,10 +282,21 @@
 
   function getSlug(){
     const st = getGuardState();
+    const raw = window.DIGIY_GUARD?.getSession?.() || {};
+    let slugFromUrl = "";
+
+    try{
+      slugFromUrl = String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();
+    }catch{}
+
     return (
-      new URL(location.href).searchParams.get("slug") ||
+      slugFromUrl ||
       st.slug ||
+      raw.slug ||
       storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
       storageGet("digiy_last_slug") ||
       storageGet("DIGIY_SLUG") ||
       ""
@@ -265,16 +305,21 @@
 
   function withSlug(path){
     const slug = SLUG || getSlug();
-    if(!slug) return path;
+    const phone = PHONE || normPhone(storageGet("digiy_loc_phone") || storageGet("digiy_loc_last_phone"));
 
     try{
       const u = new URL(path, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      if(phone && !u.searchParams.get("phone")) u.searchParams.set("phone", phone);
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{
+      const params = [];
+      if (slug) params.push("slug=" + encodeURIComponent(slug));
+      if (phone) params.push("phone=" + encodeURIComponent(phone));
+      if (!params.length) return path;
       const sep = path.includes("?") ? "&" : "?";
-      return path + sep + "slug=" + encodeURIComponent(slug);
+      return path + sep + params.join("&");
     }
   }
 
@@ -282,28 +327,51 @@
     const st = getGuardState();
     const sess = window.DIGIY_GUARD?.getSession?.() || null;
 
+    let phoneFromUrl = "";
+    try{
+      phoneFromUrl = new URL(location.href).searchParams.get("phone") || "";
+    }catch{}
+
     OWNER_ID =
       sess?.owner_id ||
       sess?.ownerId ||
+      st.owner_id ||
+      st.ownerId ||
       storageGet("DIGIY_LOC_OWNER_ID") ||
       storageGet("digiy_loc_owner_id") ||
       storageGet("DIGIY_OWNER_ID") ||
       storageGet("owner_id") ||
       "";
 
-    PHONE =
+    PHONE = normPhone(
       sess?.phone ||
       st.phone ||
+      phoneFromUrl ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
       storageGet("DIGIY_PHONE") ||
       storageGet("DIGIY_LOC_PHONE") ||
-      "";
+      ""
+    );
 
     BUSINESS_CODE =
       (sess?.business_code ||
       sess?.businessCode ||
+      st.business_code ||
+      st.businessCode ||
       storageGet("DIGIY_LOC_BUSINESS_CODE") ||
       storageGet("DIGIY_BUSINESS_CODE") ||
       "").toString().trim().toUpperCase();
+
+    if (SLUG) {
+      try{ sessionStorage.setItem("digiy_loc_slug", SLUG); }catch{}
+      try{ localStorage.setItem("digiy_loc_last_slug", SLUG); }catch{}
+    }
+
+    if (PHONE) {
+      try{ sessionStorage.setItem("digiy_loc_phone", PHONE); }catch{}
+      try{ localStorage.setItem("digiy_loc_last_phone", PHONE); }catch{}
+    }
   }
 
   function pick(obj, keys){
@@ -409,6 +477,82 @@
     return { ok:false, rows:[], mode:"owner:none" };
   }
 
+  async function hasAccess(){
+    const st = getGuardState();
+    const sess = window.DIGIY_GUARD?.getSession?.() || {};
+
+    const flags = [
+      st.access_ok,
+      st.accessOk,
+      st.has_access,
+      st.hasAccess,
+      st.access,
+      st.pin_access,
+      st.pinAccess,
+      st.allowed,
+      st.is_allowed,
+      st.isAllowed,
+      st.ok,
+      sess.access_ok,
+      sess.accessOk,
+      sess.has_access,
+      sess.hasAccess,
+      sess.access,
+      sess.pin_access,
+      sess.pinAccess,
+      sess.allowed,
+      sess.is_allowed,
+      sess.isAllowed,
+      sess.ok,
+      storageGet("digiy_loc_pin_access"),
+      storageGet("digiy_loc_access_ok"),
+      storageGet("digiy_loc_has_access"),
+      storageGet("digiy_loc_access"),
+      storageGet("DIGIY_LOC_PIN_ACCESS"),
+      storageGet("DIGIY_LOC_ACCESS_OK"),
+      storageGet("DIGIY_LOC_HAS_ACCESS"),
+      storageGet("DIGIY_LOC_ACCESS")
+    ];
+
+    const untils = [
+      st.pin_access_until,
+      st.access_until,
+      st.expires_at,
+      sess.pin_access_until,
+      sess.access_until,
+      sess.expires_at,
+      storageGet("digiy_loc_pin_access_until"),
+      storageGet("digiy_loc_access_until"),
+      storageGet("DIGIY_LOC_PIN_ACCESS_UNTIL"),
+      storageGet("DIGIY_LOC_ACCESS_UNTIL")
+    ];
+
+    if (flags.some(isTruthyLike) || untils.some(isFutureAccess)) return true;
+
+    const phone = PHONE || normPhone(storageGet("digiy_loc_phone") || storageGet("digiy_loc_last_phone"));
+    if (!phone) return false;
+
+    try{
+      const sb = getSB();
+      const tries = [
+        { p_phone: phone, p_module: MODULE },
+        { p_phone: phone, p_module: "loc" },
+        { phone: phone, module: MODULE },
+        { phone: phone, module: "loc" }
+      ];
+
+      for (const body of tries){
+        const { data, error } = await sb.rpc("digiy_has_access", body);
+        if (error) continue;
+        if (data === true || data?.ok === true || data?.access === true || data?.has_access === true) return true;
+      }
+    }catch(e){
+      console.warn("NDIMBAL LOC fallback access failed:", e);
+    }
+
+    return false;
+  }
+
   async function load(){
     clear();
 
@@ -426,9 +570,7 @@
     show("⏳ Chargement NDIMBAL…", "warn");
 
     try{
-      const st = getGuardState();
-
-      if(!st.access_ok){
+      if(!await hasAccess()){
         show("🔒 Accès non ouvert.\n➡️ Passe par PIN pour ouvrir le bureau réel.", "warn");
         grid.innerHTML = "";
         pillCount.textContent = "0 résultat";
@@ -507,12 +649,7 @@
   }
 
   async function init(){
-    try{
-      await waitGuardReady();
-    }catch(e){
-      show("❌ Guard absent ou non prêt.\n➡️ Vérifie ./guard.js puis recharge.", "bad");
-      return;
-    }
+    await waitGuardReady();
 
     SLUG = getSlug();
     resolveSession();
