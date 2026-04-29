@@ -2128,24 +2128,33 @@
     return "other";
   }
 
+
+  function quickLocNorm(text){
+    return String(text || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
   function quickLocComplement(text, type){
     const s = String(text || "").trim();
-    const lower = s.toLowerCase();
+    const lower = quickLocNorm(s);
 
-    if(/\b(chambre|studio|appartement|logement|villa|maison)\b/.test(lower)){
-      const found = lower.match(/\b(chambre|studio|appartement|logement|villa|maison)\b/);
+    if(/(chambre|studio|appartement|logement|villa|maison)/.test(lower)){
+      const found = lower.match(/(chambre|studio|appartement|logement|villa|maison)/);
       return found ? found[1] : "";
     }
-    if(/\b(ménage|menage|nettoyage)\b/.test(lower)) return "ménage";
-    if(/\b(robinet|réparation|reparation|plomberie|serrure|clim|électricité|electricite)\b/.test(lower)) return "entretien";
-    if(/\b(acompte|avance)\b/.test(lower)) return "acompte";
-    if(/\b(bloquer|fermer|indisponible)\b/.test(lower)) return "calendrier";
+    if(/(menage|nettoyage)/.test(lower)) return "ménage";
+    if(/(robinet|reparation|plomberie|serrure|clim|entretien)/.test(lower)) return "entretien";
+    if(/(electricite|eau|internet|facture|senelec|sde|sen eau)/.test(lower)) return "facture";
+    if(/(acompte|avance)/.test(lower)) return "acompte";
+    if(/(bloquer|fermer|indisponible)/.test(lower)) return "calendrier";
     return "";
   }
 
   function quickLocDraftFromText(text){
     const sentence = String(text || "").trim().replace(/\s+/g, " ");
-    const lower = sentence.toLowerCase();
+    const lower = quickLocNorm(sentence);
     const amount = quickLocAmount(sentence);
     const channel = quickLocChannel(sentence);
 
@@ -2191,7 +2200,7 @@
       category = "maintenance";
       kind = "expense";
       impact = "dépense entretien";
-    } else if(/\b(électricité|electricite|eau|internet|facture)\b/.test(lower)){
+    } else if(/\b(electricite|eau|internet|facture|senelec|sde|sen eau)\b/.test(lower)){
       type = "utility_expense";
       title = "Facture logement";
       direction = "out";
