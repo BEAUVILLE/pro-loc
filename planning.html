@@ -687,6 +687,221 @@
       font-size:.90rem;
     }
 
+
+    .quickLoc{
+      margin-top:12px;
+      padding:12px;
+      border-color:rgba(250,204,21,.22);
+      background:
+        radial-gradient(420px 180px at 100% 0%, rgba(250,204,21,.10), transparent 70%),
+        rgba(255,255,255,.04);
+    }
+
+    .quickLocTitle{
+      font-weight:1100;
+      font-size:1rem;
+      margin-bottom:4px;
+    }
+
+    .quickLocSub{
+      color:var(--muted);
+      font-weight:900;
+      line-height:1.35;
+      margin-bottom:12px;
+    }
+
+    .quickGuide{
+      padding:11px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.035);
+      display:grid;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .quickGuide strong{
+      color:#fde68a;
+      font-weight:1100;
+      font-size:.90rem;
+    }
+
+    .quickGuide p{
+      margin:0;
+      color:var(--muted);
+      font-weight:900;
+      line-height:1.35;
+      font-size:.86rem;
+    }
+
+    .quickExamples{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .quickExamples button{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:999px;
+      padding:7px 10px;
+      font-weight:1000;
+      font-size:.78rem;
+      cursor:pointer;
+    }
+
+    .quickExamples button:hover{
+      border-color:rgba(250,204,21,.35);
+      color:#fde68a;
+    }
+
+    .quickInput{
+      width:100%;
+      min-height:86px;
+      resize:vertical;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:11px 12px;
+      font:inherit;
+      font-weight:950;
+      outline:none;
+    }
+
+    .quickInput:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.10);
+    }
+
+    .quickDraft{
+      display:none;
+      margin-top:10px;
+      padding:11px;
+      border-radius:16px;
+      border:1px solid rgba(34,197,94,.30);
+      background:rgba(34,197,94,.08);
+      color:#bbf7d0;
+      font-weight:900;
+      line-height:1.42;
+      white-space:normal;
+    }
+
+    .quickDraft strong{color:#fff}
+
+    .memoryBox{
+      margin-top:10px;
+      padding:11px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.035);
+      display:grid;
+      gap:10px;
+    }
+
+    .memoryHead{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .memoryTitle{
+      font-size:.92rem;
+      font-weight:1100;
+      color:#fde68a;
+      line-height:1.25;
+    }
+
+    .memoryHelp{
+      margin-top:3px;
+      color:var(--muted);
+      font-size:.80rem;
+      font-weight:900;
+      line-height:1.35;
+    }
+
+    .memoryList{
+      display:grid;
+      gap:8px;
+    }
+
+    .memoryItem{
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.04);
+      padding:10px;
+      display:grid;
+      gap:5px;
+    }
+
+    .memoryItemTop{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .memoryItemTitle{
+      font-size:.90rem;
+      font-weight:1100;
+      color:var(--text);
+      line-height:1.35;
+    }
+
+    .memoryItemAmount{
+      font-size:.82rem;
+      font-weight:1100;
+      color:#bbf7d0;
+      white-space:nowrap;
+    }
+
+    .memoryItemMeta{
+      color:var(--muted);
+      font-size:.80rem;
+      font-weight:900;
+      line-height:1.35;
+    }
+
+    .memoryEmpty{
+      padding:10px;
+      border-radius:14px;
+      border:1px dashed rgba(148,163,184,.22);
+      color:var(--muted);
+      font-size:.82rem;
+      font-weight:900;
+      line-height:1.4;
+    }
+
+    .memoryPayAction{
+      margin-top:6px;
+      display:inline-flex;
+      width:max-content;
+      max-width:100%;
+      min-height:36px;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      padding:8px 11px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.32);
+      background:rgba(250,204,21,.12);
+      color:#fde68a;
+      font-size:.80rem;
+      font-weight:1100;
+      text-decoration:none;
+    }
+
+    .memoryPayHint{
+      color:rgba(246,248,242,.72);
+      font-size:.74rem;
+      font-weight:850;
+      line-height:1.35;
+    }
+
     @media (max-width:700px){
       .topActions{grid-template-columns:repeat(2,minmax(0,1fr))}
       .miniTools{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -763,6 +978,49 @@
 
       <div class="rangeHint" id="rangeHint">Astuce : touche une date ou glisse sur plusieurs jours pour remplir la plage plus vite.</div>
     </div>
+
+
+    <div class="card quickLoc" id="quickLocNote">
+      <div class="quickLocTitle">Note rapide location</div>
+      <div class="quickLocSub">Écris court, DIGIY prépare. Tu confirmes avant toute suite.</div>
+
+      <div class="quickGuide">
+        <strong>Une phrase suffit.</strong>
+        <p>Exemples : paiement client, acompte, ménage, réparation, facture ou date à bloquer.</p>
+        <div class="quickExamples" id="quickLocExamples">
+          <button type="button">Client a payé 30000 cash chambre</button>
+          <button type="button">Acompte 10000 Wave</button>
+          <button type="button">Ménage 5000 cash</button>
+          <button type="button">Réparation robinet 12000</button>
+          <button type="button">Électricité 18000 vendredi</button>
+          <button type="button">Bloquer samedi dimanche</button>
+        </div>
+      </div>
+
+      <textarea class="quickInput" id="quickLocInput" placeholder="Ex : Client a payé 30000 cash chambre"></textarea>
+
+      <div class="rangeActions" style="margin-top:10px">
+        <button class="btn gold" id="btnQuickLocPrepare" type="button">Préparer</button>
+        <button class="btn ok" id="btnQuickLocConfirm" type="button" style="display:none">✅ Confirmer</button>
+        <button class="btn" id="btnQuickLocClear" type="button">Effacer</button>
+      </div>
+
+      <div class="quickDraft" id="quickLocDraft"></div>
+
+      <div class="memoryBox">
+        <div class="memoryHead">
+          <div>
+            <div class="memoryTitle">🧠 Aide-mémoire location</div>
+            <div class="memoryHelp">Dernières notes confirmées ici. Les notes argent peuvent partir vers Mon argent.</div>
+          </div>
+          <button class="btn small" id="btnQuickLocMemoryClear" type="button">Vider</button>
+        </div>
+        <div class="memoryList" id="quickLocMemoryList">
+          <div class="memoryEmpty">Aucune note LOC confirmée pour le moment.</div>
+        </div>
+      </div>
+    </div>
+
 
     <div class="calendarCard">
       <div class="calendarHead">
@@ -1852,6 +2110,339 @@
     `;
   }
 
+
+  function quickLocAmount(text){
+    const m = String(text || "").replace(/\s+/g, " ").match(/(\d[\d\s.,]*)\s*(f|fcfa|xof)?/i);
+    if(!m) return 0;
+    const raw = String(m[1] || "").replace(/[^\d]/g, "");
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function quickLocChannel(text){
+    const t = String(text || "").toLowerCase();
+    if(/\bwave\b/.test(t)) return "wave";
+    if(/\b(cash|espèces|especes|liquide)\b/.test(t)) return "cash";
+    if(/\b(orange money|om)\b/.test(t)) return "orange_money";
+    if(/\b(banque|virement)\b/.test(t)) return "bank";
+    return "other";
+  }
+
+  function quickLocComplement(text, type){
+    const s = String(text || "").trim();
+    const lower = s.toLowerCase();
+
+    if(/\b(chambre|studio|appartement|logement|villa|maison)\b/.test(lower)){
+      const found = lower.match(/\b(chambre|studio|appartement|logement|villa|maison)\b/);
+      return found ? found[1] : "";
+    }
+    if(/\b(ménage|menage|nettoyage)\b/.test(lower)) return "ménage";
+    if(/\b(robinet|réparation|reparation|plomberie|serrure|clim|électricité|electricite)\b/.test(lower)) return "entretien";
+    if(/\b(acompte|avance)\b/.test(lower)) return "acompte";
+    if(/\b(bloquer|fermer|indisponible)\b/.test(lower)) return "calendrier";
+    return "";
+  }
+
+  function quickLocDraftFromText(text){
+    const sentence = String(text || "").trim().replace(/\s+/g, " ");
+    const lower = sentence.toLowerCase();
+    const amount = quickLocAmount(sentence);
+    const channel = quickLocChannel(sentence);
+
+    let type = "note";
+    let title = "Note location";
+    let direction = "none";
+    let category = "loc_note";
+    let kind = "other";
+    let impact = "à classer";
+
+    if(/\b(bloquer|fermer|indisponible|occupé|occupe)\b/.test(lower)){
+      type = "calendar_note";
+      title = "Note calendrier";
+      direction = "none";
+      category = "calendar_note";
+      kind = "other";
+      impact = "calendrier à vérifier";
+    } else if(/\b(acompte|avance)\b/.test(lower)){
+      type = "deposit";
+      title = "Acompte reçu";
+      direction = "in";
+      category = "deposit";
+      kind = "sale";
+      impact = "entrée location";
+    } else if(/\b(payé|paye|payee|payée|encaissé|encaisse|client a payé|client a paye|reçu|recu)\b/.test(lower)){
+      type = "rent_income";
+      title = "Paiement location";
+      direction = "in";
+      category = "rent_income";
+      kind = "sale";
+      impact = "recette location";
+    } else if(/\b(ménage|menage|nettoyage)\b/.test(lower)){
+      type = "cleaning_expense";
+      title = "Ménage payé";
+      direction = "out";
+      category = "cleaning";
+      kind = "expense";
+      impact = "dépense location";
+    } else if(/\b(réparation|reparation|robinet|plomberie|serrure|clim|entretien)\b/.test(lower)){
+      type = "maintenance_expense";
+      title = "Réparation location";
+      direction = "out";
+      category = "maintenance";
+      kind = "expense";
+      impact = "dépense entretien";
+    } else if(/\b(électricité|electricite|eau|internet|facture)\b/.test(lower)){
+      type = "utility_expense";
+      title = "Facture logement";
+      direction = "out";
+      category = "utility_bill";
+      kind = "expense";
+      impact = "charge location";
+    }
+
+    const complement = quickLocComplement(sentence, type);
+
+    return {
+      sentence,
+      type,
+      title,
+      amount_xof: amount,
+      channel,
+      direction,
+      category,
+      kind,
+      impact,
+      complement,
+      module: "LOC",
+      status: "draft",
+      created_at: new Date().toISOString()
+    };
+  }
+
+  function quickLocMemoryKey(){
+    const slug = getAccessSlug() || "unknown";
+    return `digiy_loc_quick_memory:${slug}`;
+  }
+
+  function quickLocDraftKey(){
+    const slug = getAccessSlug() || "unknown";
+    return `digiy_loc_quick_draft:${slug}`;
+  }
+
+  function readQuickLocMemory(){
+    try{
+      const raw = localStorage.getItem(quickLocMemoryKey());
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch{
+      return [];
+    }
+  }
+
+  function writeQuickLocMemory(items){
+    try{
+      localStorage.setItem(quickLocMemoryKey(), JSON.stringify((items || []).slice(0, 10)));
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function saveQuickLocDraft(draft, confirmed = false){
+    try{
+      localStorage.setItem(quickLocDraftKey(), JSON.stringify({
+        ...draft,
+        status: confirmed ? "confirmed_local" : "draft",
+        confirmed_at: confirmed ? new Date().toISOString() : null
+      }));
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function addQuickLocMemory(draft){
+    const item = {
+      ...draft,
+      memory_id: "loc_" + Date.now(),
+      confirmed_at: new Date().toISOString()
+    };
+    const list = readQuickLocMemory();
+    list.unshift(item);
+    writeQuickLocMemory(list);
+    renderQuickLocMemory();
+  }
+
+  function isQuickLocFinancial(item){
+    const type = String(item?.type || "").toLowerCase();
+    return ["rent_income","deposit","cleaning_expense","maintenance_expense","utility_expense"].includes(type);
+  }
+
+  function paySlugFromLocPhone(){
+    const p = digits(getAccessPhone());
+    return p ? "pay-" + p : "";
+  }
+
+  function payLocLabel(item){
+    const type = String(item?.type || "").toLowerCase();
+    const comp = String(item?.complement || "").trim();
+
+    if(type === "rent_income") return comp ? "Paiement " + comp : "Paiement location";
+    if(type === "deposit") return "Acompte location";
+    if(type === "cleaning_expense") return "Ménage";
+    if(type === "maintenance_expense") return comp ? "Réparation " + comp : "Réparation location";
+    if(type === "utility_expense") return comp ? "Facture " + comp : "Facture logement";
+    return item?.title || "Note location";
+  }
+
+  function buildPayFromLocUrl(item){
+    const phone = digits(getAccessPhone());
+    const paySlug = paySlugFromLocPhone();
+    const qsPay = new URLSearchParams();
+
+    if(paySlug) qsPay.set("slug", paySlug);
+    if(phone) qsPay.set("phone", phone);
+
+    qsPay.set("fromDraft", "1");
+    qsPay.set("direction", item?.direction === "in" ? "in" : "out");
+    qsPay.set("scope", "pro");
+    qsPay.set("amount", String(Math.round(Number(item?.amount_xof || 0))));
+    qsPay.set("kind", item?.kind || (item?.direction === "in" ? "sale" : "expense"));
+    qsPay.set("channel", item?.channel || "other");
+    qsPay.set("category", item?.category || "loc_note");
+    qsPay.set("source_module", "LOC");
+    qsPay.set("label", payLocLabel(item));
+    qsPay.set("note", String(item?.sentence || "").trim());
+    qsPay.set("complement", String(item?.complement || "").trim());
+    qsPay.set("intent", "loc_quick_note");
+
+    return "https://pro-pay.digiylyfe.com/admin.html?" + qsPay.toString();
+  }
+
+  function renderQuickLocDraft(draft){
+    const box = $("quickLocDraft");
+    const confirmBtn = $("btnQuickLocConfirm");
+    if(!box) return;
+
+    if(!draft || !draft.sentence){
+      box.style.display = "none";
+      box.innerHTML = "";
+      if(confirmBtn) confirmBtn.style.display = "none";
+      return;
+    }
+
+    const amountText = draft.amount_xof ? formatAmount(draft.amount_xof) + " F CFA" : "montant à préciser";
+    const channelText = draft.channel === "other" ? "canal à préciser" : draft.channel;
+
+    box.style.display = "block";
+    if(confirmBtn) confirmBtn.style.display = "inline-flex";
+
+    box.innerHTML = `
+      <strong>Voilà ce que DIGIY LOC a préparé :</strong><br>
+      Type : ${esc(draft.title)}<br>
+      Montant : ${esc(amountText)}<br>
+      Canal : ${esc(channelText)}<br>
+      Impact : ${esc(draft.impact)}<br>
+      ${draft.complement ? `Complément : ${esc(draft.complement)}<br>` : ``}
+      <br>
+      <span style="color:rgba(246,248,242,.72)">Brouillon seulement. Rien n’est envoyé en base automatiquement.</span>
+    `;
+  }
+
+  function renderQuickLocMemory(){
+    const box = $("quickLocMemoryList");
+    if(!box) return;
+
+    const list = readQuickLocMemory();
+    if(!list.length){
+      box.innerHTML = `<div class="memoryEmpty">Aucune note LOC confirmée pour le moment.</div>`;
+      return;
+    }
+
+    box.innerHTML = list.slice(0, 10).map(item => {
+      const amount = item.amount_xof ? formatAmount(item.amount_xof) + " F CFA" : "montant à préciser";
+      const channel = item.channel && item.channel !== "other" ? item.channel : "canal à préciser";
+      const comp = item.complement ? " · " + item.complement : "";
+
+      return `
+        <div class="memoryItem">
+          <div class="memoryItemTop">
+            <div class="memoryItemTitle">✅ ${esc(item.title || "Note location")}</div>
+            <div class="memoryItemAmount">${esc(amount)}</div>
+          </div>
+          <div class="memoryItemMeta">${esc(channel)} · ${esc(item.impact || "à classer")}${esc(comp)}</div>
+          <div class="memoryItemMeta">${esc(item.sentence || "")}</div>
+          ${isQuickLocFinancial(item) ? `
+            <a class="memoryPayAction" href="${esc(buildPayFromLocUrl(item))}">
+              💼 Envoyer vers Mon argent
+            </a>
+            <div class="memoryPayHint">Abonnement Mon argent requis pour enregistrer.</div>
+          ` : ``}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function clearQuickLocMemory(){
+    const ok = window.confirm("Vider l’aide-mémoire location sur cet appareil ?");
+    if(!ok) return;
+    writeQuickLocMemory([]);
+    renderQuickLocMemory();
+    show("Aide-mémoire location vidé sur cet appareil.", "ok");
+  }
+
+  function bindQuickLocNote(){
+    const input = $("quickLocInput");
+    const prepare = $("btnQuickLocPrepare");
+    const confirm = $("btnQuickLocConfirm");
+    const clear = $("btnQuickLocClear");
+
+    $("quickLocExamples")?.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if(!input) return;
+        input.value = btn.textContent.trim();
+        input.focus();
+      });
+    });
+
+    prepare?.addEventListener("click", () => {
+      const sentence = String(input?.value || "").trim();
+      if(!sentence){
+        show("Écris une note location avant de préparer.", "warn");
+        return;
+      }
+
+      const draft = quickLocDraftFromText(sentence);
+      saveQuickLocDraft(draft, false);
+      renderQuickLocDraft(draft);
+      show("Brouillon location préparé. Vérifie puis confirme.", "ok");
+    });
+
+    confirm?.addEventListener("click", () => {
+      const draft = quickLocDraftFromText(String(input?.value || "").trim());
+      if(!draft.sentence){
+        show("Prépare d’abord une note location.", "warn");
+        return;
+      }
+
+      saveQuickLocDraft(draft, true);
+      addQuickLocMemory(draft);
+      renderQuickLocDraft({...draft, status:"confirmed_local"});
+      if(confirm) confirm.style.display = "none";
+      show("Note location confirmée dans l’aide-mémoire.", "ok");
+    });
+
+    clear?.addEventListener("click", () => {
+      if(input) input.value = "";
+      renderQuickLocDraft(null);
+      show("Note location effacée.", "ok");
+    });
+
+    $("btnQuickLocMemoryClear")?.addEventListener("click", clearQuickLocMemory);
+    renderQuickLocMemory();
+  }
+
+
   function render(){
     renderCalendar();
     renderActionBar();
@@ -2383,7 +2974,9 @@
       }
     });
 
-    $("btnSupport").addEventListener("click", ()=>{
+    bindQuickLocNote();
+
+  $("btnSupport").addEventListener("click", ()=>{
       const accessSlug = getAccessSlug();
       const roomSlug = ROOM_CTX.roomSlug || readRoomSlugFromQuery() || "—";
       const sess = getSession();
