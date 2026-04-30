@@ -15,7 +15,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-reservations-v11"></script>
+  <script src="./guard.js?v=locpro-reservations-rpc-v12"></script>
 
   <style>
     :root{
@@ -286,7 +286,7 @@
 
   <div class="card">
     <h2 style="margin:0 0 8px;font-size:18px">Filtres</h2>
-    <div class="muted">Lecture réelle sur les réservations liées à l’identifiant actif.</div>
+    <div class="muted">Lecture sécurisée par identifiant actif, sans ouvrir la table clients.</div>
 
     <div class="filters">
       <div class="f">
@@ -924,88 +924,79 @@
     setAccessBox("");
   }
 
-  async function fetchRooms(sbClient){
-    const attempts = [];
+  async function fetchReservationsViaRpc(sbClient){
+    const candidates = [];
 
-    if (State.phone) {
-      attempts.push(async () => {
-        const { data, error } = await sbClient
-          .from(DB.rooms)
-          .select("id, nom, owner_id, phone")
-          .eq(DB.roomPhone, State.phone)
-          .order("created_at", { ascending:false });
-        if (error) throw error;
-        return data || [];
-      });
+    function addCandidate(value){
+      const v = String(value || "").trim().toLowerCase();
+      if(!v) return;
+      if(!candidates.includes(v)) candidates.push(v);
     }
 
-    if (State.ownerId) {
-      attempts.push(async () => {
-        const { data, error } = await sbClient
-          .from(DB.rooms)
-          .select("id, nom, owner_id, phone")
-          .eq(DB.roomOwnerId, State.ownerId)
-          .order("created_at", { ascending:false });
-        if (error) throw error;
-        return data || [];
-      });
-    }
+    addCandidate(State.slug);
+    addCandidate(getSlug());
+
+    const urlSlug = (()=>{
+      try{return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();}
+      catch{return "";}
+    })();
+    addCandidate(urlSlug);
+
+    const storedSlugs = [
+      storageGet("digiy_loc_room_slug"),
+      storageGet("DIGIY_LOC_ROOM_SLUG"),
+      storageGet("digiy_loc_slug"),
+      storageGet("digiy_loc_last_slug"),
+      storageGet("DIGIY_LOC_SLUG"),
+      storageGet("DIGIY_LOC_LAST_SLUG"),
+      storageGet("digiy_last_slug")
+    ];
+    storedSlugs.forEach(addCandidate);
+
+    const phone = phoneDigits(State.phone || getPhone());
+    if(phone) addCandidate("loc-" + phone);
 
     let lastError = null;
-    for (const run of attempts) {
-      try {
-        const rows = await run();
-        if (Array.isArray(rows)) return rows;
-      } catch (e) {
+    for(const slug of candidates){
+      try{
+        const { data, error } = await sbClient.rpc("digiy_loc_reservations_by_slug", {
+          p_slug: slug
+        });
+        if(error) throw error;
+        const rows = Array.isArray(data) ? data : [];
+        if(rows.length){
+          if(State.slug !== slug){
+            State.slug = slug;
+            rememberAccess();
+            refreshTopUi();
+          }
+          return rows;
+        }
+      }catch(e){
         lastError = e;
       }
     }
 
-    if (lastError) throw lastError;
+    if(lastError){
+      throw lastError;
+    }
+
     return [];
-  }
-
-  async function fetchReservationsByRoomIds(sbClient, roomIds){
-    if (!roomIds.length) return [];
-
-    const { data, error } = await sbClient
-      .from(DB.reservations)
-      .select("*")
-      .in(DB.resRoomId, roomIds)
-      .order(DB.resCheckin, { ascending:false })
-      .limit(500);
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  async function fetchReservationsByOwnerId(sbClient){
-    if (!State.ownerId) return [];
-
-    const { data, error } = await sbClient
-      .from(DB.reservations)
-      .select("*")
-      .eq(DB.resOwnerId, State.ownerId)
-      .order(DB.resCheckin, { ascending:false })
-      .limit(500);
-
-    if (error) throw error;
-    return data || [];
   }
 
   function decorateReservations(rows){
     return (rows || []).map(r => ({
       ...r,
-      _client: r?.[DB.resClientName] || r.client_nom || r.client_name || "Client",
-      _phone: r?.[DB.resPhone] || r.client_phone || r.phone || "",
-      _room: roomNameById(r?.[DB.resRoomId]),
-      _checkin: r?.[DB.resCheckin] || r.date_arrivee || "",
-      _checkout: r?.[DB.resCheckout] || r.date_depart || "",
-      _amount: Number(r?.[DB.resAmount] || r.montant_total || 0) || 0,
+      _client: r.client_name || r.client_nom || "Client",
+      _phone: r.phone || r.client_phone || "",
+      _room: r.room_name || roomNameById(r.room_id) || "Logement",
+      _checkin: r.checkin || r.date_arrivee || "",
+      _checkout: r.checkout || r.date_depart || "",
+      _amount: Number(r.amount_total || r.montant_total || 0) || 0,
       _source: normalizeSource(r),
       _status: normalizeStatus(r),
       _pay: normalizePay(r),
-      _ref: r.id || r.reference || r.tracking_code || "—"
+      _ref: r.reference || r.id || r.tracking_code || "—"
     }));
   }
 
@@ -1042,39 +1033,17 @@
   async function loadLiveData(){
     const sbClient = getLocalSupabase();
 
-    State.rooms = await fetchRooms(sbClient);
+    State.rooms = [];
 
-    if (!State.ownerId && State.rooms.length) {
-      const firstOwner = State.rooms.find(x => x?.owner_id)?.owner_id || "";
-      if (firstOwner) State.ownerId = String(firstOwner);
-    }
-
-    const roomIds = State.rooms.map(x => x?.id).filter(Boolean);
-    let reservations = [];
-
-    try{
-      reservations = await fetchReservationsByRoomIds(sbClient, roomIds);
-    }catch(e){
-      if (State.ownerId) {
-        reservations = await fetchReservationsByOwnerId(sbClient);
-      } else {
-        throw e;
-      }
-    }
-
-    if (!reservations.length && State.ownerId) {
-      try{
-        reservations = await fetchReservationsByOwnerId(sbClient);
-      }catch(_){}
-    }
+    const reservations = await fetchReservationsViaRpc(sbClient);
 
     State.reservations = decorateReservations(reservations);
     applyFilters();
 
     if(!State.reservations.length){
-      setNoteMain("✅ Accès vivant OK. Aucune réservation pour l’instant.", "ok");
+      setNoteMain("✅ Accès vivant OK. Aucune réservation trouvée pour cet identifiant.", "ok");
     }else{
-      setNoteMain(`✅ ${State.reservations.length} réservation(s) chargée(s).`, "ok");
+      setNoteMain(`✅ ${State.reservations.length} réservation(s) chargée(s) par lecture sécurisée.`, "ok");
     }
   }
 
