@@ -287,6 +287,44 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,.28),
         0 8px 20px rgba(0,0,0,.08);
+      touch-action:pan-y;
+    }
+
+    .calendarCard.monthSwipeNext .calendarGrid{
+      animation:monthSwipeNext .22s ease both;
+    }
+
+    .calendarCard.monthSwipePrev .calendarGrid{
+      animation:monthSwipePrev .22s ease both;
+    }
+
+    @keyframes monthSwipeNext{
+      from{opacity:.40;transform:translateX(22px)}
+      to{opacity:1;transform:translateX(0)}
+    }
+
+    @keyframes monthSwipePrev{
+      from{opacity:.40;transform:translateX(-22px)}
+      to{opacity:1;transform:translateX(0)}
+    }
+
+    .monthSwipeHint{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:34px;
+      padding:8px 10px;
+      border-radius:14px;
+      border:1px dashed rgba(120,95,56,.24);
+      background:rgba(255,255,255,.38);
+      color:#4b3a28;
+      font-weight:1100;
+      font-size:.82rem;
+      text-align:center;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action:pan-y;
     }
 
     .calendarHead{
@@ -1023,11 +1061,11 @@
 
 
     <div class="calendarCard">
-      <div class="calendarHead">
+      <div class="calendarHead" id="calendarHead">
         <div class="monthLine">
           <div>
             <div class="monthTitle" id="calendarTitle">Mois</div>
-            <div class="monthSub" id="calendarSub">Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.</div>
+            <div class="monthSub" id="calendarSub">Le prix du jour passe devant. Glisse sur le haut pour changer de mois, touche les dates pour agir.</div>
           </div>
           <div class="monthNav">
             <button class="btn small" id="btnPrevMonth" type="button">←</button>
@@ -1042,6 +1080,8 @@
           <span class="legendItem"><span class="dot closed"></span> Fermé</span>
           <span class="legendItem priceLegend"><span class="dot price"></span> Prix du jour bien visible</span>
         </div>
+
+        <div class="monthSwipeHint" id="monthSwipeHint">↔️ Glisse ici pour changer de mois · touche les dates pour agir</div>
       </div>
 
       <div class="calendarGrid" id="calendarGrid"></div>
@@ -1148,6 +1188,15 @@
       suppressClickUntil: 0
     };
   })();
+
+  const MONTH_SWIPE = {
+    active:false,
+    pointerId:null,
+    startX:0,
+    startY:0,
+    moved:false,
+    busy:false
+  };
 
   const DATA = {
     room: null,
@@ -2509,6 +2558,108 @@
     await selectSingleDay(startYmd);
   }
 
+  function daysInMonth(year, month){
+    return new Date(year, month + 1, 0).getDate();
+  }
+
+  function normalizeMonthState(){
+    while(MONTH_STATE.month < 0){
+      MONTH_STATE.month += 12;
+      MONTH_STATE.year -= 1;
+    }
+    while(MONTH_STATE.month > 11){
+      MONTH_STATE.month -= 12;
+      MONTH_STATE.year += 1;
+    }
+  }
+
+  function rememberFocusedDayForNewMonth(){
+    const previous = localDateFromYmd(MONTH_STATE.focusedDate) || new Date(MONTH_STATE.year, MONTH_STATE.month, 1);
+    const day = Math.min(previous.getDate(), daysInMonth(MONTH_STATE.year, MONTH_STATE.month));
+    MONTH_STATE.focusedDate = ymdFromDate(new Date(MONTH_STATE.year, MONTH_STATE.month, day));
+  }
+
+  function playMonthSwipeAnimation(delta){
+    const card = document.querySelector(".calendarCard");
+    if(!card) return;
+    const cls = delta > 0 ? "monthSwipeNext" : "monthSwipePrev";
+    card.classList.remove("monthSwipeNext", "monthSwipePrev");
+    void card.offsetWidth;
+    card.classList.add(cls);
+    window.setTimeout(()=>card.classList.remove(cls), 260);
+  }
+
+  async function shiftMonth(delta, message){
+    if(MONTH_SWIPE.busy) return;
+    MONTH_SWIPE.busy = true;
+    try{
+      MONTH_STATE.month += Number(delta || 0);
+      normalizeMonthState();
+      rememberFocusedDayForNewMonth();
+      clearSelection(false);
+      playMonthSwipeAnimation(delta);
+      await reloadCurrentMonth(message || (delta > 0 ? "→ Mois suivant." : "← Mois précédent."));
+    }catch(e){
+      console.error(e);
+      showRight("❌ Impossible de changer de mois : " + (e?.message || e), "bad");
+    }finally{
+      MONTH_SWIPE.busy = false;
+    }
+  }
+
+  function bindMonthSwipe(){
+    const area = $("calendarHead") || document.querySelector(".calendarHead");
+    const hint = $("monthSwipeHint");
+    const targets = [area, hint].filter(Boolean);
+
+    targets.forEach((target)=>{
+      target.addEventListener("pointerdown", (ev)=>{
+        if(ev.pointerType === "mouse" && ev.button !== 0) return;
+        if(ev.target?.closest?.("button,a,input,textarea,.day")) return;
+
+        MONTH_SWIPE.active = true;
+        MONTH_SWIPE.pointerId = ev.pointerId;
+        MONTH_SWIPE.startX = Number(ev.clientX || 0);
+        MONTH_SWIPE.startY = Number(ev.clientY || 0);
+        MONTH_SWIPE.moved = false;
+
+        try{ target.setPointerCapture(ev.pointerId); }catch{}
+      });
+
+      target.addEventListener("pointermove", (ev)=>{
+        if(!MONTH_SWIPE.active) return;
+        if(MONTH_SWIPE.pointerId != null && ev.pointerId !== MONTH_SWIPE.pointerId) return;
+
+        const dx = Number(ev.clientX || 0) - MONTH_SWIPE.startX;
+        const dy = Number(ev.clientY || 0) - MONTH_SWIPE.startY;
+        if(Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.25){
+          MONTH_SWIPE.moved = true;
+          ev.preventDefault();
+        }
+      }, { passive:false });
+
+      target.addEventListener("pointerup", async (ev)=>{
+        if(!MONTH_SWIPE.active) return;
+        if(MONTH_SWIPE.pointerId != null && ev.pointerId !== MONTH_SWIPE.pointerId) return;
+
+        const dx = Number(ev.clientX || 0) - MONTH_SWIPE.startX;
+        const dy = Number(ev.clientY || 0) - MONTH_SWIPE.startY;
+        MONTH_SWIPE.active = false;
+        MONTH_SWIPE.pointerId = null;
+
+        if(Math.abs(dx) >= 70 && Math.abs(dx) > Math.abs(dy) * 1.35){
+          ev.preventDefault();
+          await shiftMonth(dx < 0 ? 1 : -1, dx < 0 ? "→ Mois suivant." : "← Mois précédent.");
+        }
+      });
+
+      target.addEventListener("pointercancel", ()=>{
+        MONTH_SWIPE.active = false;
+        MONTH_SWIPE.pointerId = null;
+      });
+    });
+  }
+
   function bindDayPointer(el, ymd){
     el.addEventListener("pointerdown", (ev)=>{
       if(ev.pointerType === "mouse" && ev.button !== 0) return;
@@ -3008,27 +3159,10 @@ Merci. — DIGIY`;
       location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
     });
 
-    $("btnPrevMonth").addEventListener("click", async ()=>{
-      MONTH_STATE.month -= 1;
-      if(MONTH_STATE.month < 0){
-        MONTH_STATE.month = 11;
-        MONTH_STATE.year -= 1;
-      }
-      clearSelection(false);
-      await reloadCurrentMonth();
-    });
-
-    $("btnNextMonth").addEventListener("click", async ()=>{
-      MONTH_STATE.month += 1;
-      if(MONTH_STATE.month > 11){
-        MONTH_STATE.month = 0;
-        MONTH_STATE.year += 1;
-      }
-      clearSelection(false);
-      await reloadCurrentMonth();
-    });
-
+    $("btnPrevMonth").addEventListener("click", ()=>shiftMonth(-1, "← Mois précédent."));
+    $("btnNextMonth").addEventListener("click", ()=>shiftMonth(1, "→ Mois suivant."));
     $("btnTodayMonth").addEventListener("click", gotoTodayMonth);
+    bindMonthSwipe();
 
     $("btnOpenRange").addEventListener("click", ()=>applyAction("open"));
     $("btnCloseRange").addEventListener("click", ()=>applyAction("close"));
