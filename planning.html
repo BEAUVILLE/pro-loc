@@ -964,6 +964,208 @@
       .rangeGrid{grid-template-columns:1fr}
       .rangeActions{grid-template-columns:1fr}
     }
+  
+    /* DIGIY LOC — doctrine mobile terrain : calendrier roi */
+    .wrap{
+      display:flex;
+      flex-direction:column;
+    }
+    .top{order:1}
+    .calendarCard{order:2}
+    .programCard{order:3}
+    .quickLoc{order:4}
+    .section{order:5}
+
+    .mobileDrawer{
+      overflow:hidden;
+    }
+    .mobileDrawer > summary{
+      list-style:none;
+      cursor:pointer;
+      padding:14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-weight:1100;
+      color:#fde68a;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action:manipulation;
+    }
+    .mobileDrawer > summary::-webkit-details-marker{display:none}
+    .mobileDrawer > summary::after{
+      content:"＋";
+      width:30px;
+      height:30px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(250,204,21,.26);
+      background:rgba(250,204,21,.10);
+      color:#fde68a;
+      flex:0 0 auto;
+    }
+    .mobileDrawer[open] > summary::after{content:"−"}
+    .drawerContent{
+      padding:0 12px 12px;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .screenHint{
+      margin:10px 0 0;
+      padding:9px 10px;
+      border-radius:14px;
+      border:1px solid rgba(250,204,21,.20);
+      background:rgba(250,204,21,.08);
+      color:#fde68a;
+      font-size:.82rem;
+      font-weight:1000;
+      line-height:1.25;
+    }
+
+    @media (max-width:560px){
+      body{
+        padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom, 0px) + 14px);
+      }
+      .top{
+        gap:8px;
+        padding:10px;
+        box-shadow:none;
+      }
+      .title{
+        font-size:1.05rem;
+      }
+      .sub{
+        font-size:.82rem;
+        line-height:1.22;
+        margin-top:3px;
+      }
+      #pillSlug{
+        max-width:100%;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+      .topActions{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
+      }
+      .topActions .btn{
+        min-height:38px;
+        padding:8px 6px;
+        font-size:.78rem;
+        border-radius:12px;
+      }
+      .calendarCard{
+        margin-top:10px;
+        border-radius:16px;
+      }
+      .calendarHead{
+        padding:9px;
+        gap:7px;
+      }
+      .monthLine{
+        align-items:flex-start;
+        gap:8px;
+      }
+      .monthTitle{
+        font-size:1.02rem;
+      }
+      .monthSub{
+        font-size:.78rem;
+        line-height:1.18;
+        max-width:100%;
+      }
+      .monthNav{
+        gap:5px;
+        justify-content:flex-end;
+      }
+      .calendarHead .btn.small{
+        min-height:34px;
+        padding:6px 8px;
+        border-radius:10px;
+        font-size:.76rem;
+      }
+      .legend{
+        gap:5px;
+      }
+      .legendItem{
+        padding:5px 7px;
+        font-size:.68rem;
+      }
+      .monthSwipeHint{
+        min-height:30px;
+        padding:6px 8px;
+        font-size:.72rem;
+      }
+      .calendarGrid{
+        gap:4px;
+        padding:7px;
+      }
+      .dow{
+        font-size:.68rem;
+        padding:2px 0;
+      }
+      .day{
+        min-height:78px;
+        padding:5px;
+        border-radius:11px;
+        gap:4px;
+      }
+      .dayNum{
+        font-size:.82rem;
+      }
+      .stateTag{
+        font-size:.54rem;
+        padding:2px 4px;
+      }
+      .priceWrap{
+        padding:5px 5px 4px;
+        border-radius:9px;
+      }
+      .priceMain{
+        font-size:.78rem;
+        letter-spacing:-.02em;
+      }
+      .priceUnit{
+        font-size:.48rem;
+      }
+      .daySub{
+        display:none;
+      }
+      .calendarFoot{
+        padding:0 9px 9px;
+        font-size:.76rem;
+      }
+      .programCard,
+      .quickLoc,
+      .section{
+        margin-top:10px;
+        box-shadow:none;
+      }
+      .mobileDrawer > summary{
+        min-height:48px;
+        padding:12px;
+        font-size:.92rem;
+      }
+      .drawerContent{
+        padding:0 10px 10px;
+      }
+      .programSub,
+      .quickLocSub,
+      .memoryHelp{
+        font-size:.78rem;
+        line-height:1.25;
+      }
+      .quickGuide,
+      .memoryBox{
+        padding:9px;
+      }
+      .quickInput{
+        min-height:70px;
+      }
+    }
+
   </style>
 </head>
 
@@ -972,7 +1174,7 @@
     <div class="card top">
       <div class="row">
         <div>
-          <div class="title">Je loue • Mon calendrier</div>
+          <div class="title">Je loue • Disponibilités</div>
           <div class="sub" id="sub">🧭 Vérification de ton accès…</div>
         </div>
         <div class="row" style="justify-content:flex-end">
@@ -987,10 +1189,13 @@
       </div>
 
       <div class="note" id="note"></div>
+      <div class="screenHint">Calendrier d’abord : glisse le mois, touche une date, puis ouvre, ferme ou change le prix.</div>
     </div>
 
-    <div class="card programCard">
-      <div class="programTitle">Programmer une plage</div>
+    <details class="card programCard mobileDrawer">
+      <summary>📆 Modifier plusieurs dates</summary>
+      <div class="drawerContent">
+        <div class="programTitle">Programmer une plage</div>
       <div class="programSub">Pour aller vite : choisis un début, une fin, puis ouvre, ferme ou mets un prix sur toute la période.</div>
 
       <div class="rangeGrid">
@@ -1015,11 +1220,13 @@
       </div>
 
       <div class="rangeHint" id="rangeHint">Astuce : touche une date ou glisse sur plusieurs jours pour remplir la plage plus vite.</div>
-    </div>
+      </div>
+    </details>
 
-
-    <div class="card quickLoc" id="quickLocNote">
-      <div class="quickLocTitle">Note rapide location</div>
+    <details class="card quickLoc mobileDrawer" id="quickLocNote">
+      <summary>📝 Ajouter une note location</summary>
+      <div class="drawerContent">
+        <div class="quickLocTitle">Note rapide location</div>
       <div class="quickLocSub">Écris court, DIGIY prépare. Tu confirmes avant toute suite.</div>
 
       <div class="quickGuide">
@@ -1057,8 +1264,8 @@
           <div class="memoryEmpty">Aucune note LOC confirmée pour le moment.</div>
         </div>
       </div>
-    </div>
-
+      </div>
+    </details>
 
     <div class="calendarCard">
       <div class="calendarHead" id="calendarHead">
@@ -1091,8 +1298,10 @@
       </div>
     </div>
 
-    <div class="card section">
-      <div class="sectionHead">
+    <details class="card section mobileDrawer">
+      <summary>📋 Réservations et outils du jour</summary>
+      <div class="drawerContent">
+        <div class="sectionHead">
         <div class="sectionTitle">Réservations du jour choisi</div>
         <span class="pill" id="pickedDayPill">Jour choisi : aucun</span>
       </div>
@@ -1109,7 +1318,8 @@
       </div>
 
       <div class="note show ok" id="noteRight">Le calendrier sert à agir vite. Le prix doit sauter aux yeux.</div>
-    </div>
+      </div>
+    </details>
   </div>
 
   <div class="actionBar" id="actionBar">
