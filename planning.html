@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Mon calendrier</title>
+  <title>Je loue • Disponibilités</title>
   <meta name="theme-color" content="#d6c29a"/>
-  <meta name="description" content="Je loue — calendrier mobile simple pour ouvrir, fermer et modifier le prix des dates."/>
+  <meta name="description" content="Je loue — disponibilités mobiles simples : ouvrir, fermer et modifier le prix des dates."/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -20,1264 +20,341 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-real-v7-owner-room-split"></script>
+  <script src="./guard.js?v=locpro-calendar-pure-v1"></script>
 
   <style>
     :root{
-      --bg:#0b1a14;
-      --bg2:#13241c;
+      --bg:#071611;
+      --bg2:#10251d;
       --card:#10251d;
       --line:rgba(255,255,255,.12);
       --text:#f6f8f2;
-      --muted:rgba(246,248,242,.78);
-
+      --muted:rgba(246,248,242,.72);
       --ok:#16a34a;
-      --warn:#d97706;
       --bad:#dc2626;
       --blue:#2563eb;
       --gold:#facc15;
-
-      --sand-1:#f5ecd9;
-      --sand-2:#efe2c5;
-      --sand-3:#e4d2ab;
-      --sand-4:#c8b38a;
-      --sand-ink:#241a10;
-      --sand-muted:#5c4b36;
-
+      --sand:#f3e6c8;
+      --sand2:#fff8eb;
+      --ink:#251a10;
       --radius:18px;
-      --shadow:0 22px 55px rgba(0,0,0,.34);
-
-      --cal-wrap-bg:linear-gradient(180deg, #f7efdd, #efdfbf);
-      --cal-wrap-line:rgba(120,95,56,.20);
-
-      --day-bg:#fffaf0;
-      --day-line:rgba(120,95,56,.22);
-      --day-hover:#fff3dc;
-      --day-muted:#eadcbc;
-      --day-muted-text:#7c6548;
-
-      --day-today:#fff2be;
-      --day-today-line:rgba(202,138,4,.48);
-
-      --sel-bg:#dff3ff;
-      --sel-line:rgba(56,189,248,.65);
-
-      --free-bg:#fffaf0;
-      --free-ink:#241a10;
-      --closed-bg:#fde7e7;
-      --closed-ink:#7f1d1d;
-      --booked-bg:#dbeafe;
-      --booked-ink:#1d4ed8;
-
-      --price-card-bg:rgba(255,255,255,.72);
-      --price-card-line:rgba(120,95,56,.16);
-      --price-card-shadow:0 1px 0 rgba(255,255,255,.45) inset;
-
-      --bar-h:108px;
+      --shadow:0 18px 44px rgba(0,0,0,.32);
+      --bottom-nav-h:76px;
+      --action-h:118px;
     }
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-
     body{
+      min-height:100vh;
       font-family:"Outfit",system-ui,-apple-system,sans-serif;
       color:var(--text);
       background:
-        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.08), transparent 60%),
-        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.08), transparent 60%),
-        linear-gradient(180deg, var(--bg2), var(--bg));
-      padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom, 0px) + 22px);
+        radial-gradient(900px 500px at 10% -10%, rgba(250,204,21,.10), transparent 58%),
+        radial-gradient(900px 520px at 95% 0%, rgba(34,197,94,.12), transparent 60%),
+        linear-gradient(180deg,var(--bg2),var(--bg));
+      padding-bottom:calc(var(--bottom-nav-h) + env(safe-area-inset-bottom,0px) + 18px);
     }
 
-    .wrap{max-width:860px;margin:0 auto;padding:14px 14px 28px}
-
-    .card{
-      background:rgba(255,255,255,.04);
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(3px);
-    }
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+    .wrap{max-width:860px;margin:0 auto;padding:10px 10px 14px}
 
     .top{
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-
-    .title{
-      font-size:1.22rem;
-      font-weight:1100;
-      line-height:1.1;
-    }
-
-    .sub{
-      color:var(--muted);
-      font-weight:900;
-      line-height:1.35;
-      margin-top:4px;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.05);
-      color:var(--muted);
-      font-weight:1000;
-      font-size:.84rem;
-      white-space:nowrap;
-    }
-
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-    }
-
-    .btn{
-      appearance:none;
+      position:sticky;
+      top:0;
+      z-index:20;
+      padding:10px 10px 8px;
+      margin:0 -2px 8px;
       border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
+      border-radius:18px;
+      background:rgba(8,24,18,.88);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+    }
+
+    .topRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .brand{min-width:0}
+    .kicker{font-size:.76rem;font-weight:1000;color:#fde68a;letter-spacing:.04em;text-transform:uppercase}
+    .title{font-size:1.22rem;font-weight:1100;line-height:1.05;margin-top:2px}
+    .sub{font-size:.82rem;color:var(--muted);font-weight:900;line-height:1.25;margin-top:4px}
+    .pill{
+      display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+      padding:8px 9px;border-radius:999px;border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.045);color:var(--muted);
+      font-size:.78rem;font-weight:1000;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.34);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.34);background:rgba(250,204,21,.10);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+    .smallActions{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+    .btn{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.045);
       color:var(--text);
-      min-height:46px;
-      padding:10px 14px;
+      min-height:42px;
+      padding:9px 12px;
       border-radius:14px;
       font-weight:1000;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
       cursor:pointer;
-      text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      transition:.15s ease;
-      user-select:none;
+      gap:7px;
+      text-align:center;
       touch-action:manipulation;
     }
+    .btn:disabled{opacity:.52;cursor:not-allowed}
+    .btn.ok{border-color:rgba(34,197,94,.48);background:rgba(34,197,94,.12);color:#bbf7d0}
+    .btn.bad{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12);color:#fecaca}
+    .btn.gold{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.13);color:#fde68a}
+    .btn.blue{border-color:rgba(59,130,246,.40);background:rgba(59,130,246,.12);color:#bfdbfe}
 
-    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-    .btn:active{transform:translateY(0)}
-    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-
-    .btn.ok{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.10)}
-    .btn.warn{border-color:rgba(217,119,6,.55);background:rgba(217,119,6,.10)}
-    .btn.bad{border-color:rgba(220,38,38,.50);background:rgba(220,38,38,.10)}
-    .btn.blue{border-color:rgba(37,99,235,.45);background:rgba(37,99,235,.12)}
-    .btn.gold{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12);color:#fde68a}
-    .btn.small{min-height:40px;padding:8px 12px;border-radius:12px}
-
-    .topActions{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:8px;
-    }
-
-    .topActions .btn{
-      width:100%;
-      min-height:44px;
-      padding:10px 8px;
-      font-size:.92rem;
-    }
-
-    .note{
-      margin-top:12px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      font-weight:950;
-      white-space:pre-wrap;
-      line-height:1.35;
+    .notice{
       display:none;
-    }
-
-    .note.show{display:block}
-    .note.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .note.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .note.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
-
-    .programCard{
-      margin-top:12px;
-      padding:12px;
-    }
-
-    .programTitle{
-      font-weight:1100;
-      font-size:1rem;
-      margin-bottom:4px;
-    }
-
-    .programSub{
-      color:var(--muted);
-      font-weight:900;
-      line-height:1.35;
-      margin-bottom:12px;
-    }
-
-    .rangeGrid{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:10px;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-
-    .field label{
-      color:var(--muted);
-      font-size:.80rem;
-      font-weight:1000;
-    }
-
-    .field input{
-      width:100%;
-      min-height:46px;
+      margin-top:8px;
+      padding:8px 10px;
       border-radius:14px;
       border:1px solid rgba(148,163,184,.22);
       background:rgba(255,255,255,.04);
-      color:var(--text);
-      padding:10px 12px;
-      font:inherit;
-      font-weight:1000;
-      outline:none;
-    }
-
-    .field input:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.10);
-    }
-
-    .rangeActions{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:8px;
-    }
-
-    .rangeHint{
-      margin-top:10px;
       color:var(--muted);
-      font-size:.84rem;
+      font-size:.82rem;
       font-weight:900;
-      line-height:1.35;
+      line-height:1.28;
+      white-space:pre-wrap;
     }
+    .notice.show{display:block}
+    .notice.ok{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.08);color:#bbf7d0}
+    .notice.warn{border-color:rgba(250,204,21,.32);background:rgba(250,204,21,.10);color:#fde68a}
+    .notice.bad{border-color:rgba(239,68,68,.32);background:rgba(239,68,68,.09);color:#fecaca}
 
     .calendarCard{
-      margin-top:12px;
-      border:1px solid var(--cal-wrap-line);
+      border:1px solid rgba(120,95,56,.20);
       border-radius:18px;
-      background:var(--cal-wrap-bg);
-      color:var(--sand-ink);
+      background:linear-gradient(180deg,#f7efdd,#efdfbf);
+      color:var(--ink);
       overflow:hidden;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.28),
-        0 8px 20px rgba(0,0,0,.08);
-      touch-action:pan-y;
-    }
-
-    .calendarCard.monthSwipeNext .calendarGrid{
-      animation:monthSwipeNext .22s ease both;
-    }
-
-    .calendarCard.monthSwipePrev .calendarGrid{
-      animation:monthSwipePrev .22s ease both;
-    }
-
-    @keyframes monthSwipeNext{
-      from{opacity:.40;transform:translateX(22px)}
-      to{opacity:1;transform:translateX(0)}
-    }
-
-    @keyframes monthSwipePrev{
-      from{opacity:.40;transform:translateX(-22px)}
-      to{opacity:1;transform:translateX(0)}
-    }
-
-    .monthSwipeHint{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      min-height:34px;
-      padding:8px 10px;
-      border-radius:14px;
-      border:1px dashed rgba(120,95,56,.24);
-      background:rgba(255,255,255,.38);
-      color:#4b3a28;
-      font-weight:1100;
-      font-size:.82rem;
-      text-align:center;
-      user-select:none;
-      -webkit-user-select:none;
+      box-shadow:0 10px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.38);
       touch-action:pan-y;
     }
 
     .calendarHead{
-      padding:12px;
+      padding:10px;
       border-bottom:1px solid rgba(120,95,56,.14);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .monthLine{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .monthTitle{
-      font-weight:1100;
-      font-size:1.10rem;
-      text-transform:capitalize;
-      color:#2f2417;
-    }
-
-    .monthSub{
-      color:#5b4a35;
-      font-weight:950;
-      line-height:1.28;
-      max-width:560px;
-    }
-
-    .monthNav{
-      display:flex;
+      display:grid;
       gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
+      touch-action:pan-y;
     }
+    .monthRow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .monthTitle{font-size:1.08rem;font-weight:1100;text-transform:capitalize;color:#2f2417}
+    .monthSub{font-size:.78rem;font-weight:950;color:#5b4a35;line-height:1.22;margin-top:2px}
+    .monthNav{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+    .calendarHead .btn{min-height:38px;padding:7px 10px;background:rgba(255,255,255,.58);color:#241a10;border-color:rgba(120,95,56,.18)}
+    .calendarHead .btn.gold{background:rgba(250,204,21,.22);color:#3a2a12}
 
-    .calendarHead .btn.small{
-      background:rgba(255,255,255,.60);
-      color:#241a10;
-      border-color:rgba(120,95,56,.18);
-    }
-
-    .calendarHead .btn.small:hover{background:rgba(255,255,255,.74)}
-
-    .legend{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
+    .legend{display:flex;gap:6px;flex-wrap:wrap}
     .legendItem{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 9px;
-      border-radius:999px;
+      display:inline-flex;align-items:center;gap:5px;
+      padding:5px 8px;border-radius:999px;
       border:1px solid rgba(120,95,56,.18);
-      background:rgba(255,255,255,.55);
-      color:#241a10;
-      font-weight:1000;
-      font-size:.78rem;
+      background:rgba(255,255,255,.52);
+      font-size:.70rem;font-weight:1100;color:#241a10;
     }
+    .dot{width:8px;height:8px;border-radius:999px;display:inline-block}
+    .dot.free{background:#9ca3af}.dot.booked{background:var(--blue)}.dot.closed{background:var(--bad)}.dot.price{background:var(--gold)}
 
-    .legendItem.priceLegend{
-      background:rgba(250,204,21,.16);
-      border-color:rgba(202,138,4,.24);
+    .swipeHint{
+      min-height:30px;
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      border:1px dashed rgba(120,95,56,.22);
+      border-radius:14px;
+      background:rgba(255,255,255,.36);
+      color:#4b3a28;
       font-weight:1100;
+      font-size:.76rem;
+      user-select:none;
+      -webkit-user-select:none;
     }
-
-    .dot{
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      display:inline-block;
-      flex:0 0 auto;
-    }
-
-    .dot.free{background:#9ca3af}
-    .dot.booked{background:var(--blue)}
-    .dot.closed{background:var(--bad)}
-    .dot.price{background:var(--gold)}
 
     .calendarGrid{
-      padding:10px;
+      padding:8px;
       display:grid;
       grid-template-columns:repeat(7,minmax(0,1fr));
-      gap:6px;
+      gap:5px;
     }
+    .calendarCard.monthNext .calendarGrid{animation:next .20s ease both}
+    .calendarCard.monthPrev .calendarGrid{animation:prev .20s ease both}
+    @keyframes next{from{opacity:.42;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes prev{from{opacity:.42;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 
-    .dow{
-      text-align:center;
-      color:#2f2417;
-      font-size:.78rem;
-      font-weight:1100;
-      padding:4px 0;
-    }
-
+    .dow{text-align:center;font-size:.70rem;font-weight:1100;color:#2f2417;padding:2px 0}
     .day{
-      min-height:104px;
-      border-radius:14px;
-      border:1px solid var(--day-line);
-      background:var(--day-bg);
-      color:var(--free-ink);
-      padding:7px;
+      min-height:88px;
+      border:1px solid rgba(120,95,56,.22);
+      border-radius:12px;
+      background:var(--sand2);
+      color:#241a10;
+      padding:6px;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
-      gap:6px;
+      gap:5px;
       cursor:pointer;
-      transition:.15s ease;
-      box-shadow:0 1px 0 rgba(255,255,255,.25) inset;
       user-select:none;
       -webkit-user-select:none;
       touch-action:none;
       position:relative;
       overflow:hidden;
+      box-shadow:0 1px 0 rgba(255,255,255,.32) inset;
     }
-
-    .day:hover{background:var(--day-hover);transform:translateY(-1px)}
-
-    .day.mutedDay{
-      background:var(--day-muted);
-      color:var(--day-muted-text);
+    .day.muted{opacity:.52;background:#eadcbc}
+    .day.today{border-color:rgba(202,138,4,.55);background:#fff2be}
+    .day.booked{background:#dbeafe;color:#1d4ed8;border-color:rgba(37,99,235,.25)}
+    .day.closed{background:#fde7e7;color:#7f1d1d;border-color:rgba(220,38,38,.25)}
+    .day.selected{box-shadow:0 0 0 2px rgba(56,189,248,.70) inset;background:#dff3ff}
+    .day.booked::after{
+      content:"";position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(135deg,transparent 0 44%,rgba(220,38,38,.13) 44% 56%,transparent 56% 100%);
     }
-
-    .day.today{
-      border-color:var(--day-today-line);
-      background:var(--day-today);
-    }
-
-    .day.booked{
-      background:var(--booked-bg);
-      color:var(--booked-ink);
-      border-color:rgba(37,99,235,.25);
-    }
-
-    .day.closed{
-      background:var(--closed-bg);
-      color:var(--closed-ink);
-      border-color:rgba(220,38,38,.25);
-    }
-
-    .day.selected{
-      box-shadow:0 0 0 2px var(--sel-line) inset;
-      background:var(--sel-bg);
-    }
-
-    .day.booked.selected{
-      background:linear-gradient(180deg, #dbeafe, #dff3ff);
-    }
-
-    .day.closed.selected{
-      background:linear-gradient(180deg, #fde7e7, #dff3ff);
-    }
-
-    .day.locked::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg, transparent 0 44%, rgba(220,38,38,.14) 44% 56%, transparent 56% 100%);
-      pointer-events:none;
-    }
-
-    .dayTop{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:6px;
-    }
-
-    .dayNum{
-      font-size:.96rem;
-      font-weight:1100;
-      line-height:1;
-    }
-
-    .stateTag{
-      font-size:.68rem;
-      font-weight:1100;
-      padding:3px 6px;
-      border-radius:999px;
-      background:rgba(255,255,255,.58);
-      color:inherit;
-      white-space:nowrap;
-    }
-
-    .dayMid{
-      display:flex;
-      flex-direction:column;
-      gap:5px;
-      min-height:44px;
-      justify-content:center;
-    }
-
-    .priceWrap{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:2px;
-      padding:8px 8px 7px;
-      border-radius:12px;
-      background:var(--price-card-bg);
-      border:1px solid var(--price-card-line);
-      box-shadow:var(--price-card-shadow);
-    }
-
-    .day.booked .priceWrap{
-      background:rgba(255,255,255,.76);
-      border-color:rgba(37,99,235,.22);
-    }
-
-    .day.closed .priceWrap{
+    .dayTop{display:flex;align-items:flex-start;justify-content:space-between;gap:3px}
+    .dayNum{font-size:.88rem;font-weight:1100;line-height:1}
+    .tag{font-size:.56rem;font-weight:1100;padding:2px 5px;border-radius:999px;background:rgba(255,255,255,.58);white-space:nowrap}
+    .price{
+      display:grid;gap:1px;
+      padding:6px 6px 5px;
+      border-radius:10px;
       background:rgba(255,255,255,.68);
-      border-color:rgba(220,38,38,.18);
+      border:1px solid rgba(120,95,56,.14);
     }
+    .priceMain{font-size:.92rem;font-weight:1200;line-height:1;letter-spacing:-.03em;color:#1a120b}
+    .day.booked .priceMain{color:#133f9d}.day.closed .priceMain{color:#7f1d1d}
+    .priceUnit{font-size:.54rem;font-weight:1100;letter-spacing:.08em;text-transform:uppercase;opacity:.78}
+    .dayNote{font-size:.58rem;font-weight:1050;line-height:1.05;opacity:.78}
 
-    .priceMain{
-      font-size:1.10rem;
-      font-weight:1200;
-      line-height:.95;
-      letter-spacing:-.03em;
-      color:#1a120b;
-    }
-
-    .day.booked .priceMain{color:#133f9d}
-    .day.closed .priceMain{color:#7f1d1d}
-
-    .priceUnit{
-      font-size:.62rem;
-      font-weight:1100;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      opacity:.84;
-      line-height:1;
-    }
-
-    .daySub{
-      font-size:.68rem;
-      line-height:1.12;
-      font-weight:1050;
-      opacity:.82;
-    }
-
-    .calendarFoot{
-      padding:0 12px 12px;
+    .foot{
+      padding:0 10px 10px;
       color:#5c4b36;
-      font-weight:950;
-      font-size:.84rem;
-      line-height:1.3;
+      font-weight:1000;
+      font-size:.78rem;
+      line-height:1.25;
     }
-
-    .section{
-      margin-top:12px;
-      padding:12px;
-    }
-
-    .sectionHead{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .sectionTitle{
-      font-weight:1100;
-      font-size:1rem;
-    }
-
-    .list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .item{
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.04);
-      border-radius:14px;
-      padding:10px;
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .itemTitle{font-weight:1100}
-
-    .itemMeta{
-      margin-top:4px;
-      color:var(--muted);
-      font-weight:850;
-      font-size:.90rem;
-      line-height:1.35;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 9px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.04);
-      color:var(--muted);
-      font-weight:950;
-      font-size:.82rem;
-      white-space:nowrap;
-    }
-
-    .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .badge.warn{border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.08);color:#fed7aa}
-    .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
-    .badge.blue{border-color:rgba(37,99,235,.35);background:rgba(37,99,235,.12);color:#bfdbfe}
-    .badge.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
 
     .actionBar{
       position:fixed;
-      left:0;
-      right:0;
-      bottom:0;
-      z-index:50;
-      padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      left:0;right:0;bottom:calc(var(--bottom-nav-h) + env(safe-area-inset-bottom,0px));
+      z-index:40;
       display:none;
+      padding:8px 10px;
     }
-
     .actionBar.show{display:block}
-
-    .actionBarInner{
-      max-width:860px;
-      margin:0 auto;
-      background:rgba(11,26,20,.94);
-      border:1px solid rgba(255,255,255,.12);
+    .actionInner{
+      max-width:860px;margin:0 auto;
+      border:1px solid rgba(255,255,255,.14);
       border-radius:18px;
-      box-shadow:0 18px 46px rgba(0,0,0,.36);
-      backdrop-filter:blur(10px);
-      padding:10px;
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-
-    .selectionInfo{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width:0;
-    }
-
-    .selectionTitle{
-      font-weight:1100;
-      font-size:.98rem;
-      line-height:1.2;
-    }
-
-    .selectionPrice{
-      font-weight:1200;
-      font-size:1.12rem;
-      line-height:1.05;
-      color:#fde68a;
-      letter-spacing:-.02em;
-    }
-
-    .selectionSub{
-      color:var(--muted);
-      font-weight:900;
-      font-size:.84rem;
-      line-height:1.25;
-    }
-
-    .barBtns{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:8px;
-    }
-
-    .barBtns .btn{
-      width:100%;
-      min-height:48px;
-      padding:10px 8px;
-    }
-
-    .miniTools{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:8px;
-      margin-top:10px;
-    }
-
-    .miniTools .btn{
-      width:100%;
-      min-height:44px;
-      padding:10px 8px;
-      font-size:.90rem;
-    }
-
-
-    .quickLoc{
-      margin-top:12px;
-      padding:12px;
-      border-color:rgba(250,204,21,.22);
-      background:
-        radial-gradient(420px 180px at 100% 0%, rgba(250,204,21,.10), transparent 70%),
-        rgba(255,255,255,.04);
-    }
-
-    .quickLocTitle{
-      font-weight:1100;
-      font-size:1rem;
-      margin-bottom:4px;
-    }
-
-    .quickLocSub{
-      color:var(--muted);
-      font-weight:900;
-      line-height:1.35;
-      margin-bottom:12px;
-    }
-
-    .quickGuide{
-      padding:11px;
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.035);
-      display:grid;
-      gap:8px;
-      margin-bottom:10px;
-    }
-
-    .quickGuide strong{
-      color:#fde68a;
-      font-weight:1100;
-      font-size:.90rem;
-    }
-
-    .quickGuide p{
-      margin:0;
-      color:var(--muted);
-      font-weight:900;
-      line-height:1.35;
-      font-size:.86rem;
-    }
-
-    .quickExamples{
-      display:flex;
-      gap:7px;
-      flex-wrap:wrap;
-    }
-
-    .quickExamples button{
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      border-radius:999px;
-      padding:7px 10px;
-      font-weight:1000;
-      font-size:.78rem;
-      cursor:pointer;
-    }
-
-    .quickExamples button:hover{
-      border-color:rgba(250,204,21,.35);
-      color:#fde68a;
-    }
-
-    .quickInput{
-      width:100%;
-      min-height:86px;
-      resize:vertical;
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      padding:11px 12px;
-      font:inherit;
-      font-weight:950;
-      outline:none;
-    }
-
-    .quickInput:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.10);
-    }
-
-    .quickDraft{
-      display:none;
-      margin-top:10px;
-      padding:11px;
-      border-radius:16px;
-      border:1px solid rgba(34,197,94,.30);
-      background:rgba(34,197,94,.08);
-      color:#bbf7d0;
-      font-weight:900;
-      line-height:1.42;
-      white-space:normal;
-    }
-
-    .quickDraft strong{color:#fff}
-
-    .memoryBox{
-      margin-top:10px;
-      padding:11px;
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.035);
-      display:grid;
-      gap:10px;
-    }
-
-    .memoryHead{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:flex-start;
-    }
-
-    .memoryTitle{
-      font-size:.92rem;
-      font-weight:1100;
-      color:#fde68a;
-      line-height:1.25;
-    }
-
-    .memoryHelp{
-      margin-top:3px;
-      color:var(--muted);
-      font-size:.80rem;
-      font-weight:900;
-      line-height:1.35;
-    }
-
-    .memoryList{
+      background:rgba(8,24,18,.95);
+      box-shadow:0 18px 42px rgba(0,0,0,.38);
+      backdrop-filter:blur(12px);
+      padding:9px;
       display:grid;
       gap:8px;
     }
+    .selectionTitle{font-size:.92rem;font-weight:1100;line-height:1.15}
+    .selectionPrice{font-size:1.02rem;font-weight:1200;color:#fde68a;line-height:1.08;margin-top:2px}
+    .selectionSub{font-size:.78rem;font-weight:900;color:var(--muted);line-height:1.2;margin-top:2px}
+    .barBtns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+    .barBtns .btn{min-height:44px;padding:8px 5px;font-size:.82rem}
 
-    .memoryItem{
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.04);
-      padding:10px;
+    .bottomNav{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:50;
+      padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));
+      background:rgba(4,15,11,.88);
+      border-top:1px solid rgba(255,255,255,.10);
+      backdrop-filter:blur(14px);
+    }
+    .bottomInner{
+      max-width:860px;margin:0 auto;
       display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
       gap:5px;
     }
-
-    .memoryItemTop{
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:flex-start;
-    }
-
-    .memoryItemTitle{
-      font-size:.90rem;
-      font-weight:1100;
-      color:var(--text);
-      line-height:1.35;
-    }
-
-    .memoryItemAmount{
-      font-size:.82rem;
-      font-weight:1100;
-      color:#bbf7d0;
-      white-space:nowrap;
-    }
-
-    .memoryItemMeta{
-      color:var(--muted);
-      font-size:.80rem;
-      font-weight:900;
-      line-height:1.35;
-    }
-
-    .memoryEmpty{
-      padding:10px;
-      border-radius:14px;
-      border:1px dashed rgba(148,163,184,.22);
-      color:var(--muted);
-      font-size:.82rem;
-      font-weight:900;
-      line-height:1.4;
-    }
-
-    .memoryPayAction{
-      margin-top:6px;
-      display:inline-flex;
-      width:max-content;
-      max-width:100%;
-      min-height:36px;
-      align-items:center;
-      justify-content:center;
-      gap:7px;
-      padding:8px 11px;
-      border-radius:999px;
-      border:1px solid rgba(250,204,21,.32);
-      background:rgba(250,204,21,.12);
-      color:#fde68a;
-      font-size:.80rem;
-      font-weight:1100;
-      text-decoration:none;
-    }
-
-    .memoryPayHint{
-      color:rgba(246,248,242,.72);
-      font-size:.74rem;
-      font-weight:850;
-      line-height:1.35;
-    }
-
-    @media (max-width:700px){
-      .topActions{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .miniTools{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .rangeGrid{grid-template-columns:1fr 1fr}
-      .rangeActions{grid-template-columns:1fr 1fr}
-      .rangeActions .btn:last-child{grid-column:1 / -1}
-    }
-
-    @media (max-width:560px){
-      .wrap{padding:10px 10px 24px}
-      .top{padding:12px}
-      .monthLine{align-items:flex-start}
-      .calendarGrid{gap:5px;padding:8px}
-      .day{min-height:94px;padding:6px}
-      .priceMain{font-size:.98rem}
-      .priceUnit{font-size:.58rem}
-      .daySub{font-size:.64rem}
-      .stateTag{font-size:.62rem;padding:2px 5px}
-      .barBtns{grid-template-columns:1fr 1fr}
-      .barBtns .btn:last-child{grid-column:1 / -1}
-      .selectionPrice{font-size:1.02rem}
-      .rangeGrid{grid-template-columns:1fr}
-      .rangeActions{grid-template-columns:1fr}
-    }
-  
-    /* DIGIY LOC — doctrine mobile terrain : calendrier roi */
-    .wrap{
+    .navItem{
+      min-height:56px;
+      border-radius:16px;
       display:flex;
       flex-direction:column;
-    }
-    .top{order:1}
-    .calendarCard{order:2}
-    .programCard{order:3}
-    .quickLoc{order:4}
-    .section{order:5}
-
-    .mobileDrawer{
-      overflow:hidden;
-    }
-    .mobileDrawer > summary{
-      list-style:none;
-      cursor:pointer;
-      padding:14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      font-weight:1100;
-      color:#fde68a;
-      user-select:none;
-      -webkit-user-select:none;
-      touch-action:manipulation;
-    }
-    .mobileDrawer > summary::-webkit-details-marker{display:none}
-    .mobileDrawer > summary::after{
-      content:"＋";
-      width:30px;
-      height:30px;
-      border-radius:999px;
-      display:inline-flex;
       align-items:center;
       justify-content:center;
-      border:1px solid rgba(250,204,21,.26);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-      flex:0 0 auto;
-    }
-    .mobileDrawer[open] > summary::after{content:"−"}
-    .drawerContent{
-      padding:0 12px 12px;
-      border-top:1px solid rgba(255,255,255,.08);
-    }
-    .screenHint{
-      margin:10px 0 0;
-      padding:9px 10px;
-      border-radius:14px;
-      border:1px solid rgba(250,204,21,.20);
-      background:rgba(250,204,21,.08);
-      color:#fde68a;
-      font-size:.82rem;
+      gap:3px;
+      color:rgba(246,248,242,.76);
       font-weight:1000;
-      line-height:1.25;
+      font-size:.68rem;
+      border:1px solid transparent;
+      background:transparent;
+      text-align:center;
+    }
+    .navItem .ico{font-size:1.08rem;line-height:1}
+    .navItem.active{
+      color:#fde68a;
+      border-color:rgba(250,204,21,.34);
+      background:rgba(250,204,21,.10);
+      box-shadow:0 0 0 1px rgba(250,204,21,.05) inset;
     }
 
-    @media (max-width:560px){
-      body{
-        padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom, 0px) + 14px);
-      }
-      .top{
-        gap:8px;
-        padding:10px;
-        box-shadow:none;
-      }
-      .title{
-        font-size:1.05rem;
-      }
-      .sub{
-        font-size:.82rem;
-        line-height:1.22;
-        margin-top:3px;
-      }
-      #pillSlug{
-        max-width:100%;
-        overflow:hidden;
-        text-overflow:ellipsis;
-      }
-      .topActions{
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        gap:6px;
-      }
-      .topActions .btn{
-        min-height:38px;
-        padding:8px 6px;
-        font-size:.78rem;
-        border-radius:12px;
-      }
-      .calendarCard{
-        margin-top:10px;
-        border-radius:16px;
-      }
-      .calendarHead{
-        padding:9px;
-        gap:7px;
-      }
-      .monthLine{
-        align-items:flex-start;
-        gap:8px;
-      }
-      .monthTitle{
-        font-size:1.02rem;
-      }
-      .monthSub{
-        font-size:.78rem;
-        line-height:1.18;
-        max-width:100%;
-      }
-      .monthNav{
-        gap:5px;
-        justify-content:flex-end;
-      }
-      .calendarHead .btn.small{
-        min-height:34px;
-        padding:6px 8px;
-        border-radius:10px;
-        font-size:.76rem;
-      }
-      .legend{
-        gap:5px;
-      }
-      .legendItem{
-        padding:5px 7px;
-        font-size:.68rem;
-      }
-      .monthSwipeHint{
-        min-height:30px;
-        padding:6px 8px;
-        font-size:.72rem;
-      }
-      .calendarGrid{
-        gap:4px;
-        padding:7px;
-      }
-      .dow{
-        font-size:.68rem;
-        padding:2px 0;
-      }
-      .day{
-        min-height:78px;
-        padding:5px;
-        border-radius:11px;
-        gap:4px;
-      }
-      .dayNum{
-        font-size:.82rem;
-      }
-      .stateTag{
-        font-size:.54rem;
-        padding:2px 4px;
-      }
-      .priceWrap{
-        padding:5px 5px 4px;
-        border-radius:9px;
-      }
-      .priceMain{
-        font-size:.78rem;
-        letter-spacing:-.02em;
-      }
-      .priceUnit{
-        font-size:.48rem;
-      }
-      .daySub{
-        display:none;
-      }
-      .calendarFoot{
-        padding:0 9px 9px;
-        font-size:.76rem;
-      }
-      .programCard,
-      .quickLoc,
-      .section{
-        margin-top:10px;
-        box-shadow:none;
-      }
-      .mobileDrawer > summary{
-        min-height:48px;
-        padding:12px;
-        font-size:.92rem;
-      }
-      .drawerContent{
-        padding:0 10px 10px;
-      }
-      .programSub,
-      .quickLocSub,
-      .memoryHelp{
-        font-size:.78rem;
-        line-height:1.25;
-      }
-      .quickGuide,
-      .memoryBox{
-        padding:9px;
-      }
-      .quickInput{
-        min-height:70px;
-      }
+    @media(max-width:560px){
+      .wrap{padding:8px 8px 12px}
+      .top{padding:9px}
+      .title{font-size:1.08rem}
+      .sub{font-size:.76rem}
+      .smallActions .btn{min-height:38px;padding:7px 9px;font-size:.78rem}
+      .pill{font-size:.72rem;padding:7px 8px}
+      .monthRow{align-items:flex-start}
+      .monthNav{flex-direction:column}
+      .calendarGrid{gap:4px;padding:7px}
+      .day{min-height:78px;border-radius:10px;padding:5px}
+      .tag{display:none}
+      .price{padding:5px}
+      .priceMain{font-size:.78rem}
+      .priceUnit{font-size:.48rem}
+      .dayNote{display:none}
+      .legendItem{font-size:.66rem;padding:4px 7px}
+      .barBtns{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .barBtns .btn:last-child{grid-column:1 / -1}
     }
-
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="card top">
-      <div class="row">
-        <div>
-          <div class="title">Je loue • Disponibilités</div>
+    <header class="top">
+      <div class="topRow">
+        <div class="brand">
+          <div class="kicker">Je loue</div>
+          <div class="title">Disponibilités</div>
           <div class="sub" id="sub">🧭 Vérification de ton accès…</div>
         </div>
-        <div class="row" style="justify-content:flex-end">
-          <span class="pill mono" id="pillSlug">identifiant accès : —</span>
+
+        <div class="smallActions">
+          <span class="pill" id="pillSlug">—</span>
+          <button class="btn bad" id="btnLogout" type="button" title="Sortir">🚪</button>
         </div>
       </div>
+      <div class="notice" id="notice"></div>
+    </header>
 
-      <div class="topActions">
-        <a class="btn gold" id="btnDashboard" href="./app.html">🏠 Mon espace</a>
-        <a class="btn blue" id="btnReservations" href="./reservations.html">📆 Réservations</a>
-        <button class="btn bad" id="btnLogout" type="button">🚪 Sortir</button>
-      </div>
-
-      <div class="note" id="note"></div>
-      <div class="screenHint">Calendrier d’abord : glisse le mois, touche une date, puis ouvre, ferme ou change le prix.</div>
-    </div>
-
-    <details class="card programCard mobileDrawer">
-      <summary>📆 Modifier plusieurs dates</summary>
-      <div class="drawerContent">
-        <div class="programTitle">Programmer une plage</div>
-      <div class="programSub">Pour aller vite : choisis un début, une fin, puis ouvre, ferme ou mets un prix sur toute la période.</div>
-
-      <div class="rangeGrid">
-        <div class="field">
-          <label for="rangeStart">Date de début</label>
-          <input id="rangeStart" type="date"/>
-        </div>
-        <div class="field">
-          <label for="rangeEnd">Date de fin</label>
-          <input id="rangeEnd" type="date"/>
-        </div>
-        <div class="field">
-          <label for="rangePrice">Prix / nuit (F CFA)</label>
-          <input id="rangePrice" type="number" min="0" inputmode="numeric" placeholder="ex : 25000"/>
-        </div>
-      </div>
-
-      <div class="rangeActions">
-        <button class="btn ok" id="btnOpenProgram" type="button">✅ Ouvrir la plage</button>
-        <button class="btn bad" id="btnCloseProgram" type="button">⛔ Fermer la plage</button>
-        <button class="btn gold" id="btnPriceProgram" type="button">💰 Appliquer le prix</button>
-      </div>
-
-      <div class="rangeHint" id="rangeHint">Astuce : touche une date ou glisse sur plusieurs jours pour remplir la plage plus vite.</div>
-      </div>
-    </details>
-
-    <details class="card quickLoc mobileDrawer" id="quickLocNote">
-      <summary>📝 Ajouter une note location</summary>
-      <div class="drawerContent">
-        <div class="quickLocTitle">Note rapide location</div>
-      <div class="quickLocSub">Écris court, DIGIY prépare. Tu confirmes avant toute suite.</div>
-
-      <div class="quickGuide">
-        <strong>Une phrase suffit.</strong>
-        <p>Exemples : paiement client, acompte, ménage, réparation, facture ou date à bloquer.</p>
-        <div class="quickExamples" id="quickLocExamples">
-          <button type="button">Client a payé 30000 cash chambre</button>
-          <button type="button">Acompte 10000 Wave</button>
-          <button type="button">Ménage 5000 cash</button>
-          <button type="button">Réparation robinet 12000</button>
-          <button type="button">Électricité 18000 vendredi</button>
-          <button type="button">Bloquer samedi dimanche</button>
-        </div>
-      </div>
-
-      <textarea class="quickInput" id="quickLocInput" placeholder="Ex : Client a payé 30000 cash chambre"></textarea>
-
-      <div class="rangeActions" style="margin-top:10px">
-        <button class="btn gold" id="btnQuickLocPrepare" type="button">Préparer</button>
-        <button class="btn ok" id="btnQuickLocConfirm" type="button" style="display:none">✅ Confirmer</button>
-        <button class="btn" id="btnQuickLocClear" type="button">Effacer</button>
-      </div>
-
-      <div class="quickDraft" id="quickLocDraft"></div>
-
-      <div class="memoryBox">
-        <div class="memoryHead">
-          <div>
-            <div class="memoryTitle">🧠 Aide-mémoire location</div>
-            <div class="memoryHelp">Dernières notes confirmées ici. Les notes argent peuvent partir vers Mon argent.</div>
-          </div>
-          <button class="btn small" id="btnQuickLocMemoryClear" type="button">Vider</button>
-        </div>
-        <div class="memoryList" id="quickLocMemoryList">
-          <div class="memoryEmpty">Aucune note LOC confirmée pour le moment.</div>
-        </div>
-      </div>
-      </div>
-    </details>
-
-    <div class="calendarCard">
+    <main class="calendarCard" id="calendarCard">
       <div class="calendarHead" id="calendarHead">
-        <div class="monthLine">
+        <div class="monthRow">
           <div>
             <div class="monthTitle" id="calendarTitle">Mois</div>
-            <div class="monthSub" id="calendarSub">Le prix du jour passe devant. Glisse sur le haut pour changer de mois, touche les dates pour agir.</div>
+            <div class="monthSub" id="calendarSub">Le calendrier est l’écran principal.</div>
           </div>
+
           <div class="monthNav">
-            <button class="btn small" id="btnPrevMonth" type="button">←</button>
-            <button class="btn small gold" id="btnTodayMonth" type="button">Aujourd’hui</button>
-            <button class="btn small" id="btnNextMonth" type="button">→</button>
+            <button class="btn" id="btnPrevMonth" type="button">←</button>
+            <button class="btn gold" id="btnTodayMonth" type="button">Aujourd’hui</button>
+            <button class="btn" id="btnNextMonth" type="button">→</button>
           </div>
         </div>
 
@@ -1285,2165 +362,760 @@
           <span class="legendItem"><span class="dot free"></span> Ouvert</span>
           <span class="legendItem"><span class="dot booked"></span> Occupé</span>
           <span class="legendItem"><span class="dot closed"></span> Fermé</span>
-          <span class="legendItem priceLegend"><span class="dot price"></span> Prix du jour bien visible</span>
+          <span class="legendItem"><span class="dot price"></span> Prix</span>
         </div>
 
-        <div class="monthSwipeHint" id="monthSwipeHint">↔️ Glisse ici pour changer de mois · touche les dates pour agir</div>
+        <div class="swipeHint">↔️ Glisse ici pour changer de mois</div>
       </div>
 
       <div class="calendarGrid" id="calendarGrid"></div>
-
-      <div class="calendarFoot" id="calendarFoot">
-        Touchez une date ou glissez sur plusieurs jours.
-      </div>
-    </div>
-
-    <details class="card section mobileDrawer">
-      <summary>📋 Réservations et outils du jour</summary>
-      <div class="drawerContent">
-        <div class="sectionHead">
-        <div class="sectionTitle">Réservations du jour choisi</div>
-        <span class="pill" id="pickedDayPill">Jour choisi : aucun</span>
-      </div>
-
-      <div class="list" id="bookingsList"></div>
-
-      <div class="miniTools">
-        <a class="btn blue" id="btnTarifs" href="./tarifs.html">💰 Tarifs</a>
-        <a class="btn" id="btnPhotos" href="./photos.html">🖼️ Photos</a>
-        <a class="btn" id="btnListing" href="./listing.html">📋 Ma fiche</a>
-        <a class="btn" id="btnWave" href="./pin-wave.html">🌊 Code Wave</a>
-        <a class="btn" id="btnPin" href="./pin.html">🔐 Mon accès</a>
-        <button class="btn warn" id="btnSupport" type="button">💬 Support</button>
-      </div>
-
-      <div class="note show ok" id="noteRight">Le calendrier sert à agir vite. Le prix doit sauter aux yeux.</div>
-      </div>
-    </details>
+      <div class="foot" id="calendarFoot">Touche une date pour agir.</div>
+    </main>
   </div>
 
   <div class="actionBar" id="actionBar">
-    <div class="actionBarInner">
-      <div class="selectionInfo">
+    <div class="actionInner">
+      <div>
         <div class="selectionTitle" id="selectionTitle">Aucune sélection</div>
-        <div class="selectionPrice" id="selectionPrice">Le prix choisi apparaîtra ici.</div>
+        <div class="selectionPrice" id="selectionPrice">Le prix apparaîtra ici.</div>
         <div class="selectionSub" id="selectionSub">Choisis une ou plusieurs dates.</div>
       </div>
       <div class="barBtns">
         <button class="btn ok" id="btnOpenRange" type="button">✅ Ouvrir</button>
         <button class="btn bad" id="btnCloseRange" type="button">⛔ Fermer</button>
         <button class="btn gold" id="btnPriceRange" type="button">💰 Prix</button>
+        <button class="btn" id="btnCancelRange" type="button">Annuler</button>
       </div>
-      <button class="btn" id="btnCancelRange" type="button">Annuler</button>
     </div>
   </div>
+
+  <nav class="bottomNav" aria-label="Navigation LOC">
+    <div class="bottomInner">
+      <a class="navItem" id="navHome" href="./app.html"><span class="ico">🏠</span><span>Accueil</span></a>
+      <a class="navItem" id="navResa" href="./reservations.html"><span class="ico">📋</span><span>Réserv.</span></a>
+      <a class="navItem active" id="navPlanning" href="./planning.html"><span class="ico">📅</span><span>Dispos</span></a>
+      <a class="navItem" id="navMessages" href="./reservations.html#messages"><span class="ico">💬</span><span>Messages</span></a>
+      <a class="navItem" id="navMore" href="./app.html#plus"><span class="ico">⋯</span><span>Plus</span></a>
+    </div>
+  </nav>
 
 <script>
 (async function(){
   "use strict";
 
   const MODULE = "LOC";
-  const SUPPORT_WA = "+221771342889";
   const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
-  const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
   let sb = null;
-  let UX_MODE = "preview";
-  let UX_REASON = "booting";
+  let accessOpen = false;
 
   const SESSION_KEYS = [
-    "digiy_loc_session",
-    "digiy_loc_guard_session",
-    "digiy_guard_loc_session",
-    "DIGIY_LOC_SESSION",
-    "digiy_session_loc",
-    "DIGIY_SESSION_LOC",
-    "digiy_guard_session_loc",
-    "digiy_guard_session_LOC",
-    "digiy_guard_session",
-    "DIGIY_SESSION",
-    "digiy_session"
+    "digiy_loc_session","digiy_loc_guard_session","digiy_guard_loc_session",
+    "DIGIY_LOC_SESSION","digiy_session_loc","DIGIY_SESSION_LOC",
+    "digiy_guard_session","DIGIY_SESSION","digiy_session"
   ];
 
-  const ACCESS_SLUG_KEYS = [
-    "digiy_loc_last_slug",
-    "digiy_loc_slug",
-    "DIGIY_LOC_SLUG",
-    "digiy_last_slug",
-    "DIGIY_SLUG"
-  ];
+  const ACCESS_SLUG_KEYS = ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"];
+  const ACCESS_PHONE_KEYS = ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE"];
 
-  const ACCESS_PHONE_KEYS = [
-    "digiy_loc_phone",
-    "digiy_loc_last_phone",
-    "DIGIY_LOC_PHONE",
-    "digiy_phone",
-    "DIGIY_PHONE"
-  ];
-
-  const MONTH_STATE = (() => {
-    const d = new Date();
-    return {
-      year: d.getFullYear(),
-      month: d.getMonth(),
-      focusedDate: "",
-      dragging: false,
-      dragStart: "",
-      dragCurrent: "",
-      selectedKeys: [],
-      pointerId: null,
-      dragMoved: false,
-      startX: 0,
-      startY: 0,
-      suppressClickUntil: 0
-    };
-  })();
-
-  const MONTH_SWIPE = {
-    active:false,
-    pointerId:null,
-    startX:0,
-    startY:0,
-    moved:false,
-    busy:false
+  const State = {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+    focusedDate: "",
+    selected: [],
+    dragging: false,
+    pointerId: null,
+    dragStart: "",
+    startX: 0,
+    startY: 0,
+    moved: false,
+    suppressClickUntil: 0
   };
 
-  const DATA = {
-    room: null,
-    daily: {},
-    bookingsByDay: {}
-  };
+  const Swipe = { active:false, pointerId:null, startX:0, startY:0, busy:false };
+  const Room = { slug:"", id:"", name:"" };
+  const Data = { room:null, daily:{} };
+  const LocalTariffs = { night:0, loaded:false };
 
-  const ROOM_CTX = {
-    roomSlug: "",
-    roomName: "",
-    roomId: ""
-  };
-
-  const LOCAL_TARIFFS = {
-    loaded: false,
-    key: "",
-    sourceSlug: "",
-    night: 0,
-    week: 0,
-    month: 0,
-    clean: 0,
-    deposit: 0,
-    ts: 0
-  };
-
-  function digits(v){
-    return String(v || "").replace(/\D/g, "");
-  }
-
-  function esc(s){
-    return String(s || "").replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
-  }
-
-  function normalizePhone(value){
-    const raw = String(value || "").trim();
+  function esc(s){return String(s ?? "").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+  function digits(v){return String(v || "").replace(/\D/g,"");}
+  function normalizeSlug(v){return String(v || "").trim().toLowerCase();}
+  function normalizePhone(v){
+    const raw = String(v || "").trim();
     if(!raw) return "";
-    const keepPlus = raw.startsWith("+");
-    const digitsOnly = raw.replace(/[^\d]/g, "");
-    return keepPlus ? ("+" + digitsOnly) : digitsOnly;
+    const d = digits(raw);
+    return raw.startsWith("+") ? "+" + d : d;
   }
-
-  function normalizeSlug(value){
-    return String(value || "").trim().toLowerCase();
+  function storageGet(k){
+    try{const s=sessionStorage.getItem(k); if(s) return s;}catch{}
+    try{const l=localStorage.getItem(k); if(l) return l;}catch{}
+    return "";
   }
-
+  function storageSet(k,v){
+    if(v == null || String(v).trim()==="") return;
+    try{sessionStorage.setItem(k,String(v).trim());}catch{}
+    try{localStorage.setItem(k,String(v).trim());}catch{}
+  }
+  function parseJson(raw){try{return JSON.parse(raw);}catch{return null;}}
+  function readParam(name){try{return new URL(location.href).searchParams.get(name) || "";}catch{return "";}}
   function parseDateMs(value){
     if(!value) return 0;
-
-    if(typeof value === "number" && Number.isFinite(value)){
-      return value < 100000000000 ? value * 1000 : value;
-    }
-
-    const str = String(value).trim();
-    if(!str) return 0;
-
-    if(/^\d+$/.test(str)){
-      const n = Number(str);
-      return n < 100000000000 ? n * 1000 : n;
-    }
-
-    const t = Date.parse(str);
+    if(typeof value === "number" && Number.isFinite(value)) return value < 100000000000 ? value*1000 : value;
+    const s = String(value).trim();
+    if(/^\d+$/.test(s)){const n=Number(s); return n < 100000000000 ? n*1000 : n;}
+    const t = Date.parse(s);
     return Number.isFinite(t) ? t : 0;
   }
+  function isFresh(v){const t=parseDateMs(v); return !!t && Date.now()-t <= SESSION_MAX_AGE_MS;}
 
-  function isSessionFresh(validatedAt){
-    const ts = parseDateMs(validatedAt);
-    if(!ts) return false;
-    return (Date.now() - ts) <= SESSION_MAX_AGE_MS;
-  }
-
-  function setSub(text){
-    $("sub").textContent = text;
-  }
-
-  function show(msg, cls){
-    const el = $("note");
-    el.className = "note show " + (cls || "warn");
-    el.textContent = msg || "";
-    if(!msg) el.className = "note";
-  }
-
-  function showRight(msg, cls){
-    const el = $("noteRight");
-    el.className = "note show " + (cls || "ok");
+  function setNotice(msg, cls="warn"){
+    const el = $("notice");
+    el.className = "notice" + (msg ? " show " + cls : "");
     el.textContent = msg || "";
   }
+  function setSub(text){$("sub").textContent = text;}
 
-  function storageGet(key){
-    try{
-      const s = sessionStorage.getItem(key);
-      if(s) return s;
-    }catch{}
-    try{
-      const l = localStorage.getItem(key);
-      if(l) return l;
-    }catch{}
-    return "";
-  }
-
-  function storageSet(key, value){
-    if(value == null || String(value).trim() === "") return;
-    const v = String(value).trim();
-    try{ sessionStorage.setItem(key, v); }catch{}
-    try{ localStorage.setItem(key, v); }catch{}
-  }
-
-  function safeJsonParse(raw){
-    try{
-      return JSON.parse(raw);
-    }catch{
-      return null;
-    }
-  }
-
-  function firstText(keys){
-    for(const key of keys){
-      const v = storageGet(key);
-      if(v) return String(v).trim();
-    }
-    return "";
-  }
-
-  function pickFrom(obj, keys){
+  function pick(obj, keys){
     if(!obj || typeof obj !== "object") return "";
-    for(const key of keys){
-      const v = obj[key];
+    for(const k of keys){
+      const v = obj[k];
       if(v != null && String(v).trim() !== "") return String(v).trim();
     }
     return "";
   }
-
-  function normalizeSessionCandidate(candidate){
-    if(!candidate || typeof candidate !== "object") return null;
-
-    const nested = [
-      candidate,
-      candidate.session,
-      candidate.state,
-      candidate.data,
-      candidate.payload,
-      candidate.guard_state
-    ].filter(Boolean);
-
-    let slug = "";
-    let phone = "";
-    let validated_at = "";
-    let session_token = "";
-    let module = "";
-    let reason = "";
-    let accessFlag = false;
-
-    for(const src of nested){
-      if(!slug) slug = pickFrom(src, ["slug", "last_slug", "place_slug", "workspace_slug"]);
-      if(!phone) phone = pickFrom(src, ["phone", "owner_phone", "user_phone", "p_phone"]);
-      if(!validated_at) validated_at = pickFrom(src, ["validated_at", "validatedAt", "ts", "timestamp"]);
-      if(!session_token) session_token = pickFrom(src, ["session_token", "token"]);
-      if(!module) module = pickFrom(src, ["module", "digiy_module"]);
-      if(!reason) reason = pickFrom(src, ["reason", "error", "message"]);
-
-      if(
-        src.access === true ||
-        src.access_ok === true ||
-        src.ok === true ||
-        src.valid === true ||
-        src.authenticated === true
-      ){
-        accessFlag = true;
-      }
+  function normSession(obj){
+    if(!obj || typeof obj !== "object") return {};
+    const arr = [obj,obj.session,obj.state,obj.data,obj.payload,obj.guard_state].filter(Boolean);
+    const out = { slug:"", phone:"", validated_at:"", module:MODULE, ok:false };
+    for(const src of arr){
+      if(!out.slug) out.slug = pick(src,["slug","last_slug","place_slug","workspace_slug"]);
+      if(!out.phone) out.phone = pick(src,["phone","owner_phone","user_phone","p_phone"]);
+      if(!out.validated_at) out.validated_at = pick(src,["validated_at","validatedAt","ts","timestamp","access_until","expires_at"]);
+      if(src.access === true || src.access_ok === true || src.ok === true || src.valid === true || src.authenticated === true) out.ok = true;
+      if(!out.module) out.module = pick(src,["module","digiy_module"]) || MODULE;
     }
-
-    return {
-      slug: normalizeSlug(slug),
-      phone: normalizePhone(phone),
-      validated_at: String(validated_at || "").trim(),
-      session_token: String(session_token || "").trim(),
-      module: String(module || MODULE).trim().toUpperCase(),
-      reason: String(reason || "").trim(),
-      accessFlag
-    };
+    out.slug = normalizeSlug(out.slug);
+    out.phone = normalizePhone(out.phone);
+    out.module = String(out.module || MODULE).toUpperCase();
+    return out;
   }
-
-  function getStoredSession(){
-    for(const key of SESSION_KEYS){
-      const parsed = safeJsonParse(storageGet(key));
-      const normalized = normalizeSessionCandidate(parsed);
-      if(normalized && (normalized.slug || normalized.phone || normalized.validated_at || normalized.accessFlag)){
-        return normalized;
-      }
+  function storedSession(){
+    for(const k of SESSION_KEYS){
+      const s = normSession(parseJson(storageGet(k)));
+      if(s.slug || s.phone || s.validated_at || s.ok) return s;
     }
-    return normalizeSessionCandidate({});
+    return {};
   }
-
-  function readQueryParam(name){
-    try{
-      const u = new URL(location.href);
-      const v = u.searchParams.get(name);
-      return v ? String(v).trim() : "";
-    }catch{
-      return "";
+  function guardState(){return normSession(window.DIGIY_GUARD?.state || {});}
+  function guardSession(){try{return normSession(window.DIGIY_GUARD?.getSession?.() || {});}catch{return {};}}
+  function getAccessSlug(){
+    const candidates = [
+      guardState().slug, guardSession().slug, storedSession().slug,
+      storageGet("digiy_loc_last_slug"), storageGet("digiy_loc_slug"),
+      storageGet("DIGIY_LOC_SLUG"), storageGet("digiy_last_slug"), readParam("slug")
+    ].map(normalizeSlug).filter(Boolean);
+    return candidates.find(s => !/^loc-room-/i.test(s)) || candidates[0] || "";
+  }
+  function getAccessPhone(){
+    const candidates = [
+      readParam("phone"), guardState().phone, guardSession().phone, storedSession().phone,
+      storageGet("digiy_loc_phone"), storageGet("digiy_loc_last_phone"),
+      storageGet("DIGIY_LOC_PHONE"), storageGet("DIGIY_PHONE")
+    ].map(normalizePhone).filter(Boolean);
+    return candidates[0] || "";
+  }
+  function getSession(){
+    const a = guardState(), b = guardSession(), c = storedSession();
+    const slug = getAccessSlug();
+    const phone = getAccessPhone();
+    const validated = a.validated_at || b.validated_at || c.validated_at || "";
+    const ok = !!(a.ok || b.ok || c.ok || (slug && phone && isFresh(validated)));
+    return { access_ok:ok, slug, phone, module:MODULE };
+  }
+  function syncAccess(){
+    const slug = getAccessSlug(), phone = getAccessPhone();
+    if(slug){
+      ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"].forEach(k=>storageSet(k,slug));
+    }
+    if(phone){
+      ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE"].forEach(k=>storageSet(k,phone));
     }
   }
 
-  function readRoomSlugFromQuery(){
-    const a = normalizeSlug(readQueryParam("room_slug"));
-    if(a) return a;
-
-    const b = normalizeSlug(readQueryParam("room"));
-    if(b) return b;
-
-    const qSlug = normalizeSlug(readQueryParam("slug"));
-    if(/^loc-room-/i.test(qSlug)) return qSlug;
-
+  function buildUrl(path, params={}){
+    const url = new URL(path, location.href);
+    Object.entries(params).forEach(([k,v])=>{ if(v != null && String(v).trim()) url.searchParams.set(k,String(v).trim()); });
+    return url.origin === location.origin ? url.pathname + url.search + url.hash : url.toString();
+  }
+  function withAccess(path){
+    const p = {};
+    const slug = getAccessSlug(), phone = getAccessPhone();
+    if(slug) p.slug = slug;
+    if(phone) p.phone = phone;
+    if(Room.slug) p.room_slug = Room.slug;
+    return buildUrl(path,p);
+  }
+  function roomSlugFromQuery(){
+    const r = normalizeSlug(readParam("room_slug") || readParam("room"));
+    if(/^loc-room-/i.test(r)) return r;
+    const s = normalizeSlug(readParam("slug"));
+    if(/^loc-room-/i.test(s)) return s;
     return "";
   }
 
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      module: MODULE,
-      reason: "guard_missing"
-    };
-  }
-
-  function getGuardSession(){
-    try{
-      return window.DIGIY_GUARD?.getSession?.() || {};
-    }catch{
-      return {};
-    }
-  }
-
-  function getAccessSlug(){
-    const st = normalizeSessionCandidate(getGuardState()) || {};
-    const gs = normalizeSessionCandidate(getGuardSession()) || {};
-    const ss = getStoredSession() || {};
-
-    const querySlug = normalizeSlug(readQueryParam("slug"));
-    const storedSlug = normalizeSlug(firstText(ACCESS_SLUG_KEYS));
-
-    const candidates = [
-      st.slug,
-      gs.slug,
-      ss.slug,
-      storedSlug,
-      querySlug
-    ].filter(Boolean);
-
-    for(const slug of candidates){
-      if(!/^loc-room-/i.test(slug)) return slug;
-    }
-
-    return candidates[0] || "";
-  }
-
-  function getAccessPhone(){
-    const q = normalizePhone(readQueryParam("phone"));
-    if(q) return q;
-
-    const st = normalizeSessionCandidate(getGuardState()) || {};
-    if(st.phone) return st.phone;
-
-    const gs = normalizeSessionCandidate(getGuardSession()) || {};
-    if(gs.phone) return gs.phone;
-
-    const ss = getStoredSession() || {};
-    if(ss.phone) return ss.phone;
-
-    return normalizePhone(firstText(ACCESS_PHONE_KEYS));
-  }
-
-  function getSession(){
-    const st = normalizeSessionCandidate(getGuardState()) || {};
-    const gs = normalizeSessionCandidate(getGuardSession()) || {};
-    const ss = getStoredSession() || {};
-
-    const slug = getAccessSlug();
-    const phone = getAccessPhone();
-    const validated_at = st.validated_at || gs.validated_at || ss.validated_at || "";
-    const session_token = st.session_token || gs.session_token || ss.session_token || "";
-    const reason = st.reason || gs.reason || ss.reason || "";
-    const module = String(st.module || gs.module || ss.module || MODULE).trim().toUpperCase();
-
-    const explicitAccess = !!(st.accessFlag || gs.accessFlag || ss.accessFlag);
-    const inferredAccess = !!(
-      slug &&
-      phone &&
-      module === MODULE &&
-      isSessionFresh(validated_at)
-    );
-
-    const ok = explicitAccess || inferredAccess;
-
-    return {
-      ok,
-      access_ok: ok,
-      preview: !ok,
-      reason,
-      module,
-      slug,
-      phone,
-      validated_at,
-      session_token
-    };
-  }
-
-  function syncStoredAccessContext(){
-    const slug = getAccessSlug();
-    const phone = getAccessPhone();
-
-    if(slug){
-      storageSet("digiy_loc_last_slug", slug);
-      storageSet("digiy_loc_slug", slug);
-      storageSet("DIGIY_LOC_SLUG", slug);
-      storageSet("digiy_last_slug", slug);
-      storageSet("DIGIY_SLUG", slug);
-    }
-
-    if(phone){
-      storageSet("digiy_loc_phone", phone);
-      storageSet("digiy_loc_last_phone", phone);
-      storageSet("DIGIY_LOC_PHONE", phone);
-      storageSet("digiy_phone", phone);
-      storageSet("DIGIY_PHONE", phone);
-    }
-  }
-
-  function buildSafeUrl(path, extraParams){
-    const rawPath = String(path || "").trim() || "./";
-    let url;
-    try{
-      url = new URL(rawPath, location.href);
-    }catch{
-      const basePath = location.pathname.replace(/[^/]*$/, "");
-      const cleanPath = rawPath.replace(/^\.\//, "").replace(/^\/+/, "");
-      url = new URL(basePath + cleanPath, location.origin);
-    }
-
-    const params = extraParams && typeof extraParams === "object" ? extraParams : {};
-    Object.entries(params).forEach(([key, value])=>{
-      if(value == null) return;
-      const text = String(value).trim();
-      if(!text) return;
-      url.searchParams.set(key, text);
-    });
-
-    if(url.origin === location.origin){
-      return url.pathname + url.search + url.hash;
-    }
-    return url.toString();
-  }
-
-  function withAccess(path){
-    const slug = getAccessSlug();
-    const phone = getAccessPhone();
-    const params = {};
-    if(slug) params.slug = slug;
-    if(phone) params.phone = phone;
-    return buildSafeUrl(path, params);
-  }
-
-  function pinUrl(){
-    const slug = getAccessSlug();
-    const phone = getAccessPhone();
-    const roomSlug = ROOM_CTX.roomSlug || readRoomSlugFromQuery();
-    const params = {};
-    if(slug) params.slug = slug;
-    if(phone) params.phone = phone;
-    if(roomSlug) params.room_slug = roomSlug;
-    return buildSafeUrl("./pin.html", params);
-  }
-
-  function getCalendarSlug(){
-    return ROOM_CTX.roomSlug || readRoomSlugFromQuery() || "";
-  }
-
-  async function waitGuardReady(){
-    const guard = window.DIGIY_GUARD;
-    if(!guard || typeof guard.ready !== "function"){
-      throw new Error("guard_missing");
-    }
-
-    try{
-      await guard.ready({
-        redirect:false,
-        preserve_validation:true,
-        allow_soft_session:true
-      });
-    }catch{
-      await guard.ready();
-    }
-
-    return guard.state || {};
-  }
-
-  function getSupabase(){
+  function supabaseClient(){
     if(sb?.rpc) return sb;
-
-    if(!window.supabase?.createClient){
-      throw new Error("supabase_missing");
-    }
-
+    if(!window.supabase?.createClient) throw new Error("supabase_missing");
     sb = window.supabase.createClient(
       window.DIGIY_SUPABASE_URL,
       window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY,
-      {
-        auth:{
-          persistSession:false,
-          autoRefreshToken:false,
-          detectSessionInUrl:false
-        }
-      }
+      { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } }
     );
-
     return sb;
   }
-
   async function rpc(name, params){
-    const S = getSupabase();
-    const { data, error } = await S.rpc(name, params || {});
+    const {data,error} = await supabaseClient().rpc(name, params || {});
     if(error) throw error;
     return data;
   }
 
-  function ymdFromDate(d){
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
+  function ymd(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+  function dateFromYmd(v){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||""))) return null;
+    const [y,m,d] = String(v).split("-").map(Number);
+    const out = new Date(y,m-1,d);
+    return Number.isNaN(out.getTime()) ? null : out;
   }
-
-  function localDateFromYmd(ymd){
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || "").trim())) return null;
-    const [y,m,d] = String(ymd).split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  function formatMonthYear(year, month){
-    const d = new Date(year, month, 1);
-    return d.toLocaleDateString("fr-FR", { month:"long", year:"numeric" });
-  }
-
-  function formatDateFr(ymd){
-    const d = localDateFromYmd(ymd);
-    if(!d) return ymd || "—";
-    return d.toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
-  }
-
-  function formatAmount(amount){
-    const n = Number(amount || 0);
+  function monthLabel(y,m){return new Date(y,m,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"});}
+  function dateFr(v){const d=dateFromYmd(v); return d ? d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : (v || "—");}
+  function money(v){
+    const n = Number(v || 0);
     if(!Number.isFinite(n) || n <= 0) return "—";
-    return new Intl.NumberFormat("fr-FR", { maximumFractionDigits:0 }).format(n);
+    return new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0}).format(n);
   }
-
-  function rangeInclusive(startYmd, endYmd){
-    const a = localDateFromYmd(startYmd);
-    const b = localDateFromYmd(endYmd);
-    if(!a || !b) return [];
-    const start = a <= b ? a : b;
-    const end = a <= b ? b : a;
+  function rangeInclusive(a,b){
+    const da=dateFromYmd(a), db=dateFromYmd(b);
+    if(!da || !db) return [];
+    const start = da <= db ? da : db, end = da <= db ? db : da;
+    const out = [], d = new Date(start);
+    while(d <= end){out.push(ymd(d)); d.setDate(d.getDate()+1);}
+    return out;
+  }
+  function cellsForMonth(year, month){
+    const first = new Date(year,month,1);
+    const firstDay = (first.getDay()+6)%7;
+    const start = new Date(year,month,1-firstDay);
     const out = [];
-    const d = new Date(start);
-    while(d <= end){
-      out.push(ymdFromDate(d));
-      d.setDate(d.getDate() + 1);
+    for(let i=0;i<42;i++){
+      const d = new Date(start);
+      d.setDate(start.getDate()+i);
+      out.push({date:d, ymd:ymd(d), inMonth:d.getMonth()===month});
     }
     return out;
   }
-
-  function compareYmd(a, b){
-    return String(a || "").localeCompare(String(b || ""));
-  }
-
-  function getCalendarCells(year, month){
-    const first = new Date(year, month, 1);
-    const firstDay = (first.getDay() + 6) % 7;
-    const start = new Date(year, month, 1 - firstDay);
-    const cells = [];
-    for(let i = 0; i < 42; i++){
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      cells.push({
-        date: d,
-        ymd: ymdFromDate(d),
-        inMonth: d.getMonth() === month
-      });
-    }
-    return cells;
-  }
-
   function normalizeDay(rec){
     return {
-      day: String(rec?.day || "").trim(),
-      price_night: Number(rec?.price_night || 0) || 0,
-      base_price_night: Number(rec?.base_price_night || 0) || 0,
-      is_booked: !!rec?.is_booked,
-      is_closed: !!rec?.is_closed,
-      status: String(rec?.status || "open").trim().toLowerCase(),
-      bookings_count: Number(rec?.bookings_count || 0) || 0,
-      note: String(rec?.note || "").trim() || null
+      day:String(rec?.day || "").trim(),
+      price_night:Number(rec?.price_night || 0) || 0,
+      base_price_night:Number(rec?.base_price_night || 0) || 0,
+      status:String(rec?.status || (rec?.is_booked ? "booked" : rec?.is_closed ? "closed" : "open")).toLowerCase(),
+      is_booked:!!rec?.is_booked,
+      is_closed:!!rec?.is_closed,
+      bookings_count:Number(rec?.bookings_count || 0) || 0,
+      note:String(rec?.note || "").trim()
     };
   }
 
-  function getTariffStorageCandidates(){
-    const accessSlug = getAccessSlug();
-    const roomSlug = ROOM_CTX.roomSlug || "";
-    return [
-      accessSlug ? `DIGIY_LOC_TARIFS_V2:${accessSlug}` : "",
-      roomSlug && roomSlug !== accessSlug ? `DIGIY_LOC_TARIFS_V2:${roomSlug}` : "",
+  function loadLocalTariff(){
+    const candidates = [
+      getAccessSlug() ? `DIGIY_LOC_TARIFS_V2:${getAccessSlug()}` : "",
+      Room.slug ? `DIGIY_LOC_TARIFS_V2:${Room.slug}` : "",
       "DIGIY_LOC_TARIFS_V2:noslug"
     ].filter(Boolean);
-  }
-
-  function loadOfflineTariffs(){
-    LOCAL_TARIFFS.loaded = false;
-    LOCAL_TARIFFS.key = "";
-    LOCAL_TARIFFS.sourceSlug = "";
-    LOCAL_TARIFFS.night = 0;
-    LOCAL_TARIFFS.week = 0;
-    LOCAL_TARIFFS.month = 0;
-    LOCAL_TARIFFS.clean = 0;
-    LOCAL_TARIFFS.deposit = 0;
-    LOCAL_TARIFFS.ts = 0;
-
-    for(const key of getTariffStorageCandidates()){
-      const parsed = safeJsonParse(storageGet(key));
-      if(!parsed || typeof parsed !== "object") continue;
-
-      LOCAL_TARIFFS.loaded = true;
-      LOCAL_TARIFFS.key = key;
-      LOCAL_TARIFFS.sourceSlug = key.split(":").slice(1).join(":");
-      LOCAL_TARIFFS.night = Number(parsed.night || 0) || 0;
-      LOCAL_TARIFFS.week = Number(parsed.week || 0) || 0;
-      LOCAL_TARIFFS.month = Number(parsed.month || 0) || 0;
-      LOCAL_TARIFFS.clean = Number(parsed.clean || 0) || 0;
-      LOCAL_TARIFFS.deposit = Number(parsed.deposit || 0) || 0;
-      LOCAL_TARIFFS.ts = Number(parsed.ts || 0) || 0;
-      break;
-    }
-
-    return LOCAL_TARIFFS;
-  }
-
-  function getEffectiveBaseNight(){
-    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
-    if(localNight > 0) return localNight;
-    return Number(DATA.room?.base_price_night || 0) || 0;
-  }
-
-  function applyOfflineTariffsToDay(rec){
-    const day = normalizeDay(rec || {});
-    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
-
-    if(localNight > 0){
-      const oldBase = Number(day.base_price_night || 0) || 0;
-      const oldPrice = Number(day.price_night || 0) || 0;
-      const shouldUseLocalBasePrice = !oldPrice || oldPrice === oldBase;
-
-      day.base_price_night = localNight;
-
-      if(shouldUseLocalBasePrice){
-        day.price_night = localNight;
-      }
-    }
-
-    return day;
-  }
-
-  function applyOfflineTariffsOverlay(){
-    loadOfflineTariffs();
-
-    if(!DATA.room) DATA.room = {};
-
-    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
-    if(localNight > 0){
-      DATA.room.base_price_night = localNight;
-    }
-
-    Object.keys(DATA.daily).forEach((ymd)=>{
-      DATA.daily[ymd] = applyOfflineTariffsToDay(DATA.daily[ymd]);
-    });
-  }
-
-  function getTariffHintMessage(){
-    const localNight = Number(LOCAL_TARIFFS.night || 0) || 0;
-    if(localNight > 0){
-      return `💰 Tarif de base repris depuis Tarifs : ${formatAmount(localNight)} F CFA.`;
-    }
-    return "";
-  }
-
-  function getDayRecord(ymd){
-    if(DATA.daily[ymd]) return DATA.daily[ymd];
-    const base = getEffectiveBaseNight();
-    return {
-      day: ymd,
-      price_night: base,
-      base_price_night: base,
-      is_booked: false,
-      is_closed: false,
-      status: "open",
-      bookings_count: 0,
-      note: null
-    };
-  }
-
-  function getSelectedKeys(){
-    return Array.isArray(MONTH_STATE.selectedKeys) ? MONTH_STATE.selectedKeys.slice() : [];
-  }
-
-  function isSelected(ymd){
-    return getSelectedKeys().includes(ymd);
-  }
-
-  function clearSelection(renderToo = true){
-    MONTH_STATE.dragging = false;
-    MONTH_STATE.dragStart = "";
-    MONTH_STATE.dragCurrent = "";
-    MONTH_STATE.selectedKeys = [];
-    MONTH_STATE.pointerId = null;
-    MONTH_STATE.dragMoved = false;
-    MONTH_STATE.startX = 0;
-    MONTH_STATE.startY = 0;
-    if(renderToo) render();
-  }
-
-  function resetDragState(){
-    MONTH_STATE.dragging = false;
-    MONTH_STATE.dragStart = "";
-    MONTH_STATE.dragCurrent = "";
-    MONTH_STATE.pointerId = null;
-    MONTH_STATE.dragMoved = false;
-    MONTH_STATE.startX = 0;
-    MONTH_STATE.startY = 0;
-  }
-
-  function setSelectionFromRange(startYmd, endYmd){
-    MONTH_STATE.selectedKeys = rangeInclusive(startYmd, endYmd);
-  }
-
-  function getStatusLabel(status){
-    if(status === "booked") return "Occupé";
-    if(status === "closed") return "Fermé";
-    return "Ouvert";
-  }
-
-  function getStatusClass(status){
-    if(status === "booked") return "booked";
-    if(status === "closed") return "closed";
-    return "open";
-  }
-
-  function getDaySubLabel(rec){
-    if(rec.status === "booked") return "Réservation protégée";
-    if(rec.status === "closed") return "Fermé manuellement";
-    if(rec.note) return rec.note;
-    return "Disponible à ce prix";
-  }
-
-  function selectionSummary(keys){
-    if(!keys.length){
-      return {
-        title:"Aucune sélection",
-        sub:"Choisis une ou plusieurs dates.",
-        price:"Le prix choisi apparaîtra ici.",
-        hasBooked:false,
-        count:0
-      };
-    }
-
-    const sorted = keys.slice().sort(compareYmd);
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    const hasBooked = sorted.some((ymd)=>getDayRecord(ymd).status === "booked");
-    const lockedCount = sorted.filter((ymd)=>getDayRecord(ymd).status === "booked").length;
-
-    let title = "";
-    if(sorted.length === 1){
-      title = formatDateFr(first);
-    }else{
-      title = `${formatDateFr(first)} → ${formatDateFr(last)}`;
-    }
-
-    const prices = sorted
-      .map((ymd)=>Number(getDayRecord(ymd).price_night || 0))
-      .filter((n)=>Number.isFinite(n) && n > 0);
-
-    const uniquePrices = [...new Set(prices)];
-    let price = "Prix non défini";
-
-    if(sorted.length === 1 && prices.length){
-      price = `💰 ${formatAmount(prices[0])} F CFA`;
-    }else if(uniquePrices.length === 1 && prices.length){
-      price = `💰 Prix commun : ${formatAmount(uniquePrices[0])} F CFA`;
-    }else if(prices.length){
-      const min = Math.min(...prices);
-      const max = Math.max(...prices);
-      price = `💰 Fourchette : ${formatAmount(min)} → ${formatAmount(max)} F CFA`;
-    }
-
-    const sub = hasBooked
-      ? `${sorted.length} date(s) choisies · ${lockedCount} occupée(s) protégée(s)`
-      : `${sorted.length} date(s) choisies`;
-
-    return {
-      title,
-      sub,
-      price,
-      hasBooked,
-      count:sorted.length
-    };
-  }
-
-  function syncRangeFormFromSelection(){
-    const keys = getSelectedKeys().slice().sort(compareYmd);
-    const startEl = $("rangeStart");
-    const endEl = $("rangeEnd");
-    const priceEl = $("rangePrice");
-    if(!startEl || !endEl || !priceEl) return;
-
-    if(!keys.length){
-      if(!priceEl.value){
-        const base = getEffectiveBaseNight();
-        if(base > 0) priceEl.value = String(base);
-      }
-      return;
-    }
-
-    startEl.value = keys[0] || "";
-    endEl.value = keys[keys.length - 1] || "";
-
-    const firstPrice = Number(getDayRecord(keys[0]).price_night || 0) || 0;
-    if(firstPrice > 0){
-      priceEl.value = String(firstPrice);
-    }else{
-      const base = getEffectiveBaseNight();
-      priceEl.value = base > 0 ? String(base) : "";
-    }
-  }
-
-  function setProgramDefaults(){
-    const startEl = $("rangeStart");
-    const endEl = $("rangeEnd");
-    const priceEl = $("rangePrice");
-    const today = ymdFromDate(new Date());
-
-    if(startEl && !startEl.value) startEl.value = today;
-    if(endEl && !endEl.value) endEl.value = today;
-    if(priceEl && !priceEl.value){
-      const base = getEffectiveBaseNight();
-      if(base > 0) priceEl.value = String(base);
-    }
-  }
-
-  function setActionButtonsEnabled(enabled){
-    [
-      "btnOpenRange","btnCloseRange","btnPriceRange","btnCancelRange",
-      "btnOpenProgram","btnCloseProgram","btnPriceProgram",
-      "rangeStart","rangeEnd","rangePrice"
-    ].forEach((id)=>{
-      const el = $(id);
-      if(el) el.disabled = !enabled;
-    });
-  }
-
-  function getProgramRange(){
-    const start = String($("rangeStart")?.value || "").trim();
-    const end = String($("rangeEnd")?.value || "").trim();
-
-    if(!start || !end){
-      throw new Error("Choisis une date de début et une date de fin.");
-    }
-    if(compareYmd(start, end) > 0){
-      throw new Error("La date de fin doit être après la date de début.");
-    }
-    return { start, end };
-  }
-
-  function getProgramPrice(){
-    const raw = String($("rangePrice")?.value || "").trim();
-    const amount = Number(raw.replace(/[^\d]/g, ""));
-    if(!Number.isFinite(amount) || amount <= 0){
-      throw new Error("Mets un prix valide.");
-    }
-    return amount;
-  }
-
-  function renderActionBar(){
-    const keys = getSelectedKeys();
-    const info = selectionSummary(keys);
-
-    $("selectionTitle").textContent = info.title;
-    $("selectionPrice").textContent = info.price;
-    $("selectionSub").textContent = info.sub;
-
-    const showBar = keys.length > 0;
-    $("actionBar").classList.toggle("show", showBar);
-
-    $("btnOpenRange").disabled = !showBar || !getSession().access_ok;
-    $("btnCloseRange").disabled = !showBar || !getSession().access_ok;
-    $("btnPriceRange").disabled = !showBar || !getSession().access_ok;
-  }
-
-  function renderCalendar(){
-    $("calendarTitle").textContent = formatMonthYear(MONTH_STATE.year, MONTH_STATE.month);
-
-    const monthLabel = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
-    const roomLabel = DATA.room?.room_name || ROOM_CTX.roomName || "";
-    const roomSlug = ROOM_CTX.roomSlug || "";
-    const baseNight = getEffectiveBaseNight();
-
-    $("calendarSub").textContent = roomLabel
-      ? (baseNight > 0
-          ? `${roomLabel} • base ${formatAmount(baseNight)} F CFA • ${monthLabel}`
-          : `${roomLabel} • ${monthLabel}`)
-      : (baseNight > 0
-          ? `Le prix du jour passe devant. Base actuelle : ${formatAmount(baseNight)} F CFA.`
-          : "Le prix du jour passe devant. Glisse sur les dates pour ouvrir, fermer ou changer le tarif.");
-
-    if(roomSlug){
-      $("rangeHint").textContent = `Astuce : touche une date ou glisse sur plusieurs jours pour remplir la plage plus vite. • Logement : ${roomSlug}`;
-    }
-
-    const grid = $("calendarGrid");
-    const foot = $("calendarFoot");
-    const todayYmd = ymdFromDate(new Date());
-    const cells = getCalendarCells(MONTH_STATE.year, MONTH_STATE.month);
-
-    grid.innerHTML = "";
-    ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach((label)=>{
-      const el = document.createElement("div");
-      el.className = "dow";
-      el.textContent = label;
-      grid.appendChild(el);
-    });
-
-    cells.forEach((cell)=>{
-      const rec = getDayRecord(cell.ymd);
-      const statusClass = getStatusClass(rec.status);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = [
-        "day",
-        cell.inMonth ? "" : "mutedDay",
-        cell.ymd === todayYmd ? "today" : "",
-        statusClass === "booked" ? "booked locked" : "",
-        statusClass === "closed" ? "closed" : "",
-        isSelected(cell.ymd) ? "selected" : ""
-      ].join(" ").trim();
-
-      btn.dataset.date = cell.ymd;
-      btn.setAttribute("aria-label", `${formatDateFr(cell.ymd)} • ${getStatusLabel(rec.status)} • ${formatAmount(rec.price_night)} F CFA`);
-
-      btn.innerHTML = `
-        <div class="dayTop">
-          <div class="dayNum">${cell.date.getDate()}</div>
-          <div class="stateTag">${esc(getStatusLabel(rec.status))}</div>
-        </div>
-        <div class="dayMid">
-          <div class="priceWrap">
-            <div class="priceMain">${esc(formatAmount(rec.price_night))}</div>
-            <div class="priceUnit">F CFA</div>
-          </div>
-          <div class="daySub">${esc(getDaySubLabel(rec))}</div>
-        </div>
-      `;
-
-      bindDayPointer(btn, cell.ymd);
-      grid.appendChild(btn);
-    });
-
-    const keys = getSelectedKeys();
-    if(keys.length){
-      const info = selectionSummary(keys);
-      foot.textContent = info.hasBooked
-        ? `${info.price} · Les dates occupées restent protégées.`
-        : `${info.price} · Choisis ton action : ouvrir, fermer ou changer le prix.`;
-    }else if(MONTH_STATE.focusedDate){
-      const rec = getDayRecord(MONTH_STATE.focusedDate);
-      foot.textContent = `💰 ${formatAmount(rec.price_night)} F CFA · ${formatDateFr(MONTH_STATE.focusedDate)} · ${getStatusLabel(rec.status)}`;
-    }else{
-      foot.textContent = "Touchez une date ou glissez sur plusieurs jours.";
-    }
-  }
-
-  function renderBookings(){
-    const day = MONTH_STATE.focusedDate || "";
-    $("pickedDayPill").textContent = day ? `Jour choisi : ${day}` : "Jour choisi : aucun";
-
-    const list = $("bookingsList");
-
-    if(!day){
-      list.innerHTML = `
-        <div class="item">
-          <div>
-            <div class="itemTitle">Choisis une date</div>
-            <div class="itemMeta">Appuie sur une date pour lire ce qu’il y a dessus.</div>
-          </div>
-          <div><span class="badge">📅 Calendrier</span></div>
-        </div>
-      `;
-      return;
-    }
-
-    const rec = getDayRecord(day);
-    const bookings = Array.isArray(DATA.bookingsByDay[day]) ? DATA.bookingsByDay[day] : [];
-
-    if(bookings.length){
-      list.innerHTML = bookings.map((b)=>`
-        <div class="item">
-          <div>
-            <div class="itemTitle">${esc(b.client_name || "Client")}</div>
-            <div class="itemMeta">
-              📅 ${esc(formatDateFr(day))}<br>
-              🛏️ ${esc(b.checkin || "—")} → ${esc(b.checkout || "—")}<br>
-              💰 ${esc(formatAmount(b.amount_total || 0))} F CFA<br>
-              📞 ${esc(b.phone || "—")}
-            </div>
-          </div>
-          <div><span class="badge blue">🛏️ Occupé</span></div>
-        </div>
-      `).join("");
-      return;
-    }
-
-    if(rec.status === "closed"){
-      list.innerHTML = `
-        <div class="item">
-          <div>
-            <div class="itemTitle">Date fermée</div>
-            <div class="itemMeta">
-              📅 ${esc(formatDateFr(day))}<br>
-              💰 ${esc(formatAmount(rec.price_night))} F CFA<br>
-              ${rec.note ? "📝 " + esc(rec.note) : "Indisponible"}
-            </div>
-          </div>
-          <div><span class="badge bad">⛔ Fermé</span></div>
-        </div>
-      `;
-      return;
-    }
-
-    list.innerHTML = `
-      <div class="item">
-        <div>
-          <div class="itemTitle">Date ouverte</div>
-          <div class="itemMeta">
-            📅 ${esc(formatDateFr(day))}<br>
-            💰 ${esc(formatAmount(rec.price_night))} F CFA<br>
-            Disponible à la réservation
-          </div>
-        </div>
-        <div><span class="badge ok">✅ Ouvert</span></div>
-      </div>
-    `;
-  }
-
-
-  function quickLocAmount(text){
-    const m = String(text || "").replace(/\s+/g, " ").match(/(\d[\d\s.,]*)\s*(f|fcfa|xof)?/i);
-    if(!m) return 0;
-    const raw = String(m[1] || "").replace(/[^\d]/g, "");
-    const n = Number(raw);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function quickLocChannel(text){
-    const t = String(text || "").toLowerCase();
-    if(/\bwave\b/.test(t)) return "wave";
-    if(/\b(cash|espèces|especes|liquide)\b/.test(t)) return "cash";
-    if(/\b(orange money|om)\b/.test(t)) return "orange_money";
-    if(/\b(banque|virement)\b/.test(t)) return "bank";
-    return "other";
-  }
-
-
-  function quickLocNorm(text){
-    return String(text || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function quickLocComplement(text, type){
-    const s = String(text || "").trim();
-    const lower = quickLocNorm(s);
-
-    if(/(chambre|studio|appartement|logement|villa|maison)/.test(lower)){
-      const found = lower.match(/(chambre|studio|appartement|logement|villa|maison)/);
-      return found ? found[1] : "";
-    }
-    if(/(menage|nettoyage)/.test(lower)) return "ménage";
-    if(/(robinet|reparation|plomberie|serrure|clim|entretien)/.test(lower)) return "entretien";
-    if(/(electricite|eau|internet|facture|senelec|sde|sen eau)/.test(lower)) return "facture";
-    if(/(acompte|avance)/.test(lower)) return "acompte";
-    if(/(bloquer|fermer|indisponible)/.test(lower)) return "calendrier";
-    return "";
-  }
-
-  function quickLocDraftFromText(text){
-    const sentence = String(text || "").trim().replace(/\s+/g, " ");
-    const lower = quickLocNorm(sentence);
-    const amount = quickLocAmount(sentence);
-    const channel = quickLocChannel(sentence);
-
-    let type = "note";
-    let title = "Note location";
-    let direction = "none";
-    let category = "loc_note";
-    let kind = "other";
-    let impact = "à classer";
-
-    if(/\b(bloquer|fermer|indisponible|occupé|occupe)\b/.test(lower)){
-      type = "calendar_note";
-      title = "Note calendrier";
-      direction = "none";
-      category = "calendar_note";
-      kind = "other";
-      impact = "calendrier à vérifier";
-    } else if(/\b(acompte|avance)\b/.test(lower)){
-      type = "deposit";
-      title = "Acompte reçu";
-      direction = "in";
-      category = "deposit";
-      kind = "sale";
-      impact = "entrée location";
-    } else if(/\b(payé|paye|payee|payée|encaissé|encaisse|client a payé|client a paye|reçu|recu)\b/.test(lower)){
-      type = "rent_income";
-      title = "Paiement location";
-      direction = "in";
-      category = "rent_income";
-      kind = "sale";
-      impact = "recette location";
-    } else if(/\b(ménage|menage|nettoyage)\b/.test(lower)){
-      type = "cleaning_expense";
-      title = "Ménage payé";
-      direction = "out";
-      category = "cleaning";
-      kind = "expense";
-      impact = "dépense location";
-    } else if(/\b(réparation|reparation|robinet|plomberie|serrure|clim|entretien)\b/.test(lower)){
-      type = "maintenance_expense";
-      title = "Réparation location";
-      direction = "out";
-      category = "maintenance";
-      kind = "expense";
-      impact = "dépense entretien";
-    } else if(/\b(electricite|eau|internet|facture|senelec|sde|sen eau)\b/.test(lower)){
-      type = "utility_expense";
-      title = "Facture logement";
-      direction = "out";
-      category = "utility_bill";
-      kind = "expense";
-      impact = "charge location";
-    }
-
-    const complement = quickLocComplement(sentence, type);
-
-    return {
-      sentence,
-      type,
-      title,
-      amount_xof: amount,
-      channel,
-      direction,
-      category,
-      kind,
-      impact,
-      complement,
-      module: "LOC",
-      status: "draft",
-      created_at: new Date().toISOString()
-    };
-  }
-
-  function quickLocMemoryKey(){
-    const slug = getAccessSlug() || "unknown";
-    return `digiy_loc_quick_memory:${slug}`;
-  }
-
-  function quickLocDraftKey(){
-    const slug = getAccessSlug() || "unknown";
-    return `digiy_loc_quick_draft:${slug}`;
-  }
-
-  function readQuickLocMemory(){
-    try{
-      const raw = localStorage.getItem(quickLocMemoryKey());
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
-    }catch{
-      return [];
-    }
-  }
-
-  function writeQuickLocMemory(items){
-    try{
-      localStorage.setItem(quickLocMemoryKey(), JSON.stringify((items || []).slice(0, 10)));
-      return true;
-    }catch{
-      return false;
-    }
-  }
-
-  function saveQuickLocDraft(draft, confirmed = false){
-    try{
-      localStorage.setItem(quickLocDraftKey(), JSON.stringify({
-        ...draft,
-        status: confirmed ? "confirmed_local" : "draft",
-        confirmed_at: confirmed ? new Date().toISOString() : null
-      }));
-      return true;
-    }catch{
-      return false;
-    }
-  }
-
-  function addQuickLocMemory(draft){
-    const item = {
-      ...draft,
-      memory_id: "loc_" + Date.now(),
-      confirmed_at: new Date().toISOString()
-    };
-    const list = readQuickLocMemory();
-    list.unshift(item);
-    writeQuickLocMemory(list);
-    renderQuickLocMemory();
-  }
-
-  function isQuickLocFinancial(item){
-    const type = String(item?.type || "").toLowerCase();
-    return ["rent_income","deposit","cleaning_expense","maintenance_expense","utility_expense"].includes(type);
-  }
-
-  function paySlugFromLocPhone(){
-    const p = digits(getAccessPhone());
-    return p ? "pay-" + p : "";
-  }
-
-  function payLocLabel(item){
-    const type = String(item?.type || "").toLowerCase();
-    const comp = String(item?.complement || "").trim();
-
-    if(type === "rent_income") return comp ? "Paiement " + comp : "Paiement location";
-    if(type === "deposit") return "Acompte location";
-    if(type === "cleaning_expense") return "Ménage";
-    if(type === "maintenance_expense") return comp ? "Réparation " + comp : "Réparation location";
-    if(type === "utility_expense") return comp ? "Facture " + comp : "Facture logement";
-    return item?.title || "Note location";
-  }
-
-  function buildPayFromLocUrl(item){
-    const phone = digits(getAccessPhone());
-    const paySlug = paySlugFromLocPhone();
-    const qsPay = new URLSearchParams();
-
-    if(paySlug) qsPay.set("slug", paySlug);
-    if(phone) qsPay.set("phone", phone);
-
-    qsPay.set("fromDraft", "1");
-    qsPay.set("direction", item?.direction === "in" ? "in" : "out");
-    qsPay.set("scope", "pro");
-    qsPay.set("amount", String(Math.round(Number(item?.amount_xof || 0))));
-    qsPay.set("kind", item?.kind || (item?.direction === "in" ? "sale" : "expense"));
-    qsPay.set("channel", item?.channel || "other");
-    qsPay.set("category", item?.category || "loc_note");
-    qsPay.set("source_module", "LOC");
-    qsPay.set("label", payLocLabel(item));
-    qsPay.set("note", String(item?.sentence || "").trim());
-    qsPay.set("complement", String(item?.complement || "").trim());
-    qsPay.set("intent", "loc_quick_note");
-
-    return "https://pro-pay.digiylyfe.com/admin.html?" + qsPay.toString();
-  }
-
-  function renderQuickLocDraft(draft){
-    const box = $("quickLocDraft");
-    const confirmBtn = $("btnQuickLocConfirm");
-    if(!box) return;
-
-    if(!draft || !draft.sentence){
-      box.style.display = "none";
-      box.innerHTML = "";
-      if(confirmBtn) confirmBtn.style.display = "none";
-      return;
-    }
-
-    const amountText = draft.amount_xof ? formatAmount(draft.amount_xof) + " F CFA" : "montant à préciser";
-    const channelText = draft.channel === "other" ? "canal à préciser" : draft.channel;
-
-    box.style.display = "block";
-    if(confirmBtn) confirmBtn.style.display = "inline-flex";
-
-    box.innerHTML = `
-      <strong>Voilà ce que DIGIY LOC a préparé :</strong><br>
-      Type : ${esc(draft.title)}<br>
-      Montant : ${esc(amountText)}<br>
-      Canal : ${esc(channelText)}<br>
-      Impact : ${esc(draft.impact)}<br>
-      ${draft.complement ? `Complément : ${esc(draft.complement)}<br>` : ``}
-      <br>
-      <span style="color:rgba(246,248,242,.72)">Brouillon seulement. Rien n’est envoyé en base automatiquement.</span>
-    `;
-  }
-
-  function renderQuickLocMemory(){
-    const box = $("quickLocMemoryList");
-    if(!box) return;
-
-    const list = readQuickLocMemory();
-    if(!list.length){
-      box.innerHTML = `<div class="memoryEmpty">Aucune note LOC confirmée pour le moment.</div>`;
-      return;
-    }
-
-    box.innerHTML = list.slice(0, 10).map(item => {
-      const amount = item.amount_xof ? formatAmount(item.amount_xof) + " F CFA" : "montant à préciser";
-      const channel = item.channel && item.channel !== "other" ? item.channel : "canal à préciser";
-      const comp = item.complement ? " · " + item.complement : "";
-
-      return `
-        <div class="memoryItem">
-          <div class="memoryItemTop">
-            <div class="memoryItemTitle">✅ ${esc(item.title || "Note location")}</div>
-            <div class="memoryItemAmount">${esc(amount)}</div>
-          </div>
-          <div class="memoryItemMeta">${esc(channel)} · ${esc(item.impact || "à classer")}${esc(comp)}</div>
-          <div class="memoryItemMeta">${esc(item.sentence || "")}</div>
-          ${isQuickLocFinancial(item) ? `
-            <a class="memoryPayAction" href="${esc(buildPayFromLocUrl(item))}">
-              💼 Envoyer vers Mon argent
-            </a>
-            <div class="memoryPayHint">Abonnement Mon argent requis pour enregistrer.</div>
-          ` : ``}
-        </div>
-      `;
-    }).join("");
-  }
-
-  function clearQuickLocMemory(){
-    const ok = window.confirm("Vider l’aide-mémoire location sur cet appareil ?");
-    if(!ok) return;
-    writeQuickLocMemory([]);
-    renderQuickLocMemory();
-    show("Aide-mémoire location vidé sur cet appareil.", "ok");
-  }
-
-  function bindQuickLocNote(){
-    const input = $("quickLocInput");
-    const prepare = $("btnQuickLocPrepare");
-    const confirm = $("btnQuickLocConfirm");
-    const clear = $("btnQuickLocClear");
-
-    $("quickLocExamples")?.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if(!input) return;
-        input.value = btn.textContent.trim();
-        input.focus();
-      });
-    });
-
-    prepare?.addEventListener("click", () => {
-      const sentence = String(input?.value || "").trim();
-      if(!sentence){
-        show("Écris une note location avant de préparer.", "warn");
+    for(const k of candidates){
+      const parsed = parseJson(storageGet(k));
+      if(parsed && typeof parsed === "object"){
+        LocalTariffs.night = Number(parsed.night || 0) || 0;
+        LocalTariffs.loaded = LocalTariffs.night > 0;
         return;
       }
-
-      const draft = quickLocDraftFromText(sentence);
-      saveQuickLocDraft(draft, false);
-      renderQuickLocDraft(draft);
-      show("Brouillon location préparé. Vérifie puis confirme.", "ok");
-    });
-
-    confirm?.addEventListener("click", () => {
-      const draft = quickLocDraftFromText(String(input?.value || "").trim());
-      if(!draft.sentence){
-        show("Prépare d’abord une note location.", "warn");
-        return;
-      }
-
-      saveQuickLocDraft(draft, true);
-      addQuickLocMemory(draft);
-      renderQuickLocDraft({...draft, status:"confirmed_local"});
-      if(confirm) confirm.style.display = "none";
-      show("Note location confirmée dans l’aide-mémoire.", "ok");
-    });
-
-    clear?.addEventListener("click", () => {
-      if(input) input.value = "";
-      renderQuickLocDraft(null);
-      show("Note location effacée.", "ok");
-    });
-
-    $("btnQuickLocMemoryClear")?.addEventListener("click", clearQuickLocMemory);
-    renderQuickLocMemory();
+    }
+  }
+  function baseNight(){
+    return LocalTariffs.night || Number(Data.room?.base_price_night || 0) || 0;
+  }
+  function dayRecord(key){
+    if(Data.daily[key]) return Data.daily[key];
+    const base = baseNight();
+    return { day:key, price_night:base, base_price_night:base, status:"open", is_booked:false, is_closed:false, bookings_count:0, note:"" };
+  }
+  function applyLocalPrice(rec){
+    const d = normalizeDay(rec || {});
+    if(LocalTariffs.night > 0){
+      const oldBase = Number(d.base_price_night || 0) || 0;
+      const oldPrice = Number(d.price_night || 0) || 0;
+      const useLocal = !oldPrice || oldPrice === oldBase;
+      d.base_price_night = LocalTariffs.night;
+      if(useLocal) d.price_night = LocalTariffs.night;
+    }
+    return d;
   }
 
-
-  function render(){
-    renderCalendar();
-    renderActionBar();
-    renderBookings();
-    syncRangeFormFromSelection();
-  }
-
-  function getDayButtonFromPoint(clientX, clientY){
-    if(!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
-    const el = document.elementFromPoint(clientX, clientY);
-    if(!el || typeof el.closest !== "function") return null;
-    return el.closest(".day[data-date]");
-  }
-
-  function getYmdFromPoint(clientX, clientY){
-    const btn = getDayButtonFromPoint(clientX, clientY);
-    return btn ? String(btn.dataset.date || "").trim() : "";
-  }
-
-  async function selectSingleDay(ymd){
-    if(!ymd) return;
-    resetDragState();
-    MONTH_STATE.focusedDate = ymd;
-    MONTH_STATE.selectedKeys = [ymd];
-    render();
+  async function waitGuard(){
+    const guard = window.DIGIY_GUARD;
+    if(!guard?.ready) throw new Error("guard_missing");
     try{
-      await loadDayDetails(ymd);
-    }catch(e){
-      console.error(e);
+      await guard.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+    }catch{
+      await guard.ready();
     }
   }
 
-  async function finalizePointerSelection(finalYmd){
-    const startYmd = MONTH_STATE.dragStart || finalYmd || "";
-    const endYmd = finalYmd || MONTH_STATE.dragCurrent || startYmd || "";
-    const wasRange = !!MONTH_STATE.dragMoved;
+  async function resolveRoom(){
+    if(Room.slug) return Room;
 
-    MONTH_STATE.suppressClickUntil = Date.now() + 350;
-    resetDragState();
+    const query = roomSlugFromQuery();
+    const S = supabaseClient();
 
-    if(!startYmd) return;
-
-    if(wasRange && endYmd){
-      setSelectionFromRange(startYmd, endYmd);
-      MONTH_STATE.focusedDate = endYmd;
-      render();
+    async function fillBySlug(slug){
+      Room.slug = slug;
       try{
-        await loadDayDetails(endYmd);
-      }catch(e){
-        console.error(e);
-      }
-      return;
-    }
-
-    await selectSingleDay(startYmd);
-  }
-
-  function daysInMonth(year, month){
-    return new Date(year, month + 1, 0).getDate();
-  }
-
-  function normalizeMonthState(){
-    while(MONTH_STATE.month < 0){
-      MONTH_STATE.month += 12;
-      MONTH_STATE.year -= 1;
-    }
-    while(MONTH_STATE.month > 11){
-      MONTH_STATE.month -= 12;
-      MONTH_STATE.year += 1;
-    }
-  }
-
-  function rememberFocusedDayForNewMonth(){
-    const previous = localDateFromYmd(MONTH_STATE.focusedDate) || new Date(MONTH_STATE.year, MONTH_STATE.month, 1);
-    const day = Math.min(previous.getDate(), daysInMonth(MONTH_STATE.year, MONTH_STATE.month));
-    MONTH_STATE.focusedDate = ymdFromDate(new Date(MONTH_STATE.year, MONTH_STATE.month, day));
-  }
-
-  function playMonthSwipeAnimation(delta){
-    const card = document.querySelector(".calendarCard");
-    if(!card) return;
-    const cls = delta > 0 ? "monthSwipeNext" : "monthSwipePrev";
-    card.classList.remove("monthSwipeNext", "monthSwipePrev");
-    void card.offsetWidth;
-    card.classList.add(cls);
-    window.setTimeout(()=>card.classList.remove(cls), 260);
-  }
-
-  async function shiftMonth(delta, message){
-    if(MONTH_SWIPE.busy) return;
-    MONTH_SWIPE.busy = true;
-    try{
-      MONTH_STATE.month += Number(delta || 0);
-      normalizeMonthState();
-      rememberFocusedDayForNewMonth();
-      clearSelection(false);
-      playMonthSwipeAnimation(delta);
-      await reloadCurrentMonth(message || (delta > 0 ? "→ Mois suivant." : "← Mois précédent."));
-    }catch(e){
-      console.error(e);
-      showRight("❌ Impossible de changer de mois : " + (e?.message || e), "bad");
-    }finally{
-      MONTH_SWIPE.busy = false;
-    }
-  }
-
-  function bindMonthSwipe(){
-    const area = $("calendarHead") || document.querySelector(".calendarHead");
-    const hint = $("monthSwipeHint");
-    const targets = [area, hint].filter(Boolean);
-
-    targets.forEach((target)=>{
-      target.addEventListener("pointerdown", (ev)=>{
-        if(ev.pointerType === "mouse" && ev.button !== 0) return;
-        if(ev.target?.closest?.("button,a,input,textarea,.day")) return;
-
-        MONTH_SWIPE.active = true;
-        MONTH_SWIPE.pointerId = ev.pointerId;
-        MONTH_SWIPE.startX = Number(ev.clientX || 0);
-        MONTH_SWIPE.startY = Number(ev.clientY || 0);
-        MONTH_SWIPE.moved = false;
-
-        try{ target.setPointerCapture(ev.pointerId); }catch{}
-      });
-
-      target.addEventListener("pointermove", (ev)=>{
-        if(!MONTH_SWIPE.active) return;
-        if(MONTH_SWIPE.pointerId != null && ev.pointerId !== MONTH_SWIPE.pointerId) return;
-
-        const dx = Number(ev.clientX || 0) - MONTH_SWIPE.startX;
-        const dy = Number(ev.clientY || 0) - MONTH_SWIPE.startY;
-        if(Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.25){
-          MONTH_SWIPE.moved = true;
-          ev.preventDefault();
-        }
-      }, { passive:false });
-
-      target.addEventListener("pointerup", async (ev)=>{
-        if(!MONTH_SWIPE.active) return;
-        if(MONTH_SWIPE.pointerId != null && ev.pointerId !== MONTH_SWIPE.pointerId) return;
-
-        const dx = Number(ev.clientX || 0) - MONTH_SWIPE.startX;
-        const dy = Number(ev.clientY || 0) - MONTH_SWIPE.startY;
-        MONTH_SWIPE.active = false;
-        MONTH_SWIPE.pointerId = null;
-
-        if(Math.abs(dx) >= 70 && Math.abs(dx) > Math.abs(dy) * 1.35){
-          ev.preventDefault();
-          await shiftMonth(dx < 0 ? 1 : -1, dx < 0 ? "→ Mois suivant." : "← Mois précédent.");
-        }
-      });
-
-      target.addEventListener("pointercancel", ()=>{
-        MONTH_SWIPE.active = false;
-        MONTH_SWIPE.pointerId = null;
-      });
-    });
-  }
-
-  function bindDayPointer(el, ymd){
-    el.addEventListener("pointerdown", (ev)=>{
-      if(ev.pointerType === "mouse" && ev.button !== 0) return;
-
-      MONTH_STATE.dragging = true;
-      MONTH_STATE.pointerId = ev.pointerId;
-      MONTH_STATE.dragStart = ymd;
-      MONTH_STATE.dragCurrent = ymd;
-      MONTH_STATE.dragMoved = false;
-      MONTH_STATE.startX = Number(ev.clientX || 0);
-      MONTH_STATE.startY = Number(ev.clientY || 0);
-      MONTH_STATE.focusedDate = ymd;
-
-      try{ el.setPointerCapture(ev.pointerId); }catch{}
-    });
-
-    el.addEventListener("click", (ev)=>{
-      if(Date.now() < MONTH_STATE.suppressClickUntil){
-        ev.preventDefault();
-        ev.stopPropagation();
-        return;
-      }
-      selectSingleDay(ymd);
-    });
-
-    el.addEventListener("keydown", (ev)=>{
-      if(ev.key === "Enter" || ev.key === " "){
-        ev.preventDefault();
-        selectSingleDay(ymd);
-      }
-    });
-  }
-
-  function handleGlobalPointerMove(ev){
-    if(!MONTH_STATE.dragging) return;
-    if(MONTH_STATE.pointerId != null && ev.pointerId !== MONTH_STATE.pointerId) return;
-
-    const clientX = Number(ev.clientX || 0);
-    const clientY = Number(ev.clientY || 0);
-    const dx = Math.abs(clientX - MONTH_STATE.startX);
-    const dy = Math.abs(clientY - MONTH_STATE.startY);
-    const currentYmd = getYmdFromPoint(clientX, clientY) || MONTH_STATE.dragCurrent || MONTH_STATE.dragStart;
-
-    if((dx > 8 || dy > 8 || currentYmd !== MONTH_STATE.dragStart) && currentYmd){
-      MONTH_STATE.dragMoved = true;
-
-      if(currentYmd !== MONTH_STATE.dragCurrent || getSelectedKeys().length === 0){
-        MONTH_STATE.dragCurrent = currentYmd;
-        MONTH_STATE.focusedDate = currentYmd;
-        setSelectionFromRange(MONTH_STATE.dragStart, currentYmd);
-        render();
-      }
-
-      ev.preventDefault();
-    }
-  }
-
-  async function handleGlobalPointerUp(ev){
-    if(!MONTH_STATE.dragging) return;
-    if(MONTH_STATE.pointerId != null && ev.pointerId !== MONTH_STATE.pointerId) return;
-
-    const clientX = Number(ev.clientX || 0);
-    const clientY = Number(ev.clientY || 0);
-    const currentYmd = getYmdFromPoint(clientX, clientY) || MONTH_STATE.dragCurrent || MONTH_STATE.dragStart;
-
-    await finalizePointerSelection(currentYmd);
-  }
-
-  async function handleGlobalPointerCancel(){
-    if(!MONTH_STATE.dragging) return;
-    await finalizePointerSelection(MONTH_STATE.dragCurrent || MONTH_STATE.dragStart);
-  }
-
-  async function resolveCalendarRoom(){
-    if(ROOM_CTX.roomSlug) return ROOM_CTX;
-
-    const queryRoomSlug = readRoomSlugFromQuery();
-    if(/^loc-room-/i.test(queryRoomSlug)){
-      ROOM_CTX.roomSlug = queryRoomSlug;
-      try{
-        const { data, error } = await getSupabase()
-          .from("digiy_loc_rooms")
-          .select("id, slug, nom")
-          .eq("slug", queryRoomSlug)
-          .limit(1)
-          .maybeSingle();
-        if(!error && data){
-          ROOM_CTX.roomId = String(data.id || "").trim();
-          ROOM_CTX.roomName = String(data.nom || "").trim();
-        }
+        const {data,error} = await S.from("digiy_loc_rooms").select("id, slug, nom").eq("slug", slug).limit(1).maybeSingle();
+        if(!error && data){ Room.id = String(data.id||""); Room.name = String(data.nom||""); }
       }catch{}
-      return ROOM_CTX;
+      return Room;
     }
 
-    const cached = normalizeSlug(
-      storageGet("DIGIY_LOC_ROOM_SLUG") ||
-      storageGet("digiy_loc_room_slug") ||
-      ""
-    );
+    if(/^loc-room-/i.test(query)) return fillBySlug(query);
 
-    if(/^loc-room-/i.test(cached)){
-      ROOM_CTX.roomSlug = cached;
-      try{
-        const { data, error } = await getSupabase()
-          .from("digiy_loc_rooms")
-          .select("id, slug, nom")
-          .eq("slug", ROOM_CTX.roomSlug)
-          .limit(1)
-          .maybeSingle();
-        if(!error && data){
-          ROOM_CTX.roomId = String(data.id || "").trim();
-          ROOM_CTX.roomName = String(data.nom || "").trim();
-        }
-      }catch{}
-      return ROOM_CTX;
-    }
+    const cached = normalizeSlug(storageGet("DIGIY_LOC_ROOM_SLUG") || storageGet("digiy_loc_room_slug"));
+    if(/^loc-room-/i.test(cached)) return fillBySlug(cached);
 
-    const sess = getSession();
-    const phoneRaw =
-      sess.phone ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      "";
-
-    const phone = String(phoneRaw).trim();
+    const phone = getSession().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
     if(!phone) throw new Error("room_phone_missing");
 
-    const S = getSupabase();
-
-    let data = null;
-    let error = null;
-
-    ({ data, error } = await S
-      .from("digiy_loc_rooms")
+    let {data,error} = await S.from("digiy_loc_rooms")
       .select("id, slug, nom, status, updated_at, phone")
       .eq("phone", phone)
-      .in("status", ["active", "actif"])
-      .order("updated_at", { ascending:false })
-      .limit(1));
+      .in("status", ["active","actif"])
+      .order("updated_at", {ascending:false})
+      .limit(1);
 
-    if((!data || !data.length) && !phone.startsWith("+")){
-      ({ data, error } = await S
-        .from("digiy_loc_rooms")
+    if((!data || !data.length) && !String(phone).startsWith("+")){
+      ({data,error} = await S.from("digiy_loc_rooms")
         .select("id, slug, nom, status, updated_at, phone")
         .eq("phone", "+" + phone)
-        .in("status", ["active", "actif"])
-        .order("updated_at", { ascending:false })
+        .in("status", ["active","actif"])
+        .order("updated_at", {ascending:false})
         .limit(1));
     }
 
     if(error) throw error;
     if(!data || !data.length) throw new Error("room_slug_not_found");
 
-    ROOM_CTX.roomId = String(data[0].id || "").trim();
-    ROOM_CTX.roomSlug = normalizeSlug(data[0].slug);
-    ROOM_CTX.roomName = String(data[0].nom || "").trim();
-
-    storageSet("DIGIY_LOC_ROOM_SLUG", ROOM_CTX.roomSlug);
-    storageSet("digiy_loc_room_slug", ROOM_CTX.roomSlug);
-
-    return ROOM_CTX;
+    Room.id = String(data[0].id || "");
+    Room.slug = normalizeSlug(data[0].slug);
+    Room.name = String(data[0].nom || "");
+    storageSet("DIGIY_LOC_ROOM_SLUG", Room.slug);
+    storageSet("digiy_loc_room_slug", Room.slug);
+    return Room;
   }
 
   async function loadMonth(){
-    const room = await resolveCalendarRoom();
-    const roomSlug = room.roomSlug;
-    if(!roomSlug) throw new Error("room_slug_missing");
-
-    const monthDate = `${MONTH_STATE.year}-${String(MONTH_STATE.month+1).padStart(2,"0")}-01`;
-    const data = await rpc("digiy_loc_calendar_month", {
-      p_slug: roomSlug,
-      p_month: monthDate
-    });
-
+    const room = await resolveRoom();
+    const monthDate = `${State.year}-${String(State.month+1).padStart(2,"0")}-01`;
+    const data = await rpc("digiy_loc_calendar_month", { p_slug: room.slug, p_month: monthDate });
     if(!data?.ok) throw new Error(data?.reason || "calendar_month_failed");
 
-    DATA.room = {
-      room_id: data.room_id,
-      room_name: data.room_name || room.roomName || "",
-      base_price_night: Array.isArray(data.days) && data.days[0]
-        ? Number(data.days[0].base_price_night || 0) || 0
-        : 0
+    Data.room = {
+      room_id:data.room_id,
+      room_name:data.room_name || room.name || "",
+      base_price_night:Array.isArray(data.days) && data.days[0] ? Number(data.days[0].base_price_night || 0) || 0 : 0
     };
-
-    ROOM_CTX.roomId = String(data.room_id || ROOM_CTX.roomId || "");
-    ROOM_CTX.roomName = String(data.room_name || ROOM_CTX.roomName || "");
-
-    DATA.daily = {};
-    (Array.isArray(data.days) ? data.days : []).forEach((day)=>{
-      const rec = normalizeDay(day);
-      if(rec.day) DATA.daily[rec.day] = rec;
+    Room.id = String(data.room_id || Room.id || "");
+    Room.name = String(data.room_name || Room.name || "");
+    Data.daily = {};
+    loadLocalTariff();
+    (Array.isArray(data.days) ? data.days : []).forEach(row=>{
+      const d = applyLocalPrice(row);
+      if(d.day) Data.daily[d.day] = d;
     });
-
-    applyOfflineTariffsOverlay();
-
-    // On garde le badge sur l’identifiant d’accès propriétaire.
-    $("pillSlug").textContent = "identifiant accès : " + (getAccessSlug() || "—");
-
-    const extra = ROOM_CTX.roomSlug
-      ? `📍 Logement chargé : ${ROOM_CTX.roomSlug}${ROOM_CTX.roomName ? " • " + ROOM_CTX.roomName : ""}`
-      : "";
-
-    const tariffHint = getTariffHintMessage();
-    if(extra && tariffHint){
-      showRight(extra + "\n" + tariffHint, "ok");
-    }else if(extra){
-      showRight(extra, "ok");
-    }else if(tariffHint){
-      showRight(tariffHint, "ok");
-    }
   }
 
-  async function loadDayDetails(ymd){
-    const roomSlug = getCalendarSlug();
-    if(!roomSlug || !ymd) return;
-
-    const data = await rpc("digiy_loc_day_listing", {
-      p_slug: roomSlug,
-      p_day: ymd
-    });
-
+  async function loadDay(key){
+    if(!Room.slug || !key) return;
+    const data = await rpc("digiy_loc_day_listing", { p_slug:Room.slug, p_day:key });
     if(!data?.ok) return;
-
-    DATA.bookingsByDay[ymd] = Array.isArray(data.bookings) ? data.bookings : [];
-    DATA.daily[ymd] = applyOfflineTariffsToDay({
-      day: ymd,
-      price_night: Number(data.price_night || 0) || 0,
-      base_price_night: Number(data.base_price_night || 0) || 0,
-      is_booked: !!data.is_booked,
-      is_closed: !!data.is_closed,
-      status: String(data.status || "open").trim().toLowerCase(),
-      bookings_count: Array.isArray(data.bookings) ? data.bookings.length : 0,
-      note: DATA.daily[ymd]?.note || null
+    Data.daily[key] = applyLocalPrice({
+      day:key,
+      price_night:Number(data.price_night || 0) || 0,
+      base_price_night:Number(data.base_price_night || 0) || 0,
+      is_booked:!!data.is_booked,
+      is_closed:!!data.is_closed,
+      status:String(data.status || "open").toLowerCase(),
+      bookings_count:Array.isArray(data.bookings) ? data.bookings.length : 0
     });
-
-    render();
   }
 
-  async function reloadCurrentMonth(keepMessage){
-    await loadMonth();
-    const targetDay = MONTH_STATE.focusedDate || ymdFromDate(new Date());
+  function selectedKeys(){return Array.isArray(State.selected) ? State.selected.slice() : [];}
+  function isSelected(key){return selectedKeys().includes(key);}
+  function clearSelection(renderToo=true){
+    State.selected = [];
+    State.dragging = false;
+    State.pointerId = null;
+    State.dragStart = "";
+    State.moved = false;
+    if(renderToo) render();
+  }
+  function setSelection(a,b){State.selected = rangeInclusive(a,b);}
+  function labelStatus(status){
+    if(status === "booked") return "Occupé";
+    if(status === "closed") return "Fermé";
+    return "Ouvert";
+  }
+  function cssStatus(status){
+    if(status === "booked") return "booked";
+    if(status === "closed") return "closed";
+    return "";
+  }
+  function dayNote(rec){
+    if(rec.status === "booked") return "Protégé";
+    if(rec.status === "closed") return "Fermé";
+    return "Disponible";
+  }
+  function selectionInfo(){
+    const keys = selectedKeys().sort();
+    if(!keys.length) return {title:"Aucune sélection", price:"Le prix apparaîtra ici.", sub:"Choisis une ou plusieurs dates.", hasBooked:false};
+    const first = keys[0], last = keys[keys.length-1];
+    const prices = keys.map(k=>Number(dayRecord(k).price_night || 0)).filter(n=>n>0);
+    const unique = [...new Set(prices)];
+    const hasBooked = keys.some(k=>dayRecord(k).status === "booked");
+    let price = "Prix non défini";
+    if(keys.length === 1 && prices.length) price = `💰 ${money(prices[0])} F CFA`;
+    else if(unique.length === 1 && prices.length) price = `💰 Prix commun : ${money(unique[0])} F CFA`;
+    else if(prices.length) price = `💰 Fourchette : ${money(Math.min(...prices))} → ${money(Math.max(...prices))} F CFA`;
+    return {
+      title: keys.length === 1 ? dateFr(first) : `${dateFr(first)} → ${dateFr(last)}`,
+      price,
+      sub: hasBooked ? `${keys.length} date(s) choisies · occupé protégé` : `${keys.length} date(s) choisies`,
+      hasBooked
+    };
+  }
 
-    if(DATA.daily[targetDay]){
-      MONTH_STATE.focusedDate = targetDay;
-      await loadDayDetails(targetDay);
-    }else{
-      MONTH_STATE.focusedDate = Object.keys(DATA.daily)[0] || targetDay;
-      if(DATA.daily[MONTH_STATE.focusedDate]){
-        await loadDayDetails(MONTH_STATE.focusedDate);
-      }
-    }
+  function renderHeader(){
+    const phone = getSession().phone || "—";
+    $("pillSlug").textContent = getAccessSlug() || "—";
 
+    if(accessOpen) setSub(`✅ Accès ouvert · ${phone}`);
+    else setSub("🔐 Lecture seulement");
+
+    const roomName = Data.room?.room_name || Room.name || "";
+    const base = baseNight();
+    $("calendarTitle").textContent = monthLabel(State.year, State.month);
+    $("calendarSub").textContent = roomName
+      ? `${roomName}${base ? " • base " + money(base) + " F CFA" : ""}`
+      : base ? `Base actuelle : ${money(base)} F CFA` : "Glisse le mois, touche les dates.";
+  }
+
+  function renderCalendar(){
+    const grid = $("calendarGrid");
+    const today = ymd(new Date());
+    const cells = cellsForMonth(State.year, State.month);
+    grid.innerHTML = "";
+
+    ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach(x=>{
+      const el = document.createElement("div");
+      el.className = "dow";
+      el.textContent = x;
+      grid.appendChild(el);
+    });
+
+    cells.forEach(cell=>{
+      const rec = dayRecord(cell.ymd);
+      const status = cssStatus(rec.status);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = [
+        "day",
+        cell.inMonth ? "" : "muted",
+        cell.ymd === today ? "today" : "",
+        status,
+        isSelected(cell.ymd) ? "selected" : ""
+      ].join(" ").trim();
+      btn.dataset.date = cell.ymd;
+      btn.setAttribute("aria-label", `${dateFr(cell.ymd)} • ${labelStatus(rec.status)} • ${money(rec.price_night)} F CFA`);
+      btn.innerHTML = `
+        <div class="dayTop">
+          <span class="dayNum">${cell.date.getDate()}</span>
+          <span class="tag">${esc(labelStatus(rec.status))}</span>
+        </div>
+        <div class="price">
+          <div class="priceMain">${esc(money(rec.price_night))}</div>
+          <div class="priceUnit">F CFA</div>
+        </div>
+        <div class="dayNote">${esc(dayNote(rec))}</div>
+      `;
+      bindDay(btn, cell.ymd);
+      grid.appendChild(btn);
+    });
+
+    const keys = selectedKeys();
+    const info = selectionInfo();
+    $("calendarFoot").textContent = keys.length
+      ? info.hasBooked ? `${info.price} · Les dates occupées restent protégées.` : `${info.price} · Ouvrir, fermer ou changer le prix.`
+      : State.focusedDate ? `💰 ${money(dayRecord(State.focusedDate).price_night)} F CFA · ${dateFr(State.focusedDate)} · ${labelStatus(dayRecord(State.focusedDate).status)}`
+      : "Touche une date pour agir.";
+  }
+
+  function renderActionBar(){
+    const keys = selectedKeys();
+    const info = selectionInfo();
+    $("selectionTitle").textContent = info.title;
+    $("selectionPrice").textContent = info.price;
+    $("selectionSub").textContent = info.sub;
+    $("actionBar").classList.toggle("show", keys.length > 0);
+    ["btnOpenRange","btnCloseRange","btnPriceRange"].forEach(id=>$(id).disabled = !keys.length || !accessOpen);
+  }
+  function render(){ renderHeader(); renderCalendar(); renderActionBar(); syncNav(); }
+
+  function getDayFromPoint(x,y){
+    const el = document.elementFromPoint(x,y);
+    const day = el?.closest?.(".day");
+    return day?.dataset?.date || "";
+  }
+  function selectDay(key){
+    State.focusedDate = key;
+    State.selected = [key];
     render();
+    loadDay(key).then(render).catch(()=>{});
+  }
+  function bindDay(el,key){
+    el.addEventListener("pointerdown", ev=>{
+      if(ev.pointerType === "mouse" && ev.button !== 0) return;
+      State.dragging = true;
+      State.pointerId = ev.pointerId;
+      State.dragStart = key;
+      State.focusedDate = key;
+      State.startX = ev.clientX || 0;
+      State.startY = ev.clientY || 0;
+      State.moved = false;
+      try{el.setPointerCapture(ev.pointerId);}catch{}
+    });
+    el.addEventListener("click", ev=>{
+      if(Date.now() < State.suppressClickUntil){ev.preventDefault();ev.stopPropagation();return;}
+      selectDay(key);
+    });
+  }
 
-    if(keepMessage){
-      const roomLine = ROOM_CTX.roomSlug
-        ? `📍 Logement : ${ROOM_CTX.roomSlug}${ROOM_CTX.roomName ? " • " + ROOM_CTX.roomName : ""}`
-        : "";
-      const tariffHint = getTariffHintMessage();
-
-      const parts = [keepMessage, roomLine, tariffHint].filter(Boolean);
-      showRight(parts.join("\n"), "ok");
+  function onPointerMove(ev){
+    if(!State.dragging) return;
+    if(State.pointerId != null && ev.pointerId !== State.pointerId) return;
+    const dx = (ev.clientX || 0) - State.startX;
+    const dy = (ev.clientY || 0) - State.startY;
+    const key = getDayFromPoint(ev.clientX, ev.clientY);
+    if(key && key !== State.dragStart){
+      State.moved = true;
+      setSelection(State.dragStart, key);
+      State.focusedDate = key;
+      render();
+      ev.preventDefault();
+    }else if(Math.abs(dx) > 10 || Math.abs(dy) > 10){
+      State.moved = true;
     }
+  }
+  function finishPointer(ev){
+    if(!State.dragging) return;
+    if(State.pointerId != null && ev.pointerId !== State.pointerId) return;
+    const key = getDayFromPoint(ev.clientX, ev.clientY) || State.focusedDate || State.dragStart;
+    if(State.moved && key){
+      setSelection(State.dragStart, key);
+      State.focusedDate = key;
+      State.suppressClickUntil = Date.now() + 350;
+      render();
+    }
+    State.dragging = false;
+    State.pointerId = null;
+    State.dragStart = "";
+  }
+
+  function normalizeMonth(){
+    while(State.month < 0){State.month += 12; State.year--;}
+    while(State.month > 11){State.month -= 12; State.year++;}
+  }
+  function animateMonth(delta){
+    const card = $("calendarCard");
+    card.classList.remove("monthNext","monthPrev");
+    void card.offsetWidth;
+    card.classList.add(delta > 0 ? "monthNext" : "monthPrev");
+    setTimeout(()=>card.classList.remove("monthNext","monthPrev"),260);
+  }
+  async function shiftMonth(delta, msg){
+    if(Swipe.busy) return;
+    Swipe.busy = true;
+    try{
+      State.month += delta;
+      normalizeMonth();
+      clearSelection(false);
+      animateMonth(delta);
+      await reload(msg || (delta > 0 ? "→ Mois suivant." : "← Mois précédent."));
+    }catch(e){
+      console.error(e);
+      setNotice("❌ Impossible de changer de mois : " + (e?.message || e), "bad");
+    }finally{
+      Swipe.busy = false;
+    }
+  }
+  function bindMonthSwipe(){
+    const area = $("calendarHead");
+    area.addEventListener("pointerdown", ev=>{
+      if(ev.pointerType === "mouse" && ev.button !== 0) return;
+      if(ev.target?.closest?.("button,a,input,textarea,.day")) return;
+      Swipe.active = true; Swipe.pointerId = ev.pointerId; Swipe.startX = ev.clientX || 0; Swipe.startY = ev.clientY || 0;
+      try{area.setPointerCapture(ev.pointerId);}catch{}
+    });
+    area.addEventListener("pointermove", ev=>{
+      if(!Swipe.active || ev.pointerId !== Swipe.pointerId) return;
+      const dx = (ev.clientX||0)-Swipe.startX, dy=(ev.clientY||0)-Swipe.startY;
+      if(Math.abs(dx)>12 && Math.abs(dx)>Math.abs(dy)*1.25) ev.preventDefault();
+    }, {passive:false});
+    area.addEventListener("pointerup", ev=>{
+      if(!Swipe.active || ev.pointerId !== Swipe.pointerId) return;
+      const dx = (ev.clientX||0)-Swipe.startX, dy=(ev.clientY||0)-Swipe.startY;
+      Swipe.active = false; Swipe.pointerId = null;
+      if(Math.abs(dx)>=70 && Math.abs(dx)>Math.abs(dy)*1.35){
+        ev.preventDefault();
+        shiftMonth(dx < 0 ? 1 : -1);
+      }
+    });
+    area.addEventListener("pointercancel", ()=>{Swipe.active=false; Swipe.pointerId=null;});
+  }
+
+  async function reload(msg){
+    await loadMonth();
+    const target = State.focusedDate || ymd(new Date());
+    State.focusedDate = target;
+    if(Data.daily[target]) await loadDay(target);
+    render();
+    if(msg) setNotice(msg, "ok");
   }
 
   async function applyAction(action){
-    const keys = getSelectedKeys().slice().sort(compareYmd);
-    if(!keys.length){
-      showRight("Choisis d’abord une ou plusieurs dates.", "warn");
-      return;
-    }
+    const keys = selectedKeys().sort();
+    if(!keys.length){ setNotice("Choisis d’abord une ou plusieurs dates.", "warn"); return; }
+    if(keys.some(k=>dayRecord(k).status === "booked")){ setNotice("Les dates occupées restent protégées.", "warn"); return; }
 
-    const sess = getSession();
-    const roomSlug = getCalendarSlug();
-    const phone = sess.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+    const phone = getSession().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+    if(!Room.slug || !phone){ setNotice("Accès incomplet. Reviens par ton accès.", "warn"); return; }
 
-    if(!roomSlug || !phone){
-      showRight("Accès incomplet. Reviens par ton accès.", "warn");
-      return;
-    }
-
-    if(keys.some((ymd)=>getDayRecord(ymd).status === "booked")){
-      showRight("Les dates occupées restent protégées.", "warn");
-      return;
-    }
-
-    let pPrice = null;
-    let pNote = null;
-
+    let price = null, note = null;
     if(action === "price"){
-      const current = getDayRecord(keys[0]).price_night || getEffectiveBaseNight() || 0;
+      const current = dayRecord(keys[0]).price_night || baseNight() || 0;
       const raw = prompt("Nouveau prix en F CFA pour les dates choisies", String(current || ""));
       if(raw == null) return;
-
-      const amount = Number(String(raw).replace(/[^\d]/g, ""));
-      if(!Number.isFinite(amount) || amount <= 0){
-        showRight("Prix invalide.", "warn");
-        return;
-      }
-      pPrice = amount;
-      pNote = "tarif manuel";
+      const amount = Number(String(raw).replace(/[^\d]/g,""));
+      if(!Number.isFinite(amount) || amount <= 0){ setNotice("Prix invalide.", "warn"); return; }
+      price = amount; note = "tarif manuel";
     }
-
-    if(action === "close") pNote = "fermeture manuelle";
-    if(action === "open") pNote = "réouverture manuelle";
+    if(action === "close") note = "fermeture manuelle";
+    if(action === "open") note = "réouverture manuelle";
 
     try{
-      showRight("⏳ Mise à jour du calendrier…", "warn");
-
+      setNotice("⏳ Mise à jour du calendrier…", "warn");
       const out = await rpc("digiy_loc_calendar_apply_range", {
-        p_slug: roomSlug,
+        p_slug: Room.slug,
         p_owner_phone: phone,
         p_start: keys[0],
-        p_end: keys[keys.length - 1],
+        p_end: keys[keys.length-1],
         p_action: action,
-        p_price: pPrice,
-        p_note: pNote
+        p_price: price,
+        p_note: note
       });
-
-      if(!out?.ok){
-        throw new Error(out?.reason || "calendar_apply_failed");
-      }
-
+      if(!out?.ok) throw new Error(out?.reason || "calendar_apply_failed");
       const label = action === "price"
         ? `💰 Prix appliqué sur ${out.changed_count || 0} date(s).`
-        : action === "close"
-          ? `⛔ ${out.changed_count || 0} date(s) fermée(s).`
-          : `✅ ${out.changed_count || 0} date(s) ouverte(s).`;
-
+        : action === "close" ? `⛔ ${out.changed_count || 0} date(s) fermée(s).`
+        : `✅ ${out.changed_count || 0} date(s) ouverte(s).`;
       clearSelection(false);
-      await reloadCurrentMonth(label);
+      await reload(label);
     }catch(e){
       console.error(e);
-      showRight("❌ Impossible de mettre à jour : " + (e?.message || e), "bad");
+      setNotice("❌ Impossible de mettre à jour : " + (e?.message || e), "bad");
     }
   }
 
-  async function applyProgramRange(action){
-    if(!getSession().access_ok){
-      showRight("Ouvre ton accès pour agir sur les dates.", "warn");
-      return;
-    }
-
-    let start = "";
-    let end = "";
-    let amount = null;
-
-    try{
-      const range = getProgramRange();
-      start = range.start;
-      end = range.end;
-      if(action === "price"){
-        amount = getProgramPrice();
-      }
-    }catch(e){
-      showRight(String(e?.message || e), "warn");
-      return;
-    }
-
-    const keys = rangeInclusive(start, end);
-    if(keys.some((ymd)=>getDayRecord(ymd).status === "booked")){
-      showRight("Les dates occupées restent protégées.", "warn");
-      return;
-    }
-
-    const sess = getSession();
-    const roomSlug = getCalendarSlug();
-    const phone = sess.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
-
-    if(!roomSlug || !phone){
-      showRight("Accès incomplet. Reviens par ton accès.", "warn");
-      return;
-    }
-
-    try{
-      showRight("⏳ Mise à jour de la plage…", "warn");
-
-      const out = await rpc("digiy_loc_calendar_apply_range", {
-        p_slug: roomSlug,
-        p_owner_phone: phone,
-        p_start: start,
-        p_end: end,
-        p_action: action,
-        p_price: action === "price" ? amount : null,
-        p_note: action === "price"
-          ? "tarif programmé"
-          : action === "close"
-            ? "fermeture programmée"
-            : "réouverture programmée"
-      });
-
-      if(!out?.ok){
-        throw new Error(out?.reason || "calendar_apply_failed");
-      }
-
-      MONTH_STATE.focusedDate = end;
-      MONTH_STATE.selectedKeys = keys;
-
-      const label = action === "price"
-        ? `💰 Prix appliqué sur ${out.changed_count || 0} date(s).`
-        : action === "close"
-          ? `⛔ ${out.changed_count || 0} date(s) fermée(s).`
-          : `✅ ${out.changed_count || 0} date(s) ouverte(s).`;
-
-      await reloadCurrentMonth(label);
-    }catch(e){
-      console.error(e);
-      showRight("❌ Impossible de mettre à jour : " + (e?.message || e), "bad");
-    }
-  }
-
-  function renderPreview(reason){
-    UX_MODE = "preview";
-    UX_REASON = reason || "preview";
-    setSub("🔐 Ouvre ton accès pour agir");
-    setActionButtonsEnabled(false);
-
-    show(
-      reason === "slug_missing"
-        ? "Identifiant d’accès introuvable. Ouvre cette page depuis ton espace pour agir sur tes dates."
-        : "Mode lecture seulement tant que l’accès n’est pas ouvert.",
-      "warn"
-    );
-
-    const roomLine = ROOM_CTX.roomSlug ? `📍 Logement : ${ROOM_CTX.roomSlug}` : "";
-    showRight(
-      ["Mode lecture seulement tant que l’accès n’est pas ouvert.", roomLine].filter(Boolean).join("\n"),
-      "warn"
-    );
-  }
-
-  function renderLiveHeader(){
-    const sess = getSession();
-    const phone =
-      sess.phone ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      "—";
-
-    UX_MODE = "live";
-    UX_REASON = "ok";
-    setActionButtonsEnabled(true);
-    setSub(`✅ Accès ouvert · ${phone}`);
-    show("Calendrier réel prêt. Ouvrir, fermer, tarifer.", "ok");
-  }
-
-  async function gotoTodayMonth(){
-    const d = new Date();
-    MONTH_STATE.year = d.getFullYear();
-    MONTH_STATE.month = d.getMonth();
-    clearSelection(false);
-    MONTH_STATE.focusedDate = ymdFromDate(d);
-    await reloadCurrentMonth();
+  function syncNav(){
+    $("navHome").href = withAccess("./app.html");
+    $("navResa").href = withAccess("./reservations.html");
+    $("navPlanning").href = withAccess("./planning.html");
+    const phone = digits(getSession().phone || getAccessPhone());
+    $("navMessages").href = phone ? `https://wa.me/${phone}` : withAccess("./reservations.html#messages");
+    $("navMore").href = withAccess("./app.html#plus");
   }
 
   async function init(){
-    syncStoredAccessContext();
-
-    $("btnDashboard").href = withAccess("./app.html");
-    $("btnReservations").href = withAccess("./reservations.html");
-    $("btnTarifs").href = withAccess("./tarifs.html");
-    $("btnPhotos").href = withAccess("./photos.html");
-    $("btnListing").href = withAccess("./listing.html");
-    $("btnWave").href = withAccess("./pin-wave.html");
-    $("btnPin").href = pinUrl();
-
+    syncAccess();
+    syncNav();
     $("btnLogout").addEventListener("click", ()=>{
-      try{
-        window.DIGIY_GUARD?.logout?.();
-      }catch{
-        location.replace(pinUrl());
-      }
+      try{ window.DIGIY_GUARD?.logout?.(); }catch{ location.replace(withAccess("./pin.html")); }
     });
-
-    bindQuickLocNote();
-
-  $("btnSupport").addEventListener("click", ()=>{
-      const accessSlug = getAccessSlug();
-      const roomSlug = ROOM_CTX.roomSlug || readRoomSlugFromQuery() || "—";
-      const sess = getSession();
-      const phone =
-        sess.phone ||
-        storageGet("DIGIY_PHONE") ||
-        storageGet("DIGIY_LOC_PHONE") ||
-        "";
-
-      const txt =
-`DIGIY LOC • Support
-
-Page : calendrier
-Identifiant accès : ${accessSlug || "—"}
-Identifiant logement : ${roomSlug}
-Téléphone : ${phone || "—"}
-
-Merci. — DIGIY`;
-
-      location.href = "https://wa.me/" + digits(SUPPORT_WA) + "?text=" + encodeURIComponent(txt);
+    $("btnPrevMonth").addEventListener("click", ()=>shiftMonth(-1));
+    $("btnNextMonth").addEventListener("click", ()=>shiftMonth(1));
+    $("btnTodayMonth").addEventListener("click", ()=>{
+      const d = new Date();
+      State.year = d.getFullYear();
+      State.month = d.getMonth();
+      State.focusedDate = ymd(d);
+      clearSelection(false);
+      reload("Aujourd’hui.");
     });
-
-    $("btnPrevMonth").addEventListener("click", ()=>shiftMonth(-1, "← Mois précédent."));
-    $("btnNextMonth").addEventListener("click", ()=>shiftMonth(1, "→ Mois suivant."));
-    $("btnTodayMonth").addEventListener("click", gotoTodayMonth);
-    bindMonthSwipe();
-
     $("btnOpenRange").addEventListener("click", ()=>applyAction("open"));
     $("btnCloseRange").addEventListener("click", ()=>applyAction("close"));
     $("btnPriceRange").addEventListener("click", ()=>applyAction("price"));
-
-    $("btnOpenProgram").addEventListener("click", ()=>applyProgramRange("open"));
-    $("btnCloseProgram").addEventListener("click", ()=>applyProgramRange("close"));
-    $("btnPriceProgram").addEventListener("click", ()=>applyProgramRange("price"));
-
-    $("btnCancelRange").addEventListener("click", ()=>{
-      clearSelection(false);
-      setProgramDefaults();
-      render();
-      showRight("Sélection annulée.", "ok");
-    });
-
-    document.addEventListener("pointermove", handleGlobalPointerMove, { passive:false });
-    document.addEventListener("pointerup", handleGlobalPointerUp);
-    document.addEventListener("pointercancel", handleGlobalPointerCancel);
-
-    $("pillSlug").textContent = "identifiant accès : " + (getAccessSlug() || "—");
-    setProgramDefaults();
-    setActionButtonsEnabled(false);
+    $("btnCancelRange").addEventListener("click", ()=>{clearSelection(); setNotice("Sélection annulée.", "ok");});
+    document.addEventListener("pointermove", onPointerMove, {passive:false});
+    document.addEventListener("pointerup", finishPointer);
+    document.addEventListener("pointercancel", ()=>{State.dragging=false; State.pointerId=null;});
+    bindMonthSwipe();
 
     if(!window.DIGIY_GUARD){
-      setSub("❌ Ton accès n’est pas disponible.");
-      show("Le fichier d’accès n’est pas chargé.\nVérifie ./guard.js", "bad");
-      return;
-    }
-
-    try{
-      await waitGuardReady();
-    }catch(e){
-      console.error(e);
-      setSub("❌ Ton accès ne répond pas.");
-      show("Ton accès n’a pas pu s’initialiser.", "bad");
-      return;
-    }
-
-    syncStoredAccessContext();
-
-    const accessSlug = getAccessSlug();
-
-    if(!accessSlug){
-      try{ await resolveCalendarRoom(); }catch{}
-      renderPreview("slug_missing");
-      MONTH_STATE.focusedDate = ymdFromDate(new Date());
+      setSub("❌ Accès indisponible");
+      setNotice("Le fichier d’accès n’est pas chargé. Vérifie guard.js.", "bad");
       render();
       return;
     }
 
-    if(!getSession().access_ok){
-      try{ await resolveCalendarRoom(); }catch{}
-      renderPreview("has_access_false");
-      MONTH_STATE.focusedDate = ymdFromDate(new Date());
+    try{
+      await waitGuard();
+    }catch(e){
+      console.error(e);
+      setSub("❌ Accès non initialisé");
+      setNotice("Ton accès n’a pas pu s’initialiser.", "bad");
       render();
       return;
     }
 
-    renderLiveHeader();
+    syncAccess();
+    accessOpen = !!getSession().access_ok;
+
+    try{ await resolveRoom(); }catch(e){ console.warn(e); }
+
+    if(!getAccessSlug()){
+      accessOpen = false;
+      setNotice("Identifiant d’accès introuvable. Ouvre cette page depuis ton espace.", "warn");
+    }else if(!accessOpen){
+      setNotice("Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
+    }else{
+      setNotice("Calendrier prêt. Touche une date, puis agis en bas.", "ok");
+    }
 
     try{
-      await resolveCalendarRoom();
-      loadOfflineTariffs();
-      MONTH_STATE.focusedDate = ymdFromDate(new Date());
-      await reloadCurrentMonth();
-      setProgramDefaults();
+      State.focusedDate = ymd(new Date());
+      await reload();
     }catch(e){
       console.error(e);
-      show("❌ Impossible de charger le calendrier réel : " + (e?.message || e), "bad");
-      showRight("Recharge la page ou repasse par ton accès.", "warn");
+      setNotice("❌ Impossible de charger le calendrier réel : " + (e?.message || e), "bad");
+      render();
     }
   }
 
