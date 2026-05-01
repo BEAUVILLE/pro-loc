@@ -557,7 +557,7 @@
     }
 
     if(r.channel && r.channel !== "à préciser") u.searchParams.set("channel", r.channel);
-    else u.searchParams.set("channel", "manual");
+    else u.searchParams.set("channel", "other");
 
     u.searchParams.set("scope", "pro");
     u.searchParams.set("movement_date", new Date().toISOString().slice(0, 10));
