@@ -208,6 +208,14 @@
       box-shadow:0 1px 0 rgba(255,255,255,.32) inset;
     }
     .day.muted{opacity:.52;background:#eadcbc}
+    .blankDay{
+      min-height:104px;
+      border-radius:14px;
+      border:1px solid transparent;
+      background:transparent;
+      pointer-events:none;
+      box-shadow:none;
+    }
     .day.today{border-color:rgba(202,138,4,.55);background:#fff2be}
     .day.booked{background:#dbeafe;color:#1d4ed8;border-color:rgba(37,99,235,.25)}
     .day.closed{background:#fde7e7;color:#7f1d1d;border-color:rgba(220,38,38,.25)}
@@ -758,6 +766,11 @@
     });
   }
 
+  function isCurrentMonthKey(key){
+    const d = dateFromYmd(key);
+    return !!d && d.getFullYear() === State.year && d.getMonth() === State.month;
+  }
+
   function selectedKeys(){return Array.isArray(State.selected) ? State.selected.slice() : [];}
   function isSelected(key){return selectedKeys().includes(key);}
   function clearSelection(renderToo=true){
@@ -815,7 +828,7 @@
     $("calendarTitle").textContent = monthLabel(State.year, State.month);
     $("calendarSub").textContent = roomName
       ? `${roomName}${base ? " • base " + money(base) + " F CFA" : ""}`
-      : base ? `Base actuelle : ${money(base)} F CFA` : "Glisse le mois, touche les dates.";
+      : base ? `Base actuelle : ${money(base)} F CFA` : "Un mois net, sans mélange avec le mois suivant.";
   }
 
   function renderCalendar(){
@@ -832,13 +845,20 @@
     });
 
     cells.forEach(cell=>{
+      if(!cell.inMonth){
+        const blank = document.createElement("div");
+        blank.className = "blankDay";
+        blank.setAttribute("aria-hidden", "true");
+        grid.appendChild(blank);
+        return;
+      }
+
       const rec = dayRecord(cell.ymd);
       const status = cssStatus(rec.status);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = [
         "day",
-        cell.inMonth ? "" : "muted",
         cell.ymd === today ? "today" : "",
         status,
         isSelected(cell.ymd) ? "selected" : ""
@@ -956,6 +976,7 @@
     try{
       State.month += delta;
       normalizeMonth();
+      State.focusedDate = "";
       clearSelection(false);
       animateMonth(delta);
       await reload(msg || (delta > 0 ? "→ Mois suivant." : "← Mois précédent."));
@@ -993,9 +1014,16 @@
 
   async function reload(msg){
     await loadMonth();
-    const target = State.focusedDate || ymd(new Date());
-    State.focusedDate = target;
-    if(Data.daily[target]) await loadDay(target);
+
+    const todayKey = ymd(new Date());
+    if(!isCurrentMonthKey(State.focusedDate)){
+      State.focusedDate = isCurrentMonthKey(todayKey) ? todayKey : "";
+    }
+
+    if(State.focusedDate && Data.daily[State.focusedDate]){
+      await loadDay(State.focusedDate);
+    }
+
     render();
     if(msg) setNotice(msg, "ok");
   }
@@ -1124,3 +1152,4 @@
 </script>
 </body>
 </html>
+
