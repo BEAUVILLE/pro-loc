@@ -279,6 +279,7 @@
     <div class="toolGrid">
       <a class="tool" id="goTarifs" href="./tarifs.html"><b>💰 Tarifs</b><span>Prix de base, semaine, mois, caution.</span></a>
       <a class="tool" id="goPhotos" href="./photos.html"><b>🖼️ Photos</b><span>Images du logement et présentation visuelle.</span></a>
+      <a class="tool" id="goGenerator" href="./generator.html"><b>🏠 Préparer une fiche</b><span>Créer une fiche logement publique sur le vrai rail LOC.</span></a>
       <a class="tool" id="goListing" href="./listing.html"><b>📋 Ma fiche</b><span>Informations visibles côté client.</span></a>
       <a class="tool" id="goPrefiche" href="./fiche-abo.html"><b>📝 Pré-fiche</b><span>Préparer les éléments avant publication.</span></a>
     </div>
@@ -326,7 +327,7 @@
     <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
     <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
     <a class="navItem" id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
-    <a class="navItem active" id="navPlus" href="./plus.html"><strong>⋯</strong><span>Plus</span></a>
+    <a class="navItem active" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
   </div>
 </nav>
 
@@ -442,6 +443,7 @@
       ["goNotes","./notes.html"],
       ["goTarifs","./tarifs.html"],
       ["goPhotos","./photos.html"],
+      ["goGenerator","./generator.html"],
       ["goListing","./listing.html"],
       ["goPrefiche","./fiche-abo.html"],
       ["goQr","./qr.html"],
@@ -459,7 +461,7 @@
       ["navReservations","./reservations.html"],
       ["navPlanning","./planning.html"],
       ["navNotes","./notes.html"],
-      ["navPlus","./plus.html"]
+      ["navPlus","./manage-links.html"]
     ];
 
     links.forEach(([id,path])=>{
@@ -494,9 +496,10 @@
       "Accueil : " + withContext("./app.html"),
       "Réservations : " + withContext("./reservations.html"),
       "Disponibilités : " + withContext("./planning.html"),
+      "Préparer une fiche : " + withContext("./generator.html"),
       "Messages : " + withContext("./reservations-pulse.html"),
       "Notes rapides : " + withContext("./notes.html"),
-      "Plus : " + withContext("./plus.html"),
+      "Plus : " + withContext("./manage-links.html"),
       "Fiche publique : " + withContext("./go-pin-public.html"),
       "QR : " + withContext("./qr.html")
     ];
