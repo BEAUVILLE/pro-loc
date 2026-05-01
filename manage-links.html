@@ -3,157 +3,176 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Liens et QR</title>
-  <meta name="theme-color" content="#0b1020"/>
-  <meta name="description" content="DIGIY LOC — gestion des liens et QR via session PIN réelle."/>
+  <title>Je loue • Plus</title>
+  <meta name="theme-color" content="#061b14"/>
+  <meta name="description" content="DIGIY LOC — outils rangés derrière : tarifs, photos, fiche, QR, liens, accès et support."/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script src="./guard.js?v=loc-links-qr-clean-20260329"></script>
+  <script src="./guard.js?v=loc-plus-mobile-v1"></script>
+
   <style>
     :root{
-      --bg:#020617;
-      --bg2:#0b1020;
-      --line:rgba(148,163,184,.22);
-      --ink:#f9fafb;
-      --muted:#cbd5f5;
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:#0b2a1f;
+      --line:rgba(255,255,255,.12);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.72);
       --gold:#facc15;
-      --green:#22c55e;
-      --red:#ef4444;
-      --card:rgba(255,255,255,.03);
-      --shadow:0 22px 50px rgba(0,0,0,.55);
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --blue:#38bdf8;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+      --bottom:78px;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0}
-
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
     body{
       min-height:100vh;
-      font-family:Outfit,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
-        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
-        linear-gradient(180deg, var(--bg2), var(--bg));
-      padding:16px;
+        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
+        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
     }
 
-    .wrap{max-width:1040px;margin:0 auto}
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
+
+    .wrap{max-width:980px;margin:0 auto}
+
+    .hero{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(255,255,255,.035);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
 
     .top{
       display:flex;
-      justify-content:space-between;
-      gap:10px;
       align-items:center;
+      justify-content:space-between;
+      gap:12px;
       flex-wrap:wrap;
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:var(--card);
-      box-shadow:var(--shadow);
     }
 
-    .brand{display:flex;gap:10px;align-items:center}
-
-    .logo{
-      width:44px;
-      height:44px;
-      border-radius:16px;
-      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .ico{
+      width:44px;height:44px;border-radius:16px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
       border:1px solid rgba(250,204,21,.35);
-      display:grid;
-      place-items:center;
-      color:#061b14;
-      font-weight:1100;
+      font-size:20px;
+      flex:0 0 auto;
     }
-
-    h1{font-size:1.06rem}
-
-    .sub{
-      color:var(--muted);
-      font-weight:850;
-      margin-top:4px;
-    }
+    h1{font-size:20px;margin:0;letter-spacing:-.02em}
+    .sub{margin-top:4px;color:var(--muted);font-weight:850;line-height:1.35;font-size:13px}
 
     .pill{
-      border:1px solid rgba(148,163,184,.35);
-      padding:7px 10px;
+      display:inline-flex;align-items:center;gap:6px;
+      border:1px solid rgba(148,163,184,.25);
       border-radius:999px;
-      background:rgba(255,255,255,.02);
+      padding:8px 10px;
+      background:rgba(255,255,255,.035);
       color:var(--muted);
-      font-weight:900;
-      font-size:.86rem;
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
     }
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
 
-    .pill.ok{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#bbf7d0;
-    }
-
-    .pill.warn{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
-
-    .pill.bad{
-      border-color:rgba(239,68,68,.35);
-      background:rgba(239,68,68,.10);
-      color:#fecaca;
-    }
-
-    .grid{
+    .quick{
       display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
       margin-top:14px;
     }
 
-    .card{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      border-radius:20px;
-      box-shadow:var(--shadow);
-      padding:16px;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
     .btn{
-      min-height:46px;
-      border-radius:14px;
-      border:1px solid var(--line);
+      min-height:48px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.22);
       background:rgba(255,255,255,.04);
-      color:#fff;
-      font-weight:1100;
-      font-size:15px;
-      cursor:pointer;
-      text-decoration:none;
-      padding:10px 12px;
-      display:inline-flex;
+      color:var(--text);
+      font-weight:1000;
+      display:flex;
       align-items:center;
       justify-content:center;
       gap:8px;
+      padding:11px 12px;
+      cursor:pointer;
+      text-align:center;
+    }
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn:active{transform:translateY(1px)}
+
+    .section{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+      padding:14px;
     }
 
-    .btn.primary{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
-    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35)}
-    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .sectionHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .sectionTitle{font-size:16px;font-weight:1000}
+    .sectionSub{margin-top:4px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.35}
+
+    .toolGrid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .tool{
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:18px;
+      background:rgba(2,44,34,.26);
+      padding:12px;
+      min-height:92px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .tool b{font-size:15px}
+    .tool span{color:var(--muted);font-size:12px;line-height:1.35;font-weight:800}
+
+    .miniActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
 
     .note{
+      display:none;
       margin-top:10px;
       padding:10px 12px;
       border-radius:14px;
@@ -162,245 +181,249 @@
       color:var(--muted);
       font-weight:900;
       white-space:pre-wrap;
-      display:none;
+      line-height:1.4;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+
+    .bottomNav{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:70;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:linear-gradient(180deg, rgba(6,27,20,0), rgba(6,27,20,.96) 28%);
     }
 
-    .note.ok{
-      display:block;
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.09);
-      color:#bbf7d0;
+    .bottomInner{
+      max-width:980px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(6,27,20,.94);
+      backdrop-filter:blur(10px);
+      border-radius:22px;
+      padding:7px;
+      box-shadow:0 16px 44px rgba(0,0,0,.38);
     }
 
-    .note.bad{
-      display:block;
-      border-color:rgba(239,68,68,.35);
-      background:rgba(239,68,68,.09);
-      color:#fecaca;
-    }
-
-    .note.warn{
-      display:block;
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.09);
-      color:#fde68a;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-    }
-
-    th,td{
-      padding:10px;
-      border-bottom:1px solid rgba(148,163,184,.18);
-      text-align:left;
-      font-weight:850;
-      vertical-align:top;
-    }
-
-    th{
-      color:rgba(203,213,245,.9);
-      font-size:.85rem;
-    }
-
-    td{
-      color:#f9fafb;
-      font-size:.95rem;
-    }
-
-    .tiny{
-      color:rgba(203,213,245,.9);
-      font-weight:850;
-      font-size:.9rem;
-      line-height:1.35;
-      margin-top:10px;
-    }
-
-    .mono{
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      word-break:break-all;
-    }
-
-    .field{
-      width:100%;
-      padding:10px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.18);
-      color:#fff;
-      font-weight:900;
-      outline:none;
-    }
-
-    .field:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.12);
-    }
-
-    .miniBtn{
-      min-height:40px;
-      padding:8px 10px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      font-weight:1000;
-      cursor:pointer;
-      display:inline-flex;
+    .navItem{
+      min-height:52px;
+      border-radius:16px;
+      display:flex;
+      flex-direction:column;
       align-items:center;
-      gap:8px;
-    }
-
-    .miniBtn.red{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10)}
-    .miniBtn.gold{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10)}
-    .miniBtn.green{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10)}
-    .miniBtn:disabled{opacity:.55;cursor:not-allowed}
-
-    .emptyRow{
-      color:rgba(203,213,245,.9);
+      justify-content:center;
+      gap:3px;
+      color:rgba(234,255,241,.72);
+      font-size:11px;
+      font-weight:950;
+      border:1px solid transparent;
       text-align:center;
-      padding:18px 10px;
     }
 
-    @media (max-width:900px){
-      table, thead, tbody, th, td, tr{
-        display:block;
-      }
+    .navItem strong{font-size:18px;line-height:1}
+    .navItem.active{
+      color:#fde68a;
+      background:rgba(250,204,21,.10);
+      border-color:rgba(250,204,21,.24);
+    }
 
-      thead{
-        display:none;
-      }
-
-      tr{
-        border-bottom:1px solid rgba(148,163,184,.18);
-        padding:10px 0;
-      }
-
-      td{
-        border-bottom:none;
-        padding:6px 0;
-      }
-
-      td::before{
-        display:block;
-        color:rgba(203,213,245,.8);
-        font-size:.8rem;
-        margin-bottom:4px;
-        font-weight:900;
-      }
-
-      td[data-label]::before{
-        content:attr(data-label);
-      }
+    @media(max-width:560px){
+      body{padding-left:10px;padding-right:10px}
+      .quick{grid-template-columns:1fr 1fr}
+      .toolGrid{grid-template-columns:1fr}
+      h1{font-size:18px}
+      .btn{min-height:46px;padding:10px}
     }
   </style>
 </head>
 
 <body>
 <div class="wrap">
-  <div class="top">
-    <div class="brand">
-      <div class="logo">∞</div>
-      <div>
-        <h1>Je loue • Liens et QR</h1>
-        <div class="sub">Code actif • liens utiles • QR rangés au même endroit</div>
-      </div>
-    </div>
-    <div class="pill" id="pillSlug">identifiant : —</div>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div style="font-weight:950">🔐 Session</div>
-        <div class="pill warn" id="pillStatus">—</div>
-      </div>
-
-      <div class="tiny" id="who">—</div>
-
-      <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="btnLoad" type="button">↻ Charger</button>
-        <button class="btn gold" id="btnSave" type="button">💾 Enregistrer</button>
-        <button class="btn red" id="btnReset" type="button">🧹 Vider</button>
-        <a class="btn" id="btnBack" href="#">⬅️ Retour à mon espace</a>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <a class="btn" id="btnOpenApp" href="#">🏠 Ouvrir mon espace</a>
-        <a class="btn" id="btnOpenPublic" href="#">👁️ Fiche publique</a>
-        <a class="btn" id="btnOpenPin" href="#">🔑 Accès (PIN)</a>
-        <button class="btn" id="btnCopyAll" type="button">📋 Copier les liens</button>
-      </div>
-
-      <div class="note warn" id="note"></div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
-        <div style="font-weight:950">🔗 GO LINKS</div>
-        <div class="row">
-          <button class="btn" id="btnAdd" type="button">➕ Nouveau lien</button>
-          <button class="btn" id="btnSort" type="button">↕️ Trier</button>
+  <section class="hero">
+    <div class="top">
+      <div class="brand">
+        <div class="ico">⋯</div>
+        <div>
+          <h1>Plus</h1>
+          <div class="sub">Les outils secondaires sont rangés ici. Le calendrier reste léger.</div>
         </div>
       </div>
-
-      <div class="tiny">
-        Ces liens deviennent des boutons terrain. Mets les ordres par pas de 10 : 10, 20, 30.
+      <div>
+        <div class="pill" id="pillSlug">identifiant : —</div>
+        <div class="pill warn" id="pillState" style="margin-top:6px">aperçu</div>
       </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th style="width:90px">Ordre</th>
-            <th style="min-width:180px">Label</th>
-            <th>URL</th>
-            <th style="width:90px">Actif</th>
-            <th style="width:240px">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
     </div>
 
-    <div class="card">
-      <div style="font-weight:950">⬇️ Mon QR</div>
-      <div class="tiny">Lien de partage → <span class="mono" id="qrProUrl">—</span></div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="btnQrApp" type="button">⬇️ QR espace</button>
-        <button class="btn" id="btnQrPublic" type="button">⬇️ QR Public</button>
-        <button class="btn" id="btnQrPin" type="button">⬇️ QR Accès</button>
-        <button class="btn" id="btnCopyQr" type="button">📋 Copier le lien QR</button>
-      </div>
-      <div class="tiny" id="qrInfo" style="margin-top:10px">—</div>
+    <div class="quick">
+      <a class="btn green" id="goPlanning" href="./planning.html">📅 Disponibilités</a>
+      <a class="btn blue" id="goReservations" href="./reservations.html">📋 Réservations</a>
+      <a class="btn gold" id="goMessages" href="./reservations-pulse.html">💬 Messages</a>
+      <button class="btn" id="btnCopyPack" type="button">📋 Copier mes liens</button>
     </div>
-  </div>
+
+    <div class="note" id="note"></div>
+  </section>
+
+  <section class="section">
+    <div class="sectionHead">
+      <div>
+        <div class="sectionTitle">Réglages utiles</div>
+        <div class="sectionSub">Ce qui sert parfois, mais ne doit pas charger l’écran calendrier.</div>
+      </div>
+    </div>
+
+    <div class="toolGrid">
+      <a class="tool" id="goTarifs" href="./tarifs.html"><b>💰 Tarifs</b><span>Prix de base, semaine, mois, caution.</span></a>
+      <a class="tool" id="goPhotos" href="./photos.html"><b>🖼️ Photos</b><span>Images du logement et présentation visuelle.</span></a>
+      <a class="tool" id="goListing" href="./listing.html"><b>📋 Ma fiche</b><span>Informations visibles côté client.</span></a>
+      <a class="tool" id="goPrefiche" href="./fiche-abo.html"><b>📝 Pré-fiche</b><span>Préparer les éléments avant publication.</span></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sectionHead">
+      <div>
+        <div class="sectionTitle">Partage et accès</div>
+        <div class="sectionSub">QR, lien public, code PIN, liens terrain.</div>
+      </div>
+    </div>
+
+    <div class="toolGrid">
+      <a class="tool" id="goQr" href="./qr.html"><b>🔳 Mon QR</b><span>Partager l’accès ou la fiche du logement.</span></a>
+      <a class="tool" id="goQrFactory" href="./qr-factory.html"><b>🏭 QR Factory</b><span>Préparer plusieurs QR propres.</span></a>
+      <a class="tool" id="goLinks" href="./manage-links.html"><b>🔗 Mes liens</b><span>Regrouper les boutons utiles.</span></a>
+      <a class="tool" id="goPin" href="./pin.html"><b>🔐 Mon accès</b><span>Retour par code si la session expire.</span></a>
+      <a class="tool" id="goPublic" href="./go-pin-public.html"><b>👁️ Fiche publique</b><span>Voir ce que le client peut ouvrir.</span></a>
+      <a class="tool" id="goWave" href="./pin-wave.html"><b>🌊 Code Wave</b><span>Déclarations et preuves de paiement.</span></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sectionHead">
+      <div>
+        <div class="sectionTitle">Aide DIGIY</div>
+        <div class="sectionSub">Assistance, entraide et pages de soutien.</div>
+      </div>
+    </div>
+
+    <div class="toolGrid">
+      <a class="tool" id="goNdimbal" href="./ndimbal.html"><b>🤝 Entraide</b><span>Aide générale DIGIY.</span></a>
+      <a class="tool" id="goNdimbalLoc" href="./ndimbal-loc.html"><b>🏠 Entraide logement</b><span>Aide adaptée à la location.</span></a>
+      <a class="tool" id="goPulse" href="./reservations-pulse.html"><b>💬 Messages clients</b><span>Préparer un message, valider, choisir le canal.</span></a>
+      <a class="tool" id="goApp" href="./app.html"><b>🏠 Accueil</b><span>Arrivées, départs, alertes du jour.</span></a>
+    </div>
+  </section>
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navMessages" href="./reservations-pulse.html"><strong>💬</strong><span>Messages</span></a>
+    <a class="navItem active" id="navPlus" href="./plus.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (function(){
   "use strict";
 
+  const MODULE = "LOC";
   const $ = (id)=>document.getElementById(id);
 
-  const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON;
-  const MODULE = "LOC";
-  const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
+  function storageGet(key){
+    try{
+      const s = sessionStorage.getItem(key);
+      if(s) return s;
+    }catch{}
+    try{
+      const l = localStorage.getItem(key);
+      if(l) return l;
+    }catch{}
+    return "";
+  }
 
-  const PAGE_APP = "./app.html";
-  const PAGE_PUBLIC = "./go-pin-public.html";
-  const PAGE_PIN = "./pin.html";
+  function readParam(name){
+    try{
+      return String(new URL(location.href).searchParams.get(name) || "").trim();
+    }catch{
+      return "";
+    }
+  }
 
-  let LINKS = [];
-  let UX_MODE = "preview";
-  let UX_REASON = "booting";
+  function cleanSlug(s){
+    return String(s || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
+  }
 
-  function setPill(text, cls){
-    const el = $("pillStatus");
-    el.textContent = text || "—";
-    el.className = "pill " + (cls || "warn");
+  function phoneDigits(v){
+    return String(v || "").replace(/[^\d]/g, "");
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {};
+  }
+
+  function getGuardSession(){
+    try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};}
+  }
+
+  function getSlug(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return cleanSlug(
+      readParam("slug") ||
+      st.slug ||
+      gs.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG")
+    );
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return phoneDigits(
+      readParam("phone") ||
+      st.phone ||
+      gs.phone ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE")
+    );
+  }
+
+  function withContext(path){
+    const slug = getSlug();
+    const phone = getPhone();
+    try{
+      const u = new URL(path, location.href);
+      if(slug) u.searchParams.set("slug", slug);
+      if(phone) u.searchParams.set("phone", phone);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const qs = new URLSearchParams();
+      if(slug) qs.set("slug", slug);
+      if(phone) qs.set("phone", phone);
+      const tail = qs.toString();
+      return path + (tail ? (path.includes("?") ? "&" : "?") + tail : "");
+    }
   }
 
   function show(msg, cls){
@@ -411,655 +434,92 @@
     el.style.display = msg ? "block" : "none";
   }
 
-  function storageGet(key){
-    try{
-      const v1 = sessionStorage.getItem(key);
-      if(v1) return v1;
-    }catch(_){}
-    try{
-      const v2 = localStorage.getItem(key);
-      if(v2) return v2;
-    }catch(_){}
-    return "";
-  }
-
-  function digitsOnly(p){
-    return String(p || "").replace(/\D/g, "");
-  }
-
-  function normPhone(p){
-    p = String(p || "").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
-    if(p.startsWith("00221")) p = "+221" + p.slice(5);
-    if(!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
-    if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
-    return p;
-  }
-
-  function pin4FromPhone(phone){
-    const p = normPhone(phone);
-    return p ? p.slice(-4) : "";
-  }
-
-  function cleanSlug(s){
-    const x = String(s || "").trim();
-    if(!x) return "";
-    return x
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\-_]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^[-_]+|[-_]+$/g, "");
-  }
-
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      reason: "guard_missing"
-    };
-  }
-
-  async function waitGuardReady(){
-    if(!window.DIGIY_GUARD) throw new Error("guard_absent");
-
-    const ready = window.DIGIY_GUARD.ready;
-
-    if(typeof ready === "function"){
-      const maybe = ready(8000);
-      if(maybe && typeof maybe.then === "function") return await maybe;
-      return maybe;
-    }
-
-    if(ready && typeof ready.then === "function"){
-      return await ready;
-    }
-
-    if(ready) return true;
-    throw new Error("guard_not_ready");
-  }
-
-  function getSlug(){
-    const st = getGuardState();
-    if(st.slug) return cleanSlug(st.slug);
-
-    try{
-      return cleanSlug((new URL(location.href)).searchParams.get("slug") || "");
-    }catch(_){
-      return "";
-    }
-  }
-
-  function getPhone(){
-    const st = getGuardState();
-    return normPhone(
-      st.phone ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      storageGet("digiy_loc_phone") ||
-      ""
-    );
-  }
-
-  function isLive(){
-    return UX_MODE === "live" && !!getGuardState().access_ok;
-  }
-
-  function withSlug(url){
-    const slug = getSlug();
-    if(!slug) return url;
-
-    try{
-      const u = new URL(url, location.href);
-      if(!u.searchParams.get("slug")) u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch(_){
-      const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(slug);
-    }
-  }
-
-  async function getSB(){
-    try{
-      const sb1 = window.DIGIY_GUARD?.getSb?.();
-      if(sb1) return sb1;
-    }catch(e){
-      console.warn("guard sb fail", e);
-    }
-
-    try{
-      if(window.sb) return window.sb;
-      return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth:{
-          persistSession:false,
-          autoRefreshToken:false,
-          detectSessionInUrl:false
-        }
-      });
-    }catch(e){
-      console.error(e);
-      return null;
-    }
-  }
-
-  async function copyText(txt){
-    try{
-      await navigator.clipboard.writeText(txt);
-      return true;
-    }catch(_){
-      try{
-        const ta = document.createElement("textarea");
-        ta.value = txt;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        return true;
-      }catch(__){
-        return false;
-      }
-    }
-  }
-
-  function nextOrder(){
-    const max = LINKS.reduce((m, x) => Math.max(m, Number(x.order || 0)), 0);
-    return max ? (Math.ceil(max / 10) * 10 + 10) : 10;
-  }
-
-  function normalizeUrl(u){
-    u = String(u || "").trim();
-    if(!u) return "";
-
-    if(/^\+?\d{9,15}$/.test(u.replace(/\s+/g, ""))){
-      return "https://wa.me/" + digitsOnly(u);
-    }
-
-    if(/^wa\.me\//i.test(u)) return "https://" + u;
-
-    const lower = u.toLowerCase();
-    if(lower.startsWith("javascript:") || lower.startsWith("data:")) return "";
-
-    if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)){
-      if(u.includes(".")) u = "https://" + u;
-    }
-
-    return u;
-  }
-
-  function validateLinks(list){
-    const clean = [];
-
-    for(const x of (list || [])){
-      const label = String(x.label || "").trim();
-      const url = normalizeUrl(x.url || "");
-      const order = Number(x.order || 100);
-      const active = !!x.active;
-
-      if(!label || !url) continue;
-      clean.push({ order, label, url, active });
-    }
-
-    clean.sort((a,b)=>(a.order - b.order) || a.label.localeCompare(b.label));
-    return clean;
-  }
-
-  function makeEl(tag, attrs, children){
-    const el = document.createElement(tag);
-
-    if(attrs){
-      for(const [k,v] of Object.entries(attrs)){
-        if(k === "class") el.className = v;
-        else if(k === "text") el.textContent = v;
-        else if(k === "html") el.innerHTML = v;
-        else el.setAttribute(k, String(v));
-      }
-    }
-
-    (children || []).forEach(child => el.appendChild(child));
-    return el;
-  }
-
-  function render(){
-    const tb = $("rows");
-    if(!tb) return;
-
-    tb.innerHTML = "";
-
-    if(!LINKS.length){
-      const tr = document.createElement("tr");
-      const td = makeEl("td", {
-        colspan:"5",
-        class:"emptyRow",
-        text:"— aucun lien —"
-      });
-      tr.appendChild(td);
-      tb.appendChild(tr);
-      return;
-    }
-
-    const display = LINKS.map((x, idx) => ({ x, idx }))
-      .sort((a,b) => (Number(a.x.order || 999) - Number(b.x.order || 999)) || (a.idx - b.idx));
-
-    for(const it of display){
-      const i = it.idx;
-      const x = LINKS[i];
-      const tr = document.createElement("tr");
-
-      const order = makeEl("input", {
-        class:"field",
-        type:"number",
-        value:String(Number(x.order || 100)),
-        style:"width:90px"
-      });
-      order.disabled = !isLive();
-      order.addEventListener("change", () => {
-        x.order = Number(order.value || 100);
-      });
-
-      const label = makeEl("input", {
-        class:"field",
-        value:String(x.label || ""),
-        placeholder:"Ex: WhatsApp / Réserver / Commander"
-      });
-      label.disabled = !isLive();
-      label.addEventListener("change", () => {
-        x.label = String(label.value || "").trim();
-      });
-
-      const url = makeEl("input", {
-        class:"field",
-        value:String(x.url || ""),
-        placeholder:"https://... ou wa.me/..."
-      });
-      url.disabled = !isLive();
-      url.addEventListener("change", () => {
-        const n = normalizeUrl(url.value);
-        if(!n){
-          show("⚠️ URL invalide. Utilise https://..., tel:..., mailto:..., wa.me/...", "warn");
-          url.value = "";
-          x.url = "";
-          return;
-        }
-        url.value = n;
-        x.url = n;
-      });
-
-      const sel = document.createElement("select");
-      sel.className = "field";
-      sel.style.width = "90px";
-      sel.innerHTML = `
-        <option value="true">Oui</option>
-        <option value="false">Non</option>
-      `;
-      sel.value = x.active ? "true" : "false";
-      sel.disabled = !isLive();
-      sel.addEventListener("change", () => {
-        x.active = (sel.value === "true");
-      });
-
-      const actions = makeEl("div", { class:"row" });
-
-      const bTest = makeEl("button", { class:"miniBtn", type:"button", text:"🔎 Tester" });
-      const bCopy = makeEl("button", { class:"miniBtn gold", type:"button", text:"📋 Copier" });
-      const bDup  = makeEl("button", { class:"miniBtn green", type:"button", text:"📎 Dupliquer" });
-      const bDel  = makeEl("button", { class:"miniBtn red", type:"button", text:"🗑️" });
-
-      bTest.addEventListener("click", () => {
-        const u = normalizeUrl(x.url || "");
-        if(!u){
-          show("❌ URL vide ou invalide.", "bad");
-          return;
-        }
-        window.open(u, "_blank", "noopener,noreferrer");
-        show("✅ Test ouverture : " + u, "ok");
-      });
-
-      bCopy.addEventListener("click", async () => {
-        const u = normalizeUrl(x.url || "");
-        if(!u){
-          show("❌ URL vide ou invalide.", "bad");
-          return;
-        }
-        const ok = await copyText(u);
-        show(ok ? "✅ URL copiée." : "❌ Copie impossible.", ok ? "ok" : "bad");
-      });
-
-      bDup.disabled = !isLive();
-      bDup.addEventListener("click", () => {
-        if(!isLive()){
-          show("👁️ Passe par PIN pour modifier les liens.", "warn");
-          return;
-        }
-        LINKS.push({
-          order: nextOrder(),
-          label: (x.label || "") + " (copy)",
-          url: x.url || "",
-          active: x.active !== false
-        });
-        render();
-        show("✅ Lien dupliqué.", "ok");
-      });
-
-      bDel.disabled = !isLive();
-      bDel.addEventListener("click", () => {
-        if(!isLive()){
-          show("👁️ En aperçu, suppression désactivée.", "warn");
-          return;
-        }
-        LINKS.splice(i, 1);
-        render();
-        show("Lien supprimé. Clique Enregistrer pour appliquer.", "warn");
-      });
-
-      actions.appendChild(bTest);
-      actions.appendChild(bCopy);
-      actions.appendChild(bDup);
-      actions.appendChild(bDel);
-
-      const tdOrder = document.createElement("td");
-      tdOrder.setAttribute("data-label", "Ordre");
-      tdOrder.appendChild(order);
-
-      const tdLabel = document.createElement("td");
-      tdLabel.setAttribute("data-label", "Label");
-      tdLabel.appendChild(label);
-
-      const tdUrl = document.createElement("td");
-      tdUrl.setAttribute("data-label", "URL");
-      tdUrl.appendChild(url);
-
-      const tdActive = document.createElement("td");
-      tdActive.setAttribute("data-label", "Actif");
-      tdActive.appendChild(sel);
-
-      const tdActions = document.createElement("td");
-      tdActions.setAttribute("data-label", "Actions");
-      tdActions.appendChild(actions);
-
-      tr.appendChild(tdOrder);
-      tr.appendChild(tdLabel);
-      tr.appendChild(tdUrl);
-      tr.appendChild(tdActive);
-      tr.appendChild(tdActions);
-
-      tb.appendChild(tr);
-    }
-  }
-
-  function getCreds(){
-    const phone = getPhone();
-    const pin4 = pin4FromPhone(phone);
-    const st = getGuardState();
-
-    return {
-      slug:getSlug(),
-      phone,
-      pin4,
-      access_ok:!!st.access_ok
-    };
-  }
-
-  async function loadLinks(){
-    const sb = await getSB();
-    const { slug, phone, pin4, access_ok } = getCreds();
-
-    if(!sb) return show("❌ Connexion pas prête. Recharge.", "bad");
-    if(!slug) return show("❌ Identifiant manquant. Ouvre cette page depuis ton espace.", "bad");
-    if(!access_ok) return show("👁️ Mode aperçu. Les liens réels demandent un accès actif.", "warn");
-    if(!phone) return show("⚠️ Téléphone session manquant. Retour PIN.", "bad");
-    if(!pin4) return show("⚠️ PIN4 absent. Vérifie le téléphone session.", "bad");
-
-    $("btnLoad").disabled = true;
-    show("⏳ Chargement…", "warn");
-
-    try{
-      const { data, error } = await sb.rpc("digiy_go_links_get", {
-        p_slug: slug,
-        p_phone: phone,
-        p_pin4: pin4
-      });
-
-      if(error) return show("❌ Erreur : " + (error.message || error), "bad");
-      if(!data?.ok) return show("❌ Accès refusé : " + (data?.error || "unknown"), "bad");
-
-      LINKS = Array.isArray(data.links)
-        ? data.links.map(x => ({
-            order:Number(x.order || 100),
-            label:String(x.label || "").trim(),
-            url:String(x.url || "").trim(),
-            active:x.active !== false
-          }))
-        : [];
-
-      render();
-      show("✅ Liens chargés.", "ok");
-    }catch(e){
-      console.error(e);
-      show("❌ Crash chargement : " + String(e?.message || e), "bad");
-    }finally{
-      $("btnLoad").disabled = false;
-    }
-  }
-
-  async function saveLinks(){
-    const sb = await getSB();
-    const { slug, phone, pin4, access_ok } = getCreds();
-
-    if(!sb) return show("❌ Connexion pas prête.", "bad");
-    if(!slug) return show("❌ slug manquant.", "bad");
-    if(!access_ok) return show("👁️ Mode aperçu. Enregistrement désactivé.", "warn");
-    if(!phone) return show("⚠️ Téléphone session manquant.", "bad");
-    if(!pin4) return show("⚠️ PIN4 absent. Vérifie la session.", "bad");
-
-    const clean = validateLinks(LINKS);
-
-    if(LINKS.length > 0 && clean.length === 0){
-      show("⚠️ Aucun lien valide à enregistrer. Label + URL obligatoires.", "warn");
-      return;
-    }
-
-    $("btnSave").disabled = true;
-    show("⏳ Enregistrement…", "warn");
-
-    try{
-      const { data, error } = await sb.rpc("digiy_go_links_save", {
-        p_slug: slug,
-        p_phone: phone,
-        p_pin4: pin4,
-        p_links: clean
-      });
-
-      if(error) return show("❌ Erreur : " + (error.message || error), "bad");
-      if(!data?.ok) return show("❌ Refusé : " + (data?.error || "unknown"), "bad");
-
-      LINKS = clean;
-      render();
-      show("✅ Enregistré (" + (data.count ?? clean.length) + " lien(s)).", "ok");
-    }catch(e){
-      console.error(e);
-      show("❌ Crash save : " + String(e?.message || e), "bad");
-    }finally{
-      $("btnSave").disabled = false;
-    }
-  }
-
-  function setPreviewUi(reason){
-    UX_MODE = "preview";
-    UX_REASON = reason || "preview";
-
-    setPill("Aperçu 👁️", "warn");
-    $("who").textContent = "Accès réel non confirmé.";
-
-    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id => {
-      if($(id)) $(id).disabled = true;
+  function syncLinks(){
+    const links = [
+      ["goPlanning","./planning.html"],
+      ["goReservations","./reservations.html"],
+      ["goMessages","./reservations-pulse.html"],
+      ["goTarifs","./tarifs.html"],
+      ["goPhotos","./photos.html"],
+      ["goListing","./listing.html"],
+      ["goPrefiche","./fiche-abo.html"],
+      ["goQr","./qr.html"],
+      ["goQrFactory","./qr-factory.html"],
+      ["goLinks","./manage-links.html"],
+      ["goPin","./pin.html"],
+      ["goPublic","./go-pin-public.html"],
+      ["goWave","./pin-wave.html"],
+      ["goNdimbal","./ndimbal.html"],
+      ["goNdimbalLoc","./ndimbal-loc.html"],
+      ["goPulse","./reservations-pulse.html"],
+      ["goApp","./app.html"],
+      ["navHome","./app.html"],
+      ["navReservations","./reservations.html"],
+      ["navPlanning","./planning.html"],
+      ["navMessages","./reservations-pulse.html"],
+      ["navPlus","./plus.html"]
+    ];
+
+    links.forEach(([id,path])=>{
+      const el = $(id);
+      if(el) el.href = withContext(path);
     });
 
-    render();
-
-    show(
-      reason === "slug_missing"
-        ? "👁️ Aucun slug détecté. Tu vois un aperçu propre."
-        : reason === "has_access_false"
-        ? "👁️ Slug présent mais accès non actif. Passe par PIN pour modifier les liens."
-        : "👁️ Mode aperçu. Les actions d’écriture sont désactivées.",
-      "warn"
-    );
-  }
-
-  function setLiveUi(){
-    UX_MODE = "live";
-    UX_REASON = "ok";
-
-    const phone = getPhone();
-
-    setPill("Connecté ✅", "ok");
-    $("who").textContent =
-      "Téléphone : " + phone +
-      " · code détecté : " + pin4FromPhone(phone) +
-      " · contrôle rapide de l’accès";
-
-    ["btnLoad","btnSave","btnAdd","btnSort","btnReset"].forEach(id => {
-      if($(id)) $(id).disabled = false;
-    });
-
-    show("✅ Prêt. Chargement auto…", "ok");
-  }
-
-  function initStaticUi(){
     const slug = getSlug();
+    const phone = getPhone();
 
     $("pillSlug").textContent = "identifiant : " + (slug || "—");
 
-    const appUrl = new URL(PAGE_APP, location.href);
-    const publicUrl = new URL(PAGE_PUBLIC, location.href);
-    const pinUrl = new URL(PAGE_PIN, location.href);
-
-    if(slug){
-      appUrl.searchParams.set("slug", slug);
-      publicUrl.searchParams.set("slug", slug);
-      pinUrl.searchParams.set("slug", slug);
+    const pill = $("pillState");
+    const accessOk = !!(getGuardState().access_ok || getGuardSession().access_ok || getGuardSession().ok);
+    if(accessOk){
+      pill.textContent = "accès ouvert";
+      pill.className = "pill ok";
+    }else if(slug || phone){
+      pill.textContent = "lecture";
+      pill.className = "pill warn";
+    }else{
+      pill.textContent = "accès à vérifier";
+      pill.className = "pill bad";
     }
+  }
 
-    $("btnBack").href = appUrl.toString();
-    $("btnOpenApp").href = appUrl.toString();
-    $("btnOpenPublic").href = publicUrl.toString();
-    $("btnOpenPin").href = pinUrl.toString();
+  async function copyPack(){
+    const lines = [
+      "DIGIY LOC — Liens utiles",
+      "Identifiant : " + (getSlug() || "—"),
+      "",
+      "Accueil : " + withContext("./app.html"),
+      "Réservations : " + withContext("./reservations.html"),
+      "Disponibilités : " + withContext("./planning.html"),
+      "Messages : " + withContext("./reservations-pulse.html"),
+      "Plus : " + withContext("./plus.html"),
+      "Fiche publique : " + withContext("./go-pin-public.html"),
+      "QR : " + withContext("./qr.html")
+    ];
 
-    $("btnCopyAll").addEventListener("click", async () => {
-      const pack =
-`DIGIY URLs
-identifiant : ${slug || "—"}
-
-Mon espace : ${appUrl.toString()}
-PUBLIC: ${publicUrl.toString()}
-PIN: ${pinUrl.toString()}
-`;
-      const ok = await copyText(pack);
-      show(ok ? "✅ URLs copiées." : "❌ Copie impossible.", ok ? "ok" : "bad");
-    });
-
-    const qrPro = new URL(QR_PRO_BASE);
-    if(slug) qrPro.searchParams.set("slug", slug);
-
-    $("qrProUrl").textContent = qrPro.toString();
-    $("qrInfo").textContent = "Ce QR rassemble ton espace, la fiche publique et l’accès.";
-
-    function openQrPro(type){
-      const u = new URL(QR_PRO_BASE);
-      if(slug) u.searchParams.set("slug", slug);
-      if(type) u.searchParams.set("t", type);
-      window.open(u.toString(), "_blank", "noopener,noreferrer");
-      $("qrInfo").textContent = "Lien QR ouvert pour : " + (type || "—");
+    const txt = lines.join("\n");
+    try{
+      await navigator.clipboard.writeText(txt);
+      show("✅ Liens copiés.", "ok");
+    }catch{
+      show("❌ Copie impossible sur ce téléphone.", "bad");
     }
-
-    $("btnQrApp").addEventListener("click", () => openQrPro("app"));
-    $("btnQrPublic").addEventListener("click", () => openQrPro("public"));
-    $("btnQrPin").addEventListener("click", () => openQrPro("pin"));
-
-    $("btnCopyQr").addEventListener("click", async () => {
-      const ok = await copyText(qrPro.toString());
-      show(ok ? "✅ Lien QR copié." : "❌ Copie impossible.", ok ? "ok" : "bad");
-    });
-
-    $("btnAdd").addEventListener("click", () => {
-      if(!isLive()){
-        show("👁️ Passe par PIN pour ajouter un lien.", "warn");
-        return;
-      }
-
-      LINKS.push({
-        order: nextOrder(),
-        label:"WhatsApp",
-        url:"https://wa.me/221XXXXXXXXX",
-        active:true
-      });
-
-      render();
-      show("✅ Nouveau lien ajouté. Pense à Enregistrer.", "ok");
-    });
-
-    $("btnSort").addEventListener("click", () => {
-      if(!isLive()){
-        show("👁️ En aperçu, tri désactivé.", "warn");
-        return;
-      }
-
-      LINKS = validateLinks(LINKS);
-      render();
-      show("✅ Tri + nettoyage appliqués. Pense à Enregistrer.", "ok");
-    });
-
-    $("btnReset").addEventListener("click", () => {
-      if(!isLive()){
-        show("👁️ En aperçu, reset désactivé.", "warn");
-        return;
-      }
-
-      if(!confirm("Vider la liste ?")) return;
-      LINKS = [];
-      render();
-      show("Liste vidée. Clique Enregistrer pour appliquer.", "warn");
-    });
-
-    $("btnLoad").addEventListener("click", loadLinks);
-    $("btnSave").addEventListener("click", saveLinks);
   }
 
   async function init(){
-    initStaticUi();
-    render();
+    syncLinks();
+    $("btnCopyPack")?.addEventListener("click", copyPack);
 
-    if(!window.DIGIY_GUARD){
-      setPill("Guard absent", "bad");
-      show("❌ Guard absent ou non chargé.", "bad");
-      return;
+    if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
+      try{
+        await window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+      }catch{
+        try{ await window.DIGIY_GUARD.ready(); }catch{}
+      }
     }
 
-    try{
-      await waitGuardReady();
-    }catch(e){
-      setPill("Guard non prêt", "bad");
-      show("❌ Guard non prêt.", "bad");
-      return;
-    }
-
-    const st = getGuardState();
-    const slug = getSlug();
-
-    if(!slug){
-      setPreviewUi("slug_missing");
-      return;
-    }
-
-    if(!st.access_ok){
-      setPreviewUi(st.reason || "has_access_false");
-      return;
-    }
-
-    setLiveUi();
-    await loadLinks();
+    syncLinks();
   }
 
   init();
@@ -1067,3 +527,4 @@ PIN: ${pinUrl.toString()}
 </script>
 </body>
 </html>
+
