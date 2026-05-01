@@ -213,9 +213,21 @@
   }
 
   function applyState(patch) {
-    Object.assign(state, patch || {});
-    return state;
-  }
+  Object.assign(state, patch || {});
+
+  const accessValue = !!(
+    state.access === true ||
+    state.access_ok === true ||
+    state.ok === true
+  );
+
+  state.access = accessValue;
+  state.access_ok = accessValue;
+  state.ok = accessValue;
+  state.preview = !accessValue;
+
+  return state;
+}
 
   function buildUrl(url, params) {
     const base = new URL(url, window.location.href);
