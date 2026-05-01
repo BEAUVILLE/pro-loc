@@ -386,7 +386,13 @@
   }
 
   function safeJson(raw,fallback){
-    try{return JSON.parse(raw);}catch{return fallback;}
+    if(raw == null || raw === "") return fallback;
+    try{
+      const parsed = JSON.parse(raw);
+      return parsed == null ? fallback : parsed;
+    }catch{
+      return fallback;
+    }
   }
 
   function readParam(name){
@@ -565,11 +571,13 @@
   }
 
   function loadMemory(){
-    return safeJson(localStorage.getItem(memoryKey()), []);
+    const rows = safeJson(localStorage.getItem(memoryKey()), []);
+    return Array.isArray(rows) ? rows : [];
   }
 
   function saveMemory(rows){
-    storageSet(memoryKey(), JSON.stringify(rows.slice(0,20)));
+    const safeRows = Array.isArray(rows) ? rows : [];
+    storageSet(memoryKey(), JSON.stringify(safeRows.slice(0,20)));
   }
 
   function prepareNote(){
@@ -765,4 +773,3 @@
 </script>
 </body>
 </html>
-
