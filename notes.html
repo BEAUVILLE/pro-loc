@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Je loue • Notes rapides</title>
+  <meta name="theme-color" content="#061b14"/>
+  <meta name="description" content="DIGIY LOC — notes rapides location, aide-mémoire et passerelle vers Mon argent."/>
+
+  <script>
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=loc-notes-rapides-v1"></script>
+
+  <style>
+    :root{
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:#0b2a1f;
+      --line:rgba(255,255,255,.12);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.72);
+      --gold:#facc15;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --blue:#38bdf8;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+      --bottom:78px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
+        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
+    }
+
+    a{color:inherit;text-decoration:none}
+    button,textarea,input,select{font:inherit}
+
+    .wrap{max-width:860px;margin:0 auto}
+    .hero,.card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(255,255,255,.035);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+
+    .card{margin-top:14px}
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .ico{
+      width:44px;height:44px;border-radius:16px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
+      border:1px solid rgba(250,204,21,.35);
+      font-size:20px;
+      flex:0 0 auto;
+    }
+
+    h1{font-size:20px;margin:0;letter-spacing:-.02em}
+    h2{font-size:16px;margin:0 0 6px}
+    .sub{margin-top:4px;color:var(--muted);font-weight:850;line-height:1.35;font-size:13px}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:999px;
+      padding:8px 10px;
+      background:rgba(255,255,255,.035);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+    .examples{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .chip{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 10px;
+      font-weight:950;
+      font-size:12px;
+      cursor:pointer;
+    }
+
+    .input{
+      width:100%;
+      min-height:110px;
+      margin-top:12px;
+      resize:vertical;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(0,0,0,.16);
+      color:var(--text);
+      padding:12px;
+      font-weight:900;
+      line-height:1.4;
+      outline:none;
+    }
+
+    .input:focus{
+      border-color:rgba(250,204,21,.48);
+      box-shadow:0 0 0 3px rgba(250,204,21,.10);
+    }
+
+    .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+    .actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:9px;
+      margin-top:10px;
+    }
+
+    .btn{
+      min-height:48px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:11px 12px;
+      cursor:pointer;
+      text-align:center;
+    }
+    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .draft{
+      display:none;
+      margin-top:12px;
+      border:1px solid rgba(34,197,94,.32);
+      background:rgba(34,197,94,.08);
+      color:#bbf7d0;
+      border-radius:18px;
+      padding:12px;
+      font-weight:900;
+      line-height:1.45;
+      white-space:pre-wrap;
+    }
+
+    .draft.show{display:block}
+    .draft b{color:#fff}
+
+    .memory{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .memoryItem{
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:18px;
+      background:rgba(2,44,34,.26);
+      padding:12px;
+    }
+
+    .memoryTop{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .memoryTitle{font-weight:1000}
+    .memoryAmount{font-weight:1000;color:#bbf7d0;white-space:nowrap}
+    .memoryMeta{margin-top:6px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.35}
+    .memoryNote{margin-top:8px;font-weight:850;line-height:1.38}
+
+    .smallLink{
+      display:inline-flex;
+      margin-top:9px;
+      min-height:36px;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      padding:8px 11px;
+      border:1px solid rgba(250,204,21,.32);
+      background:rgba(250,204,21,.12);
+      color:#fde68a;
+      font-size:12px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .empty{
+      padding:12px;
+      border-radius:16px;
+      border:1px dashed rgba(148,163,184,.22);
+      color:var(--muted);
+      font-size:13px;
+      font-weight:850;
+      line-height:1.4;
+      text-align:center;
+    }
+
+    .note{
+      display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-weight:900;
+      white-space:pre-wrap;
+      line-height:1.4;
+    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+
+    .bottomNav{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:70;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:linear-gradient(180deg, rgba(6,27,20,0), rgba(6,27,20,.96) 28%);
+    }
+
+    .bottomInner{
+      max-width:980px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(6,27,20,.94);
+      backdrop-filter:blur(10px);
+      border-radius:22px;
+      padding:7px;
+      box-shadow:0 16px 44px rgba(0,0,0,.38);
+    }
+
+    .navItem{
+      min-height:52px;
+      border-radius:16px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      color:rgba(234,255,241,.72);
+      font-size:11px;
+      font-weight:950;
+      border:1px solid transparent;
+      text-align:center;
+    }
+
+    .navItem strong{font-size:18px;line-height:1}
+    .navItem.active{
+      color:#fde68a;
+      background:rgba(250,204,21,.10);
+      border-color:rgba(250,204,21,.24);
+    }
+
+    @media(max-width:560px){
+      body{padding-left:10px;padding-right:10px}
+      .actions{grid-template-columns:1fr}
+      h1{font-size:18px}
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="top">
+      <div class="brand">
+        <div class="ico">📝</div>
+        <div>
+          <h1>Notes rapides</h1>
+          <div class="sub">Écris comme tu parles. DIGIY prépare. Tu valides. Puis ça peut partir vers Mon argent.</div>
+        </div>
+      </div>
+      <div>
+        <div class="pill" id="pillSlug">identifiant : —</div>
+        <div class="pill warn" id="pillState" style="margin-top:6px">lecture</div>
+      </div>
+    </div>
+
+    <div class="examples" id="examples">
+      <button class="chip" type="button">Client a payé 30000 cash chambre</button>
+      <button class="chip" type="button">Acompte 10000 Wave</button>
+      <button class="chip" type="button">Ménage 5000 cash</button>
+      <button class="chip" type="button">Réparation robinet 12000</button>
+      <button class="chip" type="button">Électricité 18000 vendredi</button>
+      <button class="chip" type="button">Bloquer samedi dimanche</button>
+    </div>
+
+    <textarea class="input" id="quickInput" placeholder="Ex : Client a payé 30000 cash chambre"></textarea>
+
+    <div class="actions">
+      <button class="btn gold" id="btnPrepare" type="button">Préparer</button>
+      <button class="btn green" id="btnConfirm" type="button" disabled>✅ Confirmer</button>
+      <button class="btn" id="btnClear" type="button">Effacer</button>
+    </div>
+
+    <div class="draft" id="draft"></div>
+    <div class="note" id="note"></div>
+  </section>
+
+  <section class="card">
+    <div class="top">
+      <div>
+        <h2>🧠 Aide-mémoire location</h2>
+        <div class="sub">Dernières notes confirmées ici. Les notes argent gardent une passerelle vers Mon argent.</div>
+      </div>
+      <button class="btn red" id="btnClearMemory" type="button" style="min-height:42px">Vider</button>
+    </div>
+
+    <div class="memory" id="memoryList">
+      <div class="empty">Aucune note LOC confirmée pour le moment.</div>
+    </div>
+  </section>
+</div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navMessages" href="./reservations-pulse.html"><strong>💬</strong><span>Messages</span></a>
+    <a class="navItem active" id="navPlus" href="./plus.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  const MODULE = "LOC";
+  const MEMORY_PREFIX = "DIGIY_LOC_NOTES_V1:";
+  const $ = (id)=>document.getElementById(id);
+  let prepared = null;
+
+  function storageGet(key){
+    try{ const s = sessionStorage.getItem(key); if(s) return s; }catch{}
+    try{ const l = localStorage.getItem(key); if(l) return l; }catch{}
+    return "";
+  }
+
+  function storageSet(key,value){
+    try{ localStorage.setItem(key,value); }catch{}
+  }
+
+  function safeJson(raw,fallback){
+    try{return JSON.parse(raw);}catch{return fallback;}
+  }
+
+  function readParam(name){
+    try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch{return "";}
+  }
+
+  function cleanSlug(s){
+    return String(s || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
+  }
+
+  function phoneDigits(v){
+    return String(v || "").replace(/[^\d]/g, "");
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {};
+  }
+
+  function getGuardSession(){
+    try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};}
+  }
+
+  function getSlug(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return cleanSlug(
+      readParam("slug") ||
+      st.slug ||
+      gs.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG")
+    );
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return phoneDigits(
+      readParam("phone") ||
+      st.phone ||
+      gs.phone ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE")
+    );
+  }
+
+  function withContext(path){
+    const slug = getSlug();
+    const phone = getPhone();
+    try{
+      const u = new URL(path, location.href);
+      if(slug) u.searchParams.set("slug", slug);
+      if(phone) u.searchParams.set("phone", phone);
+      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
+      return u.toString();
+    }catch{
+      const qs = new URLSearchParams();
+      if(slug) qs.set("slug", slug);
+      if(phone) qs.set("phone", phone);
+      const tail = qs.toString();
+      return path + (tail ? (path.includes("?") ? "&" : "?") + tail : "");
+    }
+  }
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function show(msg, cls){
+    const el = $("note");
+    if(!el) return;
+    el.className = "note " + (cls || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function amountFromText(text){
+    const m = String(text || "").replace(/\s+/g," ").match(/(\d[\d\s.,]*)\s*(f|fcfa|xof)?/i);
+    if(!m) return 0;
+    const n = Number(String(m[1] || "").replace(/[^\d]/g,""));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function norm(text){
+    return String(text || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"");
+  }
+
+  function channelFromText(text){
+    const t = norm(text);
+    if(/\bwave\b/.test(t)) return "wave";
+    if(/\b(cash|especes|liquide)\b/.test(t)) return "cash";
+    if(/\b(orange money|om)\b/.test(t)) return "orange_money";
+    if(/\b(banque|virement)\b/.test(t)) return "bank";
+    return "à préciser";
+  }
+
+  function kindFromText(text){
+    const t = norm(text);
+
+    if(/\b(menage|nettoyage|reparation|robinet|plomberie|electricite|eau|facture|achat|depense|clim|serrure)\b/.test(t)){
+      return { direction:"out", category:"dépense location", title:"Dépense location" };
+    }
+
+    if(/\b(acompte|paye|payé|paiement|regle|réglé|verse|versé|recu|reçu)\b/.test(t)){
+      return { direction:"in", category:"recette location", title:"Paiement client" };
+    }
+
+    if(/\b(bloquer|fermer|indisponible|reserve|réservé|resa)\b/.test(t)){
+      return { direction:"todo", category:"calendrier", title:"Note calendrier" };
+    }
+
+    return { direction:"note", category:"à classer", title:"Note location" };
+  }
+
+  function money(n){
+    const v = Number(n || 0);
+    if(!Number.isFinite(v) || v <= 0) return "";
+    return new Intl.NumberFormat("fr-FR").format(v) + " F CFA";
+  }
+
+  function memoryKey(){
+    return MEMORY_PREFIX + (getSlug() || "noslug");
+  }
+
+  function loadMemory(){
+    return safeJson(localStorage.getItem(memoryKey()), []);
+  }
+
+  function saveMemory(rows){
+    storageSet(memoryKey(), JSON.stringify(rows.slice(0,20)));
+  }
+
+  function prepareNote(){
+    const text = String($("quickInput").value || "").trim();
+    if(!text){
+      show("Écris une phrase d’abord.", "warn");
+      return;
+    }
+
+    const amount = amountFromText(text);
+    const channel = channelFromText(text);
+    const kind = kindFromText(text);
+
+    prepared = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      ts: new Date().toISOString(),
+      text,
+      amount,
+      channel,
+      direction: kind.direction,
+      category: kind.category,
+      title: kind.title,
+      slug: getSlug(),
+      phone: getPhone()
+    };
+
+    $("draft").className = "draft show";
+    $("draft").innerHTML =
+      `<b>${esc(prepared.title)}</b>\n` +
+      (amount ? `Montant : ${esc(money(amount))}\n` : "Montant : —\n") +
+      `Canal : ${esc(channel)}\n` +
+      `Catégorie : ${esc(kind.category)}\n\n` +
+      `${esc(text)}`;
+
+    $("btnConfirm").disabled = false;
+    show("DIGIY a préparé la trace. Relis puis confirme.", "ok");
+  }
+
+  function confirmNote(){
+    if(!prepared){
+      show("Prépare une note avant de confirmer.", "warn");
+      return;
+    }
+
+    const rows = loadMemory();
+    rows.unshift(prepared);
+    saveMemory(rows);
+
+    prepared = null;
+    $("quickInput").value = "";
+    $("draft").className = "draft";
+    $("draft").textContent = "";
+    $("btnConfirm").disabled = true;
+
+    renderMemory();
+    show("✅ Note confirmée dans l’aide-mémoire.", "ok");
+  }
+
+  function renderMemory(){
+    const box = $("memoryList");
+    const rows = loadMemory();
+
+    if(!rows.length){
+      box.innerHTML = `<div class="empty">Aucune note LOC confirmée pour le moment.</div>`;
+      return;
+    }
+
+    box.innerHTML = rows.map(r => {
+      const amount = r.amount ? `<div class="memoryAmount">${esc(money(r.amount))}</div>` : "";
+      const payLink = r.amount
+        ? `<a class="smallLink" href="${esc(withContext("./app.html"))}">💼 Envoyer vers Mon argent</a>
+           <div class="memoryMeta">Abonnement Mon argent requis pour enregistrer.</div>`
+        : "";
+
+      return `
+        <div class="memoryItem">
+          <div class="memoryTop">
+            <div class="memoryTitle">✅ ${esc(r.title || "Note location")}</div>
+            ${amount}
+          </div>
+          <div class="memoryMeta">${esc(r.channel || "à préciser")} · ${esc(r.category || "à classer")} · ${new Date(r.ts || Date.now()).toLocaleString("fr-FR")}</div>
+          <div class="memoryNote">${esc(r.text || "")}</div>
+          ${payLink}
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function copyMemory(){
+    const rows = loadMemory();
+    if(!rows.length){
+      show("Aucune note à copier.", "warn");
+      return;
+    }
+
+    const txt = rows.map(r => {
+      return [
+        r.title || "Note location",
+        r.amount ? money(r.amount) : "",
+        `${r.channel || "à préciser"} · ${r.category || "à classer"}`,
+        r.text || ""
+      ].filter(Boolean).join("\n");
+    }).join("\n\n---\n\n");
+
+    try{
+      await navigator.clipboard.writeText(txt);
+      show("✅ Notes copiées.", "ok");
+    }catch{
+      show("Copie impossible sur ce téléphone.", "bad");
+    }
+  }
+
+  function syncLinks(){
+    const links = [
+      ["navHome","./app.html"],
+      ["navReservations","./reservations.html"],
+      ["navPlanning","./planning.html"],
+      ["navMessages","./reservations-pulse.html"],
+      ["navPlus","./plus.html"]
+    ];
+
+    links.forEach(([id,path])=>{
+      const el = $(id);
+      if(el) el.href = withContext(path);
+    });
+
+    $("pillSlug").textContent = "identifiant : " + (getSlug() || "—");
+
+    const pill = $("pillState");
+    const accessOk = !!(getGuardState().access_ok || getGuardSession().access_ok || getGuardSession().ok);
+    if(accessOk){
+      pill.textContent = "accès ouvert";
+      pill.className = "pill ok";
+    }else if(getSlug() || getPhone()){
+      pill.textContent = "lecture";
+      pill.className = "pill warn";
+    }else{
+      pill.textContent = "accès à vérifier";
+      pill.className = "pill bad";
+    }
+  }
+
+  async function init(){
+    syncLinks();
+
+    $("examples")?.querySelectorAll("button").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        $("quickInput").value = btn.textContent.trim();
+        $("quickInput").focus();
+      });
+    });
+
+    $("btnPrepare")?.addEventListener("click", prepareNote);
+    $("btnConfirm")?.addEventListener("click", confirmNote);
+    $("btnClear")?.addEventListener("click", ()=>{
+      $("quickInput").value = "";
+      prepared = null;
+      $("draft").className = "draft";
+      $("draft").textContent = "";
+      $("btnConfirm").disabled = true;
+      show("", "warn");
+    });
+
+    $("btnClearMemory")?.addEventListener("click", ()=>{
+      if(!confirm("Vider les notes rapides de ce téléphone ?")) return;
+      saveMemory([]);
+      renderMemory();
+      show("Aide-mémoire vidé sur ce téléphone.", "warn");
+    });
+
+    if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
+      try{
+        await window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+      }catch{
+        try{ await window.DIGIY_GUARD.ready(); }catch{}
+      }
+    }
+
+    syncLinks();
+    renderMemory();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
