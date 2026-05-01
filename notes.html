@@ -371,7 +371,7 @@
 
   const MODULE = "LOC";
   const MEMORY_PREFIX = "DIGIY_LOC_NOTES_V1:";
-  const PAY_ADMIN_BASE = "https://pro-pay.digiylyfe.com/";
+  const PAY_ADMIN_BASE = "https://pro-pay.digiylyfe.com/admin.html";
   const $ = (id)=>document.getElementById(id);
   let prepared = null;
 
@@ -540,15 +540,27 @@
 
     if(paySlug) u.searchParams.set("slug", paySlug);
     if(phone) u.searchParams.set("phone", phone);
-    if(locSlug) u.searchParams.set("source_slug", locSlug);
 
+    // PRO PAY admin.html attend fromDraft=1 pour préremplir le formulaire.
+    u.searchParams.set("fromDraft", "1");
+    u.searchParams.set("intent", "quick_note");
     u.searchParams.set("source_module", "LOC");
-    u.searchParams.set("origin", "quick_note");
-    u.searchParams.set("scope", "pro");
 
     if(r.id) u.searchParams.set("source_id", "loc-note:" + r.id);
-    if(r.amount) u.searchParams.set("amount_xof", String(r.amount));
+    if(locSlug) u.searchParams.set("source_slug", locSlug);
+
+    if(r.amount){
+      // PAY admin.html lit "amount".
+      u.searchParams.set("amount", String(r.amount));
+      // On garde aussi amount_xof pour compatibilité future éventuelle.
+      u.searchParams.set("amount_xof", String(r.amount));
+    }
+
     if(r.channel && r.channel !== "à préciser") u.searchParams.set("channel", r.channel);
+    else u.searchParams.set("channel", "manual");
+
+    u.searchParams.set("scope", "pro");
+    u.searchParams.set("movement_date", new Date().toISOString().slice(0, 10));
 
     if(r.direction === "out"){
       u.searchParams.set("direction", "out");
@@ -562,7 +574,11 @@
       u.searchParams.set("label", r.title || "Recette location");
     }
 
-    if(r.text) u.searchParams.set("note", r.text);
+    if(r.text){
+      u.searchParams.set("note", r.text);
+      u.searchParams.set("complement", r.text);
+    }
+
     return u.toString();
   }
 
@@ -773,3 +789,4 @@
 </script>
 </body>
 </html>
+
