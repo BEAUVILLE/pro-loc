@@ -371,6 +371,7 @@
 
   const MODULE = "LOC";
   const MEMORY_PREFIX = "DIGIY_LOC_NOTES_V1:";
+  const PAY_ADMIN_BASE = "https://pro-pay.digiylyfe.com/";
   const $ = (id)=>document.getElementById(id);
   let prepared = null;
 
@@ -523,6 +524,42 @@
     return new Intl.NumberFormat("fr-FR").format(v) + " F CFA";
   }
 
+  function buildPayUrl(record){
+    const r = record || {};
+    const phone = getPhone();
+    const locSlug = getSlug();
+    const paySlug = phone ? ("pay-" + phone) : "";
+
+    const u = new URL(PAY_ADMIN_BASE);
+
+    if(paySlug) u.searchParams.set("slug", paySlug);
+    if(phone) u.searchParams.set("phone", phone);
+    if(locSlug) u.searchParams.set("source_slug", locSlug);
+
+    u.searchParams.set("source_module", "LOC");
+    u.searchParams.set("origin", "quick_note");
+    u.searchParams.set("scope", "pro");
+
+    if(r.id) u.searchParams.set("source_id", "loc-note:" + r.id);
+    if(r.amount) u.searchParams.set("amount_xof", String(r.amount));
+    if(r.channel && r.channel !== "à préciser") u.searchParams.set("channel", r.channel);
+
+    if(r.direction === "out"){
+      u.searchParams.set("direction", "out");
+      u.searchParams.set("kind", "expense");
+      u.searchParams.set("category", "loc_expense");
+      u.searchParams.set("label", r.title || "Dépense location");
+    }else{
+      u.searchParams.set("direction", "in");
+      u.searchParams.set("kind", "sale");
+      u.searchParams.set("category", "rent_income");
+      u.searchParams.set("label", r.title || "Recette location");
+    }
+
+    if(r.text) u.searchParams.set("note", r.text);
+    return u.toString();
+  }
+
   function memoryKey(){
     return MEMORY_PREFIX + (getSlug() || "noslug");
   }
@@ -577,8 +614,9 @@
       return;
     }
 
+    const confirmed = { ...prepared };
     const rows = loadMemory();
-    rows.unshift(prepared);
+    rows.unshift(confirmed);
     saveMemory(rows);
 
     prepared = null;
@@ -588,7 +626,14 @@
     $("btnConfirm").disabled = true;
 
     renderMemory();
-    show("✅ Note confirmée dans l’aide-mémoire.", "ok");
+
+    if(confirmed.amount && Number(confirmed.amount) > 0){
+      show("✅ Note confirmée. Ouverture de Mon argent avec la trace préparée…", "ok");
+      window.location.href = buildPayUrl(confirmed);
+      return;
+    }
+
+    show("✅ Note confirmée dans l’aide-mémoire. Aucun montant détecté, donc Mon argent n’est pas ouvert.", "ok");
   }
 
   function renderMemory(){
@@ -603,8 +648,8 @@
     box.innerHTML = rows.map(r => {
       const amount = r.amount ? `<div class="memoryAmount">${esc(money(r.amount))}</div>` : "";
       const payLink = r.amount
-        ? `<a class="smallLink" href="${esc(withContext("./app.html"))}">💼 Envoyer vers Mon argent</a>
-           <div class="memoryMeta">Abonnement Mon argent requis pour enregistrer.</div>`
+        ? `<a class="smallLink" href="${esc(buildPayUrl(r))}">💼 Ouvrir Mon argent</a>
+           <div class="memoryMeta">La trace est préparée dans l’URL. Mon argent doit valider l’enregistrement.</div>`
         : "";
 
       return `
@@ -720,3 +765,4 @@
 </script>
 </body>
 </html>
+
