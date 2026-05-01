@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <title>Je prépare une fiche logement</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07140f">
+<meta name="description" content="DIGIY LOC — Préparer une fiche logement publique, simple, claire et connectée au vrai rail LOC.">
 
 <script>
   window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -14,7 +16,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=generator-loc-facade-v10"></script>
+<script src="./guard.js?v=generator-loc-facade-v11"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,165 +24,540 @@
 
 <style>
 :root{
-  --bg:#0b1020;
+  --bg:#07140f;
+  --bg2:#0b1d16;
   --card:#020617;
+  --card2:rgba(255,255,255,.055);
   --accent:#facc15;
   --accent-soft:#f97316;
   --ink:#f9fafb;
-  --muted:#9ca3af;
-  --line:#1f2937;
+  --muted:#a8b3c7;
+  --line:rgba(255,255,255,.10);
+  --line2:rgba(148,163,184,.24);
   --sn-green:#00853F;
+  --green:#22c55e;
+  --green-soft:#bbf7d0;
+  --blue:#60a5fa;
+  --danger:#ef4444;
+  --shadow:0 20px 60px rgba(0,0,0,.42);
+  --radius:22px;
+  --max:980px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
   --fontA:"Outfit",system-ui,-apple-system,sans-serif;
 }
+
 *{box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{
   margin:0;
-  background:radial-gradient(circle at top,#111827 0,#020617 55%);
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top left,rgba(250,204,21,.12),transparent 30%),
+    radial-gradient(circle at bottom right,rgba(34,197,94,.13),transparent 30%),
+    linear-gradient(135deg,var(--bg),#020617 55%,var(--bg2));
   color:var(--ink);
   font-family:var(--fontA);
-  padding:20px;
+  padding:14px 14px calc(92px + var(--safe-bottom));
 }
-.container{max-width:900px;margin:0 auto}
-.header{text-align:center;margin-bottom:30px}
-.header h1{font-size:36px;font-weight:900;color:var(--accent);margin:0 0 10px}
-.header p{font-size:16px;color:var(--muted);margin:0}
-.badge{
-  display:inline-block;
-  padding:8px 16px;
-  background:var(--sn-green);
-  color:#fff;
-  border-radius:999px;
-  font-weight:800;
-  font-size:14px;
-  margin-top:10px;
+
+button,input,textarea,select{font-family:var(--fontA)}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+.container{
+  max-width:var(--max);
+  margin:0 auto;
 }
-.form-card{
-  background:var(--card);
-  border-radius:20px;
+
+.section-anchor{
+  scroll-margin-top:18px;
+}
+
+.header{
+  position:relative;
+  overflow:hidden;
+  border-radius:26px;
   border:1px solid var(--line);
-  padding:30px;
-  box-shadow:0 20px 40px rgba(0,0,0,.6);
-  margin-bottom:20px;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(250,204,21,.16),transparent 42%),
+    radial-gradient(circle at 100% 100%,rgba(34,197,94,.14),transparent 42%),
+    rgba(2,6,23,.78);
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:14px;
 }
-.section-title{
-  font-size:24px;
-  font-weight:800;
-  color:var(--accent);
-  margin:0 0 20px;
-  padding-bottom:10px;
-  border-bottom:2px solid var(--line);
-}
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  margin-bottom:20px;
-}
-@media(max-width:768px){
-  .form-grid{ grid-template-columns:1fr; }
-}
-.form-group{display:flex;flex-direction:column}
-.form-group.full{ grid-column:1/-1; }
-label{
-  font-weight:700;
-  font-size:14px;
-  color:var(--ink);
-  margin-bottom:8px;
+
+.header-row{
   display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.brand-line{
+  display:flex;
+  gap:12px;
   align-items:center;
-  gap:6px;
+  min-width:0;
 }
-label .required{color:#ef4444;font-size:18px}
-input, textarea, select{
-  padding:12px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:#111827;
-  color:var(--ink);
-  font-size:14px;
-  font-weight:500;
-  font-family:var(--fontA);
+
+.logo-mark{
+  width:52px;
+  height:52px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+  color:#111827;
+  font-size:25px;
+  font-weight:950;
+  box-shadow:0 12px 28px rgba(250,204,21,.22);
+  flex:0 0 auto;
 }
-input:focus, textarea:focus, select:focus{
-  outline:none;
-  border-color:var(--accent);
+
+.header h1{
+  font-size:clamp(28px,7vw,42px);
+  font-weight:950;
+  line-height:.98;
+  letter-spacing:-.04em;
+  color:var(--accent);
+  margin:0 0 8px;
 }
-textarea{
-  min-height:100px;
-  resize:vertical;
+
+.header p{
+  font-size:15px;
+  color:#dbeafe;
+  margin:0;
+  line-height:1.55;
+  font-weight:700;
+  max-width:58ch;
 }
-.hint{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:4px;
+
+.badge-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
 }
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  padding:0 12px;
+  background:rgba(34,197,94,.14);
+  border:1px solid rgba(34,197,94,.28);
+  color:#dcfce7;
+  border-radius:999px;
+  font-weight:850;
+  font-size:13px;
+}
+
+.badge.gold{
+  background:rgba(250,204,21,.12);
+  border-color:rgba(250,204,21,.30);
+  color:#fde68a;
+}
+
+.header-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
 .btn{
   border:none;
   border-radius:999px;
-  padding:16px 32px;
-  font-size:18px;
-  font-weight:800;
-  cursor:pointer;
+  padding:13px 16px;
+  min-height:46px;
+  font-size:15px;
+  font-weight:900;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
-  transition:all 0.2s;
-  font-family:var(--fontA);
+  gap:9px;
+  transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
 }
-.btn-generate{
+
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+  color:#111827;
+  box-shadow:0 12px 26px rgba(250,204,21,.22);
+}
+.btn-green{
   background:linear-gradient(135deg,var(--sn-green),#006B32);
   color:#fff;
-  width:100%;
-  box-shadow:0 10px 30px rgba(0,133,63,0.4);
+  box-shadow:0 12px 26px rgba(0,133,63,.30);
 }
-.btn-generate:hover{
-  transform:translateY(-2px);
-  box-shadow:0 15px 40px rgba(0,133,63,0.6);
-}
-.btn-back{
-  background:rgba(255,255,255,0.1);
+.btn-soft{
+  background:rgba(255,255,255,.08);
   color:var(--ink);
   border:1px solid var(--line);
-  width:100%;
-  margin-top:10px;
 }
+.btn-blue{
+  background:rgba(96,165,250,.16);
+  color:#dbeafe;
+  border:1px solid rgba(96,165,250,.35);
+}
+.btn-danger{
+  background:rgba(239,68,68,.16);
+  color:#fee2e2;
+  border:1px solid rgba(239,68,68,.35);
+}
+
+.intro-card{
+  border-radius:22px;
+  border:1px solid rgba(250,204,21,.22);
+  background:rgba(250,204,21,.075);
+  padding:14px 16px;
+  margin-bottom:14px;
+  color:#fde68a;
+  font-weight:800;
+  line-height:1.65;
+  box-shadow:var(--shadow);
+}
+
+.audio-card{
+  border-radius:22px;
+  border:1px solid rgba(34,197,94,.24);
+  background:
+    radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 46%),
+    rgba(2,6,23,.52);
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+  box-shadow:var(--shadow);
+}
+
+.audio-title{
+  font-size:16px;
+  font-weight:950;
+  color:var(--green-soft);
+  margin-bottom:4px;
+}
+
+.audio-text{
+  font-size:14px;
+  color:#dbeafe;
+  font-weight:700;
+  line-height:1.55;
+  max-width:62ch;
+}
+
+.form-card{
+  background:
+    radial-gradient(circle at top,rgba(15,23,42,.98),#020617);
+  border-radius:24px;
+  border:1px solid var(--line);
+  padding:18px;
+  box-shadow:var(--shadow);
+  margin-bottom:18px;
+}
+
+.section-title{
+  font-size:21px;
+  font-weight:950;
+  color:var(--accent);
+  margin:0 0 14px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+
+.section-sub{
+  color:var(--muted);
+  line-height:1.55;
+  font-weight:700;
+  font-size:14px;
+  margin:-6px 0 16px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.form-group.full{grid-column:1/-1}
+
+label{
+  font-weight:850;
+  font-size:13px;
+  color:#f3f4f6;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  letter-spacing:.01em;
+}
+
+label .required{
+  color:#fb7185;
+  font-size:16px;
+}
+
+input,textarea,select{
+  width:100%;
+  padding:13px 13px;
+  border-radius:14px;
+  border:1px solid var(--line2);
+  background:rgba(15,23,42,.76);
+  color:var(--ink);
+  font-size:15px;
+  font-weight:700;
+  outline:none;
+}
+
+input:focus,textarea:focus,select:focus{
+  border-color:rgba(250,204,21,.75);
+  box-shadow:0 0 0 3px rgba(250,204,21,.10);
+}
+
+input[readonly]{
+  color:#cbd5e1;
+  background:rgba(15,23,42,.38);
+}
+
+textarea{
+  min-height:118px;
+  resize:vertical;
+  line-height:1.55;
+}
+
+.hint{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.45;
+  font-weight:700;
+}
+
+.quick-help{
+  grid-column:1/-1;
+  border:1px solid rgba(96,165,250,.24);
+  background:rgba(96,165,250,.08);
+  border-radius:18px;
+  padding:12px;
+}
+
+.quick-help-title{
+  color:#dbeafe;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:950;
+  margin-bottom:8px;
+}
+
+.quick-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.small-btn{
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.075);
+  color:var(--ink);
+  border-radius:999px;
+  padding:10px 12px;
+  font-weight:850;
+  cursor:pointer;
+  font-size:13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+
+.small-btn.gold{
+  background:rgba(250,204,21,.11);
+  border-color:rgba(250,204,21,.30);
+  color:#fde68a;
+}
+
+.info-box,
+.error-box{
+  display:none;
+  margin-top:14px;
+  padding:13px;
+  border-radius:16px;
+  font-weight:800;
+  white-space:pre-wrap;
+  line-height:1.55;
+}
+
+.info-box{
+  border:1px solid rgba(250,204,21,.45);
+  background:rgba(250,204,21,.08);
+  color:#fde68a;
+}
+
+.error-box{
+  border:1px solid rgba(239,68,68,.50);
+  background:rgba(239,68,68,.08);
+  color:#fecaca;
+}
+
+.info-box.show,
+.error-box.show{display:block}
+
+.preview-panel{
+  display:grid;
+  grid-template-columns:.85fr 1.15fr;
+  gap:14px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.035);
+  padding:14px;
+  margin:10px 0 18px;
+}
+
+.preview-photo{
+  min-height:180px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:#0b1220;
+  overflow:hidden;
+}
+
+.preview-photo img{
+  width:100%;
+  height:100%;
+  min-height:180px;
+  object-fit:cover;
+}
+
+.preview-info{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.preview-kicker{
+  color:var(--green-soft);
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-weight:950;
+}
+
+.preview-title{
+  color:var(--accent);
+  font-size:24px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:-.02em;
+}
+
+.preview-desc{
+  color:#e5e7eb;
+  font-size:14px;
+  line-height:1.55;
+  font-weight:700;
+}
+
+.preview-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.preview-tag{
+  min-height:32px;
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:0 10px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.10);
+  color:#e5e7eb;
+  font-weight:850;
+  font-size:12px;
+}
+
+.preview-tag.gold{
+  color:#fde68a;
+  border-color:rgba(250,204,21,.24);
+  background:rgba(250,204,21,.08);
+}
+
+.submit-row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.btn-generate{
+  width:100%;
+  min-height:56px;
+  border-radius:18px;
+  font-size:17px;
+}
+
+.btn-back{
+  width:100%;
+  min-height:50px;
+  border-radius:18px;
+}
+
 .success-msg{
   display:none;
-  background:rgba(34,197,94,0.1);
-  border:2px solid #22c55e;
-  border-radius:12px;
+  background:rgba(34,197,94,.10);
+  border:1px solid rgba(34,197,94,.42);
+  border-radius:22px;
   padding:20px;
-  margin-top:20px;
+  margin-top:18px;
   text-align:center;
 }
-.success-msg.show{ display:block; }
+
+.success-msg.show{display:block}
+
 .success-msg h3{
   margin:0 0 10px;
   color:#22c55e;
   font-size:24px;
+  font-weight:950;
 }
+
+.success-msg p{
+  margin:0;
+  color:#d1fae5;
+  font-weight:750;
+  line-height:1.5;
+}
+
 .eagle{
   font-size:48px;
   display:block;
-  margin:10px 0;
+  margin:4px 0 10px;
 }
-.loading{
-  text-align:center;
-  padding:50px;
-  color:#fff;
-  font-size:18px;
-  font-weight:700;
-}
+
 .public-link{
-  margin-top:12px;
+  margin-top:14px;
   padding:14px;
   border:1px solid rgba(34,197,94,.35);
-  border-radius:12px;
+  border-radius:18px;
   background:rgba(0,0,0,.22);
   text-align:left;
   word-break:break-all;
 }
+
 .public-link .row{
   display:flex;
   gap:10px;
@@ -188,46 +565,131 @@ textarea{
   justify-content:center;
   flex-wrap:wrap;
 }
+
 .public-link a{
   color:#a7f3d0;
   text-decoration:none;
-  font-weight:800;
+  font-weight:900;
 }
-.small-btn{
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.08);
-  color:var(--ink);
-  border-radius:999px;
-  padding:10px 14px;
-  font-weight:800;
-  cursor:pointer;
-  font-family:var(--fontA);
-}
-.small-btn:hover{ transform:translateY(-1px); }
-.error-box{
-  display:none;
-  margin-top:14px;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid rgba(239,68,68,.5);
-  background:rgba(239,68,68,.08);
-  color:#fecaca;
-  font-weight:700;
-  white-space:pre-wrap;
-}
-.error-box.show{ display:block; }
-.info-box{
-  display:none;
-  margin-top:14px;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid rgba(250,204,21,.45);
-  background:rgba(250,204,21,.08);
+
+.created-tip{
+  margin-top:12px;
   color:#fde68a;
-  font-weight:700;
-  white-space:pre-wrap;
+  line-height:1.55;
+  font-weight:800;
+  font-size:14px;
 }
-.info-box.show{ display:block; }
+
+.loading{
+  max-width:var(--max);
+  margin:0 auto;
+  text-align:center;
+  padding:50px 18px;
+  color:#fff;
+  font-size:18px;
+  font-weight:850;
+  border-radius:22px;
+  background:rgba(2,6,23,.72);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+
+.mobile-nav{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:90;
+  padding:8px 10px calc(8px + var(--safe-bottom));
+  background:linear-gradient(180deg, rgba(7,20,15,0), rgba(7,20,15,.92) 20%, rgba(7,20,15,.98));
+  backdrop-filter:blur(12px);
+}
+
+.mobile-nav-inner{
+  max-width:var(--max);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+  background:rgba(2,6,23,.72);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:20px;
+  padding:8px;
+  box-shadow:var(--shadow);
+}
+
+.mobile-nav a,
+.mobile-nav button{
+  min-height:52px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  text-align:center;
+  font-size:11px;
+  font-weight:900;
+  color:#ecfff4;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  padding:4px;
+}
+
+.mobile-nav span{
+  font-size:17px;
+  line-height:1;
+}
+
+.audio-float{
+  position:fixed;
+  right:12px;
+  bottom:88px;
+  z-index:88;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.audio-float .mini-audio{
+  min-height:48px;
+  min-width:48px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
+  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+  color:#111827;
+  box-shadow:0 14px 30px rgba(0,0,0,.30);
+  font-weight:950;
+  padding:0 12px;
+}
+
+.audio-float .mini-audio.stop{
+  background:rgba(255,255,255,.08);
+  color:#ecfff4;
+}
+
+@media(max-width:768px){
+  body{padding:10px 10px calc(96px + var(--safe-bottom))}
+  .form-grid{grid-template-columns:1fr}
+  .preview-panel{grid-template-columns:1fr}
+  .header-actions{width:100%}
+  .header-actions .btn{flex:1}
+  .form-card{padding:14px;border-radius:22px}
+  .section-title{font-size:19px}
+  .btn{font-size:14px}
+}
+
+@media(max-width:480px){
+  .mobile-nav-inner{gap:5px;padding:7px}
+  .mobile-nav a,
+  .mobile-nav button{font-size:10px;min-height:50px;border-radius:14px}
+  .mobile-nav span{font-size:16px}
+  .audio-float{right:10px;bottom:92px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto;transition:none!important}
+}
 </style>
 </head>
 
@@ -237,126 +699,232 @@ textarea{
 
 <div id="app" style="display:none;">
   <div class="container">
-    <div class="header">
-      <h1>🦅 Préparer une fiche logement</h1>
-      <p>Prépare ta fiche logement en 2 minutes</p>
-      <div class="badge">∞ Pas à pas, sans casser le rail réel ∞</div>
+    <header class="header section-anchor" id="aide">
+      <div class="header-row">
+        <div class="brand-line">
+          <div class="logo-mark">🏠</div>
+          <div>
+            <h1>Préparer une fiche logement</h1>
+            <p>
+              DIGIY t’aide à écrire clair, publier proprement et recevoir les demandes directes.
+              Le client voit le logement, puis il peut demander sans friction.
+            </p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-soft" type="button" id="btnAudioTop">🎧 Écouter</button>
+          <button class="btn btn-primary" type="button" id="btnGoForm">📝 Remplir</button>
+        </div>
+      </div>
+
+      <div class="badge-row">
+        <span class="badge gold">0% commission</span>
+        <span class="badge">Contact direct</span>
+        <span class="badge">Rail LOC réel</span>
+      </div>
+    </header>
+
+    <div class="intro-card">
+      Même quand la galerie est encore jeune, la demande ne doit pas se perdre.
+      Cette page prépare une fiche logement publique et la publie sur le vrai rail LOC.
+      Photos, prix, description, contact : le client comprend vite et peut écrire directement.
     </div>
 
-    <div class="form-card">
-      <h2 class="section-title">📋 Informations du logement</h2>
+    <div class="audio-card">
+      <div>
+        <div class="audio-title">DIGIY parle pour guider le propriétaire</div>
+        <div class="audio-text">
+          L’audio explique le rôle de cette page : préparer une fiche claire, publier le logement,
+          et aider le client à demander sans passer par une plateforme qui garde la relation.
+        </div>
+      </div>
+      <button class="btn btn-green" type="button" id="btnAudioCard">🔊 Lire l’aide</button>
+    </div>
 
+    <main class="form-card">
       <form id="formLogement">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Nom du logement <span class="required">*</span></label>
-            <input type="text" name="nom" id="nom" placeholder="Ex : CHEZ BAPTISTE" required>
-            <div class="hint">Sans guillemets, MAJUSCULES recommandées</div>
+        <section class="section-anchor" id="infos">
+          <h2 class="section-title">📋 Informations du logement</h2>
+          <p class="section-sub">Pose l’essentiel. Le client doit comprendre vite : où, quel type, combien de personnes, et pourquoi il peut faire confiance.</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="nom">Nom du logement <span class="required">*</span></label>
+              <input type="text" name="nom" id="nom" placeholder="Ex : CHEZ BAPTISTE" required>
+              <div class="hint">Nom simple, mémorisable, propre pour la fiche publique.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="adresse">Ville / zone <span class="required">*</span></label>
+              <input type="text" name="adresse" id="adresse" placeholder="Ex : Saly" required>
+              <div class="hint">Ex : Saly, Ngaparou, Somone, Mbour.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="personnes_max">Capacité max</label>
+              <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20">
+              <div class="hint">Gardé côté fiche et utile pour le client.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="type_logement">Type de logement</label>
+              <select name="type_logement" id="type_logement">
+                <option value="Appartement">Appartement</option>
+                <option value="Villa">Villa</option>
+                <option value="Studio">Studio</option>
+                <option value="Maison">Maison</option>
+                <option value="Chambre">Chambre</option>
+              </select>
+            </div>
+
+            <div class="quick-help">
+              <div class="quick-help-title">Aide description</div>
+              <div class="quick-actions">
+                <button class="small-btn gold" type="button" data-desc="calme">Calme proche plage</button>
+                <button class="small-btn gold" type="button" data-desc="famille">Famille / week-end</button>
+                <button class="small-btn gold" type="button" data-desc="simple">Simple et propre</button>
+              </div>
+              <div class="hint" style="margin-top:8px">Clique un exemple, puis ajuste avec les mots du terrain. On ne vend pas du rêve : on explique clair.</div>
+            </div>
+
+            <div class="form-group full">
+              <label for="description">Description courte <span class="required">*</span></label>
+              <textarea name="description" id="description" placeholder="Ex : Appartement confortable dans un quartier paisible de Saly, idéal pour quelques nuits ou un séjour en famille. Contact direct propriétaire, paiement direct, 0% commission DIGIY." required></textarea>
+            </div>
           </div>
+        </section>
 
-          <div class="form-group">
-            <label>Ville <span class="required">*</span></label>
-            <input type="text" name="adresse" id="adresse" placeholder="Ex : Saly" required>
+        <section class="section-anchor" id="tarifs">
+          <h2 class="section-title">💰 Tarifs</h2>
+          <p class="section-sub">Un prix clair rassure. Le client peut ensuite confirmer ses dates et son budget sur WhatsApp.</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prix_nuit">Prix / Nuit (FCFA) <span class="required">*</span></label>
+              <input type="number" name="prix_nuit" id="prix_nuit" placeholder="30000" required>
+            </div>
+
+            <div class="form-group">
+              <label for="prix_semaine">Prix / Semaine (FCFA)</label>
+              <input type="number" name="prix_semaine" id="prix_semaine" placeholder="175000">
+            </div>
+
+            <div class="form-group">
+              <label for="prix_mois">Prix / Mois (FCFA)</label>
+              <input type="number" name="prix_mois" id="prix_mois" placeholder="550000">
+            </div>
           </div>
+        </section>
 
-          <div class="form-group full">
-            <label>Description courte <span class="required">*</span></label>
-            <textarea name="description" id="description" placeholder="Ex : Appartement confortable dans un quartier paisible de Saly, idéal pour les séjours en famille." required></textarea>
+        <section class="section-anchor" id="contact">
+          <h2 class="section-title">👤 Contact propriétaire</h2>
+          <p class="section-sub">Ces champs viennent de ta session. L’argent et le contact restent chez le propriétaire.</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="owner_name">Nom complet</label>
+              <input type="text" name="owner_name" id="owner_name" readonly>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">WhatsApp / Téléphone</label>
+              <input type="tel" name="phone" id="phone" readonly>
+            </div>
           </div>
+        </section>
 
-          <div class="form-group">
-            <label>Capacité max</label>
-            <input type="number" name="personnes_max" id="personnes_max" value="4" min="1" max="20">
-            <div class="hint">Gardé pour plus tard, non envoyé au RPC actuel.</div>
+        <section class="section-anchor" id="photo">
+          <h2 class="section-title">📸 Photo</h2>
+          <p class="section-sub">Une bonne photo aide le client à se projeter. Une seule photo suffit pour commencer, tu complèteras après si besoin.</p>
+
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="photo_url">URL de la photo principale <span class="required">*</span></label>
+              <input type="url" name="photo_url" id="photo_url" placeholder="https://..." required>
+              <div class="hint">Héberge d’abord la photo, puis colle l’URL ici.</div>
+            </div>
           </div>
+        </section>
 
-          <div class="form-group">
-            <label>Type de logement</label>
-            <select name="type_logement" id="type_logement">
-              <option value="Appartement">Appartement</option>
-              <option value="Villa">Villa</option>
-              <option value="Studio">Studio</option>
-              <option value="Maison">Maison</option>
-              <option value="Chambre">Chambre</option>
-            </select>
+        <section class="section-anchor" id="apercu">
+          <h2 class="section-title">👁️ Aperçu rapide</h2>
+          <div class="preview-panel">
+            <div class="preview-photo">
+              <img id="previewImg" alt="Aperçu du logement" src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80">
+            </div>
+            <div class="preview-info">
+              <div class="preview-kicker">Fiche publique</div>
+              <div class="preview-title" id="previewTitle">Nom du logement</div>
+              <div class="preview-desc" id="previewDesc">La description apparaîtra ici.</div>
+              <div class="preview-tags">
+                <span class="preview-tag" id="previewZone">Zone</span>
+                <span class="preview-tag" id="previewType">Appartement</span>
+                <span class="preview-tag" id="previewPeople">4 pers.</span>
+                <span class="preview-tag gold" id="previewPrice">Prix / nuit</span>
+                <span class="preview-tag gold">0% commission</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <h2 class="section-title">💰 Tarifs</h2>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Prix / Nuit (FCFA) <span class="required">*</span></label>
-            <input type="number" name="prix_nuit" id="prix_nuit" placeholder="30000" required>
-          </div>
-
-          <div class="form-group">
-            <label>Prix / Semaine (FCFA)</label>
-            <input type="number" name="prix_semaine" id="prix_semaine" placeholder="175000">
-          </div>
-
-          <div class="form-group">
-            <label>Prix / Mois (FCFA)</label>
-            <input type="number" name="prix_mois" id="prix_mois" placeholder="550000">
-          </div>
-        </div>
-
-        <h2 class="section-title">👤 Contact</h2>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Nom complet</label>
-            <input type="text" name="owner_name" id="owner_name" readonly>
-          </div>
-
-          <div class="form-group">
-            <label>WhatsApp / Téléphone</label>
-            <input type="tel" name="phone" id="phone" readonly>
-          </div>
-        </div>
-
-        <h2 class="section-title">📸 Photo</h2>
-
-        <div class="form-grid">
-          <div class="form-group full">
-            <label>URL de la photo principale <span class="required">*</span></label>
-            <input type="url" name="photo_url" id="photo_url" placeholder="https://..." required>
-            <div class="hint">Héberge d’abord la photo, puis colle l’URL.</div>
-          </div>
-        </div>
+        </section>
 
         <div class="info-box" id="infoBox"></div>
         <div class="error-box" id="errorBox"></div>
 
-        <button class="btn btn-generate" type="submit" id="btnSubmit">
-          🚀 CRÉER LA FICHE LOGEMENT
-        </button>
+        <div class="submit-row">
+          <button class="btn btn-green btn-generate" type="submit" id="btnSubmit">
+            🚀 CRÉER LA FICHE LOGEMENT
+          </button>
 
-        <button class="btn btn-back" type="button" id="btnBack">
-          ⬅️ Retour à ma gestion
-        </button>
+          <button class="btn btn-soft btn-back" type="button" id="btnBack">
+            ⬅️ Retour à ma gestion
+          </button>
+        </div>
       </form>
 
       <div class="success-msg" id="successMsg">
         <span class="eagle">🦅</span>
         <h3>FICHE CRÉÉE AVEC SUCCÈS !</h3>
-        <p>Ta fiche est maintenant visible sur la vitrine publique 🔥</p>
+        <p>Ta fiche est maintenant visible sur la vitrine publique.</p>
 
         <div class="public-link" id="publicLinkBox" style="display:none;">
-          <div style="font-weight:900; color:#bbf7d0; margin-bottom:8px;">🔗 Lien public :</div>
+          <div style="font-weight:950; color:#bbf7d0; margin-bottom:8px;">🔗 Lien public :</div>
           <div class="row">
             <a id="publicLink" href="#" target="_blank" rel="noopener">—</a>
             <button class="small-btn" type="button" id="btnCopy">📋 Copier</button>
           </div>
+          <div class="created-tip">
+            Partage ce lien sur WhatsApp, une affiche ou un QR. Le client pourra demander ce logement directement.
+          </div>
         </div>
 
-        <button class="btn btn-back" type="button" id="btnRetour">
-          ✅ Retour à ma gestion
-        </button>
+        <div class="submit-row" style="margin-top:14px">
+          <button class="btn btn-green" type="button" id="btnOpenPublic">
+            🌍 Ouvrir la fiche publique
+          </button>
+          <button class="btn btn-soft btn-back" type="button" id="btnRetour">
+            ✅ Retour à ma gestion
+          </button>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </div>
+
+<div class="audio-float" aria-label="Aide audio">
+  <button class="mini-audio" type="button" id="btnAudioFloat">🎧</button>
+  <button class="mini-audio stop" type="button" id="btnAudioStop">⏹</button>
+</div>
+
+<nav class="mobile-nav" aria-label="Navigation rapide">
+  <div class="mobile-nav-inner">
+    <a href="#aide"><span>🎧</span>Aide</a>
+    <a href="#infos"><span>📝</span>Infos</a>
+    <a href="#tarifs"><span>💰</span>Tarifs</a>
+    <a href="#photo"><span>📸</span>Photo</a>
+    <a href="#apercu"><span>👁️</span>Aperçu</a>
+  </div>
+</nav>
 
 <script>
 (async function(){
@@ -375,6 +943,23 @@ textarea{
   const publicLinkBox = document.getElementById("publicLinkBox");
   const publicLink = document.getElementById("publicLink");
   const btnCopy = document.getElementById("btnCopy");
+  const btnOpenPublic = document.getElementById("btnOpenPublic");
+
+  const btnAudioTop = document.getElementById("btnAudioTop");
+  const btnAudioCard = document.getElementById("btnAudioCard");
+  const btnAudioFloat = document.getElementById("btnAudioFloat");
+  const btnAudioStop = document.getElementById("btnAudioStop");
+  const btnGoForm = document.getElementById("btnGoForm");
+
+  const previewImg = document.getElementById("previewImg");
+  const previewTitle = document.getElementById("previewTitle");
+  const previewDesc = document.getElementById("previewDesc");
+  const previewZone = document.getElementById("previewZone");
+  const previewType = document.getElementById("previewType");
+  const previewPeople = document.getElementById("previewPeople");
+  const previewPrice = document.getElementById("previewPrice");
+
+  const FALLBACK_IMG = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80";
 
   const State = {
     proSlug: "",
@@ -383,7 +968,8 @@ textarea{
     mode: "preview",
     reason: "booting",
     accessOk: false,
-    sb: null
+    sb: null,
+    createdPublicUrl: ""
   };
 
   function showError(msg){
@@ -423,6 +1009,12 @@ textarea{
 
   function safeJsonParse(raw){
     try { return JSON.parse(raw); } catch (_) { return null; }
+  }
+
+  function money(v){
+    const n = Number(v);
+    if(!Number.isFinite(n) || n <= 0) return "Prix / nuit";
+    return n.toLocaleString("fr-FR") + " FCFA / nuit";
   }
 
   function getGuardState(){
@@ -566,8 +1158,8 @@ textarea{
 
     const msg =
       reason === "slug_missing"
-        ? "👁️ Mode aperçu : identifiant LOC introuvable. Passe par le PIN."
-        : "👁️ Mode aperçu : connexion PIN requise pour créer une fiche logement.";
+        ? "👁️ Mode aperçu : identifiant LOC introuvable. Passe par le code d’accès."
+        : "👁️ Mode aperçu : connexion par code requise pour créer une fiche logement.";
 
     showError(msg);
     btnSubmit.textContent = "🔒 MODE APERÇU";
@@ -635,8 +1227,103 @@ textarea{
     return data || null;
   }
 
-  btnBack?.addEventListener("click", goBack);
-  btnRetour?.addEventListener("click", goBack);
+  function updatePreview(){
+    const nom = safe(document.getElementById("nom").value) || "Nom du logement";
+    const adresse = safe(document.getElementById("adresse").value) || "Zone";
+    const type = safe(document.getElementById("type_logement").value) || "Logement";
+    const personnes = safe(document.getElementById("personnes_max").value) || "—";
+    const prix = safe(document.getElementById("prix_nuit").value);
+    const description = safe(document.getElementById("description").value) || "La description apparaîtra ici.";
+    const photo = safe(document.getElementById("photo_url").value) || FALLBACK_IMG;
+
+    previewTitle.textContent = nom;
+    previewZone.textContent = adresse;
+    previewType.textContent = type;
+    previewPeople.textContent = personnes && personnes !== "—" ? `${personnes} pers.` : "Capacité";
+    previewPrice.textContent = money(prix);
+    previewDesc.textContent = description;
+    previewImg.src = photo;
+    previewImg.onerror = () => {
+      previewImg.onerror = null;
+      previewImg.src = FALLBACK_IMG;
+    };
+  }
+
+  function applyDescription(kind){
+    const desc = document.getElementById("description");
+    const adresse = safe(document.getElementById("adresse").value) || "Saly";
+    const type = safe(document.getElementById("type_logement").value).toLowerCase() || "logement";
+
+    const texts = {
+      calme:`${type.charAt(0).toUpperCase() + type.slice(1)} propre et calme à ${adresse}, pratique pour quelques nuits ou un séjour reposant. Contact direct propriétaire, paiement direct, 0% commission DIGIY.`,
+      famille:`${type.charAt(0).toUpperCase() + type.slice(1)} adapté pour un couple, une famille ou un petit week-end à ${adresse}. Le client peut demander ses dates, son budget et ses besoins directement par WhatsApp.`,
+      simple:`${type.charAt(0).toUpperCase() + type.slice(1)} simple, propre et direct à ${adresse}. L’essentiel est clair : photo, prix indicatif, contact direct propriétaire, paiement direct, 0% commission DIGIY.`
+    };
+
+    desc.value = texts[kind] || desc.value;
+    updatePreview();
+    desc.focus();
+  }
+
+  function stopAudio(){
+    try{
+      if("speechSynthesis" in window) window.speechSynthesis.cancel();
+    }catch(_){}
+  }
+
+  function speakHelp(){
+    const text = [
+      "Bienvenue dans DIGIY LOC.",
+      "Cette page sert au propriétaire à préparer une fiche logement publique.",
+      "Tu remplis le nom, la zone, le type, le prix, la description et la photo.",
+      "DIGIY publie ensuite la fiche sur le vrai rail LOC.",
+      "Le client peut voir le logement et envoyer une demande directement.",
+      "Le contact reste direct, le paiement reste direct, et DIGIY ne prend pas de commission."
+    ].join(" ");
+
+    try{
+      if(!("speechSynthesis" in window)){
+        showInfo("La lecture vocale n’est pas disponible sur ce navigateur.");
+        return;
+      }
+
+      stopAudio();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "fr-FR";
+      utter.rate = 0.86;
+      utter.pitch = 0.95;
+      window.speechSynthesis.speak(utter);
+    }catch(_){
+      showInfo("Lecture vocale impossible pour le moment.");
+    }
+  }
+
+  function bindUi(){
+    btnBack?.addEventListener("click", goBack);
+    btnRetour?.addEventListener("click", goBack);
+    btnAudioTop?.addEventListener("click", speakHelp);
+    btnAudioCard?.addEventListener("click", speakHelp);
+    btnAudioFloat?.addEventListener("click", speakHelp);
+    btnAudioStop?.addEventListener("click", stopAudio);
+    btnGoForm?.addEventListener("click", () => document.getElementById("infos")?.scrollIntoView({behavior:"smooth"}));
+
+    document.querySelectorAll("[data-desc]").forEach(btn => {
+      btn.addEventListener("click", () => applyDescription(btn.getAttribute("data-desc")));
+    });
+
+    ["nom","adresse","type_logement","personnes_max","prix_nuit","description","photo_url"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", updatePreview);
+      document.getElementById(id)?.addEventListener("change", updatePreview);
+    });
+
+    btnOpenPublic?.addEventListener("click", () => {
+      if(State.createdPublicUrl){
+        window.open(State.createdPublicUrl, "_blank", "noopener,noreferrer");
+      }
+    });
+  }
+
+  bindUi();
 
   if(!window.DIGIY_GUARD || !window.DIGIY_GUARD.ready){
     loading.innerHTML = `❌ Vérification absente. <a href="./pin.html" style="color:#facc15">Se connecter</a>`;
@@ -664,6 +1351,7 @@ textarea{
 
     loading.style.display = "none";
     app.style.display = "block";
+    updatePreview();
 
     if(!State.proSlug){
       disableFormForPreview("slug_missing");
@@ -697,6 +1385,7 @@ textarea{
 
   loading.style.display = "none";
   app.style.display = "block";
+  updatePreview();
 
   if(!State.proSlug){
     disableFormForPreview("slug_missing");
@@ -779,15 +1468,18 @@ textarea{
 
       const roomSlug = result?.room_slug || "";
       const urlPublic = safe(result?.public_url);
+      State.createdPublicUrl = urlPublic;
 
       publicLinkBox.style.display = "block";
 
       if(urlPublic){
         publicLink.textContent = urlPublic;
         publicLink.href = urlPublic;
+        btnOpenPublic.disabled = false;
       } else {
         publicLink.textContent = "Fiche créée — lien public indisponible";
         publicLink.removeAttribute("href");
+        btnOpenPublic.disabled = true;
       }
 
       let info = document.getElementById("createdRoomInfo");
@@ -827,3 +1519,4 @@ textarea{
 </script>
 </body>
 </html>
+
