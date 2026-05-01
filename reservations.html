@@ -258,7 +258,21 @@
     .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
     .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-  </style>
+  
+    body{padding-bottom:92px}
+    .bottomNav{
+      position:fixed;left:0;right:0;bottom:0;z-index:60;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:rgba(3,18,13,.94);
+      border-top:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(14px);
+    }
+    .bottomNavInner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .bottomNav a{min-height:54px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.035);color:rgba(234,255,241,.78);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:1000;text-align:center;text-decoration:none;line-height:1.05}
+    .bottomNav a strong{font-size:18px;line-height:1}
+    .bottomNav a.active{color:#fde68a;border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.11)}
+    @media(max-width:560px){body{padding:10px 10px 92px}.wrap{max-width:100%}.topbar,.card{border-radius:18px;padding:12px}.actions{width:100%}.actions .pill{width:100%;justify-content:center}.actions .btn{flex:1 1 calc(50% - 6px)}.grid{display:block}.grid .card + .card{margin-top:12px}.detailBox{min-height:120px}}
+</style>
 </head>
 
 <body>
@@ -363,6 +377,16 @@
   </div>
 
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomNavInner">
+    <a id="navAccueil" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a id="navReservations" class="active" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a id="navDispos" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a id="navMessages" href="./reservations-pulse.html"><strong>💬</strong><span>Messages</span></a>
+    <a id="navPlus" href="./app.html#plus"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (() => {
@@ -1173,6 +1197,9 @@ Je loue`;
 
     if (back) back.href = withSlug("./app.html");
     if (planning) planning.href = withSlug("./planning.html");
+
+    const navs = { navAccueil:"./app.html", navReservations:"./reservations.html", navDispos:"./planning.html", navMessages:"./reservations-pulse.html", navPlus:"./app.html#plus" };
+    Object.entries(navs).forEach(([id,path])=>{ const el = $(id); if(el) el.href = withSlug(path); });
   }
 
   async function init(){
