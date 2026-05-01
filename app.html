@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>DIGIY LOC — Mon espace</title>
-<meta name="theme-color" content="#0b1020" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Je loue • Accueil</title>
+<meta name="theme-color" content="#061b14"/>
 
 <script>
   window.DIGIY_MODULE = "LOC";
@@ -15,299 +15,379 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-wave-ultra-v8"></script>
+<script src="./guard.js?v=locpro-home-today-v1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 
 <style>
 :root{
-  --bg:#020617;
-  --bg2:#0b1020;
-  --card:rgba(255,255,255,.03);
-  --line:#1f2937;
-  --ink:#f9fafb;
-  --muted:#cbd5f5;
+  --bg:#061b14;
+  --bg2:#0a2820;
+  --card:rgba(255,255,255,.045);
+  --line:rgba(255,255,255,.12);
+  --ink:#eafff1;
+  --muted:rgba(234,255,241,.72);
   --gold:#facc15;
   --green:#22c55e;
-  --danger:#ef4444;
-  --shadow:0 22px 50px rgba(0,0,0,.55);
-  --fontA:"Outfit",system-ui,-apple-system,sans-serif;
+  --bad:#ef4444;
+  --blue:#38bdf8;
+  --orange:#f59e0b;
+  --radius:22px;
+  --shadow:0 18px 42px rgba(0,0,0,.34);
+  --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bottom:78px;
 }
-
-*{box-sizing:border-box;margin:0;padding:0}
-
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
 body{
   min-height:100vh;
-  font-family:var(--fontA);
+  font-family:var(--font);
   color:var(--ink);
   background:
-    radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
-    radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.12), transparent 60%),
-    linear-gradient(180deg, var(--bg2), var(--bg));
+    radial-gradient(900px 500px at 15% -8%, rgba(250,204,21,.14), transparent 58%),
+    radial-gradient(800px 480px at 90% 0%, rgba(34,197,94,.16), transparent 58%),
+    linear-gradient(180deg,#03120d,var(--bg));
+  padding:12px 12px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
 }
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit}
+.wrap{max-width:860px;margin:0 auto}
 
-a{color:inherit}
-
-.wrap{max-width:1100px;margin:0 auto;padding:14px}
-
+/* Haut compact */
 .top{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  padding:10px 12px;
   border:1px solid var(--line);
-  border-radius:18px;
-  background:var(--card);
+  border-radius:24px;
+  background:rgba(255,255,255,.045);
   box-shadow:var(--shadow);
+  padding:12px;
 }
-
-.brand{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-
+.topLine{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
 .logo{
-  width:40px;
-  height:40px;
-  border-radius:14px;
-  background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
-  border:1px solid rgba(250,204,21,.35);
-  box-shadow:0 0 22px rgba(250,204,21,.12);
+  width:42px;height:42px;border-radius:16px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg, rgba(250,204,21,.26), rgba(34,197,94,.16));
+  border:1px solid rgba(250,204,21,.32);
+  flex:0 0 auto;
+  font-size:20px;
 }
-
-.brand h1{margin:0;font-size:1.05rem;letter-spacing:.2px}
-.brand .infinity{font-size:1.5rem;font-weight:900;margin-left:4px}
-.brand .sub{color:var(--muted);font-weight:800;font-size:.92rem;margin-top:2px}
-
-.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-
-.pill{
-  border:1px solid rgba(148,163,184,.35);
-  padding:7px 10px;
-  border-radius:999px;
-  background:rgba(255,255,255,.02);
-  color:var(--muted);
-  font-weight:900;
-  font-size:.86rem;
-}
-
-.pill strong{color:#fff}
-
-.pill.ok{
-  border-color:rgba(34,197,94,.35);
-  background:rgba(34,197,94,.10);
-  color:#bbf7d0;
-}
-
-.pill.warn{
-  border-color:rgba(250,204,21,.35);
-  background:rgba(250,204,21,.10);
-  color:#fde68a;
-}
-
-.btn{
-  border:0;
-  cursor:pointer;
-  border-radius:14px;
-  padding:11px 12px;
+h1{
+  margin:0;
+  font-size:1.18rem;
+  line-height:1.08;
   font-weight:1000;
-  background:rgba(255,255,255,.03);
-  border:1px solid var(--line);
+  letter-spacing:-.02em;
+}
+.sub{
+  margin-top:4px;
   color:var(--muted);
-  transition:all .2s ease;
-  text-decoration:none;
+  font-size:.83rem;
+  line-height:1.3;
+  font-weight:850;
+}
+.pill{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-family:var(--fontA);
-}
-
-.btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
-.btn:active:not(:disabled){transform:translateY(0)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.primary{background:var(--green);border-color:rgba(34,197,94,.25);color:#022c22}
-.btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.35);color:#fde68a}
-.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
-.btn.ghost{background:rgba(255,255,255,.02)}
-.btn.small{padding:9px 10px;border-radius:12px;min-height:44px}
-
-.navRow{
-  width:100%;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-  justify-content:space-between;
-  margin-top:10px;
-}
-
-.navLeft,.navRight{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
-.navLabel{
-  color:var(--muted);
-  font-weight:900;
-  font-size:.86rem;
+  gap:6px;
+  min-height:34px;
   padding:7px 10px;
   border-radius:999px;
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.02);
-}
-
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-
-@media(max-width:980px){
-  .grid{grid-template-columns:1fr}
-}
-
-.card{
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
-  border-radius:20px;
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-
-.cardHead{
-  padding:12px 14px;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
-}
-
-.cardHead h2{margin:0;font-size:1.02rem}
-.cardHead small{color:var(--muted);font-weight:800}
-.cardBody{padding:14px}
-
-.note{
-  margin-top:10px;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.03);
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(255,255,255,.04);
   color:var(--muted);
-  white-space:pre-wrap;
-  display:none;
+  font-size:.78rem;
+  font-weight:1000;
+  white-space:nowrap;
 }
-
-.note.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
-.note.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
-.note.warn{border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.09)}
-
-.kv{
-  display:grid;
-  grid-template-columns:160px 1fr;
-  gap:8px;
+.pill.ok{border-color:rgba(34,197,94,.34);background:rgba(34,197,94,.10);color:#bbf7d0}
+.pill.warn{border-color:rgba(250,204,21,.34);background:rgba(250,204,21,.10);color:#fde68a}
+.pill.bad{border-color:rgba(239,68,68,.34);background:rgba(239,68,68,.10);color:#fecaca}
+.statusRow{
   margin-top:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
 }
 
-.kv div{
-  padding:8px 10px;
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:12px;
-  background:rgba(255,255,255,.02);
+/* Boutons */
+.btn{
+  appearance:none;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(255,255,255,.04);
+  color:var(--ink);
+  min-height:44px;
+  padding:10px 13px;
+  border-radius:16px;
+  font-weight:1000;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
 }
+.btn:active{transform:scale(.98)}
+.btn.primary{background:linear-gradient(180deg,#22c55e,#16a34a);border-color:rgba(34,197,94,.32);color:#04160e}
+.btn.gold{background:rgba(250,204,21,.12);border-color:rgba(250,204,21,.32);color:#fde68a}
+.btn.blue{background:rgba(56,189,248,.11);border-color:rgba(56,189,248,.28);color:#bae6fd}
+.btn.bad{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.30);color:#fecaca}
+.btn.small{min-height:40px;padding:9px 11px;border-radius:14px;font-size:.86rem}
+.btn.full{width:100%}
 
-.kv .k{color:var(--muted);font-weight:900}
-.kv .v{font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Page accueil */
+.hero{
+  margin-top:12px;
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:26px;
+  background:
+    radial-gradient(520px 220px at 10% 0%,rgba(250,204,21,.12),transparent 65%),
+    rgba(255,255,255,.045);
+  box-shadow:var(--shadow);
+  padding:14px;
+}
+.heroTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.heroTitle{
+  font-size:1.45rem;
+  font-weight:1100;
+  letter-spacing:-.04em;
+  line-height:1.02;
+}
+.heroText{
+  margin-top:7px;
+  color:var(--muted);
+  line-height:1.42;
+  font-size:.92rem;
+  font-weight:850;
+}
+.todayBadge{
+  flex:0 0 auto;
+  text-align:center;
+  min-width:76px;
+  border:1px solid rgba(250,204,21,.26);
+  border-radius:18px;
+  background:rgba(250,204,21,.10);
+  padding:9px 10px;
+}
+.todayBadge strong{display:block;font-size:1.1rem}
+.todayBadge span{display:block;color:#fde68a;font-size:.72rem;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}
 
-.quickGrid{
+/* Cartes alertes */
+.alertGrid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
-  margin-top:14px;
+  margin-top:12px;
 }
-
-.quickBtn{min-height:56px;font-size:.98rem}
-
-.clawList{display:grid;gap:10px;margin-top:12px}
-
-.clawItem{
-  border:1px solid rgba(250,204,21,.20);
-  background:rgba(250,204,21,.08);
-  border-radius:16px;
+.alertCard{
+  border:1px solid rgba(148,163,184,.16);
+  background:rgba(255,255,255,.045);
+  border-radius:20px;
   padding:12px;
+  min-height:106px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
 }
-
-.clawTitle{font-weight:1000;color:#fff2b0;margin-bottom:6px}
-.clawText{color:#f8f3d8;line-height:1.55;font-size:.92rem}
-.clawMeta{margin-top:8px;color:#d9d4b4;font-size:.8rem;font-weight:800}
-
-.clawEmpty{
-  border:1px dashed rgba(148,163,184,.25);
-  border-radius:14px;
-  padding:12px;
+.alertIcon{font-size:22px}
+.alertNum{
+  margin-top:8px;
+  font-size:1.75rem;
+  line-height:1;
+  font-weight:1100;
+  letter-spacing:-.04em;
+}
+.alertLabel{
+  margin-top:4px;
   color:var(--muted);
-  background:rgba(255,255,255,.02);
+  font-size:.84rem;
+  font-weight:900;
 }
+.alertCard.hot{border-color:rgba(250,204,21,.24);background:rgba(250,204,21,.08)}
+.alertCard.ok{border-color:rgba(34,197,94,.22);background:rgba(34,197,94,.07)}
+.alertCard.warn{border-color:rgba(245,158,11,.24);background:rgba(245,158,11,.08)}
+.alertCard.blue{border-color:rgba(56,189,248,.24);background:rgba(56,189,248,.08)}
 
-.toolsBox{
-  margin-top:14px;
-  border:1px dashed rgba(148,163,184,.22);
-  border-radius:18px;
-  background:rgba(255,255,255,.02);
-  padding:12px;
-}
-
-.toolsGrid{
+.actionRow{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
   margin-top:12px;
 }
 
-.toolsBox[hidden]{display:none}
-
-.table{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-
-.row{
-  border:1px solid rgba(148,163,184,.18);
-  background:rgba(255,255,255,.02);
-  border-radius:16px;
-  padding:10px 12px;
+/* Sections */
+.section{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:rgba(255,255,255,.04);
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
-
-.rowTop{
+.sectionHead{
+  padding:12px 13px;
+  border-bottom:1px solid rgba(255,255,255,.08);
   display:flex;
+  align-items:center;
   justify-content:space-between;
   gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
 }
-
-.row b{font-weight:1100}
-
-.mini{
-  font-size:12px;
+.sectionTitle{
+  font-weight:1100;
+  font-size:1.02rem;
+}
+.sectionSub{
+  margin-top:2px;
   color:var(--muted);
+  font-size:.80rem;
   font-weight:850;
-  line-height:1.35;
 }
-
-.badge{
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(148,163,184,.25);
-  background:rgba(255,255,255,.02);
-  font-weight:950;
-  font-size:12px;
+.sectionBody{padding:12px 13px}
+.list{display:grid;gap:9px}
+.item{
+  border:1px solid rgba(148,163,184,.16);
+  background:rgba(0,0,0,.12);
+  border-radius:18px;
+  padding:11px;
+}
+.itemTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.itemTitle{font-weight:1100;line-height:1.25}
+.itemMeta{
+  margin-top:5px;
   color:var(--muted);
+  font-size:.82rem;
+  line-height:1.4;
+  font-weight:850;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 8px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.20);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  font-size:.74rem;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.badge.ok{border-color:rgba(34,197,94,.30);background:rgba(34,197,94,.09);color:#bbf7d0}
+.badge.warn{border-color:rgba(250,204,21,.30);background:rgba(250,204,21,.09);color:#fde68a}
+.badge.bad{border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.09);color:#fecaca}
+.badge.blue{border-color:rgba(56,189,248,.30);background:rgba(56,189,248,.09);color:#bae6fd}
+.empty{
+  border:1px dashed rgba(148,163,184,.22);
+  border-radius:18px;
+  padding:13px;
+  color:var(--muted);
+  font-size:.86rem;
+  font-weight:900;
+  line-height:1.4;
+  background:rgba(255,255,255,.025);
 }
 
-.badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-.badge.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-.badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+/* Plus */
+.morePanel{
+  margin-top:12px;
+  display:none;
+}
+.morePanel.show{display:block}
+.moreGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
 
-@media(max-width:720px){
-  .wrap{padding:12px}
-  .btn{width:100%}
-  .navRight .btn{width:100%}
-  .kv{grid-template-columns:1fr}
-  .quickGrid{grid-template-columns:1fr}
-  .toolsGrid{grid-template-columns:1fr}
+/* Note */
+.note{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(255,255,255,.035);
+  color:var(--muted);
+  font-weight:900;
+  line-height:1.4;
+  display:none;
+  white-space:pre-wrap;
+}
+.note.ok{display:block;border-color:rgba(34,197,94,.30);background:rgba(34,197,94,.08);color:#bbf7d0}
+.note.warn{display:block;border-color:rgba(250,204,21,.30);background:rgba(250,204,21,.08);color:#fde68a}
+.note.bad{display:block;border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.08);color:#fecaca}
+
+/* Menu bas */
+.bottomNav{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:60;
+  padding:7px 9px calc(7px + env(safe-area-inset-bottom,0px));
+  background:rgba(3,18,13,.92);
+  border-top:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(12px);
+}
+.bottomInner{
+  max-width:860px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+}
+.navBtn{
+  min-height:55px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  color:rgba(234,255,241,.72);
+  font-weight:1000;
+  font-size:.68rem;
+  border:1px solid transparent;
+}
+.navBtn .ico{font-size:18px;line-height:1}
+.navBtn.active{
+  color:#04160e;
+  background:linear-gradient(180deg,#facc15,#22c55e);
+  border-color:rgba(255,255,255,.18);
+}
+.navBtn:not(.active){
+  background:rgba(255,255,255,.035);
+  border-color:rgba(255,255,255,.07);
+}
+
+@media(max-width:560px){
+  body{padding-left:10px;padding-right:10px}
+  .top{padding:11px}
+  .hero{padding:13px}
+  .heroTitle{font-size:1.35rem}
+  .alertGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .alertCard{min-height:96px;padding:10px}
+  .actionRow{grid-template-columns:1fr}
+  .moreGrid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -315,1044 +395,612 @@ a{color:inherit}
 <body>
 <div class="wrap">
 
-  <div class="top">
-    <div class="brand">
-      <div class="logo"></div>
-      <div>
-        <h1>Je loue <span class="infinity">∞</span></h1>
-        <div class="sub">Mon espace • simple • terrain • planning au centre</div>
-      </div>
-    </div>
-
-    <div class="pills">
-      <div class="pill" id="pillUser">👤 <strong>—</strong></div>
-      <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
-      <div class="pill warn" id="pillState">🔒 Accès fermé</div>
-      <button class="btn danger small" id="btnLogout" style="display:none">🚪 Sortir</button>
-    </div>
-
-    <div class="navRow">
-      <div class="navLeft">
-        <a class="btn ghost small" id="btnBack" href="#">⬅️ Retour</a>
-        <div class="navLabel" id="navPlace">Mon lieu : —</div>
-      </div>
-      <div class="navRight">
-        <a class="btn small primary" id="goPlanning" href="#">🗓️ Planning</a>
-        <button class="btn small ghost" id="btnToggleToolsTop" type="button">🧰 Plus d’actions</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid">
-    <section class="card">
-      <div class="cardHead">
+  <header class="top">
+    <div class="topLine">
+      <div class="brand">
+        <div class="logo">🏠</div>
         <div>
-          <h2>⚡ Mon espace</h2>
-          <small>Le minimum utile pour avancer.</small>
+          <h1>Je loue</h1>
+          <div class="sub">Accueil · ce qui demande ton attention</div>
         </div>
-        <button class="btn" id="btnRefresh" type="button">↻ Recharger</button>
       </div>
-      <div class="cardBody">
-        <div class="kv">
-          <div class="k">Mon lieu</div><div class="v" id="kvSlug">—</div>
-          <div class="k">Téléphone</div><div class="v" id="kvPhone">—</div>
-          <div class="k">Accès</div><div class="v" id="kvSess">—</div>
+      <button class="btn small" id="btnRefresh" type="button">↻</button>
+    </div>
+
+    <div class="statusRow">
+      <span class="pill" id="pillPhone">👤 —</span>
+      <span class="pill" id="pillSlug">🏷️ —</span>
+      <span class="pill warn" id="pillState">Vérification…</span>
+    </div>
+
+    <div class="note" id="noteMain"></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="heroTop">
+        <div>
+          <div class="heroTitle">Aujourd’hui chez moi</div>
+          <div class="heroText" id="heroText">Arrivées, départs, paiements et actions utiles. Pas besoin de chercher en scrollant.</div>
         </div>
-
-        <div class="quickGrid">
-          <button class="btn primary quickBtn" id="btnGoPlanning" type="button">📍 Ouvrir le planning</button>
-          <button class="btn quickBtn" id="btnToggleTools" type="button">🧰 Ouvrir les autres actions</button>
+        <div class="todayBadge">
+          <strong id="todayDay">—</strong>
+          <span id="todayMonth">—</span>
         </div>
+      </div>
 
-        <div class="note" id="noteMain"></div>
+      <div class="alertGrid">
+        <button class="alertCard hot" id="cardArrivals" type="button">
+          <div class="alertIcon">🛬</div>
+          <div>
+            <div class="alertNum" id="countArrivals">0</div>
+            <div class="alertLabel">Arrivée(s)</div>
+          </div>
+        </button>
+        <button class="alertCard blue" id="cardDepartures" type="button">
+          <div class="alertIcon">🛫</div>
+          <div>
+            <div class="alertNum" id="countDepartures">0</div>
+            <div class="alertLabel">Départ(s)</div>
+          </div>
+        </button>
+        <button class="alertCard warn" id="cardPending" type="button">
+          <div class="alertIcon">⏳</div>
+          <div>
+            <div class="alertNum" id="countPending">0</div>
+            <div class="alertLabel">À confirmer</div>
+          </div>
+        </button>
+        <button class="alertCard ok" id="cardPaid" type="button">
+          <div class="alertIcon">💰</div>
+          <div>
+            <div class="alertNum" id="countDue">0</div>
+            <div class="alertLabel">À encaisser</div>
+          </div>
+        </button>
+      </div>
 
-        <div class="toolsBox" id="toolsBox" hidden>
-          <div class="mini">Actions complémentaires, rangées derrière.</div>
-          <div class="toolsGrid">
-            <a class="btn small gold" id="goBlockDates" href="#">⛔ Bloquer des dates</a>
-            <a class="btn small" id="goReservations" href="#">📆 Réservations</a>
-            <a class="btn small" id="goTarifs" href="#">💰 Tarifs</a>
-            <a class="btn small" id="goPinWave" href="#">🌊 Déclarations Wave</a>
-            <a class="btn small" id="btnOpenPin" href="#">🔑 Mon accès</a>
-            <a class="btn small" id="btnPublic" href="#" target="_blank" rel="noopener">👁️ Accès public</a>
-            <a class="btn small" id="goPrefiche" href="#">📝 Pré-fiche</a>
-            <a class="btn small" id="goListing" href="#">📋 Mon listing</a>
-            <a class="btn small" id="goPhotos" href="#">🖼️ Mes photos</a>
-            <a class="btn small" id="goLinks" href="#">🔗 Mes liens</a>
-            <a class="btn small" id="goReservationsPulse" href="#">📲 Messages réservations</a>
-            <a class="btn small" id="goGenerator" href="#">⚙️ Préparer une fiche</a>
-            <a class="btn small" id="goQr" href="#">🔳 Mon QR</a>
-            <a class="btn small" id="goQrFactory" href="#">🏭 Mes accès QR</a>
-            <a class="btn small" id="goNdimbal" href="#">🤝 Entraide</a>
-            <a class="btn small" id="goNdimbalLoc" href="#">🏠 Entraide logement</a>
-            <a class="btn small" id="goNdimbalLocMain" href="#">🏠 Entraide LOC</a>
+      <div class="actionRow">
+        <a class="btn primary full" id="goPlanningTop" href="./planning.html">📅 Voir les disponibilités</a>
+        <a class="btn blue full" id="goReservationsTop" href="./reservations.html">📋 Voir les réservations</a>
+      </div>
+    </section>
+
+    <section class="section" id="todaySection">
+      <div class="sectionHead">
+        <div>
+          <div class="sectionTitle">À gérer maintenant</div>
+          <div class="sectionSub">Arrivées et départs du jour.</div>
+        </div>
+        <span class="badge" id="todayCountBadge">0 action</span>
+      </div>
+      <div class="sectionBody">
+        <div class="list" id="todayList"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="sectionHead">
+        <div>
+          <div class="sectionTitle">Prochains mouvements</div>
+          <div class="sectionSub">Les réservations qui arrivent bientôt.</div>
+        </div>
+        <a class="btn small" id="goReservationsMini" href="./reservations.html">Tout voir</a>
+      </div>
+      <div class="sectionBody">
+        <div class="list" id="upcomingList"></div>
+      </div>
+    </section>
+
+    <section class="morePanel" id="morePanel">
+      <div class="section">
+        <div class="sectionHead">
+          <div>
+            <div class="sectionTitle">Plus</div>
+            <div class="sectionSub">Les outils rangés derrière l’accueil.</div>
+          </div>
+          <button class="btn small" id="btnCloseMore" type="button">Fermer</button>
+        </div>
+        <div class="sectionBody">
+          <div class="moreGrid">
+            <a class="btn gold" id="goTarifs" href="./tarifs.html">💰 Tarifs</a>
+            <a class="btn" id="goPhotos" href="./photos.html">🖼️ Photos</a>
+            <a class="btn" id="goListing" href="./listing.html">📋 Ma fiche</a>
+            <a class="btn" id="goLinks" href="./manage-links.html">🔗 Mes liens</a>
+            <a class="btn" id="goWave" href="./pin-wave.html">🌊 Code Wave</a>
+            <a class="btn" id="goQr" href="./qr.html">🔳 Mon QR</a>
+            <a class="btn" id="goNotes" href="./reservations-pulse.html">💬 Messages / notes</a>
+            <a class="btn" id="goPin" href="./pin.html">🔐 Mon accès</a>
           </div>
         </div>
       </div>
     </section>
-
-    <section class="card">
-      <div class="cardHead">
-        <div>
-          <h2>💳 Mes paiements Wave</h2>
-          <small>Déclarations → vérification → preuves.</small>
-        </div>
-        <button class="btn gold" id="btnDeclareOwner" type="button">➕ Déclarer un paiement</button>
-      </div>
-      <div class="cardBody">
-        <div class="kv">
-          <div class="k">Total déclarés</div><div class="v" id="stTotal">—</div>
-          <div class="k">Total vérifiés</div><div class="v" id="stVerified">—</div>
-          <div class="k">Somme déclarée</div><div class="v" id="stSumTotal">—</div>
-          <div class="k">Somme vérifiée</div><div class="v" id="stSumVerified">—</div>
-        </div>
-        <div class="note" id="noteWave"></div>
-        <div class="table" id="waveList"></div>
-      </div>
-    </section>
-  </div>
-
-  <section class="card" style="margin-top:14px">
-    <div class="cardHead">
-      <div>
-        <h2>✨ Lecture activité</h2>
-        <small>Conseils branchés sur tes données réelles.</small>
-      </div>
-    </div>
-    <div class="cardBody">
-      <div class="mini" id="clawState">Analyse en attente…</div>
-      <div class="clawList" id="clawList"></div>
-    </div>
-  </section>
-
+  </main>
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navBtn active" id="navHome" href="./app.html"><span class="ico">🏠</span><span>Accueil</span></a>
+    <a class="navBtn" id="navReservations" href="./reservations.html"><span class="ico">📋</span><span>Réserv.</span></a>
+    <a class="navBtn" id="navPlanning" href="./planning.html"><span class="ico">📅</span><span>Dispos</span></a>
+    <a class="navBtn" id="navMessages" href="./reservations-pulse.html"><span class="ico">💬</span><span>Messages</span></a>
+    <button class="navBtn" id="navMore" type="button"><span class="ico">⋯</span><span>Plus</span></button>
+  </div>
+</nav>
 
 <script>
 (async function(){
   "use strict";
 
-  const $ = (id) => document.getElementById(id);
   const MODULE = "LOC";
   const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
-
-  const SB_URL = String(
-    window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co"
-  ).trim();
-
-  const SB_ANON = String(
-    window.DIGIY_SUPABASE_ANON ||
-    window.DIGIY_SUPABASE_ANON_KEY ||
-    "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3"
-  ).trim();
+  const $ = (id)=>document.getElementById(id);
 
   const SESSION_KEYS = [
-    "digiy_loc_session",
-    "digiy_loc_guard_session",
-    "digiy_guard_loc_session",
-    "DIGIY_LOC_SESSION",
-    "digiy_session_loc",
-    "DIGIY_SESSION_LOC",
-    "digiy_guard_session_loc",
-    "digiy_guard_session_LOC",
-    "digiy_guard_session",
-    "DIGIY_SESSION",
-    "digiy_session"
+    "digiy_loc_session","digiy_loc_guard_session","digiy_guard_loc_session",
+    "DIGIY_LOC_SESSION","digiy_session_loc","DIGIY_SESSION_LOC",
+    "digiy_guard_session_loc","digiy_guard_session_LOC","digiy_guard_session",
+    "DIGIY_SESSION","digiy_session"
   ];
-
-  const SLUG_KEYS = [
-    "digiy_loc_last_slug",
-    "digiy_loc_slug",
-    "DIGIY_LOC_SLUG",
-    "digiy_last_slug",
-    "DIGIY_SLUG"
-  ];
-
-  const PHONE_KEYS = [
-    "digiy_loc_phone",
-    "digiy_loc_last_phone",
-    "DIGIY_LOC_PHONE",
-    "digiy_phone",
-    "DIGIY_PHONE"
-  ];
+  const SLUG_KEYS = ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"];
+  const PHONE_KEYS = ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE"];
 
   let sb = null;
+  const State = {
+    slug:"",
+    phone:"",
+    access:false,
+    rows:[],
+    today:""
+  };
 
-  function showNote(elId, msg, type){
-    const el = $(elId);
-    if (!el) return;
-    el.style.display = msg ? "block" : "none";
-    el.classList.remove("ok", "bad", "warn");
-    if (type) el.classList.add(type);
-    el.textContent = msg || "";
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function digits(v){ return String(v || "").replace(/\D/g,""); }
+
+  function normalizePhone(v){
+    const raw = String(v || "").trim();
+    if(!raw) return "";
+    const d = raw.replace(/[^\d]/g,"");
+    return raw.startsWith("+") ? "+" + d : d;
+  }
+
+  function todayYmd(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function fmtDate(ymd){
+    if(!ymd) return "—";
+    const d = new Date(String(ymd).slice(0,10) + "T00:00:00");
+    if(Number.isNaN(d.getTime())) return ymd;
+    return d.toLocaleDateString("fr-FR", { day:"numeric", month:"short", year:"numeric" });
   }
 
   function money(v){
-    const n = Number(v);
-    if (Number.isFinite(n)) return n.toLocaleString("fr-FR") + " FCFA";
-    return "—";
+    const n = Number(v || 0);
+    if(!Number.isFinite(n) || n <= 0) return "—";
+    return n.toLocaleString("fr-FR") + " F CFA";
   }
 
-  function escapeHtml(str){
-    return String(str ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+  function parseDateMs(value){
+    if(!value) return 0;
+    if(typeof value === "number" && Number.isFinite(value)) return value < 100000000000 ? value * 1000 : value;
+    const s = String(value).trim();
+    if(!s) return 0;
+    if(/^\d+$/.test(s)){
+      const n = Number(s);
+      return n < 100000000000 ? n * 1000 : n;
+    }
+    const t = Date.parse(s);
+    return Number.isFinite(t) ? t : 0;
   }
 
-  function escapeAttr(str){
-    return escapeHtml(str).replaceAll("`","&#096;");
+  function isSessionFresh(v){
+    const ts = parseDateMs(v);
+    return !!ts && (Date.now() - ts <= SESSION_MAX_AGE_MS);
   }
 
-  function normalizePhone(value){
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    const keepPlus = raw.startsWith("+");
-    const digits = raw.replace(/[^\d]/g, "");
-    return keepPlus ? ("+" + digits) : digits;
-  }
-
-  function storageGetText(key){
-    try{
-      const v = sessionStorage.getItem(key);
-      if (v) return String(v).trim();
-    }catch{}
-    try{
-      const v = localStorage.getItem(key);
-      if (v) return String(v).trim();
-    }catch{}
+  function storageGet(key){
+    try{ const s = sessionStorage.getItem(key); if(s) return s; }catch{}
+    try{ const l = localStorage.getItem(key); if(l) return l; }catch{}
     return "";
   }
 
-  function storageSetText(key, value){
-    if (value == null || String(value).trim() === "") return;
+  function storageSet(key, value){
+    if(value == null || String(value).trim() === "") return;
     const v = String(value).trim();
     try{ sessionStorage.setItem(key, v); }catch{}
     try{ localStorage.setItem(key, v); }catch{}
   }
 
-  function storageRemove(key){
-    try{ sessionStorage.removeItem(key); }catch{}
-    try{ localStorage.removeItem(key); }catch{}
-  }
-
-  function parseJsonSafe(raw){
-    if (!raw || typeof raw !== "string") return null;
-    try{
-      return JSON.parse(raw);
-    }catch{
-      return null;
-    }
-  }
-
-  function storageGetJson(key){
-    const ss = storageGetText(key);
-    return parseJsonSafe(ss);
+  function parseJson(raw){
+    try{ return JSON.parse(raw); }catch{ return null; }
   }
 
   function firstText(keys){
-    for (const key of keys){
-      const v = storageGetText(key);
-      if (v) return v;
+    for(const k of keys){
+      const v = storageGet(k);
+      if(v) return String(v).trim();
     }
     return "";
   }
 
-  function parseDateMs(value){
-    if (!value) return 0;
-
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value < 100000000000 ? value * 1000 : value;
-    }
-
-    const str = String(value).trim();
-    if (!str) return 0;
-
-    if (/^\d+$/.test(str)) {
-      const n = Number(str);
-      return n < 100000000000 ? n * 1000 : n;
-    }
-
-    const t = Date.parse(str);
-    return Number.isFinite(t) ? t : 0;
-  }
-
-  function formatDateTime(value){
-    const t = parseDateMs(value);
-    if (!t) return "";
-    const d = new Date(t);
-    if (Number.isNaN(d.getTime())) return "";
-    return d.toLocaleString("fr-FR");
-  }
-
-  function pickFrom(obj, keys){
-    if (!obj || typeof obj !== "object") return "";
-    for (const key of keys){
-      const v = obj[key];
-      if (v != null && String(v).trim() !== "") return String(v).trim();
+  function pick(obj, keys){
+    if(!obj || typeof obj !== "object") return "";
+    for(const k of keys){
+      const v = obj[k];
+      if(v != null && String(v).trim() !== "") return String(v).trim();
     }
     return "";
   }
 
   function normalizeSessionCandidate(candidate){
-    if (!candidate || typeof candidate !== "object") return null;
+    if(!candidate || typeof candidate !== "object") return null;
+    const all = [candidate,candidate.session,candidate.state,candidate.data,candidate.payload,candidate.guard_state].filter(Boolean);
+    let slug="", phone="", validated_at="", module="", reason="", accessFlag=false;
 
-    const nested = [
-      candidate,
-      candidate.session,
-      candidate.state,
-      candidate.data,
-      candidate.payload,
-      candidate.guard_state
-    ].filter(Boolean);
-
-    let slug = "";
-    let phone = "";
-    let validated_at = "";
-    let session_token = "";
-    let module = "";
-    let reason = "";
-    let accessFlag = false;
-
-    for (const src of nested){
-      if (!slug) slug = pickFrom(src, ["slug", "last_slug", "place_slug", "workspace_slug"]);
-      if (!phone) phone = pickFrom(src, ["phone", "owner_phone", "user_phone"]);
-      if (!validated_at) validated_at = pickFrom(src, ["validated_at", "validatedAt", "ts", "timestamp"]);
-      if (!session_token) session_token = pickFrom(src, ["session_token", "token"]);
-      if (!module) module = pickFrom(src, ["module", "digiy_module"]);
-      if (!reason) reason = pickFrom(src, ["reason", "error", "message"]);
-
-      if (
-        src.access === true ||
-        src.access_ok === true ||
-        src.ok === true ||
-        src.valid === true ||
-        src.authenticated === true
-      ) {
-        accessFlag = true;
-      }
+    for(const src of all){
+      if(!slug) slug = pick(src, ["slug","last_slug","place_slug","workspace_slug"]);
+      if(!phone) phone = pick(src, ["phone","owner_phone","user_phone","p_phone"]);
+      if(!validated_at) validated_at = pick(src, ["validated_at","validatedAt","ts","timestamp"]);
+      if(!module) module = pick(src, ["module","digiy_module"]);
+      if(!reason) reason = pick(src, ["reason","error","message"]);
+      if(src.access === true || src.access_ok === true || src.ok === true || src.valid === true || src.authenticated === true) accessFlag = true;
     }
 
-    module = String(module || MODULE).trim().toUpperCase();
-    slug = String(slug || "").trim();
-    phone = normalizePhone(phone);
-
     return {
-      slug,
-      phone,
-      validated_at: String(validated_at || "").trim(),
-      session_token: String(session_token || "").trim(),
-      module,
-      reason: String(reason || "").trim(),
+      slug:String(slug || "").trim().toLowerCase(),
+      phone:normalizePhone(phone),
+      validated_at:String(validated_at || "").trim(),
+      module:String(module || MODULE).trim().toUpperCase(),
+      reason:String(reason || "").trim(),
       accessFlag
     };
   }
 
   function getStoredSession(){
-    for (const key of SESSION_KEYS){
-      const data = storageGetJson(key);
-      const normalized = normalizeSessionCandidate(data);
-      if (normalized && (normalized.slug || normalized.phone || normalized.validated_at || normalized.accessFlag)) {
-        return normalized;
-      }
+    for(const key of SESSION_KEYS){
+      const n = normalizeSessionCandidate(parseJson(storageGet(key)));
+      if(n && (n.slug || n.phone || n.validated_at || n.accessFlag)) return n;
     }
     return normalizeSessionCandidate({});
   }
 
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {};
+  function readParam(name){
+    try{
+      const u = new URL(location.href);
+      return String(u.searchParams.get(name) || "").trim();
+    }catch{ return ""; }
   }
 
-  function getGuardSession(){
-    try{
-      return window.DIGIY_GUARD?.getSession?.() || {};
-    }catch{
-      return {};
-    }
-  }
-
-  function readQueryParam(name){
-    try{
-      const u = new URL(window.location.href);
-      const v = u.searchParams.get(name);
-      return v ? String(v).trim() : "";
-    }catch{
-      return "";
-    }
-  }
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};} }
 
   function getSlug(){
-    const q = readQueryParam("slug");
-    if (q) return q;
-
+    const q = readParam("slug").toLowerCase();
+    if(q) return q;
     const st = normalizeSessionCandidate(getGuardState());
-    if (st?.slug) return st.slug;
-
+    if(st?.slug) return st.slug;
     const gs = normalizeSessionCandidate(getGuardSession());
-    if (gs?.slug) return gs.slug;
-
+    if(gs?.slug) return gs.slug;
     const ss = getStoredSession();
-    if (ss?.slug) return ss.slug;
-
-    return firstText(SLUG_KEYS);
+    if(ss?.slug) return ss.slug;
+    return String(firstText(SLUG_KEYS) || "").trim().toLowerCase();
   }
 
   function getPhone(){
-    const q = normalizePhone(readQueryParam("phone"));
-    if (q) return q;
-
+    const q = normalizePhone(readParam("phone"));
+    if(q) return q;
     const st = normalizeSessionCandidate(getGuardState());
-    if (st?.phone) return st.phone;
-
+    if(st?.phone) return st.phone;
     const gs = normalizeSessionCandidate(getGuardSession());
-    if (gs?.phone) return gs.phone;
-
+    if(gs?.phone) return gs.phone;
     const ss = getStoredSession();
-    if (ss?.phone) return ss.phone;
-
+    if(ss?.phone) return ss.phone;
     return normalizePhone(firstText(PHONE_KEYS));
-  }
-
-  function isSessionFresh(validated_at){
-    const ts = parseDateMs(validated_at);
-    if (!ts) return false;
-    return (Date.now() - ts) <= SESSION_MAX_AGE_MS;
   }
 
   function getSession(){
     const st = normalizeSessionCandidate(getGuardState()) || {};
     const gs = normalizeSessionCandidate(getGuardSession()) || {};
     const ss = getStoredSession() || {};
-
     const slug = getSlug();
     const phone = getPhone();
     const validated_at = st.validated_at || gs.validated_at || ss.validated_at || "";
-    const session_token = st.session_token || gs.session_token || ss.session_token || "";
-    const reason = st.reason || gs.reason || ss.reason || "";
     const module = String(st.module || gs.module || ss.module || MODULE).trim().toUpperCase();
+    const ok = !!(st.accessFlag || gs.accessFlag || ss.accessFlag || (slug && phone && module === MODULE && isSessionFresh(validated_at)));
+    return { ok, access_ok:ok, slug, phone, validated_at, module };
+  }
 
-    const explicitAccess = !!(st.accessFlag || gs.accessFlag || ss.accessFlag);
-    const inferredAccess = !!(
-      slug &&
-      phone &&
-      module === MODULE &&
-      isSessionFresh(validated_at)
-    );
+  function persist(){
+    const slug = getSlug();
+    const phone = getPhone();
+    if(slug){
+      ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"].forEach(k=>storageSet(k,slug));
+    }
+    if(phone){
+      ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE"].forEach(k=>storageSet(k,phone));
+    }
+  }
 
-    const ok = explicitAccess || inferredAccess;
+  function buildUrl(path, extra){
+    let u;
+    try{ u = new URL(path, location.href); }
+    catch{ u = new URL("./", location.href); }
+    const slug = State.slug || getSlug();
+    const phone = State.phone || getPhone();
+    if(slug) u.searchParams.set("slug", slug);
+    if(phone) u.searchParams.set("phone", phone);
+    Object.entries(extra || {}).forEach(([k,v])=>{
+      if(v != null && String(v).trim()) u.searchParams.set(k,String(v).trim());
+    });
+    return u.pathname + u.search + u.hash;
+  }
 
-    return {
-      ok,
-      access_ok: ok,
-      reason,
-      module,
-      slug,
-      phone,
-      validated_at,
-      session_token
+  function syncLinks(){
+    const links = {
+      goPlanningTop:"./planning.html",
+      goReservationsTop:"./reservations.html",
+      goReservationsMini:"./reservations.html",
+      navHome:"./app.html",
+      navReservations:"./reservations.html",
+      navPlanning:"./planning.html",
+      navMessages:"./reservations-pulse.html",
+      goTarifs:"./tarifs.html",
+      goPhotos:"./photos.html",
+      goListing:"./listing.html",
+      goLinks:"./manage-links.html",
+      goWave:"./pin-wave.html",
+      goQr:"./qr.html",
+      goNotes:"./reservations-pulse.html",
+      goPin:"./pin.html"
     };
+
+    Object.entries(links).forEach(([id,path])=>{
+      const el = $(id);
+      if(el && el.tagName === "A") el.href = buildUrl(path);
+    });
   }
 
-  function persistContext(){
-    const sess = getSession();
-    if (sess.slug) {
-      storageSetText("digiy_loc_last_slug", sess.slug);
-      storageSetText("digiy_loc_slug", sess.slug);
-      storageSetText("DIGIY_LOC_SLUG", sess.slug);
-      storageSetText("digiy_last_slug", sess.slug);
-      storageSetText("DIGIY_SLUG", sess.slug);
-    }
-    if (sess.phone) {
-      storageSetText("digiy_loc_phone", sess.phone);
-      storageSetText("digiy_loc_last_phone", sess.phone);
-      storageSetText("DIGIY_LOC_PHONE", sess.phone);
-      storageSetText("digiy_phone", sess.phone);
-      storageSetText("DIGIY_PHONE", sess.phone);
-    }
-  }
-
-  function syncUrlContext(){
-    const slug = getSlug();
-    const phone = getPhone();
-    if (!slug && !phone) return;
-
-    try{
-      const u = new URL(window.location.href);
-      let changed = false;
-
-      if (slug && !u.searchParams.get("slug")) {
-        u.searchParams.set("slug", slug);
-        changed = true;
-      }
-      if (phone && !u.searchParams.get("phone")) {
-        u.searchParams.set("phone", phone);
-        changed = true;
-      }
-
-      if (changed) {
-        history.replaceState({}, "", u.toString());
-      }
-    }catch{}
-  }
-
-  function buildSafeUrl(base, params){
-    try{
-      const u = new URL(String(base || "").trim(), window.location.href);
-      Object.entries(params || {}).forEach(([k, v]) => {
-        if (v !== null && v !== undefined && String(v).trim() !== "") {
-          u.searchParams.set(k, String(v).trim());
-        }
-      });
-      return u.toString();
-    }catch(e){
-      console.warn("[LOC PRO] buildSafeUrl KO:", base, e?.message || e);
-      return String(base || "#");
-    }
-  }
-
-  function withContext(path){
-    const slug = getSlug();
-    const phone = getPhone();
-    const params = {};
-    if (slug) params.slug = slug;
-    if (phone) params.phone = phone;
-    return buildSafeUrl(path, params);
+  function showNote(msg, type){
+    const el = $("noteMain");
+    if(!el) return;
+    el.className = "note " + (type || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
   }
 
   async function bootGuard(){
     const guard = window.DIGIY_GUARD;
-    if (!guard) {
-      console.warn("[LOC PRO] guard absent, fallback session locale");
-      return {};
-    }
-
-    const ready = guard.ready;
-
+    if(!guard || typeof guard.ready !== "function") return;
     try{
-      if (typeof ready === "function") {
-        let out;
-        try{
-          out = ready({
-            redirect: false,
-            preserve_validation: true,
-            allow_soft_session: true
-          });
-        }catch{
-          out = ready();
-        }
-
-        if (out && typeof out.then === "function") {
-          await out;
-        }
-        return guard.state || {};
-      }
-
-      if (ready && typeof ready.then === "function") {
-        await ready;
-        return guard.state || {};
-      }
-
-      if (ready) {
-        return guard.state || {};
-      }
-
-      return guard.state || {};
-    }catch(err){
-      console.warn("[LOC PRO] bootGuard fallback:", err?.message || err);
-      return guard.state || {};
+      await guard.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+    }catch{
+      try{ await guard.ready(); }catch(e){ console.warn("[LOC HOME] guard:", e?.message || e); }
     }
   }
 
-  function refreshRouteUI(){
-    persistContext();
-    syncUrlContext();
-
-    const currentSlug = getSlug();
-
-    if ($("navPlace")) $("navPlace").textContent = "Mon lieu : " + (currentSlug || "—");
-    if ($("kvSlug")) $("kvSlug").textContent = currentSlug || "—";
-    if ($("pillSlug")) $("pillSlug").innerHTML = `🏷️ <strong>${escapeHtml(currentSlug || "—")}</strong>`;
-
-    const links = [
-      ["goPrefiche","./fiche-abo.html"],
-      ["goPlanning","./planning.html"],
-      ["goBlockDates","./planning.html"],
-      ["goReservations","./reservations.html"],
-      ["goTarifs","./tarifs.html"],
-      ["goPinWave","./pin-wave.html"],
-      ["goListing","./listing.html"],
-      ["goPhotos","./photos.html"],
-      ["goLinks","./manage-links.html"],
-      ["goReservationsPulse","./reservations-pulse.html"],
-      ["goGenerator","./generator.html"],
-      ["goQr","./qr.html"],
-      ["goQrFactory","./qr-factory.html"],
-      ["goNdimbal","./ndimbal.html"],
-      ["goNdimbalLoc","./ndimbal-loc.html"],
-      ["goNdimbalLocMain","./ndimbal-loc.html"],
-      ["btnOpenPin","./pin.html"]
-    ];
-
-    links.forEach(([id, path]) => {
-      const el = $(id);
-      if (el && el.tagName === "A") {
-        el.href = withContext(path);
-      }
-    });
-
-    if ($("btnPublic")) {
-      $("btnPublic").href = buildSafeUrl("./go-pin-public.html", currentSlug ? { slug: currentSlug } : {});
-    }
-  }
-
-  function refreshSessionUI(){
-    const sess = getSession();
-    const phone = sess.phone || "—";
-    const validatedText = formatDateTime(sess.validated_at);
-    const hasPreview = !!(sess.slug || sess.phone);
-
-    if ($("kvPhone")) $("kvPhone").textContent = phone;
-
-    if ($("kvSess")) {
-      if (sess.ok) {
-        $("kvSess").textContent = "OK" + (validatedText ? " • validée : " + validatedText : "");
-      } else if (hasPreview) {
-        $("kvSess").textContent = "Lecture seule";
-      } else {
-        $("kvSess").textContent = "—";
-      }
-    }
-
-    if ($("pillUser")) {
-      $("pillUser").innerHTML = `👤 <strong>${escapeHtml(phone)}</strong>`;
-    }
-
-    if (sess.ok) {
-      if ($("pillState")) {
-        $("pillState").textContent = "✅ Accès actif";
-        $("pillState").classList.remove("warn");
-        $("pillState").classList.add("ok");
-      }
-      if ($("btnLogout")) $("btnLogout").style.display = "inline-flex";
-      return true;
-    }
-
-    if ($("pillState")) {
-      $("pillState").classList.remove("ok");
-      $("pillState").classList.add("warn");
-      $("pillState").textContent = hasPreview ? "👁️ Lecture seule" : "🔒 Accès fermé";
-    }
-
-    if ($("btnLogout")) {
-      $("btnLogout").style.display = hasPreview ? "inline-flex" : "none";
-    }
-
-    return false;
-  }
-
-  function getLocalSupabase(){
-    if (sb?.rpc) return sb;
-
-    if (!window.supabase?.createClient) {
-      throw new Error("Supabase JS indisponible.");
-    }
-
-    sb = window.supabase.createClient(SB_URL, SB_ANON, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
-
+  function getSb(){
+    if(sb?.rpc) return sb;
+    if(!window.supabase?.createClient) throw new Error("Supabase indisponible");
+    sb = window.supabase.createClient(
+      window.DIGIY_SUPABASE_URL,
+      window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY,
+      { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } }
+    );
     return sb;
   }
 
-  async function needSB(){
-    return getLocalSupabase();
-  }
+  async function loadReservations(){
+    const S = getSb();
+    const slug = State.slug || getSlug();
 
-  function rowBadge(status){
-    const s = String(status || "declared").toLowerCase();
-    if (s === "verified") return `<span class="badge ok">✅ Vérifié</span>`;
-    if (s === "rejected") return `<span class="badge bad">⛔ Refusé</span>`;
-    return `<span class="badge warn">⏳ Déclaré</span>`;
-  }
+    if(!slug) return [];
 
-  function getAmountAny(r){
-    const v = r?.amount_fcfa ?? r?.amount ?? r?.amount_xof ?? 0;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  }
+    const { data, error } = await S.rpc("digiy_loc_reservations_by_slug", { p_slug: slug });
+    if(error) throw error;
 
-  function renderList(rows){
-    const box = $("waveList");
-    if (!box) return;
-
-    if (!rows || !rows.length) {
-      box.innerHTML = `<div class="row"><div class="mini">Aucun paiement déclaré pour le moment.</div></div>`;
-      return;
-    }
-
-    box.innerHTML = rows.map(r => {
-      const dt = r.created_at ? new Date(r.created_at).toLocaleString("fr-FR") : "";
-      const who = (r.client_name || "Client") + (r.client_phone ? " · " + r.client_phone : "");
-      const noteTxt = (r.note ?? r.comment ?? r.message ?? "");
-      const note = noteTxt
-        ? `<div style="margin-top:6px;font-size:13px;color:#cbd5f5;font-weight:750">📝 ${escapeHtml(noteTxt)}</div>`
-        : "";
-      const proof = r.proof_url
-        ? `<div style="margin-top:6px"><a href="${escapeAttr(r.proof_url)}" target="_blank" rel="noopener" style="font-size:12px;color:#facc15;font-weight:900">📎 Voir la preuve</a></div>`
-        : "";
-
-      const status = String(r.status || "declared").toLowerCase();
-      const amt = getAmountAny(r);
-      const amtTxt = amt > 0 ? (amt.toLocaleString("fr-FR") + " F") : "—";
-      const verifyBtn = status === "verified"
-        ? `<button class="btn small" disabled>✅ Déjà vérifié</button>`
-        : `<button class="btn small primary jsVerify" data-id="${escapeAttr(r.id)}">✅ Vérifier</button>`;
-
-      return `
-        <div class="row">
-          <div class="rowTop">
-            <div>
-              <b>${amtTxt}</b>
-              <div class="mini">${escapeHtml(dt)}</div>
-            </div>
-            ${rowBadge(status)}
-          </div>
-          <div style="margin-top:8px;font-weight:950">${escapeHtml(who)}</div>
-          ${note}
-          ${proof}
-          <div style="display:flex;justify-content:flex-end;margin-top:10px">${verifyBtn}</div>
-        </div>`;
-    }).join("");
-
-    box.querySelectorAll(".jsVerify").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const id = btn.getAttribute("data-id");
-        if (!id) return;
-
-        const sess = getSession();
-        const ownerPhone = sess.phone || "";
-        const placeSlug = getSlug();
-
-        if (!ownerPhone || !placeSlug) {
-          showNote("noteWave", "❌ Identifiant ou session manquants. Passe par ton code.", "bad");
-          return;
-        }
-
-        const old = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "⏳ Vérification…";
-
-        try {
-          const S = await needSB();
-          const { data, error } = await S.rpc("loc_wave_payment_verify", {
-            p_id: id,
-            p_slug: placeSlug,
-            p_owner_phone: ownerPhone
-          });
-
-          if (error) throw error;
-          if (!data?.ok) throw new Error(data?.reason || "verify_failed");
-
-          showNote("noteWave", "✅ Paiement vérifié.", "ok");
-          await loadWave();
-        } catch (e) {
-          console.error(e);
-          showNote("noteWave", "❌ Erreur pendant la vérification : " + (e?.message || e), "bad");
-          btn.disabled = false;
-          btn.textContent = old;
-        }
-      });
-    });
-  }
-
-  async function loadStats(ownerPhone){
-    const currentSlug = getSlug();
-    if (!currentSlug) throw new Error("identifiant_manquant");
-
-    const S = await needSB();
-    const { data, error } = await S.rpc("loc_wave_payments_stats_owner", {
-      p_slug: currentSlug,
-      p_owner_phone: ownerPhone
-    });
-
-    if (error) throw error;
-    if (!data || data.ok !== true) throw new Error(data?.reason || "stats_failed");
-    return data;
-  }
-
-  async function loadList(ownerPhone){
-    const currentSlug = getSlug();
-    if (!currentSlug) throw new Error("identifiant_manquant");
-
-    const S = await needSB();
-    const { data, error } = await S.rpc("loc_wave_payments_list_owner", {
-      p_slug: currentSlug,
-      p_owner_phone: ownerPhone
-    });
-
-    if (error) throw error;
     return Array.isArray(data) ? data : [];
   }
 
-  async function loadWave(){
-    refreshRouteUI();
-    const sessOk = refreshSessionUI();
+  function normalizeRow(r){
+    return {
+      id:String(r.id || r.reference || Math.random()).trim(),
+      room:String(r.room_name || r.nom || "Logement"),
+      client:String(r.client_name || "Client"),
+      phone:String(r.phone || r.client_phone || ""),
+      checkin:String(r.checkin || "").slice(0,10),
+      checkout:String(r.checkout || "").slice(0,10),
+      amount:Number(r.amount_total || 0) || 0,
+      status:String(r.status || "confirmed").toLowerCase(),
+      pay:String(r.payment_status || "due").toLowerCase(),
+      source:String(r.source || "digiy").toLowerCase(),
+      ref:String(r.reference || r.id || "")
+    };
+  }
 
-    if (!sessOk) {
-      showNote("noteWave", "🔒 Passe par ton code pour voir tes paiements Wave.", "warn");
-      if ($("waveList")) $("waveList").innerHTML = "";
-      return;
-    }
+  function isPending(r){ return r.status.includes("pending") || r.status.includes("attente"); }
+  function isCancelled(r){ return r.status.includes("cancel"); }
+  function isPaid(r){ return r.pay === "paid" || r.pay === "succeeded" || r.pay === "confirmed"; }
 
-    const sess = getSession();
-    const ownerPhone = sess.phone || "";
-    const currentSlug = getSlug();
+  function renderStatus(){
+    $("pillPhone").textContent = "👤 " + (State.phone || "—");
+    $("pillSlug").textContent = "🏷️ " + (State.slug || "—");
 
-    if (!ownerPhone || !currentSlug) {
-      showNote("noteWave", "⚠️ Téléphone ou identifiant manquant.", "bad");
-      if ($("waveList")) $("waveList").innerHTML = "";
-      return;
-    }
-
-    try {
-      showNote("noteWave", "⏳ Chargement des paiements…", "warn");
-
-      const st = await loadStats(ownerPhone);
-      $("stTotal").textContent = String(st.total_declared ?? 0);
-      $("stVerified").textContent = String(st.total_verified ?? 0);
-      $("stSumTotal").textContent = money(st.sum_declared_fcfa ?? 0);
-      $("stSumVerified").textContent = money(st.sum_verified_fcfa ?? 0);
-
-      const rows = await loadList(ownerPhone);
-      renderList(rows);
-
-      showNote("noteWave", "", "");
-    } catch (e) {
-      console.error(e);
-      showNote("noteWave", "❌ Erreur de lecture : " + (e?.message || e), "bad");
+    const pill = $("pillState");
+    if(State.access){
+      pill.className = "pill ok";
+      pill.textContent = "✅ Accès ouvert";
+    }else if(State.slug || State.phone){
+      pill.className = "pill warn";
+      pill.textContent = "👁️ Lecture seule";
+    }else{
+      pill.className = "pill bad";
+      pill.textContent = "🔒 Accès fermé";
     }
   }
 
-  function renderClaw(rows){
-    const box = $("clawList");
-    if (!box) return;
-
-    if (!rows || !rows.length) {
-      box.innerHTML = `<div class="clawEmpty">Pas de conseil DIGIY pour le moment.</div>`;
-      return;
-    }
-
-    box.innerHTML = rows.map(r => {
-      const title = r.title || "Conseil DIGIY";
-      const summary = r.summary || r.rationale || "Suggestion disponible.";
-      const rationale = r.rationale
-        ? `<div class="clawText" style="margin-top:8px">${escapeHtml(r.rationale)}</div>`
-        : "";
-      const action = r.proposed_action
-        ? `<div class="clawText" style="margin-top:8px"><strong>Action :</strong> ${escapeHtml(r.proposed_action)}</div>`
-        : "";
-
-      const meta = [
-        r.recommendation_type || "suggestion",
-        r.confidence_score != null ? `confiance ${r.confidence_score}` : "",
-        r.risk_level ? `risque ${r.risk_level}` : ""
-      ].filter(Boolean).join(" • ");
-
-      return `
-        <div class="clawItem">
-          <div class="clawTitle">${escapeHtml(title)}</div>
-          <div class="clawText">${escapeHtml(summary)}</div>
-          ${rationale}
-          ${action}
-          ${meta ? `<div class="clawMeta">${escapeHtml(meta)}</div>` : ""}
-        </div>`;
-    }).join("");
+  function renderTopDate(){
+    const d = new Date();
+    $("todayDay").textContent = String(d.getDate()).padStart(2,"0");
+    $("todayMonth").textContent = d.toLocaleDateString("fr-FR", { month:"short" });
   }
 
-  async function loadClaw(){
-    const currentSlug = getSlug();
-    const stateEl = $("clawState");
-    const box = $("clawList");
+  function itemHtml(r, type){
+    const label = type === "arrival" ? "Arrivée" : type === "departure" ? "Départ" : type === "pending" ? "À confirmer" : "À encaisser";
+    const badgeClass = type === "arrival" ? "warn" : type === "departure" ? "blue" : type === "pending" ? "warn" : "bad";
+    const dateLine = `${fmtDate(r.checkin)} → ${fmtDate(r.checkout)}`;
+    const tel = r.phone ? ` · ${esc(r.phone)}` : "";
+    return `
+      <div class="item">
+        <div class="itemTop">
+          <div>
+            <div class="itemTitle">${esc(r.client)}${tel}</div>
+            <div class="itemMeta">${esc(r.room)}<br>${esc(dateLine)} · ${esc(money(r.amount))}</div>
+          </div>
+          <span class="badge ${badgeClass}">${esc(label)}</span>
+        </div>
+      </div>
+    `;
+  }
 
-    if (!stateEl || !box) return;
-
-    if (!currentSlug) {
-      stateEl.textContent = "Identifiant manquant. L’analyse DIGIY attend la connexion.";
-      box.innerHTML = "";
+  function renderList(id, rows, emptyText, type){
+    const box = $(id);
+    if(!box) return;
+    if(!rows.length){
+      box.innerHTML = `<div class="empty">${esc(emptyText)}</div>`;
       return;
     }
+    box.innerHTML = rows.map(r => itemHtml(r,type)).join("");
+  }
 
-    try {
-      stateEl.textContent = "Chargement de l’analyse DIGIY…";
+  function render(){
+    const today = State.today;
+    const rows = State.rows;
 
-      const S = await needSB();
-      const { data, error } = await S
-        .from("digiy_claw_recommendations")
-        .select("id,slug,module,recommendation_type,title,summary,rationale,proposed_action,confidence_score,risk_level,status,created_at")
-        .eq("module", "LOC")
-        .eq("slug", currentSlug)
-        .in("status", ["approved","published","ready","active","validated"])
-        .order("confidence_score", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(3);
+    const arrivals = rows.filter(r => !isCancelled(r) && r.checkin === today);
+    const departures = rows.filter(r => !isCancelled(r) && r.checkout === today);
+    const pending = rows.filter(r => !isCancelled(r) && isPending(r));
+    const due = rows.filter(r => !isCancelled(r) && !isPaid(r));
 
-      if (error) throw error;
+    const soonLimit = new Date(today + "T00:00:00");
+    soonLimit.setDate(soonLimit.getDate() + 10);
+    const soonYmd = soonLimit.toISOString().slice(0,10);
 
-      renderClaw(Array.isArray(data) ? data : []);
-      stateEl.textContent = "Lecture activité chargée.";
-    } catch (e) {
-      console.error(e);
-      stateEl.textContent = "Lecture activité momentanément indisponible.";
-      box.innerHTML = `<div class="clawEmpty">L’analyse DIGIY n’a pas abouti pour le moment. Recharge la page.</div>`;
+    const upcoming = rows
+      .filter(r => !isCancelled(r) && r.checkin >= today && r.checkin <= soonYmd)
+      .sort((a,b)=>a.checkin.localeCompare(b.checkin))
+      .slice(0,5);
+
+    $("countArrivals").textContent = arrivals.length;
+    $("countDepartures").textContent = departures.length;
+    $("countPending").textContent = pending.length;
+    $("countDue").textContent = due.length;
+
+    const todayActions = [
+      ...arrivals.map(r => ({...r, _type:"arrival"})),
+      ...departures.map(r => ({...r, _type:"departure"}))
+    ];
+
+    $("todayCountBadge").textContent = `${todayActions.length} action(s)`;
+
+    if(todayActions.length){
+      $("todayList").innerHTML = todayActions.map(r => itemHtml(r, r._type)).join("");
+    }else{
+      $("todayList").innerHTML = `<div class="empty">Rien d’urgent aujourd’hui. Ton lieu respire.</div>`;
+    }
+
+    renderList("upcomingList", upcoming, "Aucun mouvement proche visible pour l’instant.", "arrival");
+
+    if(rows.length){
+      $("heroText").textContent = `${rows.length} réservation(s) lue(s). L’accueil te montre ce qui demande attention maintenant.`;
+      showNote("", "ok");
+    }else{
+      $("heroText").textContent = "Aucune réservation visible pour cet identifiant. Va dans Disponibilités pour gérer ton calendrier.";
     }
   }
 
-  function hardLogout(){
-    [
-      ...SESSION_KEYS,
-      ...SLUG_KEYS,
-      ...PHONE_KEYS
-    ].forEach(storageRemove);
+  async function reload(){
+    const btn = $("btnRefresh");
+    if(btn) btn.disabled = true;
 
     try{
-      window.DIGIY_GUARD?.logout?.();
-      return;
-    }catch{}
+      await bootGuard();
 
-    window.location.href = withContext("./pin.html");
-  }
+      const sess = getSession();
+      State.slug = sess.slug || getSlug();
+      State.phone = sess.phone || getPhone();
+      State.access = !!sess.access_ok;
+      State.today = todayYmd();
 
-  $("btnToggleTools")?.addEventListener("click", () => {
-    const box = $("toolsBox");
-    if (!box) return;
-    box.hidden = !box.hidden;
-  });
-  $("btnToggleToolsTop")?.addEventListener("click", () => {
-    const box = $("toolsBox");
-    if (!box) return;
-    box.hidden = !box.hidden;
-  });
+      persist();
+      syncLinks();
+      renderStatus();
+      renderTopDate();
 
-  $("btnGoPlanning")?.addEventListener("click", () => {
-    window.location.href = withContext("./planning.html");
-  });
+      if(!State.slug){
+        State.rows = [];
+        render();
+        showNote("Identifiant introuvable. Reviens par ton code d’accès.", "bad");
+        return;
+      }
 
-  $("btnBack")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (history.length > 1) {
-      history.back();
-      return;
-    }
-    window.location.href = withContext("./pin.html");
-  });
+      if(!State.access){
+        showNote("Lecture seule. Passe par ton code pour ouvrir l’accès complet.", "warn");
+      }else{
+        showNote("Chargement des mouvements du jour…", "warn");
+      }
 
-  $("btnLogout")?.addEventListener("click", hardLogout);
+      const raw = await loadReservations();
+      State.rows = raw.map(normalizeRow);
+      render();
 
-  $("btnRefresh")?.addEventListener("click", async () => {
-    refreshRouteUI();
-    refreshSessionUI();
+      if(State.access){
+        showNote("Accueil chargé. Les arrivées, départs et paiements à traiter sont devant.", "ok");
+      }
 
-    if (getSession().ok && getSlug()) {
-      showNote(
-        "noteMain",
-        "✅ Espace actif.\nPlanning au centre.\nPréparation du logement rangée derrière.\nLecture utile prête.",
-        "ok"
-      );
-    } else if (getSlug()) {
-      showNote("noteMain", "👁️ Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
-    } else {
-      showNote("noteMain", "⚠️ Identifiant introuvable. Reconnecte-toi avec ton code.", "warn");
-    }
-
-    await loadClaw();
-    await loadWave();
-  });
-
-  $("btnDeclareOwner")?.addEventListener("click", async () => {
-    refreshRouteUI();
-    const sessOk = refreshSessionUI();
-    if (!sessOk) return;
-
-    const sess = getSession();
-    const ownerPhone = sess.phone || "";
-    const currentSlug = getSlug();
-
-    if (!ownerPhone || !currentSlug) {
-      showNote("noteWave", "⚠️ Téléphone ou identifiant manquant.", "bad");
-      return;
-    }
-
-    const amount = prompt("Montant reçu (FCFA) ?");
-    if (!amount) return;
-
-    const amt = Number(String(amount).replace(/[^\d]/g, ""));
-    if (!Number.isFinite(amt) || amt <= 0) {
-      showNote("noteWave", "❌ Montant invalide.", "bad");
-      return;
-    }
-
-    const clientName = prompt("Nom du client (optionnel) ?") || "";
-    const clientPhone = prompt("Téléphone client (optionnel) ?") || "";
-    const note = prompt("Note (dates, info) (optionnel) ?") || "";
-
-    try {
-      showNote("noteWave", "⏳ Déclaration en cours…", "warn");
-
-      const S = await needSB();
-      const { data, error } = await S.rpc("loc_wave_payment_declare_owner", {
-        p_slug: currentSlug,
-        p_owner_phone: ownerPhone,
-        p_amount_fcfa: amt,
-        p_client_name: clientName,
-        p_client_phone: clientPhone,
-        p_note: note
-      });
-
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.reason || "declare_failed");
-
-      showNote("noteWave", "✅ Paiement déclaré. Tu peux le vérifier ensuite.", "ok");
-      await loadWave();
-    } catch (e) {
+    }catch(e){
       console.error(e);
-      showNote("noteWave", "❌ Impossible d’enregistrer.\nDétail : " + (e?.message || e), "bad");
+      State.rows = [];
+      render();
+      showNote("Impossible de charger l’accueil.\n" + (e?.message || e), "bad");
+    }finally{
+      if(btn) btn.disabled = false;
+    }
+  }
+
+  $("btnRefresh")?.addEventListener("click", reload);
+  $("cardArrivals")?.addEventListener("click", ()=>location.assign(buildUrl("./reservations.html", { filtre:"arrivees" })));
+  $("cardDepartures")?.addEventListener("click", ()=>location.assign(buildUrl("./reservations.html", { filtre:"departs" })));
+  $("cardPending")?.addEventListener("click", ()=>location.assign(buildUrl("./reservations.html", { filtre:"attente" })));
+  $("cardPaid")?.addEventListener("click", ()=>location.assign(buildUrl("./reservations.html", { filtre:"paiement" })));
+
+  $("navMore")?.addEventListener("click", ()=>{
+    const panel = $("morePanel");
+    if(!panel) return;
+    panel.classList.toggle("show");
+    if(panel.classList.contains("show")){
+      panel.scrollIntoView({ behavior:"smooth", block:"start" });
     }
   });
 
-  try{
-    await bootGuard();
-  }catch(e){
-    console.warn("[LOC PRO] init bootGuard:", e?.message || e);
-  }
+  $("btnCloseMore")?.addEventListener("click", ()=>{
+    $("morePanel")?.classList.remove("show");
+    window.scrollTo({ top:0, behavior:"smooth" });
+  });
 
-  refreshRouteUI();
-  const sessOk = refreshSessionUI();
-
-  if (!getSlug()) {
-    showNote("noteMain", "❌ Identifiant introuvable. Reconnecte-toi avec ton code.", "bad");
-  } else if (!sessOk) {
-    showNote("noteMain", "👁️ Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
-  } else {
-    showNote(
-      "noteMain",
-      "✅ Espace actif.\nPréparation du logement rangée derrière.\nPlanning, dates bloquées, réservations, tarifs et paiements devant.\nLecture utile prête.",
-      "ok"
-    );
-  }
-
-  await loadClaw();
-  await loadWave();
-})();
-</script>
-</body>
-</html>
-  await loadClaw();
-  await loadWave();
+  syncLinks();
+  renderTopDate();
+  renderStatus();
+  reload();
 })();
 </script>
 </body>
