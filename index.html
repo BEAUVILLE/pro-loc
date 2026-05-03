@@ -187,16 +187,168 @@
         font-size:12px;
       }
     }
+
+
+    .floating-route-nav{
+      position:fixed;
+      left:16px;
+      top:calc(16px + env(safe-area-inset-top, 0px));
+      z-index:80;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      max-width:calc(100vw - 32px);
+    }
+
+    .floating-route-nav .floating-site-btn{
+      position:static;
+      left:auto;
+      top:auto;
+      min-height:46px;
+      padding:12px 14px;
+      background:rgba(2,6,23,.88);
+    }
+
+    .locAudioBox{
+      position:relative;
+      margin-top:14px;
+      border:1px solid rgba(250,204,21,.42);
+      border-radius:22px;
+      padding:14px;
+      background:
+        radial-gradient(circle at top right, rgba(250,204,21,.20), transparent 38%),
+        radial-gradient(circle at bottom left, rgba(34,197,94,.14), transparent 44%),
+        linear-gradient(180deg, rgba(250,204,21,.10), rgba(255,255,255,.035));
+      box-shadow:0 18px 42px rgba(0,0,0,.28), 0 0 0 1px rgba(250,204,21,.05) inset;
+      overflow:hidden;
+    }
+
+    .locAudioTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .locAudioLead{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      margin-bottom:8px;
+      padding:6px 11px;
+      border-radius:999px;
+      background:rgba(250,204,21,.15);
+      border:1px solid rgba(250,204,21,.38);
+      color:#fef3c7;
+      font-size:11px;
+      font-weight:1100;
+    }
+
+    .locAudioDot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:var(--gold);
+      box-shadow:0 0 14px rgba(250,204,21,.75);
+      animation:locPulse 1.5s ease-in-out infinite;
+    }
+
+    .locAudioTitle{
+      color:#fff7d6;
+      font-size:16px;
+      font-weight:1100;
+      line-height:1.25;
+    }
+
+    .locAudioText{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:900;
+      line-height:1.48;
+      max-width:580px;
+    }
+
+    .locAudioHint{
+      margin-top:8px;
+      color:#fef3c7;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .locAudioActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .locAudioBtn{
+      min-height:46px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.64);
+      background:linear-gradient(135deg,#facc15,#f59e0b);
+      color:#061b14;
+      font-weight:1100;
+      padding:10px 15px;
+      cursor:pointer;
+      box-shadow:0 12px 26px rgba(250,204,21,.24);
+    }
+
+    .locAudioBtn.stop{
+      background:rgba(239,68,68,.10);
+      border-color:rgba(239,68,68,.42);
+      color:#fecaca;
+      box-shadow:none;
+    }
+
+    .locAudioProgressWrap{
+      height:6px;
+      margin-top:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+
+    .locAudioProgress{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#facc15,#22c55e);
+      transition:width .2s linear;
+    }
+
+    @keyframes locPulse{
+      0%,100%{transform:scale(1);opacity:1}
+      50%{transform:scale(1.25);opacity:.72}
+    }
+
+    @media(max-width:700px){
+      .wrap{padding:118px 0 120px}
+      .floating-route-nav{
+        left:12px;
+        right:12px;
+        top:calc(12px + env(safe-area-inset-top, 0px));
+        max-width:none;
+      }
+      .floating-route-nav .floating-site-btn{
+        flex:1 1 auto;
+        min-height:42px;
+        padding:10px 11px;
+        font-size:12px;
+      }
+      .locAudioActions,.locAudioBtn{width:100%}
+    }
+
   </style>
 </head>
 
 <body>
-  <a
-    class="floating-site-btn"
-    href="https://digiylyfe.com/"
-    aria-label="Retour au site DIGIYLYFE"
-    title="Retour au site"
-  >← Retour au site</a>
+  <nav class="floating-route-nav" aria-label="Navigation DIGIY">
+    <a class="floating-site-btn" href="https://digiylyfe.com/" aria-label="Retour au site DIGIYLYFE" title="Retour au site">🌍 Site</a>
+    <a class="floating-site-btn" id="locHubTop" href="https://pro-espace.digiylyfe.com/" aria-label="Retour au HUB DIGIY" title="Retour au HUB">🧭 HUB</a>
+    <a class="floating-site-btn" href="https://tarifs.digiylyfe.com/" aria-label="Voir les tarifs DIGIY" title="Tarifs DIGIY">📦 Tarifs</a>
+  </nav>
 
   <div class="wrap">
     <div class="top">
@@ -215,6 +367,24 @@
         <button class="btn danger" id="btnLogout" type="button" style="display:none">🚪 Déconnexion</button>
       </div>
     </div>
+
+    <section class="locAudioBox" aria-label="Explication audio Je loue">
+      <div class="locAudioTop">
+        <div>
+          <div class="locAudioLead"><span class="locAudioDot"></span> Conseil DIGIY · écoute courte</div>
+          <div class="locAudioTitle">🎧 Comprendre Je loue avant d’ouvrir les portes</div>
+          <div class="locAudioText">
+            Une voix courte explique les réservations, disponibilités, notes, fiche publique et paiements utiles.
+          </div>
+          <div class="locAudioHint">👉 Toutes les portes sont posées pour gérer l’essentiel.</div>
+        </div>
+        <div class="locAudioActions">
+          <button class="locAudioBtn" id="btnLocAudio" type="button">🎧 Écouter DIGIY</button>
+          <button class="locAudioBtn stop" id="btnLocAudioStop" type="button">⏹ Stop</button>
+        </div>
+      </div>
+      <div class="locAudioProgressWrap" aria-hidden="true"><div class="locAudioProgress" id="locAudioProgress"></div></div>
+    </section>
 
     <div class="grid">
       <div class="card">
@@ -615,5 +785,109 @@
       });
     })();
   </script>
+
+
+  <script>
+    (function(){
+      "use strict";
+
+      const AUDIO_TEXT = "Bienvenue dans Je loue by DIGIY. Ici, toutes les portes sont posées pour gérer l’essentiel de ton logement : les réservations, les disponibilités, les notes rapides, la fiche publique et les paiements utiles. Tu peux ouvrir la vue du jour, regarder ton planning, bloquer tes dates, préparer ton QR, vérifier ton accès et revenir à ton espace sans te perdre. Le client voit plus clair, le propriétaire garde la main, et l’argent reste direct. DIGIY ne prend pas la commission : il t’aide à organiser ton lieu, simplement.";
+
+      const btnPlay = document.getElementById("btnLocAudio");
+      const btnStop = document.getElementById("btnLocAudioStop");
+      const bar = document.getElementById("locAudioProgress");
+      let playing = false;
+      let timer = null;
+
+      function pickVoice(){
+        try{
+          const voices = window.speechSynthesis.getVoices() || [];
+          return voices.find(v => /^fr/i.test(v.lang || "") && /audrey|amelie|hortense|julie|thomas|paul|french/i.test(v.name || ""))
+              || voices.find(v => /^fr/i.test(v.lang || ""))
+              || null;
+        }catch(_){ return null; }
+      }
+
+      function stopAudio(){
+        try{ window.speechSynthesis.cancel(); }catch(_){ }
+        clearInterval(timer);
+        timer = null;
+        playing = false;
+        if(btnPlay) btnPlay.textContent = "🎧 Écouter DIGIY";
+        if(bar) bar.style.width = "0%";
+      }
+
+      function playAudio(){
+        if(!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)){
+          alert("Audio indisponible sur ce navigateur.");
+          return;
+        }
+        if(playing){ stopAudio(); return; }
+
+        stopAudio();
+        const utter = new SpeechSynthesisUtterance(AUDIO_TEXT);
+        utter.lang = "fr-FR";
+        utter.rate = 0.86;
+        utter.pitch = 1.03;
+        utter.volume = 1;
+        const voice = pickVoice();
+        if(voice) utter.voice = voice;
+
+        let progress = 0;
+        const duration = Math.max(12000, AUDIO_TEXT.split(/\s+/).length * 410);
+
+        utter.onstart = function(){
+          playing = true;
+          if(btnPlay) btnPlay.textContent = "⏸️ Lecture en cours";
+          if(bar) bar.style.width = "0%";
+          timer = setInterval(function(){
+            progress += 250;
+            if(bar) bar.style.width = Math.min(96, (progress / duration) * 100) + "%";
+          }, 250);
+        };
+
+        utter.onend = function(){
+          if(bar) bar.style.width = "100%";
+          setTimeout(stopAudio, 250);
+        };
+        utter.onerror = stopAudio;
+
+        window.speechSynthesis.speak(utter);
+      }
+
+      if(btnPlay) btnPlay.addEventListener("click", playAudio);
+      if(btnStop) btnStop.addEventListener("click", stopAudio);
+      if(window.speechSynthesis && typeof window.speechSynthesis.onvoiceschanged !== "undefined"){
+        window.speechSynthesis.onvoiceschanged = pickVoice;
+      }
+      window.addEventListener("beforeunload", stopAudio);
+      document.addEventListener("visibilitychange", function(){ if(document.hidden) stopAudio(); });
+    })();
+  </script>
+
+  <script>
+    (function(){
+      "use strict";
+      function normPhone(v){
+        let s = String(v || "").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+        if(s.startsWith("00221")) s = "+221" + s.slice(5);
+        if(!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+        if(!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
+        return s;
+      }
+
+      try{
+        const params = new URLSearchParams(location.search);
+        const phone = normPhone(params.get("phone") || sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "");
+        const hub = document.getElementById("locHubTop");
+        if(hub){
+          const u = new URL("https://pro-espace.digiylyfe.com/");
+          if(phone) u.searchParams.set("phone", phone.replace(/^\+/, ""));
+          hub.href = u.toString();
+        }
+      }catch(_){ }
+    })();
+  </script>
+
 </body>
 </html>
