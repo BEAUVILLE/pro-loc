@@ -418,7 +418,7 @@
           <div class="sub">Contact direct • Paiement direct au propriétaire • 0% commission</div>
         </div>
       </div>
-      <div class="pill" id="pillIdentifiant">identifiant : —</div>
+      <div class="pill" id="pillIdentifiant">fiche publique</div>
     </div>
 
     <div class="grid">
@@ -537,8 +537,8 @@
             <div class="small" style="margin-top:6px">
               Cet accès est réservé au propriétaire du lieu.
             </div>
-            <a class="btn" id="btnPin" href="#" style="display:block;margin-top:10px">
-              🔐 Entrer avec mon PIN
+            <a class="btn" id="btnPin" href="https://pro-loc.digiylyfe.com/pin.html" style="display:block;margin-top:10px">
+              🔐 Entrer avec mon code
             </a>
           </div>
 
@@ -574,11 +574,6 @@
       function text(id, value, fallback = "—"){
         const el = $(id);
         if (el) el.textContent = value || fallback;
-      }
-
-      function html(id, value){
-        const el = $(id);
-        if (el) el.innerHTML = value || "";
       }
 
       function setStatus(message, cls){
@@ -645,6 +640,21 @@
           .replace(/^[-_]+|[-_]+$/g, "");
       }
 
+      function isSensitiveSlug(slug){
+        return /\d{7,}/.test(String(slug || ""));
+      }
+
+      function isPublicRoomSlug(slug){
+        return /^loc-room-[a-z0-9-]+$/i.test(String(slug || ""));
+      }
+
+      function publicIdentifiant(slug){
+        const s = cleanSlug(slug);
+        if (!s) return "—";
+        if (isPublicRoomSlug(s)) return "Logement " + s.slice(-6).toUpperCase();
+        return "Fiche publique";
+      }
+
       function moneyXOF(value){
         const n = Number(value);
         if (!Number.isFinite(n) || n <= 0) return "Sur demande";
@@ -655,17 +665,62 @@
         return parts.map(v => String(v || "").trim()).filter(Boolean).join(" • ");
       }
 
+      function cleanVisibleUrl(nextSlug){
+        try{
+          const url = new URL(location.href);
+          let changed = false;
+
+          if (url.searchParams.has("phone")){
+            url.searchParams.delete("phone");
+            changed = true;
+          }
+
+          const urlSlug = cleanSlug(url.searchParams.get("slug") || "");
+
+          if (urlSlug && isSensitiveSlug(urlSlug)){
+            url.searchParams.delete("slug");
+            changed = true;
+          }
+
+          if (nextSlug && isPublicRoomSlug(nextSlug)){
+            url.searchParams.set("slug", nextSlug);
+            changed = true;
+          }
+
+          if (changed){
+            history.replaceState({}, "", url.pathname + url.search + url.hash);
+          }
+        }catch(_){}
+      }
+
       const currentUrl = new URL(location.href);
-      const IDENTIFIANT = cleanSlug(currentUrl.searchParams.get("slug") || "");
+      const RAW_SLUG = cleanSlug(currentUrl.searchParams.get("slug") || "");
+      const RAW_PHONE = normPhone(currentUrl.searchParams.get("phone") || "");
 
-      text("pillIdentifiant", "identifiant : " + (IDENTIFIANT || "—"));
+      let IDENTIFIANT = isSensitiveSlug(RAW_SLUG) ? "" : RAW_SLUG;
+      let LEGACY_PHONE = RAW_PHONE;
 
+      cleanVisibleUrl();
+
+      text("pillIdentifiant", "fiche publique");
       $("btnGallery").href = GALLERY_PAGE;
-      $("btnPin").href = PIN_PAGE + (IDENTIFIANT ? ("?slug=" + encodeURIComponent(IDENTIFIANT)) : "");
+      $("btnPin").href = PIN_PAGE;
 
-      const shareUrlObj = new URL(location.href);
-      if (IDENTIFIANT) shareUrlObj.searchParams.set("slug", IDENTIFIANT);
-      const SHARE_URL = shareUrlObj.toString();
+      function makeShareUrl(publicSlug){
+        const url = new URL(location.href);
+        url.searchParams.delete("phone");
+
+        const slug = cleanSlug(publicSlug || "");
+        if (isPublicRoomSlug(slug)){
+          url.searchParams.set("slug", slug);
+        }else{
+          url.searchParams.delete("slug");
+        }
+
+        return url.toString();
+      }
+
+      let SHARE_URL = makeShareUrl(IDENTIFIANT);
 
       text("shareUrl", SHARE_URL);
 
@@ -722,43 +777,20 @@
         };
       }
 
-      function normalizeGoPin(row){
-        if (!row) return null;
-
-        const ownerPhoneRaw = row.phone || "";
-        const whatsappRaw = row.whatsapp || row.phone || "";
-        const waveRaw = row.phone || row.whatsapp || "";
-
-        return {
-          source: "go_pins",
-          identifiant: row.slug || IDENTIFIANT,
-          title: row.title || "Lieu DIGIY",
-          type: row.category || "Lieu",
-          city: "",
-          district: "",
-          address: row.address_label || "",
-          addressLabel: row.address_label || "",
-          description: "",
-          ownerPhoneRaw: ownerPhoneRaw,
-          callPhoneRaw: ownerPhoneRaw,
-          whatsappRaw: whatsappRaw,
-          waveRaw: waveRaw,
-          phoneDisplay: normPhone(ownerPhoneRaw),
-          whatsappDisplay: normPhone(whatsappRaw),
-          waveDisplay: normPhone(waveRaw),
-          prixNuit: null,
-          prixSemaine: null,
-          prixMois: null,
-          personnesMax: null,
-          ndimbalEnabled: row.ndimbal_enabled === true
-        };
-      }
-
       function renderPlace(data){
         const title = data.title || "Logement DIGIY";
         const type = data.type || "Logement";
         const meta = data.addressLabel || "Lieu vérifié — contact direct";
         const desc = data.description || "Contact direct avec le propriétaire. Pas d’intermédiaire inutile.";
+
+        IDENTIFIANT = cleanSlug(data.identifiant || IDENTIFIANT);
+        SHARE_URL = makeShareUrl(IDENTIFIANT);
+
+        cleanVisibleUrl(IDENTIFIANT);
+
+        text("pillIdentifiant", publicIdentifiant(IDENTIFIANT));
+        text("shareUrl", SHARE_URL);
+        $("btnShareWA").href = "https://wa.me/?text=" + encodeURIComponent("Voici le lien du logement DIGIY :\n" + SHARE_URL);
 
         text("tTitle", title);
         text("tMeta", meta);
@@ -768,7 +800,7 @@
         text("tPhone", "📞 " + (data.phoneDisplay || "—"));
         text("tWhats", "💬 " + (data.whatsappDisplay || "—"));
 
-        text("dIdentifiant", data.identifiant || "—");
+        text("dIdentifiant", publicIdentifiant(IDENTIFIANT));
         text("dTitle", title);
         text("dCity", data.city || "—");
         text("dDistrict", data.district || "—");
@@ -882,11 +914,14 @@
         }
       }
 
-      async function loadFromLocRooms(){
+      async function loadFromLocRoomsBySlug(slug){
+        const clean = cleanSlug(slug);
+        if (!clean || !isPublicRoomSlug(clean)) return null;
+
         const { data, error } = await SB
           .from("digiy_loc_rooms")
           .select("slug,nom,adresse,personnes_max,prix_nuit,prix_semaine,prix_mois,description,photo_url,status,phone,type_logement,owner_name,tagline,quartier,city,gallery_urls,whatsapp_phone,call_phone,wave_phone,is_public")
-          .eq("slug", IDENTIFIANT)
+          .eq("slug", clean)
           .eq("is_public", true)
           .maybeSingle();
 
@@ -895,50 +930,61 @@
         return normalizeLocRoom(data);
       }
 
-      async function loadFromGoPins(){
-        const { data, error } = await SB
-          .from("go_pins")
-          .select("slug,title,category,phone,whatsapp,address_label,ndimbal_enabled,is_public,is_active")
-          .eq("slug", IDENTIFIANT)
-          .eq("is_public", true)
-          .eq("is_active", true)
-          .maybeSingle();
+      async function loadPublicRoomByPhone(phone){
+        const cleanPhone = normPhone(phone);
+        if (!cleanPhone) return null;
 
-        if (error) throw error;
-        if (!data) return null;
-        return normalizeGoPin(data);
+        const tries = [cleanPhone];
+
+        if (cleanPhone.startsWith("+")){
+          tries.push(cleanPhone.replace(/^\+/, ""));
+        } else {
+          tries.push("+" + cleanPhone);
+        }
+
+        for (const p of tries){
+          const { data, error } = await SB
+            .from("digiy_loc_rooms")
+            .select("slug,nom,adresse,personnes_max,prix_nuit,prix_semaine,prix_mois,description,photo_url,status,phone,type_logement,owner_name,tagline,quartier,city,gallery_urls,whatsapp_phone,call_phone,wave_phone,is_public,updated_at")
+            .eq("phone", p)
+            .eq("is_public", true)
+            .order("updated_at", { ascending:false })
+            .limit(1);
+
+          if (error) continue;
+          if (Array.isArray(data) && data[0]) return normalizeLocRoom(data[0]);
+        }
+
+        return null;
       }
 
       async function load(){
-        if (!IDENTIFIANT){
-          setStatus("❌ Identifiant manquant", "warn");
-          setNote("⚠️ L’identifiant du lieu manque dans l’URL.", "bad");
-          return;
-        }
-
         setStatus("⏳ Vérification…", "warn");
         setNote("⏳ Chargement de la fiche…", "warn");
 
         try{
           let place = null;
 
-          try{
-            place = await loadFromLocRooms();
-          }catch(locErr){
-            console.warn("[DIGIY LOC FICHE] lecture digiy_loc_rooms impossible :", locErr);
+          if (IDENTIFIANT && isPublicRoomSlug(IDENTIFIANT)){
+            place = await loadFromLocRoomsBySlug(IDENTIFIANT);
           }
 
-          if (!place){
-            try{
-              place = await loadFromGoPins();
-            }catch(pinErr){
-              console.warn("[DIGIY LOC FICHE] lecture go_pins impossible :", pinErr);
-            }
+          if (!place && LEGACY_PHONE){
+            place = await loadPublicRoomByPhone(LEGACY_PHONE);
           }
 
           if (!place){
             setStatus("❌ Indisponible", "warn");
-            setNote("❌ Cette fiche n’est pas disponible publiquement ou n’a pas encore été activée.", "bad");
+
+            if (RAW_SLUG && isSensitiveSlug(RAW_SLUG)){
+              setNote(
+                "🔐 Ce lien contient un identifiant privé. Pour protéger le propriétaire, il n’est pas affiché.\n\nOuvre la galerie publique ou partage une vraie fiche logement.",
+                "warn"
+              );
+            } else {
+              setNote("❌ Cette fiche n’est pas disponible publiquement ou n’a pas encore été activée.", "bad");
+            }
+
             return;
           }
 
