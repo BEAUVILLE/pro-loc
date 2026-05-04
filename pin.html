@@ -44,7 +44,7 @@
         radial-gradient(circle at top, rgba(244,201,93,.10), transparent 32%),
         linear-gradient(180deg, var(--bg) 0%, #06140f 100%);
       color:var(--text);
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family:Outfit, Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
     a{color:inherit;text-decoration:none}
@@ -65,6 +65,7 @@
       background:rgba(255,255,255,.04);
       color:var(--muted);
       font-size:14px;
+      font-weight:800;
       margin-bottom:16px;
     }
 
@@ -88,7 +89,7 @@
       border:1px solid rgba(244,201,93,.22);
       color:var(--gold);
       font-size:13px;
-      font-weight:800;
+      font-weight:900;
       letter-spacing:.2px;
       margin-bottom:12px;
     }
@@ -105,6 +106,18 @@
       color:var(--muted);
       line-height:1.55;
       font-size:15px;
+    }
+
+    .security-note{
+      margin-top:12px;
+      padding:12px 13px;
+      border-radius:18px;
+      border:1px solid rgba(244,201,93,.22);
+      background:rgba(244,201,93,.08);
+      color:#fff4c8;
+      font-size:13px;
+      font-weight:850;
+      line-height:1.45;
     }
 
     .card{
@@ -129,7 +142,7 @@
     .label{
       font-size:13px;
       color:var(--muted);
-      font-weight:700;
+      font-weight:800;
       letter-spacing:.15px;
     }
 
@@ -162,21 +175,9 @@
 
     .pin-row{
       display:grid;
-      grid-template-columns:1fr auto;
+      grid-template-columns:1fr;
       gap:10px;
       align-items:center;
-    }
-
-    .eye{
-      height:54px;
-      min-width:54px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      cursor:pointer;
-      font-size:18px;
-      border:1px solid rgba(255,255,255,.08);
     }
 
     .btn{
@@ -186,12 +187,14 @@
       border-radius:16px;
       padding:14px 16px;
       font-size:16px;
-      font-weight:900;
+      font-weight:950;
       cursor:pointer;
       transition:transform .08s ease, opacity .18s ease, filter .18s ease;
+      text-align:center;
     }
 
     .btn:active{transform:translateY(1px)}
+    .btn:disabled{cursor:not-allowed;filter:grayscale(.2)}
 
     .btn-primary{
       background:linear-gradient(180deg, var(--gold), var(--gold2));
@@ -229,7 +232,7 @@
       display:flex;
       align-items:center;
       gap:8px;
-      font-weight:900;
+      font-weight:950;
       font-size:14px;
     }
 
@@ -276,7 +279,7 @@
 
     .meta-v{
       font-size:14px;
-      font-weight:800;
+      font-weight:850;
       color:var(--text);
       word-break:break-word;
     }
@@ -303,43 +306,32 @@
       <div class="badge">🏠 Je loue</div>
       <h1>Mon accès</h1>
       <p class="lead">
-        Entre avec ton identifiant ou ton téléphone, puis ton code.
-        Une fois validé, tu entres directement dans ton espace propriétaire.
+        Entre ton code pour ouvrir ton espace propriétaire.
+        Si ton compte est déjà reconnu par le lien ou par cet appareil, les identifiants restent cachés pour ta sécurité.
       </p>
+      <div class="security-note">
+        🔐 Les identifiants sensibles ne sont pas affichés. Le système peut les reconnaître, mais l’écran ne les expose pas.
+      </div>
     </section>
 
     <section class="card">
       <form id="pinForm" class="grid" autocomplete="on">
         <div class="field">
-          <label class="label" for="identifier">Identifiant du lieu</label>
+          <label class="label" for="identifier">Identifiant ou téléphone</label>
           <div class="input-wrap">
             <input
               id="identifier"
               name="identifier"
               type="text"
               inputmode="text"
-              placeholder="loc-221771342889 ou 221771342889"
+              placeholder="Laisse vide si ton espace est déjà reconnu"
               autocomplete="username"
             />
           </div>
         </div>
 
         <div class="field">
-          <label class="label" for="phone">Téléphone</label>
-          <div class="input-wrap">
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              inputmode="numeric"
-              placeholder="221771342889"
-              autocomplete="tel"
-            />
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label" for="pin">PIN</label>
+          <label class="label" for="pin">Code d’accès</label>
           <div class="pin-row">
             <div class="input-wrap">
               <input
@@ -352,7 +344,6 @@
                 autocomplete="current-password"
               />
             </div>
-            <button type="button" id="togglePin" class="eye" aria-label="Afficher le PIN">👁️</button>
           </div>
         </div>
 
@@ -361,7 +352,7 @@
         <div class="actions">
           <a id="returnBtn" class="btn btn-secondary" href="./app.html">🧭 Mon espace</a>
           <a class="btn btn-secondary" href="https://commencer-a-payer.digiylyfe.com/">💳 Gérer mon abonnement</a>
-          <a class="btn btn-secondary" href="./fiche.html">🌍 Fiche publique</a>
+          <a id="publicCardBtn" class="btn btn-secondary" href="./fiche.html">🌍 Fiche publique</a>
           <a class="btn btn-secondary" href="./index.html">🏘️ Galerie publique</a>
           <a class="btn btn-secondary" href="./fiche-abo.html">📝 Pré-fiche</a>
         </div>
@@ -374,16 +365,16 @@
 
       <div class="meta">
         <div class="meta-item">
-          <div class="meta-k">Activité</div>
-          <div class="meta-v" id="metaModule">LOC</div>
+          <div class="meta-k">Espace</div>
+          <div class="meta-v" id="metaModule">Je loue</div>
         </div>
         <div class="meta-item">
-          <div class="meta-k">Retour cible</div>
-          <div class="meta-v" id="metaReturn">app.html</div>
+          <div class="meta-k">Ouverture</div>
+          <div class="meta-v" id="metaReturn">Espace propriétaire</div>
         </div>
         <div class="meta-item">
           <div class="meta-k">Session</div>
-          <div class="meta-v" id="metaSession">Aucune</div>
+          <div class="meta-v" id="metaSession">Aucune session ouverte</div>
         </div>
       </div>
 
@@ -410,16 +401,20 @@
       const els = {
         form: $("pinForm"),
         identifier: $("identifier"),
-        phone: $("phone"),
         pin: $("pin"),
-        togglePin: $("togglePin"),
         submitBtn: $("submitBtn"),
         returnBtn: $("returnBtn"),
+        publicCardBtn: $("publicCardBtn"),
         statusBox: $("statusBox"),
         statusTitle: $("statusTitle"),
         statusBody: $("statusBody"),
         metaReturn: $("metaReturn"),
         metaSession: $("metaSession")
+      };
+
+      const hiddenContext = {
+        slug: "",
+        phone: ""
       };
 
       function setStatus(type, title, body){
@@ -431,7 +426,7 @@
       function setBusy(isBusy){
         els.submitBtn.disabled = !!isBusy;
         els.submitBtn.style.opacity = isBusy ? ".7" : "1";
-        els.submitBtn.textContent = isBusy ? "⏳ Vérification..." : "🔓 Ouvrir mon espace LOC";
+        els.submitBtn.textContent = isBusy ? "⏳ Vérification..." : "🔓 Ouvrir mon espace";
       }
 
       function qs(){
@@ -453,6 +448,10 @@
         return clean(v).toLowerCase().replace(/\s+/g, "-");
       }
 
+      function isSensitiveSlug(slug){
+        return /\d{7,}/.test(String(slug || ""));
+      }
+
       function isLikelySlug(v){
         return /^loc-[a-z0-9-]+$/i.test(clean(v));
       }
@@ -466,24 +465,59 @@
         catch { return null; }
       }
 
-      function getStorage(key){
-        try { return localStorage.getItem(key) || sessionStorage.getItem(key) || ""; }
+      function getLocal(key){
+        try { return localStorage.getItem(key) || ""; }
         catch { return ""; }
       }
 
-      function setStorage(key, value){
+      function getSession(key){
+        try { return sessionStorage.getItem(key) || ""; }
+        catch { return ""; }
+      }
+
+      function getStorage(key){
+        return getSession(key) || getLocal(key);
+      }
+
+      function setBoth(key, value){
         try { localStorage.setItem(key, value); } catch {}
         try { sessionStorage.setItem(key, value); } catch {}
       }
 
-      function removeStorage(key){
+      function setSessionOnly(key, value){
+        try { sessionStorage.setItem(key, value); } catch {}
+      }
+
+      function removeBoth(key){
         try { localStorage.removeItem(key); } catch {}
         try { sessionStorage.removeItem(key); } catch {}
       }
 
+      function cleanVisibleUrl(){
+        try{
+          const url = new URL(window.location.href);
+          let changed = false;
+
+          if(url.searchParams.has("phone")){
+            url.searchParams.delete("phone");
+            changed = true;
+          }
+
+          const slug = normSlug(url.searchParams.get("slug") || "");
+          if(slug && isSensitiveSlug(slug)){
+            url.searchParams.delete("slug");
+            changed = true;
+          }
+
+          if(changed){
+            history.replaceState({}, "", url.pathname + url.search + url.hash);
+          }
+        }catch(_){}
+      }
+
       function getReturnTarget(){
         const p = qs();
-        const candidate = clean(
+        const raw = clean(
           p.get("return") ||
           p.get("redirect") ||
           p.get("next") ||
@@ -491,17 +525,53 @@
           DEFAULT_RETURN
         );
 
-        if (!candidate) return DEFAULT_RETURN;
-        if (/^https?:\/\//i.test(candidate)) return candidate;
-        if (candidate.startsWith("./")) return candidate;
-        if (candidate.startsWith("/")) return candidate;
-        return "./" + candidate.replace(/^\.?\//, "");
+        const fallback = "./" + DEFAULT_RETURN.replace(/^\.?\//, "");
+
+        if(!raw) return fallback;
+
+        try{
+          const url = new URL(raw, window.location.href);
+
+          if(url.origin !== window.location.origin){
+            return fallback;
+          }
+
+          url.searchParams.delete("phone");
+
+          const slug = normSlug(url.searchParams.get("slug") || "");
+          if(slug && isSensitiveSlug(slug)){
+            url.searchParams.delete("slug");
+          }
+
+          return url.pathname + url.search + url.hash;
+        }catch(_){
+          return fallback;
+        }
       }
 
-      function buildUrl(target, slug, phone){
+      function buildPrivateUrl(target){
         const url = new URL(target || DEFAULT_RETURN, window.location.href);
-        if (slug) url.searchParams.set("slug", slug);
-        if (phone) url.searchParams.set("phone", phone);
+        url.searchParams.delete("phone");
+
+        const slug = normSlug(url.searchParams.get("slug") || "");
+        if(slug && isSensitiveSlug(slug)){
+          url.searchParams.delete("slug");
+        }
+
+        return url.toString();
+      }
+
+      function buildPublicUrl(target, slug){
+        const url = new URL(target || "fiche.html", window.location.href);
+        url.searchParams.delete("phone");
+
+        const cleanSlug = normSlug(slug || "");
+        if(cleanSlug && !isSensitiveSlug(cleanSlug)){
+          url.searchParams.set("slug", cleanSlug);
+        }else{
+          url.searchParams.delete("slug");
+        }
+
         return url.toString();
       }
 
@@ -520,8 +590,13 @@
           if (!parsed || typeof parsed !== "object") continue;
 
           const validatedAt = Number(parsed.validated_at || parsed.validatedAt || 0);
+          const expiresAt = Number(parsed.expires_at || parsed.expiresAt || 0);
           const maxAge = SESSION_HOURS * 60 * 60 * 1000;
-          const fresh = validatedAt && (Date.now() - validatedAt < maxAge);
+
+          const fresh = (
+            (expiresAt && Date.now() < expiresAt) ||
+            (validatedAt && (Date.now() - validatedAt < maxAge))
+          );
 
           if (!fresh) continue;
 
@@ -542,32 +617,50 @@
           module: MODULE,
           phone: normPhone(payload.phone || ""),
           slug: normSlug(payload.slug || ""),
-          label: clean(payload.label || "PIN LOC PRO"),
+          label: clean(payload.label || "Accès Je loue"),
           validated_at: Date.now(),
           expires_at: Date.now() + SESSION_HOURS * 60 * 60 * 1000,
           source: "pin.html",
           via: "digiy_verify_pin"
         };
 
-        setStorage("digiy_loc_session", JSON.stringify(session));
-        setStorage("digiy_loc_guard_session", JSON.stringify(session));
-        setStorage("digiy_guard_loc_session", JSON.stringify(session));
+        const json = JSON.stringify(session);
+
+        setBoth("digiy_loc_session", json);
+        setBoth("digiy_loc_guard_session", json);
+        setBoth("digiy_guard_loc_session", json);
 
         if (session.slug){
-          setStorage("digiy_loc_last_slug", session.slug);
-          setStorage("digiy_loc_slug", session.slug);
+          setBoth("digiy_loc_last_slug", session.slug);
+          setBoth("digiy_loc_slug", session.slug);
         }
 
+        /*
+          Compatibilité : le téléphone reste disponible pour le guard,
+          mais il n'est jamais affiché ni renvoyé dans l'URL.
+        */
         if (session.phone){
-          setStorage("digiy_loc_phone", session.phone);
-          setStorage("digiy_loc_last_phone", session.phone);
+          setSessionOnly("DIGIY_LOC_HUB_PHONE", session.phone);
+          setSessionOnly("digiy_loc_phone", session.phone);
+          setSessionOnly("digiy_loc_last_phone", session.phone);
         }
 
-        setStorage("digiy_loc_last_module", MODULE);
+        setBoth("digiy_loc_last_module", MODULE);
+      }
+
+      function clearBrokenSession(){
+        [
+          "digiy_loc_session",
+          "digiy_loc_guard_session",
+          "digiy_guard_loc_session",
+          "digiy_loc_phone",
+          "digiy_loc_last_phone",
+          "DIGIY_LOC_HUB_PHONE"
+        ].forEach(removeBoth);
       }
 
       function updateMetaSession(text){
-        els.metaSession.textContent = text || "Aucune";
+        els.metaSession.textContent = text || "Aucune session ouverte";
       }
 
       async function resolvePhoneBySlug(slug){
@@ -618,7 +711,7 @@
           ok: !!row.ok,
           module: clean(row.module || MODULE),
           phone: normPhone(row.phone || row.owner_phone || fallbackPhone || ""),
-          label: clean(row.label || "PIN LOC PRO"),
+          label: clean(row.label || "Accès Je loue"),
           owner_id: row.owner_id || null
         };
       }
@@ -639,35 +732,40 @@
 
         const urlSlug = normSlug(p.get("slug"));
         const urlPhone = normPhone(p.get("phone"));
-        const rememberedSlug = normSlug(getStorage("digiy_loc_last_slug") || getStorage("digiy_loc_slug"));
-        const rememberedPhone = normPhone(getStorage("digiy_loc_phone") || getStorage("digiy_loc_last_phone"));
+
+        const rememberedSlug = normSlug(
+          getStorage("digiy_loc_last_slug") ||
+          getStorage("digiy_loc_slug")
+        );
+
+        const rememberedPhone = normPhone(
+          getSession("DIGIY_LOC_HUB_PHONE") ||
+          getSession("digiy_loc_phone") ||
+          getSession("digiy_loc_last_phone")
+        );
+
         const rememberedSession = readExistingSession();
 
-        const slug = urlSlug || rememberedSlug || (rememberedSession && rememberedSession.slug) || "";
-        const phone = urlPhone || rememberedPhone || (rememberedSession && rememberedSession.phone) || "";
-        const identifier = slug || phone || "";
+        hiddenContext.slug = urlSlug || rememberedSlug || (rememberedSession && rememberedSession.slug) || "";
+        hiddenContext.phone = urlPhone || rememberedPhone || (rememberedSession && rememberedSession.phone) || "";
 
-        els.identifier.value = identifier;
-        els.phone.value = phone;
-        els.returnBtn.href = buildUrl(getReturnTarget(), slug, phone);
-        els.metaReturn.textContent = getReturnTarget().replace(/^\.\//, "");
+        cleanVisibleUrl();
+
+        els.identifier.value = "";
+        els.returnBtn.href = buildPrivateUrl(getReturnTarget());
+        els.publicCardBtn.href = buildPublicUrl("fiche.html", hiddenContext.slug);
+        els.metaReturn.textContent = "Espace propriétaire";
 
         if (rememberedSession && rememberedSession.phone){
-          updateMetaSession("Session valide trouvée");
-          setStatus("ok", "Session déjà présente", "Une session LOC encore valide a été retrouvée sur cet appareil.");
-        }else if (identifier){
-          updateMetaSession("Contexte détecté");
-          setStatus("info", "Contexte prêt", "Identifiant ou téléphone détecté. Tu peux entrer ton code.");
+          updateMetaSession("Session déjà ouverte sur cet appareil");
+          setStatus("ok", "Session déjà présente", "Ton espace est reconnu. Tu peux ouvrir ton espace propriétaire.");
+        }else if (hiddenContext.slug || hiddenContext.phone){
+          updateMetaSession("Contexte sécurisé détecté");
+          setStatus("info", "Compte reconnu", "Ton espace est reconnu. Les identifiants restent cachés. Entre seulement ton code.");
         }else{
-          updateMetaSession("Aucune");
+          updateMetaSession("Aucune session ouverte");
           setStatus("info", "Prêt", "Entre ton identifiant ou ton téléphone, puis ton code.");
         }
-      }
-
-      function clearBrokenSession(){
-        removeStorage("digiy_loc_session");
-        removeStorage("digiy_loc_guard_session");
-        removeStorage("digiy_guard_loc_session");
       }
 
       async function handleSubmit(event){
@@ -677,17 +775,12 @@
 
         try{
           let identifier = clean(els.identifier.value);
-          let phone = normPhone(els.phone.value);
-          let slug = "";
+          let phone = hiddenContext.phone || "";
+          let slug = hiddenContext.slug || "";
           const pin = clean(els.pin.value);
 
           if (!pin){
             setStatus("bad", "Code manquant", "Entre ton code pour ouvrir ton espace logement.");
-            return;
-          }
-
-          if (!identifier && !phone){
-            setStatus("bad", "Identifiant manquant", "Entre l’identifiant du lieu ou un téléphone.");
             return;
           }
 
@@ -703,8 +796,13 @@
             }
           }
 
+          if (!identifier && !phone && !slug){
+            setStatus("bad", "Compte non reconnu", "Entre ton identifiant ou ton téléphone pour retrouver ton espace.");
+            return;
+          }
+
           if (!phone && slug){
-            setStatus("info", "Recherche du téléphone", "On retrouve le téléphone à partir de l’identifiant du lieu…");
+            setStatus("info", "Recherche sécurisée", "On retrouve ton compte sans afficher les identifiants.");
             phone = await resolvePhoneBySlug(slug);
           }
 
@@ -713,23 +811,23 @@
           }
 
           if (!phone){
-            setStatus("bad", "Téléphone introuvable", "Impossible de retrouver le téléphone lié à cet identifiant.");
+            setStatus("bad", "Compte introuvable", "Impossible de retrouver l’espace lié à ces informations.");
             return;
           }
 
-          setStatus("info", "Vérification du PIN", "Contrôle du PIN sur le rail maître DIGIY…");
+          setStatus("info", "Vérification du code", "Contrôle sécurisé en cours…");
 
           const result = await callVerifyPin(phone, pin);
 
           if (!result || !result.ok){
-            setStatus("bad", "PIN invalide", "Le PIN ne correspond pas au téléphone LOC détecté.");
-            updateMetaSession("Aucune");
+            setStatus("bad", "Code invalide", "Le code ne correspond pas à cet espace.");
+            updateMetaSession("Aucune session ouverte");
             return;
           }
 
           const finalPhone = normPhone(result.phone || phone);
           const finalSlug = slug || await resolveSlugByPhone(finalPhone);
-          const label = clean(result.label || "PIN LOC PRO");
+          const label = clean(result.label || "Accès Je loue");
 
           writeSession({
             phone: finalPhone,
@@ -737,14 +835,17 @@
             label: label
           });
 
-          els.identifier.value = finalSlug || finalPhone;
-          els.phone.value = finalPhone;
-          updateMetaSession("Session LOC ouverte");
-          els.returnBtn.href = buildUrl(getReturnTarget(), finalSlug, finalPhone);
+          hiddenContext.phone = finalPhone;
+          hiddenContext.slug = finalSlug;
 
-          setStatus("ok", "Accès validé", "Code accepté. Entrée directe vers ton espace logement.");
+          els.identifier.value = "";
+          updateMetaSession("Session sécurisée ouverte");
+          els.returnBtn.href = buildPrivateUrl(getReturnTarget());
+          els.publicCardBtn.href = buildPublicUrl("fiche.html", finalSlug);
 
-          window.location.href = buildUrl(getReturnTarget(), finalSlug, finalPhone);
+          setStatus("ok", "Accès validé", "Code accepté. Ton espace logement est ouvert.");
+
+          window.location.href = buildPrivateUrl(getReturnTarget());
         }catch(err){
           console.error("[DIGIY LOC PIN] erreur", err);
           setStatus(
@@ -752,9 +853,9 @@
             "Erreur de vérification",
             err && err.message
               ? err.message
-              : "Impossible de vérifier le PIN pour le moment."
+              : "Impossible de vérifier le code pour le moment."
           );
-          updateMetaSession("Aucune");
+          updateMetaSession("Aucune session ouverte");
         }finally{
           setBusy(false);
         }
@@ -762,12 +863,6 @@
 
       function bind(){
         els.form.addEventListener("submit", handleSubmit);
-
-        els.togglePin.addEventListener("click", function(){
-          const hidden = els.pin.type === "password";
-          els.pin.type = hidden ? "text" : "password";
-          els.togglePin.textContent = hidden ? "🙈" : "👁️";
-        });
       }
 
       hydrateFromContext();
