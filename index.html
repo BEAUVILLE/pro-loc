@@ -44,17 +44,29 @@
       padding:78px 0 120px;
     }
     .top{
-      display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
-      padding:14px;border:1px solid var(--line);border-radius:22px;background:var(--card);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:var(--card);
       box-shadow:var(--shadow);
     }
     .brand{display:flex;gap:12px;align-items:center}
     .logo{
-      width:46px;height:46px;border-radius:16px;
+      width:46px;
+      height:46px;
+      border-radius:16px;
       background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.2));
       border:1px solid rgba(250,204,21,.35);
       box-shadow:0 0 22px rgba(250,204,21,.12);
-      display:grid;place-items:center;color:#061b14;font-weight:1100;
+      display:grid;
+      place-items:center;
+      color:#061b14;
+      font-weight:1100;
       user-select:none;
     }
     .h1{font-size:1.05rem;font-weight:1100}
@@ -62,16 +74,29 @@
     .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .pill{
       border:1px solid rgba(148,163,184,.35);
-      padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.02);
-      color:var(--muted);font-weight:950;font-size:.86rem;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      font-weight:950;
+      font-size:.86rem;
     }
     .pill.ok{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.09)}
     .pill.bad{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.09)}
     .btn{
-      min-height:42px;border-radius:14px;border:1px solid var(--line);
-      background:rgba(255,255,255,.04);color:#fff;font-weight:1100;font-size:14px;
-      cursor:pointer;text-decoration:none;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      min-height:42px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      font-weight:1100;
+      font-size:14px;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
       padding:10px 12px;
     }
     .btn:hover{background:rgba(255,255,255,.07)}
@@ -364,7 +389,7 @@
       </div>
 
       <div class="right">
-        <div class="pill" id="pillPhone">👤 —</div>
+        <div class="pill" id="pillPhone">👤 Compte sécurisé</div>
         <div class="pill" id="pillConn">⏳ …</div>
         <div class="pill" id="pillLieu">Lieu : —</div>
         <button class="btn danger" id="btnLogout" type="button" style="display:none">🚪 Déconnexion</button>
@@ -411,8 +436,8 @@
           <div class="k">Lieu</div>
           <div class="v" id="vLieu">—</div>
 
-          <div class="k">Téléphone</div>
-          <div class="v" id="vPhone">—</div>
+          <div class="k">Compte</div>
+          <div class="v" id="vPhone">Compte sécurisé</div>
 
           <div class="k">Session</div>
           <div class="v" id="vSess">—</div>
@@ -444,6 +469,34 @@
       const $ = (id) => document.getElementById(id);
       const SAVED_KEY = "digiy_loc_slug";
 
+      function normPhone(p){
+        if(!p) return "";
+        let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
+        if (s.startsWith("00221")) s = "+221" + s.slice(5);
+        if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+        if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
+        return s;
+      }
+
+      function isSensitiveSlug(slug){
+        return /\d{7,}/.test(String(slug || ""));
+      }
+
+      function displayLieu(slug){
+        const s = String(slug || "").trim();
+        if(!s) return "—";
+
+        if(isSensitiveSlug(s)){
+          return "Espace logement sécurisé";
+        }
+
+        if(s.startsWith("loc-room-")){
+          return "Logement " + s.slice(-6).toUpperCase();
+        }
+
+        return "Espace LOC";
+      }
+
       function getUrlSlug(){
         try{
           return (new URL(location.href)).searchParams.get("slug") || "";
@@ -468,51 +521,6 @@
         if(!slug) return;
         try{ localStorage.setItem(SAVED_KEY, slug); }catch(_){}
         try{ localStorage.setItem("digiy_last_slug", slug); }catch(_){}
-      }
-
-      function ensureSlugInUrl(slug){
-        if(!slug) return;
-        try{
-          const u = new URL(location.href);
-          if(!u.searchParams.get("slug")){
-            u.searchParams.set("slug", slug);
-            history.replaceState({}, "", u.toString());
-          }
-        }catch(_){}
-      }
-
-      function stripPhoneFromUrl(){
-        try{
-          const u = new URL(location.href);
-          if(u.searchParams.has("phone")){
-            u.searchParams.delete("phone");
-            history.replaceState({}, "", u.toString());
-          }
-        }catch(_){}
-      }
-
-      function normPhone(p){
-        if(!p) return "";
-        let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
-        if (s.startsWith("00221")) s = "+221" + s.slice(5);
-        if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-        if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
-        return s;
-      }
-
-      function maskPhone(phone){
-        const s = String(phone || "").replace(/\s+/g, "");
-        if(!s) return "—";
-        if(s.length <= 6) return "••••";
-        return s.slice(0, 4) + "••••" + s.slice(-3);
-      }
-
-      function clearLocalLocSession(){
-        try{
-          localStorage.removeItem("digiy_loc_slug");
-          localStorage.removeItem("digiy_last_slug");
-          sessionStorage.removeItem("DIGIY_LOC_HUB_PHONE");
-        }catch(_){}
       }
 
       function getHubPhone(){
@@ -547,6 +555,63 @@
         }
       }
 
+      function cleanVisibleUrl(slug){
+        try{
+          const u = new URL(location.href);
+          let changed = false;
+
+          if(u.searchParams.has("phone")){
+            u.searchParams.delete("phone");
+            changed = true;
+          }
+
+          if(isSensitiveSlug(slug) && u.searchParams.has("slug")){
+            u.searchParams.delete("slug");
+            changed = true;
+          }
+
+          if(changed){
+            history.replaceState({}, "", u.pathname + u.search + u.hash);
+          }
+        }catch(_){}
+      }
+
+      function ensureSlugInUrl(slug){
+        if(!slug) return;
+
+        try{
+          const u = new URL(location.href);
+          let changed = false;
+
+          if(u.searchParams.has("phone")){
+            u.searchParams.delete("phone");
+            changed = true;
+          }
+
+          if(isSensitiveSlug(slug)){
+            if(u.searchParams.has("slug")){
+              u.searchParams.delete("slug");
+              changed = true;
+            }
+          } else if(!u.searchParams.get("slug")){
+            u.searchParams.set("slug", slug);
+            changed = true;
+          }
+
+          if(changed){
+            history.replaceState({}, "", u.pathname + u.search + u.hash);
+          }
+        }catch(_){}
+      }
+
+      function clearLocalLocSession(){
+        try{
+          localStorage.removeItem("digiy_loc_slug");
+          localStorage.removeItem("digiy_last_slug");
+          sessionStorage.removeItem("DIGIY_LOC_HUB_PHONE");
+        }catch(_){}
+      }
+
       function getGuardState(){
         return window.DIGIY_GUARD?.state || {
           preview: true,
@@ -576,18 +641,17 @@
         try{
           const u = new URL(target, location.href);
 
-          if(slug && !u.searchParams.get("slug")){
+          if(slug && !isSensitiveSlug(slug) && !u.searchParams.get("slug")){
             u.searchParams.set("slug", slug);
           }
 
-          /* Sécurité : le téléphone ne voyage plus dans les URLs internes. */
           u.searchParams.delete("phone");
 
           if(u.origin === location.origin) return u.pathname + u.search + u.hash;
           return u.toString();
         }catch{
           let out = target;
-          if(slug){
+          if(slug && !isSensitiveSlug(slug)){
             out += (out.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
           }
           return out;
@@ -638,11 +702,13 @@
       }
 
       function setPills({ phone, slug, ok, preview }){
-        $("pillLieu").textContent = "Lieu : " + (slug || "—");
-        $("vLieu").textContent = slug || "—";
+        const lieuLabel = displayLieu(slug);
 
-        $("pillPhone").textContent = "👤 " + maskPhone(phone);
-        $("vPhone").textContent = maskPhone(phone);
+        $("pillLieu").textContent = "Lieu : " + lieuLabel;
+        $("vLieu").textContent = lieuLabel;
+
+        $("pillPhone").textContent = "👤 Compte sécurisé";
+        $("vPhone").textContent = phone ? "Compte reconnu" : "Compte sécurisé";
 
         if(ok){
           $("pillConn").className = "pill ok";
@@ -798,8 +864,8 @@
 
           alert(
             "✅ ACCÈS\n" +
-            "lieu = " + slug + "\n" +
-            "téléphone = " + maskPhone(phone) + "\n" +
+            "lieu = " + displayLieu(slug) + "\n" +
+            "compte = reconnu\n" +
             "ouvert = " + (data ? "oui" : "non")
           );
         }catch(err){
@@ -817,15 +883,17 @@
         });
 
         const hubPhone = getHubPhone();
+        const rawUrlSlug = getUrlSlug();
 
-        /* Compatibilité avec les anciens liens : on peut lire phone une fois,
-           mais on le retire aussitôt de l’adresse visible. */
-        stripPhoneFromUrl();
+        if(rawUrlSlug){
+          saveSlug(rawUrlSlug);
+        }
 
-        const initialSlug = getSlug();
+        const initialSlug = (rawUrlSlug || getSavedSlug() || "").trim();
+
+        cleanVisibleUrl(initialSlug);
 
         if(initialSlug){
-          saveSlug(initialSlug);
           ensureSlugInUrl(initialSlug);
         }
 
@@ -864,6 +932,7 @@
         const slug = getSlug();
         const phone = getHubPhone();
         disablePrivateDoors();
+        cleanVisibleUrl(slug);
         show("🔴 Crash JS.\n" + (e?.message || e), "bad");
         setPills({ phone, slug, ok:false, preview:false });
         $("vSess").textContent = "KO";
