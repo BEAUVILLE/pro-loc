@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-calendar-pure-v1"></script>
+  <script src="./guard.js?v=loc-security-v2-20260504"></script>
 
   <style>
     :root{
@@ -344,7 +344,7 @@
         </div>
 
         <div class="smallActions">
-          <span class="pill" id="pillSlug">—</span>
+          <span class="pill" id="pillSlug">Espace sécurisé</span>
           <button class="btn bad" id="btnLogout" type="button" title="Sortir">🚪</button>
         </div>
       </div>
@@ -403,7 +403,7 @@
       <a class="navItem" id="navResa" href="./reservations.html"><span class="ico">📋</span><span>Réserv.</span></a>
       <a class="navItem active" id="navPlanning" href="./planning.html"><span class="ico">📅</span><span>Dispos</span></a>
       <a class="navItem" id="navNotes" href="./notes.html"><span class="ico">📝</span><span>Notes</span></a>
-      <a class="navItem" id="navMore" href="./app.html#plus"><span class="ico">⋯</span><span>Plus</span></a>
+      <a class="navItem" id="navMore" href="./manage-links.html"><span class="ico">⋯</span><span>Plus</span></a>
     </div>
   </nav>
 
@@ -425,7 +425,7 @@
   ];
 
   const ACCESS_SLUG_KEYS = ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"];
-  const ACCESS_PHONE_KEYS = ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE"];
+  const ACCESS_PHONE_KEYS = ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE","DIGIY_LOC_HUB_PHONE"];
 
   const State = {
     year: new Date().getFullYear(),
@@ -455,6 +455,20 @@
     const d = digits(raw);
     return raw.startsWith("+") ? "+" + d : d;
   }
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+  function canExposeSlug(slug){
+    const s = normalizeSlug(slug);
+    return !!s && !isSensitiveSlug(s);
+  }
+  function displayAccessLabel(slug){
+    const s = normalizeSlug(slug);
+    if(!s) return "Espace sécurisé";
+    if(isSensitiveSlug(s)) return "Espace sécurisé";
+    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
+  }
   function storageGet(k){
     try{const s=sessionStorage.getItem(k); if(s) return s;}catch{}
     try{const l=localStorage.getItem(k); if(l) return l;}catch{}
@@ -463,7 +477,17 @@
   function storageSet(k,v){
     if(v == null || String(v).trim()==="") return;
     try{sessionStorage.setItem(k,String(v).trim());}catch{}
-    try{localStorage.setItem(k,String(v).trim());}catch{}
+    if(!ACCESS_PHONE_KEYS.includes(k)){
+      try{localStorage.setItem(k,String(v).trim());}catch{}
+    }
+  }
+  function storageSetSessionOnly(k,v){
+    if(v == null || String(v).trim()==="") return;
+    try{sessionStorage.setItem(k,String(v).trim());}catch{}
+    try{localStorage.removeItem(k);}catch{}
+  }
+  function storageRemoveLocal(k){
+    try{localStorage.removeItem(k);}catch{}
   }
   function parseJson(raw){try{return JSON.parse(raw);}catch{return null;}}
   function readParam(name){try{return new URL(location.href).searchParams.get(name) || "";}catch{return "";}}
@@ -476,6 +500,28 @@
     return Number.isFinite(t) ? t : 0;
   }
   function isFresh(v){const t=parseDateMs(v); return !!t && Date.now()-t <= SESSION_MAX_AGE_MS;}
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+
+      if(u.searchParams.has("phone")){
+        u.searchParams.delete("phone");
+        changed = true;
+      }
+
+      const slug = normalizeSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+
+      if(changed){
+        history.replaceState({}, "", u.pathname + u.search + u.hash);
+      }
+    }catch(_){}
+  }
 
   function setNotice(msg, cls="warn"){
     const el = $("notice");
@@ -529,7 +575,7 @@
     const candidates = [
       readParam("phone"), guardState().phone, guardSession().phone, storedSession().phone,
       storageGet("digiy_loc_phone"), storageGet("digiy_loc_last_phone"),
-      storageGet("DIGIY_LOC_PHONE"), storageGet("DIGIY_PHONE")
+      storageGet("DIGIY_LOC_PHONE"), storageGet("DIGIY_PHONE"), storageGet("DIGIY_LOC_HUB_PHONE")
     ].map(normalizePhone).filter(Boolean);
     return candidates[0] || "";
   }
@@ -543,27 +589,73 @@
   }
   function syncAccess(){
     const slug = getAccessSlug(), phone = getAccessPhone();
+
+    ACCESS_SLUG_KEYS.forEach((k)=>{
+      const current = normalizeSlug(storageGet(k));
+      if(current && isSensitiveSlug(current)){
+        storageRemoveLocal(k);
+      }
+    });
+
     if(slug){
-      ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"].forEach(k=>storageSet(k,slug));
+      if(isSensitiveSlug(slug)){
+        ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"].forEach(k=>storageSetSessionOnly(k,slug));
+      }else{
+        ["digiy_loc_last_slug","digiy_loc_slug","DIGIY_LOC_SLUG","digiy_last_slug","DIGIY_SLUG"].forEach(k=>storageSet(k,slug));
+      }
     }
+
     if(phone){
-      ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE"].forEach(k=>storageSet(k,phone));
+      ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","digiy_phone","DIGIY_PHONE","DIGIY_LOC_HUB_PHONE"].forEach(k=>storageSetSessionOnly(k,phone));
     }
+
+    cleanVisibleUrl();
   }
 
   function buildUrl(path, params={}){
     const url = new URL(path, location.href);
-    Object.entries(params).forEach(([k,v])=>{ if(v != null && String(v).trim()) url.searchParams.set(k,String(v).trim()); });
+
+    Object.entries(params).forEach(([k,v])=>{
+      const value = String(v ?? "").trim();
+      if(!value) return;
+
+      if(k === "phone") return;
+
+      if(k === "slug"){
+        const s = normalizeSlug(value);
+        if(canExposeSlug(s)) url.searchParams.set("slug", s);
+        return;
+      }
+
+      if(k === "room_slug" || k === "room"){
+        const r = normalizeSlug(value);
+        if(/^loc-room-/i.test(r)) url.searchParams.set(k, r);
+        return;
+      }
+
+      url.searchParams.set(k, value);
+    });
+
+    url.searchParams.delete("phone");
+
+    const slug = normalizeSlug(url.searchParams.get("slug") || "");
+    if(slug && isSensitiveSlug(slug)){
+      url.searchParams.delete("slug");
+    }
+
     return url.origin === location.origin ? url.pathname + url.search + url.hash : url.toString();
   }
+
   function withAccess(path){
     const p = {};
-    const slug = getAccessSlug(), phone = getAccessPhone();
-    if(slug) p.slug = slug;
-    if(phone) p.phone = phone;
-    if(Room.slug) p.room_slug = Room.slug;
+    const slug = getAccessSlug();
+
+    if(slug && canExposeSlug(slug)) p.slug = slug;
+    if(Room.slug && /^loc-room-/i.test(Room.slug)) p.room_slug = Room.slug;
+
     return buildUrl(path,p);
   }
+
   function roomSlugFromQuery(){
     const r = normalizeSlug(readParam("room_slug") || readParam("room"));
     if(/^loc-room-/i.test(r)) return r;
@@ -674,9 +766,9 @@
     const guard = window.DIGIY_GUARD;
     if(!guard?.ready) throw new Error("guard_missing");
     try{
-      await guard.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+      await guard.ready({ redirect:false, preserve_validation:true });
     }catch{
-      await guard.ready();
+      await guard.ready({ redirect:false });
     }
   }
 
@@ -700,7 +792,7 @@
     const cached = normalizeSlug(storageGet("DIGIY_LOC_ROOM_SLUG") || storageGet("digiy_loc_room_slug"));
     if(/^loc-room-/i.test(cached)) return fillBySlug(cached);
 
-    const phone = getSession().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+    const phone = getSession().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || storageGet("DIGIY_LOC_HUB_PHONE") || "";
     if(!phone) throw new Error("room_phone_missing");
 
     let {data,error} = await S.from("digiy_loc_rooms")
@@ -817,10 +909,9 @@
   }
 
   function renderHeader(){
-    const phone = getSession().phone || "—";
-    $("pillSlug").textContent = getAccessSlug() || "—";
+    $("pillSlug").textContent = displayAccessLabel(getAccessSlug());
 
-    if(accessOpen) setSub(`✅ Accès ouvert · ${phone}`);
+    if(accessOpen) setSub("✅ Accès ouvert");
     else setSub("🔐 Lecture seulement");
 
     const roomName = Data.room?.room_name || Room.name || "";
@@ -1033,7 +1124,7 @@
     if(!keys.length){ setNotice("Choisis d’abord une ou plusieurs dates.", "warn"); return; }
     if(keys.some(k=>dayRecord(k).status === "booked")){ setNotice("Les dates occupées restent protégées.", "warn"); return; }
 
-    const phone = getSession().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "";
+    const phone = getSession().phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || storageGet("DIGIY_LOC_HUB_PHONE") || "";
     if(!Room.slug || !phone){ setNotice("Accès incomplet. Reviens par ton accès.", "warn"); return; }
 
     let price = null, note = null;
@@ -1073,17 +1164,27 @@
   }
 
   function syncNav(){
-    $("navHome").href = withAccess("./app.html");
-    $("navResa").href = withAccess("./reservations.html");
-    $("navPlanning").href = withAccess("./planning.html");
-    const phone = digits(getSession().phone || getAccessPhone());
-    $("navMessages").href = phone ? `https://wa.me/${phone}` : withAccess("./reservations.html#messages");
-    $("navMore").href = withAccess("./app.html#plus");
+    function setHref(id, target){
+      const el = $(id);
+      if(!el){
+        console.warn("[LOC planning] lien absent ignoré:", id, "→", target);
+        return;
+      }
+      el.href = withAccess(target);
+    }
+
+    setHref("navHome", "./app.html");
+    setHref("navResa", "./reservations.html");
+    setHref("navPlanning", "./planning.html");
+    setHref("navNotes", "./notes.html");
+    setHref("navMore", "./manage-links.html");
   }
 
   async function init(){
+    cleanVisibleUrl();
     syncAccess();
     syncNav();
+
     $("btnLogout").addEventListener("click", ()=>{
       try{ window.DIGIY_GUARD?.logout?.(); }catch{ location.replace(withAccess("./pin.html")); }
     });
@@ -1123,6 +1224,7 @@
       return;
     }
 
+    cleanVisibleUrl();
     syncAccess();
     accessOpen = !!getSession().access_ok;
 
@@ -1130,7 +1232,7 @@
 
     if(!getAccessSlug()){
       accessOpen = false;
-      setNotice("Identifiant d’accès introuvable. Ouvre cette page depuis ton espace.", "warn");
+      setNotice("Identifiant d’accès introuvable. Ouvre cette page depuis ton accès.", "warn");
     }else if(!accessOpen){
       setNotice("Mode lecture seulement tant que l’accès n’est pas ouvert.", "warn");
     }else{
