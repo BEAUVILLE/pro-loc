@@ -16,7 +16,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-notes-rapides-v1"></script>
+  <script src="./guard.js?v=loc-security-v2-20260504"></script>
 
   <style>
     :root{
@@ -136,7 +136,6 @@
       box-shadow:0 0 0 3px rgba(250,204,21,.10);
     }
 
-    .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
     .actions{
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
@@ -314,7 +313,7 @@
         </div>
       </div>
       <div>
-        <div class="pill" id="pillSlug">identifiant : —</div>
+        <div class="pill" id="pillSlug">Espace sécurisé</div>
         <div class="pill warn" id="pillState" style="margin-top:6px">lecture</div>
       </div>
     </div>
@@ -361,7 +360,7 @@
     <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
     <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
     <a class="navItem active" id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
-    <a class="navItem" id="navPlus" href="./plus.html"><strong>⋯</strong><span>Plus</span></a>
+    <a class="navItem" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
   </div>
 </nav>
 
@@ -409,8 +408,47 @@
       .replace(/^[-_]+|[-_]+$/g, "");
   }
 
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+
+  function canExposeSlug(slug){
+    const s = cleanSlug(slug);
+    return !!s && !isSensitiveSlug(s);
+  }
+
+  function displaySpace(slug){
+    const s = cleanSlug(slug);
+    if(!s) return "Espace sécurisé";
+    if(isSensitiveSlug(s)) return "Espace sécurisé";
+    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
+  }
+
   function phoneDigits(v){
     return String(v || "").replace(/[^\d]/g, "");
+  }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+
+      if(u.searchParams.has("phone")){
+        u.searchParams.delete("phone");
+        changed = true;
+      }
+
+      const slug = cleanSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+
+      if(changed){
+        history.replaceState({}, "", u.pathname + u.search + u.hash);
+      }
+    }catch(_){}
   }
 
   function getGuardState(){
@@ -447,25 +485,33 @@
       storageGet("digiy_loc_phone") ||
       storageGet("digiy_loc_last_phone") ||
       storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE")
+      storageGet("DIGIY_LOC_PHONE") ||
+      storageGet("DIGIY_LOC_HUB_PHONE")
     );
   }
 
   function withContext(path){
     const slug = getSlug();
-    const phone = getPhone();
+
     try{
       const u = new URL(path, location.href);
-      if(slug) u.searchParams.set("slug", slug);
-      if(phone) u.searchParams.set("phone", phone);
+      u.searchParams.delete("phone");
+
+      if(slug && canExposeSlug(slug) && !u.searchParams.get("slug")){
+        u.searchParams.set("slug", slug);
+      }
+
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{
-      const qs = new URLSearchParams();
-      if(slug) qs.set("slug", slug);
-      if(phone) qs.set("phone", phone);
-      const tail = qs.toString();
-      return path + (tail ? (path.includes("?") ? "&" : "?") + tail : "");
+      if(slug && canExposeSlug(slug)){
+        const qs = new URLSearchParams();
+        qs.set("slug", slug);
+        const tail = qs.toString();
+        return path + (tail ? (path.includes("?") ? "&" : "?") + tail : "");
+      }
+
+      return path;
     }
   }
 
@@ -541,18 +587,18 @@
     if(paySlug) u.searchParams.set("slug", paySlug);
     if(phone) u.searchParams.set("phone", phone);
 
-    // PRO PAY admin.html attend fromDraft=1 pour préremplir le formulaire.
     u.searchParams.set("fromDraft", "1");
     u.searchParams.set("intent", "quick_note");
     u.searchParams.set("source_module", "LOC");
 
     if(r.id) u.searchParams.set("source_id", "loc-note:" + r.id);
-    if(locSlug) u.searchParams.set("source_slug", locSlug);
+
+    if(locSlug && canExposeSlug(locSlug)){
+      u.searchParams.set("source_slug", locSlug);
+    }
 
     if(r.amount){
-      // PAY admin.html lit "amount".
       u.searchParams.set("amount", String(r.amount));
-      // On garde aussi amount_xof pour compatibilité future éventuelle.
       u.searchParams.set("amount_xof", String(r.amount));
     }
 
@@ -690,37 +736,15 @@
     }).join("");
   }
 
-  async function copyMemory(){
-    const rows = loadMemory();
-    if(!rows.length){
-      show("Aucune note à copier.", "warn");
-      return;
-    }
-
-    const txt = rows.map(r => {
-      return [
-        r.title || "Note location",
-        r.amount ? money(r.amount) : "",
-        `${r.channel || "à préciser"} · ${r.category || "à classer"}`,
-        r.text || ""
-      ].filter(Boolean).join("\n");
-    }).join("\n\n---\n\n");
-
-    try{
-      await navigator.clipboard.writeText(txt);
-      show("✅ Notes copiées.", "ok");
-    }catch{
-      show("Copie impossible sur ce téléphone.", "bad");
-    }
-  }
-
   function syncLinks(){
+    cleanVisibleUrl();
+
     const links = [
       ["navHome","./app.html"],
       ["navReservations","./reservations.html"],
       ["navPlanning","./planning.html"],
       ["navNotes","./notes.html"],
-      ["navPlus","./plus.html"]
+      ["navPlus","./manage-links.html"]
     ];
 
     links.forEach(([id,path])=>{
@@ -728,10 +752,17 @@
       if(el) el.href = withContext(path);
     });
 
-    $("pillSlug").textContent = "identifiant : " + (getSlug() || "—");
+    $("pillSlug").textContent = displaySpace(getSlug());
 
     const pill = $("pillState");
-    const accessOk = !!(getGuardState().access_ok || getGuardSession().access_ok || getGuardSession().ok);
+    const accessOk = !!(
+      getGuardState().access_ok ||
+      getGuardState().access ||
+      getGuardSession().access_ok ||
+      getGuardSession().access ||
+      getGuardSession().ok
+    );
+
     if(accessOk){
       pill.textContent = "accès ouvert";
       pill.className = "pill ok";
@@ -745,6 +776,7 @@
   }
 
   async function init(){
+    cleanVisibleUrl();
     syncLinks();
 
     $("examples")?.querySelectorAll("button").forEach(btn=>{
@@ -774,12 +806,13 @@
 
     if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
       try{
-        await window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+        await window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true });
       }catch{
-        try{ await window.DIGIY_GUARD.ready(); }catch{}
+        try{ await window.DIGIY_GUARD.ready({ redirect:false }); }catch{}
       }
     }
 
+    cleanVisibleUrl();
     syncLinks();
     renderMemory();
   }
