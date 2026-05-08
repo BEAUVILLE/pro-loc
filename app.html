@@ -408,8 +408,8 @@ h1{
     </div>
 
     <div class="statusRow">
-      <span class="pill" id="pillPhone">👤 —</span>
-      <span class="pill" id="pillSlug">🏷️ —</span>
+      <span class="pill" id="pillPhone">👤 Compte sécurisé</span>
+      <span class="pill" id="pillSlug">🏷️ Espace logement</span>
       <span class="pill warn" id="pillState">Vérification…</span>
     </div>
 
@@ -568,6 +568,48 @@ h1{
     if(!raw) return "";
     const d = raw.replace(/[^\d]/g,"");
     return raw.startsWith("+") ? "+" + d : d;
+  }
+
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+
+  function displayProtectedPlace(slug){
+    const s = String(slug || "").trim().toLowerCase();
+    if(!s) return "Espace logement";
+
+    if(isSensitiveSlug(s)){
+      return "Espace logement sécurisé";
+    }
+
+    if(s.startsWith("loc-room-")){
+      return "Logement " + s.slice(-6).toUpperCase();
+    }
+
+    return "Espace LOC sécurisé";
+  }
+
+  function cleanSensitiveVisibleUrl(slug){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+
+      ["phone","tel","owner_phone","p_phone"].forEach((key)=>{
+        if(u.searchParams.has(key)){
+          u.searchParams.delete(key);
+          changed = true;
+        }
+      });
+
+      if(isSensitiveSlug(slug || u.searchParams.get("slug")) && u.searchParams.has("slug")){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+
+      if(changed){
+        history.replaceState({}, document.title, u.pathname + u.search + u.hash);
+      }
+    }catch(_){ }
   }
 
   function todayYmd(){
@@ -736,13 +778,25 @@ h1{
     let u;
     try{ u = new URL(path, location.href); }
     catch{ u = new URL("./", location.href); }
+
     const slug = State.slug || getSlug();
-    const phone = State.phone || getPhone();
-    if(slug) u.searchParams.set("slug", slug);
-    if(phone) u.searchParams.set("phone", phone);
+
+    // Sécurité façade : ne jamais remettre téléphone pro ni slug sensible dans l'adresse.
+    // Le rail garde ces infos en session/localStorage pour que les pages internes continuent de fonctionner.
+    ["phone","tel","owner_phone","p_phone"].forEach((key)=>u.searchParams.delete(key));
+
+    if(slug && !isSensitiveSlug(slug)){
+      u.searchParams.set("slug", slug);
+    }else{
+      u.searchParams.delete("slug");
+    }
+
     Object.entries(extra || {}).forEach(([k,v])=>{
-      if(v != null && String(v).trim()) u.searchParams.set(k,String(v).trim());
+      if(v != null && String(v).trim() && !["phone","tel","owner_phone","p_phone"].includes(k)){
+        u.searchParams.set(k,String(v).trim());
+      }
     });
+
     return u.pathname + u.search + u.hash;
   }
 
@@ -834,8 +888,10 @@ h1{
   function isPaid(r){ return r.pay === "paid" || r.pay === "succeeded" || r.pay === "confirmed"; }
 
   function renderStatus(){
-    $("pillPhone").textContent = "👤 " + (State.phone || "—");
-    $("pillSlug").textContent = "🏷️ " + (State.slug || "—");
+    // Ne jamais afficher le téléphone pro ni le slug brut dans l'interface.
+    // Ces identifiants restent en session pour le guard, mais la façade reste propre.
+    $("pillPhone").textContent = State.phone ? "👤 Compte reconnu" : "👤 Compte sécurisé";
+    $("pillSlug").textContent = "🏷️ " + displayProtectedPlace(State.slug);
 
     const pill = $("pillState");
     if(State.access){
@@ -944,6 +1000,7 @@ h1{
       State.today = todayYmd();
 
       persist();
+      cleanSensitiveVisibleUrl(State.slug);
       syncLinks();
       renderStatus();
       renderTopDate();
