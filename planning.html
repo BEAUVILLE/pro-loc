@@ -909,7 +909,7 @@
   }
 
   function renderHeader(){
-    $("pillSlug").textContent = displayAccessLabel(getAccessSlug());
+    $("pillSlug").textContent = "Espace logement sécurisé";
 
     if(accessOpen) setSub("✅ Accès ouvert");
     else setSub("🔐 Lecture seulement");
@@ -1250,6 +1250,21 @@
   }
 
   init();
+})();
+</script>
+
+<script>
+(function(){
+  function scrub(){
+    document.querySelectorAll('body *').forEach(function(el){
+      if(!el || el.children.length) return;
+      var t=el.textContent||'';
+      var n=t.replace(/loc-\d{7,}/gi,'Espace logement sécurisé').replace(/(?:\+?221)?\d{9,}/g,function(m){return /[0-9]/.test(m)?'Compte reconnu':m});
+      if(n!==t) el.textContent=n;
+    });
+    document.querySelectorAll('a[href]').forEach(function(a){try{var u=new URL(a.getAttribute('href'),location.href);u.searchParams.delete('phone');var s=u.searchParams.get('slug')||'';if(/\d{7,}/.test(s))u.searchParams.delete('slug');a.setAttribute('href',u.origin===location.origin?u.pathname+u.search+u.hash:u.toString());}catch(e){}});
+  }
+  scrub(); new MutationObserver(scrub).observe(document.body,{childList:true,subtree:true,characterData:true});
 })();
 </script>
 </body>
