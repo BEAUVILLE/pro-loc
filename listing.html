@@ -597,6 +597,14 @@
         return String(value || "").replace(/\D/g, "");
       }
 
+      function isSensitiveSlug(slug){
+        return /\d{7,}/.test(String(slug || ""));
+      }
+
+      function safeLieuLabel(slug){
+        return slug && !isSensitiveSlug(slug) ? String(slug) : "Espace logement sécurisé";
+      }
+
       function escapeHtml(value){
         return String(value ?? "")
           .replaceAll("&","&amp;")
@@ -700,18 +708,20 @@
         const slug = SLUG || getSlug();
         try{
           const u = new URL(path, location.href);
-          if (slug && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+          if (slug && !isSensitiveSlug(slug) && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+          u.searchParams.delete("phone");
           return (u.origin === location.origin) ? (u.pathname + u.search + u.hash) : u.toString();
         }catch(_){
           if (!slug) return path;
           const sep = path.includes("?") ? "&" : "?";
-          return path + sep + "slug=" + encodeURIComponent(slug);
+          return isSensitiveSlug(slug) ? path : path + sep + "slug=" + encodeURIComponent(slug);
         }
       }
 
       function buildListingUrl(){
         const u = new URL(window.location.href);
-        if (SLUG) u.searchParams.set("slug", SLUG);
+        if (SLUG && !isSensitiveSlug(SLUG)) u.searchParams.set("slug", SLUG);
+        u.searchParams.delete("phone");
         if (DATE) u.searchParams.set("date", DATE);
         return u.toString();
       }
@@ -723,7 +733,7 @@
 
         return [
           "📋 DIGIY LOC — Listing du jour",
-          "📍 " + (SLUG || data?.slug || "—"),
+          "📍 " + safeLieuLabel(SLUG || data?.slug || ""),
           "🏠 " + (BUSINESS || data?.business_code || "—"),
           "📅 " + prettyDateLabel(DATE),
           "Arrivées: " + arrivals + " • Départs: " + departures + " • En cours: " + occupied,
@@ -957,7 +967,7 @@
         $("countArr").textContent = "0";
         $("countDep").textContent = "0";
         $("countOcc").textContent = "0";
-        $("businessCode").textContent = "CODE • —";
+        $("businessCode").textContent = "Espace sécurisé";
       }
 
       function renderAll(data){
@@ -1129,11 +1139,11 @@
         }
 
         const sb = getSB();
-        $("businessCode").textContent = "CODE • …";
+        $("businessCode").textContent = "Espace sécurisé";
 
         try{
           BUSINESS = await resolveBusinessFromSlug(sb, SLUG);
-          $("businessCode").textContent = "CODE • " + (BUSINESS || "—");
+          $("businessCode").textContent = "Espace sécurisé";
 
           let payload = await fetchListingBySlug(sb);
 
@@ -1185,5 +1195,20 @@
       init();
     })();
   </script>
+
+<script>
+(function(){
+  function scrub(){
+    document.querySelectorAll('body *').forEach(function(el){
+      if(!el || el.children.length) return;
+      var t=el.textContent||'';
+      var n=t.replace(/loc-\d{7,}/gi,'Espace logement sécurisé').replace(/(?:\+?221)?\d{9,}/g,function(m){return /[0-9]/.test(m)?'Compte reconnu':m});
+      if(n!==t) el.textContent=n;
+    });
+    document.querySelectorAll('a[href]').forEach(function(a){try{var u=new URL(a.getAttribute('href'),location.href);u.searchParams.delete('phone');var s=u.searchParams.get('slug')||'';if(/\d{7,}/.test(s))u.searchParams.delete('slug');a.setAttribute('href',u.origin===location.origin?u.pathname+u.search+u.hash:u.toString());}catch(e){}});
+  }
+  scrub(); new MutationObserver(scrub).observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
+</script>
 </body>
 </html>
