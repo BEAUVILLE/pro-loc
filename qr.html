@@ -1,688 +1,727 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1020" />
-  <meta name="description" content="Je loue — prépare et partage ton QR d’accès DIGIY pour ouvrir ton espace, ta fiche publique et ton entrée sécurisée." />
-  <title>Je loue • Mon QR DIGIY</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#061b14"/>
+<meta name="description" content="Je loue — QR DIGIY LOC sécurisé, sans téléphone visible, sans identifiant sensible en façade."/>
+<title>Je loue • Mon QR</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 
-  <script>
-    window.DIGIY_MODULE = "LOC";
-    window.DIGIY_LOGIN_URL = "./pin.html";
-    window.DIGIY_SUPABASE_URL =
-      window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY =
-      window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON =
-      window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
-  </script>
-  <!-- QR local/offline : place le fichier qrcode.min.js dans ce même dépôt -->
-  <script src="./qrcode.min.js?v=digiy-local-1"></script>
-  <script src="./guard.js?v=locpro-final-human-front"></script>
+<script>
+  window.DIGIY_MODULE = "LOC";
+  window.DIGIY_LOGIN_URL = "./pin.html";
+  window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
+  window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
+</script>
 
-  <style>
-    :root{
-      --bg:#020617;
-      --card:#052e16;
-      --accent:#facc15;
-      --muted:#9ca3af;
-      --text:#e5e7eb;
-      --line:rgba(148,163,184,0.18);
-      --danger:#ef4444;
-      --ok:#22c55e;
-      --shadow:0 18px 60px rgba(0,0,0,.45);
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
-      background:
-        radial-gradient(circle at 10% 10%, rgba(250,204,21,.09), transparent 40%),
-        radial-gradient(circle at 90% 100%, rgba(34,197,94,.10), transparent 45%),
-        linear-gradient(135deg,#020617,#062e16);
-      color:var(--text);
-      min-height:100vh;
-    }
-    .wrap{max-width:760px;margin:auto;padding:18px}
-    h1{font-size:1.42rem;margin-bottom:6px;font-weight:950}
-    p{color:var(--muted);margin-bottom:14px;line-height:1.4;font-weight:700}
+<script src="./qrcode.min.js?v=digiy-local-1"></script>
+<script src="./guard.js?v=loc-qr-safe-senior-v1"></script>
 
-    .card{
-      background:rgba(255,255,255,0.03);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:16px;
-      margin-top:14px;
-      box-shadow:var(--shadow);
-    }
-
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
-    .btn{
-      width:100%;
-      padding:12px;
-      border-radius:12px;
-      font-weight:900;
-      border:none;
-      cursor:pointer;
-      margin-top:10px;
-      min-height:48px;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      transition:transform .12s ease, filter .12s ease, opacity .12s ease;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
-    }
-    .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.05)}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .btn.primary{background:var(--accent);color:#022c22}
-    .btn.ghost{
-      background:transparent;
-      border:1px solid rgba(250,204,21,0.35);
-      color:#fff;
-    }
-    .btn.good{
-      background:rgba(34,197,94,.14);
-      border:1px solid rgba(34,197,94,.35);
-      color:#bbf7d0;
-    }
-
-    .mini{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:.92rem;
-      font-weight:700;
-      line-height:1.35;
-    }
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
-
-    .note{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      display:none;
-      white-space:pre-wrap;
-      line-height:1.35;
-      font-weight:850;
-    }
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(34,197,94,.08)}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(239,68,68,.08)}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);color:#fde68a;background:rgba(250,204,21,.08)}
-
-    .qrbox{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      padding:16px;
-      border-radius:16px;
-      border:1px dashed rgba(250,204,21,0.35);
-      background:rgba(0,0,0,0.12);
-      margin-top:12px;
-      min-height:220px;
-    }
-    .qrImg{
-      max-width:100%;
-      width:320px;
-      height:auto;
-      border-radius:12px;
-      background:#fff;
-      padding:10px;
-      display:block;
-      border:1px solid rgba(148,163,184,.22);
-    }
-
-    .brandPreview{
-      margin-top:12px;
-      border-radius:18px;
-      border:1px solid rgba(250,204,21,.28);
-      background:
-        radial-gradient(circle at 20% 0%, rgba(250,204,21,.18), transparent 38%),
-        radial-gradient(circle at 90% 100%, rgba(34,197,94,.16), transparent 45%),
-        rgba(2,6,23,.72);
-      padding:14px;
-    }
-
-    .brandPreviewTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .digiyMark{
-      width:42px;
-      height:42px;
-      border-radius:15px;
-      display:grid;
-      place-items:center;
-      background:linear-gradient(135deg,#fef3c7,#facc15);
-      color:#052e16;
-      font-weight:1000;
-      box-shadow:0 10px 30px rgba(250,204,21,.18);
-    }
-
-    .brandName{
-      font-weight:1000;
-      letter-spacing:.04em;
-      text-transform:uppercase;
-      color:#fff7cc;
-    }
-
-    .brandLine{
-      color:rgba(229,231,235,.78);
-      font-size:.88rem;
-      font-weight:800;
-      margin-top:2px;
-    }
-
-    .brandUrl{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(0,0,0,.14);
-      color:#cbd5e1;
-      font-size:.86rem;
-      font-weight:800;
-      word-break:break-all;
-    }
-
-    .label{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,0.12);
-      line-height:1.4;
-      word-break:break-all;
-      font-weight:800;
-    }
-    .label b{color:#fff}
-    .hr{height:1px;background:rgba(148,163,184,0.18);margin-top:12px}
-    .pillRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-    .pill{
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      color:#cbd5e1;
-      font-weight:900;
-      font-size:.9rem;
-    }
-
-    @media (max-width:680px){
-      .wrap{padding:14px}
-      .qrImg{width:260px}
-    }
-  </style>
+<style>
+:root{
+  --bg:#061b14;
+  --bg2:#0a2820;
+  --card:rgba(255,255,255,.045);
+  --line:rgba(255,255,255,.14);
+  --text:#eafff1;
+  --muted:rgba(234,255,241,.78);
+  --gold:#facc15;
+  --ok:#22c55e;
+  --bad:#ef4444;
+  --blue:#38bdf8;
+  --shadow:0 18px 42px rgba(0,0,0,.36);
+  --bottom:86px;
+  --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:var(--font);
+  color:var(--text);
+  background:
+    radial-gradient(900px 520px at 12% -8%,rgba(250,204,21,.14),transparent 58%),
+    radial-gradient(900px 520px at 92% 0%,rgba(34,197,94,.16),transparent 58%),
+    linear-gradient(180deg,#03120d,var(--bg));
+  padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+.wrap{max-width:860px;margin:0 auto}
+.hero,.card{
+  border:1px solid var(--line);
+  border-radius:26px;
+  background:var(--card);
+  box-shadow:var(--shadow);
+  padding:18px;
+}
+.card{margin-top:14px}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.brand{display:flex;gap:12px;align-items:center;min-width:0}
+.logo{
+  width:58px;height:58px;border-radius:20px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(34,197,94,.20));
+  border:1px solid rgba(250,204,21,.36);
+  font-size:28px;flex:0 0 auto;
+}
+h1{
+  margin:0;
+  font-size:clamp(30px,6vw,46px);
+  line-height:1.02;
+  font-weight:1100;
+  letter-spacing:-.045em;
+  color:#fff7cc;
+}
+.sub{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:18px;
+  line-height:1.5;
+  font-weight:850;
+  max-width:62ch;
+}
+.pillRow{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.pill{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:42px;
+  padding:9px 13px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.26);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  font-size:15px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+.pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+.pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+.btn{
+  appearance:none;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:18px;
+  min-height:58px;
+  padding:14px 16px;
+  background:rgba(255,255,255,.045);
+  color:var(--text);
+  font-size:17px;
+  font-weight:1100;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  text-align:center;
+  touch-action:manipulation;
+}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.38);color:#fde68a}
+.btn.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.36);color:#bbf7d0}
+.btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
+.btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.32);color:#fecaca}
+.actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+.qrBox{
+  margin-top:14px;
+  min-height:330px;
+  border-radius:24px;
+  border:1px dashed rgba(250,204,21,.38);
+  background:rgba(0,0,0,.14);
+  display:grid;
+  place-items:center;
+  padding:18px;
+}
+.qrImg{
+  width:min(360px,100%);
+  height:auto;
+  border-radius:18px;
+  background:#fff;
+  padding:12px;
+  border:1px solid rgba(148,163,184,.24);
+  display:block;
+}
+.sectionTitle{
+  font-size:24px;
+  font-weight:1100;
+  color:#fde68a;
+  margin:0 0 8px;
+  letter-spacing:-.02em;
+}
+.safeText{
+  color:var(--muted);
+  font-size:17px;
+  line-height:1.55;
+  font-weight:850;
+}
+.linkBox{
+  margin-top:14px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(0,0,0,.16);
+}
+.linkLabel{
+  color:#fde68a;
+  font-weight:1100;
+  font-size:16px;
+  margin-bottom:8px;
+}
+.linkValue{
+  color:#dbeafe;
+  font-size:15px;
+  line-height:1.45;
+  font-weight:850;
+  word-break:break-all;
+}
+.doctrine{
+  margin-top:14px;
+  border:1px solid rgba(34,197,94,.28);
+  border-radius:22px;
+  background:rgba(34,197,94,.08);
+  padding:14px;
+  color:#bbf7d0;
+  font-size:17px;
+  line-height:1.55;
+  font-weight:900;
+}
+.note{
+  display:none;
+  margin-top:12px;
+  padding:13px 14px;
+  border-radius:18px;
+  border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.035);
+  color:var(--muted);
+  font-size:16px;
+  line-height:1.45;
+  font-weight:950;
+  white-space:pre-wrap;
+}
+.note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+.note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+.note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+.bottomNav{
+  position:fixed;left:0;right:0;bottom:0;z-index:70;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,rgba(6,27,20,0),rgba(6,27,20,.96) 28%);
+}
+.bottomInner{
+  max-width:980px;margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(6,27,20,.94);
+  backdrop-filter:blur(10px);
+  border-radius:22px;
+  padding:7px;
+  box-shadow:0 16px 44px rgba(0,0,0,.38);
+}
+.navItem{
+  min-height:60px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  color:rgba(234,255,241,.76);
+  font-size:13px;
+  font-weight:1000;
+  border:1px solid transparent;
+  text-align:center;
+}
+.navItem strong{font-size:21px;line-height:1}
+.navItem.active{color:#fde68a;background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.24)}
+@media(max-width:620px){
+  body{padding-left:10px;padding-right:10px}
+  .hero,.card{padding:15px;border-radius:22px}
+  .actions{grid-template-columns:1fr}
+  .sub{font-size:17px}
+  .btn{font-size:17px;min-height:60px}
+  .qrBox{min-height:280px}
+  .navItem{font-size:12px}
+}
+</style>
 </head>
 
 <body>
 <div class="wrap">
-  <h1>📎 Mon QR</h1>
-  <p>Un seul QR pour ouvrir ton espace, ta fiche publique et ton entrée sécurisée. Tu peux le partager ou l’imprimer.</p>
+  <section class="hero">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">🔳</div>
+        <div>
+          <h1>Mon QR</h1>
+          <div class="sub">
+            Un QR propre pour partager le logement et retrouver l’accès DIGIY.
+            Pas de téléphone affiché. Pas d’identifiant sensible en façade.
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="pill" id="pillSpace">Espace sécurisé</div>
+        <div class="pill warn" id="pillState" style="margin-top:8px">vérification…</div>
+      </div>
+    </div>
 
-  <div class="card">
     <div class="pillRow">
-      <div class="pill" id="pillSlug">identifiant : —</div>
-      <div class="pill" id="pillState">accès : —</div>
+      <span class="pill ok">0% commission</span>
+      <span class="pill">Lien léger</span>
+      <span class="pill">QR local</span>
     </div>
 
-    <div class="row">
-      <button class="btn ghost" id="btnBack" type="button">⬅️ Retour à mon espace</button>
-      <button class="btn primary" id="btnCopy" type="button">📋 Copier mon lien</button>
+    <div class="actions">
+      <button class="btn green" id="btnOpen" type="button">↗️ Ouvrir le lien</button>
+      <button class="btn gold" id="btnCopy" type="button">📋 Copier le lien</button>
+      <button class="btn blue" id="btnDownload" type="button">⬇️ Télécharger QR</button>
+      <button class="btn" id="btnSticker" type="button">🟩 Sticker XL</button>
     </div>
 
-    <div class="row">
-      <button class="btn good" id="btnOpen" type="button">↗️ Ouvrir mon lien</button>
-      <button class="btn primary" id="btnDownload" type="button">⬇️ Télécharger mon QR</button>
-      <button class="btn ghost" id="btnSticker" type="button">🟩 Télécharger sticker XL</button>
+    <div class="note" id="note"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="sectionTitle">QR prêt à partager</h2>
+    <div class="safeText">
+      Teste le QR avec un téléphone avant impression. Le lien ne transporte pas le numéro du propriétaire.
     </div>
 
-    <div class="qrbox">
+    <div class="qrBox">
       <a id="qrAnchor" href="#" target="_blank" rel="noopener">
-        <img id="qrImg" class="qrImg" alt="QR DIGIY" />
+        <img id="qrImg" class="qrImg" alt="QR DIGIY LOC"/>
       </a>
     </div>
 
-    <div class="brandPreview">
-      <div class="brandPreviewTop">
-        <div class="row" style="margin:0">
-          <div class="digiyMark">∞</div>
-          <div>
-            <div class="brandName">DIGIYLYFE</div>
-            <div class="brandLine">Je loue • accès direct • 0% commission</div>
-          </div>
-        </div>
-        <div class="pill" id="pillPhone">téléphone : —</div>
-      </div>
-      <div class="brandUrl" id="brandUrl">Lien QR en préparation…</div>
+    <div class="linkBox">
+      <div class="linkLabel">Lien du QR</div>
+      <div class="linkValue" id="linkValue">Préparation…</div>
     </div>
 
-    <div class="note warn" id="note"></div>
-
-    <div class="hr"></div>
-  </div>
+    <div class="doctrine">
+      Doctrine DIGIY LOC : le QR ouvre le chemin, mais ne montre pas le téléphone du propriétaire.
+      Les infos sensibles restent dans l’accès, pas dans l’adresse visible.
+    </div>
+  </section>
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
+    <a class="navItem active" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (async function(){
   "use strict";
 
   const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
+  const $ = (id)=>document.getElementById(id);
 
-  const qrImg = document.getElementById("qrImg");
-  const qrAnchor = document.getElementById("qrAnchor");
-  const noteEl = document.getElementById("note");
-  const pillSlug = document.getElementById("pillSlug");
-  const pillState = document.getElementById("pillState");
-  const pillPhone = document.getElementById("pillPhone");
-  const brandUrl = document.getElementById("brandUrl");
+  const State = {
+    slug:"",
+    phone:"",
+    access:false,
+    targetUrl:"",
+    qrNormal:"",
+    qrXL:"",
+    busy:false
+  };
 
-  const btnDownload = document.getElementById("btnDownload");
-  const btnSticker  = document.getElementById("btnSticker");
-  const btnBack     = document.getElementById("btnBack");
-  const btnCopy     = document.getElementById("btnCopy");
-  const btnOpen     = document.getElementById("btnOpen");
+  function storageGet(k){
+    try{const s=sessionStorage.getItem(k); if(s) return s;}catch{}
+    try{const l=localStorage.getItem(k); if(l) return l;}catch{}
+    return "";
+  }
 
-  let slug = "";
-  let phone = "";
-  let url = "";
-  let busy = false;
-  let qrNormalDataUrl = "";
-  let qrXLDataUrl = "";
+  function cleanSlug(v){
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"")
+      .replace(/-+/g,"-")
+      .replace(/^[-_]+|[-_]+$/g,"");
+  }
 
-  function note(msg, type){
-    noteEl.className = "note " + (type || "warn");
-    noteEl.textContent = msg || "";
-    noteEl.style.display = msg ? "block" : "none";
+  function digits(v){ return String(v || "").replace(/\D/g,""); }
+
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+
+  function canExposeSlug(slug){
+    const s = cleanSlug(slug);
+    return !!s && !isSensitiveSlug(s);
+  }
+
+  function safeSpaceLabel(slug){
+    const s = cleanSlug(slug);
+    if(!s || isSensitiveSlug(s)) return "Espace logement sécurisé";
+    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
+  }
+
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};} }
+
+  function readParam(name){
+    try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch{return "";}
+  }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>{
+        if(u.searchParams.has(k)){u.searchParams.delete(k);changed=true;}
+      });
+      const slug = cleanSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }catch{}
+  }
+
+  function getSlug(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return cleanSlug(
+      readParam("slug") ||
+      st.slug ||
+      gs.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG")
+    );
+  }
+
+  function getPhone(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return digits(
+      st.phone ||
+      gs.phone ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      storageGet("DIGIY_PHONE")
+    );
+  }
+
+  function hasAccess(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return [st.access_ok,st.access,st.ok,gs.access_ok,gs.access,gs.ok]
+      .some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1");
+  }
+
+  function note(msg, cls="warn"){
+    const el = $("note");
+    el.className = "note " + cls;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
   }
 
   function setBusy(on){
-    busy = !!on;
-    btnDownload.disabled = on;
-    btnSticker.disabled = on;
-    btnCopy.disabled = on;
-    btnOpen.disabled = on;
-    btnBack.disabled = on;
-  }
-
-  function getGuardSession(){
-    const st = window.DIGIY_GUARD?.state || {};
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
-    return {
-      ok: !!st.access_ok,
-      phone: String(st.phone || raw.phone || "").trim(),
-      slug: String(st.slug || raw.slug || "").trim()
-    };
-  }
-
-  async function bootGuardSafe(){
-    try{
-      if(window.DIGIY_GUARD?.ready){
-        await window.DIGIY_GUARD.ready();
-      }
-    }catch(e){
-      console.warn("guard ready failed", e);
-    }
-  }
-
-  function getSlugSafe(){
-    const sess = getGuardSession();
-    const qsSlug = new URLSearchParams(location.search).get("slug") || "";
-    return String(sess.slug || window.DIGIY_GUARD?.state?.slug || qsSlug || "").trim();
-  }
-
-  function getPhoneSafe(){
-    const sess = getGuardSession();
-    const qsTel =
-      new URLSearchParams(location.search).get("tel") ||
-      new URLSearchParams(location.search).get("phone") || "";
-    return String(sess.phone || qsTel || "").trim();
-  }
-
-  function buildSafeUrl(path, params){
-    let u;
-    try{
-      u = new URL(path, location.href);
-    }catch{
-      u = new URL(location.href);
-      u.pathname = path;
-      u.search = "";
-      u.hash = "";
-    }
-    Object.entries(params || {}).forEach(([k,v]) => {
-      if(v == null || v === "") return;
-      u.searchParams.set(k, String(v));
-    });
-    return u.toString();
-  }
-
-  function withSlug(path){
-    return buildSafeUrl(path, {
-      ...(slug ? { slug } : {}),
-      ...(phone ? { phone } : {})
+    State.busy = !!on;
+    ["btnOpen","btnCopy","btnDownload","btnSticker"].forEach(id=>{
+      const el=$(id); if(el) el.disabled = !!on;
     });
   }
 
-  function syncOwnSlug(){
-    const u = new URL(location.href);
-    if(slug) u.searchParams.set("slug", slug);
-    else u.searchParams.delete("slug");
+  function buildInternal(path){
+    const u = new URL(path, location.href);
+    if(canExposeSlug(State.slug)) u.searchParams.set("slug", State.slug);
+    ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
+    return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
+  }
 
-    if(phone) u.searchParams.set("tel", phone);
-    else u.searchParams.delete("tel");
+  function buildTargetUrl(){
+    const qr = new URL(QR_PRO_BASE);
+    qr.searchParams.set("module", "LOC");
 
-    history.replaceState({}, "", u.toString());
+    // Le slug n’est envoyé que s’il n’est pas sensible.
+    // Si le slug contient un téléphone ou un identifiant brut, le QR mène vers l’entrée PIN propre.
+    if(canExposeSlug(State.slug)){
+      qr.searchParams.set("slug", State.slug);
+    }
+
+    const returnUrl = new URL(buildInternal("./app.html"), location.href);
+    const publicUrl = new URL(buildInternal("./go-pin-public.html"), location.href);
+
+    qr.searchParams.set("return", returnUrl.toString());
+    qr.searchParams.set("public", publicUrl.toString());
+
+    return qr.toString();
+  }
+
+  function syncUi(){
+    $("pillSpace").textContent = safeSpaceLabel(State.slug);
+    const pill = $("pillState");
+    if(State.access){
+      pill.textContent = "accès ouvert";
+      pill.className = "pill ok";
+    }else if(State.slug || State.phone){
+      pill.textContent = "lecture";
+      pill.className = "pill warn";
+    }else{
+      pill.textContent = "accès à vérifier";
+      pill.className = "pill bad";
+    }
+
+    $("linkValue").textContent = State.targetUrl || "Préparation…";
+    $("qrAnchor").href = State.targetUrl || "#";
+
+    [
+      ["navHome","./app.html"],
+      ["navReservations","./reservations.html"],
+      ["navPlanning","./planning.html"],
+      ["navNotes","./notes.html"],
+      ["navPlus","./manage-links.html"]
+    ].forEach(([id,path])=>{
+      const el = $(id);
+      if(el) el.href = buildInternal(path);
+    });
+  }
+
+  function copySignal(label){
+    try{
+      const key = "DIGIY_LOC_PRO_SIGNALS";
+      const raw = localStorage.getItem(key);
+      const rows = raw ? JSON.parse(raw) : [];
+      const next = Array.isArray(rows) ? rows : [];
+      next.unshift({
+        id:"loc-qr-" + Date.now(),
+        type:"qr",
+        source:"qr",
+        label:label || "QR LOC préparé",
+        href:buildInternal("./qr.html"),
+        created_at:new Date().toISOString()
+      });
+      localStorage.setItem(key, JSON.stringify(next.slice(0,20)));
+    }catch{}
   }
 
   async function copyText(text){
-    if(navigator.clipboard?.writeText){
-      return navigator.clipboard.writeText(text);
-    }
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    let ok = false;
-    try{
-      ok = document.execCommand("copy");
-    }catch(_){}
+    if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+    const ta=document.createElement("textarea");
+    ta.value=text; ta.setAttribute("readonly","");
+    ta.style.position="fixed"; ta.style.left="-9999px";
+    document.body.appendChild(ta); ta.select();
+    const ok=document.execCommand("copy");
     ta.remove();
     if(!ok) throw new Error("copy_failed");
   }
 
   function loadImage(src){
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("image_load_failed"));
-      img.src = src;
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(new Error("image_load_failed"));
+      img.src=src;
     });
   }
 
-  function roundRect(ctx, x, y, w, h, r){
-    const rr = Math.min(r, w / 2, h / 2);
+  function roundRect(ctx,x,y,w,h,r){
+    const rr=Math.min(r,w/2,h/2);
     ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
     ctx.closePath();
-  }
-
-  async function makeBrandedPng(qrDataUrl, size){
-    const qr = await loadImage(qrDataUrl);
-
-    const W = size;
-    const H = Math.round(size * 1.34);
-    const pad = Math.round(size * .07);
-    const qrSize = Math.round(size * .70);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
-
-    const ctx = canvas.getContext("2d");
-
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, "#020617");
-    grad.addColorStop(.55, "#052e16");
-    grad.addColorStop(1, "#07140f");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.fillStyle = "rgba(250,204,21,.10)";
-    ctx.beginPath();
-    ctx.arc(W * .18, H * .10, W * .30, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "rgba(34,197,94,.12)";
-    ctx.beginPath();
-    ctx.arc(W * .95, H * .82, W * .36, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "rgba(255,255,255,.06)";
-    roundRect(ctx, pad, pad, W - pad * 2, H - pad * 2, Math.round(size * .05));
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(250,204,21,.42)";
-    ctx.lineWidth = Math.max(2, Math.round(size * .004));
-    roundRect(ctx, pad, pad, W - pad * 2, H - pad * 2, Math.round(size * .05));
-    ctx.stroke();
-
-    ctx.fillStyle = "#fff7cc";
-    ctx.textAlign = "center";
-    ctx.font = `900 ${Math.round(size * .058)}px Outfit, system-ui, Arial`;
-    ctx.fillText("DIGIYLYFE", W / 2, pad + Math.round(size * .095));
-
-    ctx.fillStyle = "rgba(229,231,235,.88)";
-    ctx.font = `800 ${Math.round(size * .034)}px Outfit, system-ui, Arial`;
-    ctx.fillText("Je loue • accès direct • 0% commission", W / 2, pad + Math.round(size * .145));
-
-    const qx = Math.round((W - qrSize) / 2);
-    const qy = pad + Math.round(size * .18);
-
-    ctx.fillStyle = "#ffffff";
-    roundRect(ctx, qx - Math.round(size * .025), qy - Math.round(size * .025), qrSize + Math.round(size * .05), qrSize + Math.round(size * .05), Math.round(size * .035));
-    ctx.fill();
-
-    ctx.drawImage(qr, qx, qy, qrSize, qrSize);
-
-    ctx.fillStyle = "#facc15";
-    ctx.font = `900 ${Math.round(size * .038)}px Outfit, system-ui, Arial`;
-    ctx.fillText(slug || "mon-lieu", W / 2, qy + qrSize + Math.round(size * .075));
-
-    ctx.fillStyle = "rgba(229,231,235,.80)";
-    ctx.font = `800 ${Math.round(size * .030)}px Outfit, system-ui, Arial`;
-    ctx.fillText(phone ? ("Tel : " + phone) : "Scanne pour ouvrir", W / 2, qy + qrSize + Math.round(size * .12));
-
-    ctx.fillStyle = "rgba(203,213,225,.75)";
-    ctx.font = `700 ${Math.round(size * .025)}px Outfit, system-ui, Arial`;
-    ctx.fillText("Powered by DIGIY", W / 2, H - pad - Math.round(size * .030));
-
-    return canvas.toDataURL("image/png");
-  }
-
-  function directDownload(dataUrl, filename){
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-
-  function loadScript(src){
-    return new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = src;
-      s.async = true;
-      s.onload = () => resolve(true);
-      s.onerror = () => reject(new Error("script_load_failed: " + src));
-      document.head.appendChild(s);
-    });
-  }
-
-  async function ensureQrLib(){
-    // Version blindée offline : aucune dépendance CDN.
-    // Le fichier ./qrcode.min.js doit être présent dans le dépôt, à côté de qr.html.
-    for(let i = 0; i < 20; i++){
-      if(window.QRCode?.toDataURL) return true;
-      await new Promise(r => setTimeout(r, 150));
-    }
-
-    return !!window.QRCode?.toDataURL;
   }
 
   function qrOptions(size){
     return {
-      width: size,
-      margin: 1,
-      errorCorrectionLevel: "M",
-      color: {
-        dark: "#111827",
-        light: "#FFFFFF"
-      }
+      width:size,
+      margin:1,
+      errorCorrectionLevel:"M",
+      color:{dark:"#111827", light:"#FFFFFF"}
     };
   }
 
-  function makeQrDataUrl(text, size){
-    return new Promise((resolve, reject) => {
-      if(!window.QRCode || typeof window.QRCode.toDataURL !== "function"){
-        reject(new Error("QRCode lib missing"));
-        return;
-      }
-      window.QRCode.toDataURL(text, qrOptions(size), (err, dataUrl) => {
-        if(err) reject(err);
-        else resolve(dataUrl);
+  async function ensureQrLib(){
+    for(let i=0;i<25;i++){
+      if(window.QRCode?.toDataURL) return true;
+      await new Promise(r=>setTimeout(r,120));
+    }
+    return !!window.QRCode?.toDataURL;
+  }
+
+  function makeQrDataUrl(text,size){
+    return new Promise((resolve,reject)=>{
+      if(!window.QRCode?.toDataURL){ reject(new Error("QRCode lib missing")); return; }
+      window.QRCode.toDataURL(text, qrOptions(size), (err,dataUrl)=>{
+        if(err) reject(err); else resolve(dataUrl);
       });
     });
   }
 
-  await bootGuardSafe();
+  async function makeBranded(qrDataUrl,size){
+    const qr = await loadImage(qrDataUrl);
+    const W=size, H=Math.round(size*1.34);
+    const pad=Math.round(size*.07);
+    const qrSize=Math.round(size*.70);
+    const canvas=document.createElement("canvas");
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext("2d");
 
-  slug = getSlugSafe();
-  phone = getPhoneSafe();
+    const grad=ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0,"#020617");
+    grad.addColorStop(.55,"#052e16");
+    grad.addColorStop(1,"#07140f");
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
 
-  if(!slug){
-    alert("❌ Identifiant manquant. Ouvre cette page depuis ton espace.");
-    return;
+    ctx.fillStyle="rgba(250,204,21,.11)";
+    ctx.beginPath(); ctx.arc(W*.18,H*.10,W*.30,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="rgba(34,197,94,.12)";
+    ctx.beginPath(); ctx.arc(W*.94,H*.82,W*.36,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle="rgba(255,255,255,.06)";
+    roundRect(ctx,pad,pad,W-pad*2,H-pad*2,Math.round(size*.05)); ctx.fill();
+    ctx.strokeStyle="rgba(250,204,21,.42)";
+    ctx.lineWidth=Math.max(2,Math.round(size*.004));
+    roundRect(ctx,pad,pad,W-pad*2,H-pad*2,Math.round(size*.05)); ctx.stroke();
+
+    ctx.fillStyle="#fff7cc"; ctx.textAlign="center";
+    ctx.font=`900 ${Math.round(size*.058)}px Outfit, system-ui, Arial`;
+    ctx.fillText("DIGIYLYFE", W/2, pad + Math.round(size*.095));
+
+    ctx.fillStyle="rgba(229,231,235,.88)";
+    ctx.font=`800 ${Math.round(size*.034)}px Outfit, system-ui, Arial`;
+    ctx.fillText("Je loue • accès direct • 0% commission", W/2, pad + Math.round(size*.145));
+
+    const qx=Math.round((W-qrSize)/2);
+    const qy=pad + Math.round(size*.18);
+    ctx.fillStyle="#fff";
+    roundRect(ctx,qx-Math.round(size*.025),qy-Math.round(size*.025),qrSize+Math.round(size*.05),qrSize+Math.round(size*.05),Math.round(size*.035));
+    ctx.fill();
+    ctx.drawImage(qr,qx,qy,qrSize,qrSize);
+
+    ctx.fillStyle="#facc15";
+    ctx.font=`900 ${Math.round(size*.038)}px Outfit, system-ui, Arial`;
+    ctx.fillText(safeSpaceLabel(State.slug), W/2, qy+qrSize+Math.round(size*.075));
+
+    ctx.fillStyle="rgba(229,231,235,.82)";
+    ctx.font=`800 ${Math.round(size*.030)}px Outfit, system-ui, Arial`;
+    ctx.fillText("Scanne pour ouvrir DIGIY LOC", W/2, qy+qrSize+Math.round(size*.12));
+
+    ctx.fillStyle="rgba(203,213,225,.78)";
+    ctx.font=`700 ${Math.round(size*.025)}px Outfit, system-ui, Arial`;
+    ctx.fillText("Powered by DIGIYLYFE", W/2, H-pad-Math.round(size*.030));
+
+    return canvas.toDataURL("image/png");
   }
 
-  const sess = getGuardSession();
-  pillSlug.textContent = "identifiant : " + slug;
-  pillState.textContent = sess.ok
-    ? ("accès : ouvert" + (phone ? " · " + phone : ""))
-    : "accès : aperçu";
-
-  syncOwnSlug();
-
-  const qrProUrl = new URL(QR_PRO_BASE);
-  qrProUrl.searchParams.set("slug", slug);
-  qrProUrl.searchParams.set("module", "LOC");
-  if (phone) qrProUrl.searchParams.set("tel", phone);
-
-  const appUrl = new URL("./app.html", location.href);
-  appUrl.searchParams.set("slug", slug);
-
-  const publicUrl = new URL("./fiche.html", location.href);
-  publicUrl.searchParams.set("slug", slug);
-
-  qrProUrl.searchParams.set("return", appUrl.toString());
-  qrProUrl.searchParams.set("public", publicUrl.toString());
-
-  url = qrProUrl.toString();
-
-  if (brandUrl) brandUrl.textContent = url;
-  if (pillPhone) pillPhone.textContent = "téléphone : " + (phone || "—");
-
-  qrAnchor.href = url;
-  note("⏳ Préparation du QR local…", "warn");
-  setBusy(true);
-
-  try{
-    const ok = await ensureQrLib();
-    if(!ok){
-      throw new Error("Librairie QR introuvable");
-    }
-
-    const rawNormal = await makeQrDataUrl(url, 520);
-    const rawXL = await makeQrDataUrl(url, 900);
-
-    qrNormalDataUrl = await makeBrandedPng(rawNormal, 900);
-    qrXLDataUrl = await makeBrandedPng(rawXL, 1400);
-
-    qrImg.onload = () => {
-      note("✅ Ton QR est prêt. Teste-le au téléphone avant impression.", "ok");
-    };
-
-    qrImg.onerror = () => {
-      note("❌ Impossible d’afficher l’image QR locale.", "bad");
-    };
-
-    qrImg.src = qrNormalDataUrl;
-  }catch(e){
-    console.error(e);
-    note("❌ Génération QR locale impossible : " + (e?.message || e) + "\n\nVérifie que le fichier qrcode.min.js est bien présent à côté de qr.html dans le dépôt.", "bad");
-  }finally{
-    setBusy(false);
+  function download(dataUrl, filename){
+    const a=document.createElement("a");
+    a.href=dataUrl; a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove();
   }
 
-  btnBack.onclick = () => {
-    location.href = withSlug("./app.html");
-  };
-
-  btnCopy.onclick = async () => {
-    try{
-      await copyText(url);
-      note("✅ Ton lien a bien été copié.", "ok");
-    }catch(e){
-      console.error(e);
-      note("⚠️ La copie a été bloquée. Copie manuelle dans le lien affiché.", "warn");
-    }
-  };
-
-  btnOpen.onclick = () => {
-    window.open(url, "_blank", "noopener");
-  };
-
-  btnDownload.onclick = async () => {
-    if(busy) return;
-    if(!qrNormalDataUrl){
-      note("❌ Le QR n’est pas encore prêt.", "bad");
-      return;
-    }
+  async function renderQr(){
+    note("⏳ Préparation du QR local…", "warn");
     setBusy(true);
     try{
-      note("⏳ Préparation du PNG…", "warn");
-      directDownload(qrNormalDataUrl, `DIGIY_QR_PRO_LOC_${slug}.png`);
-      note("⬇️ Téléchargement lancé.", "ok");
+      const ok = await ensureQrLib();
+      if(!ok) throw new Error("Librairie QR introuvable : vérifie qrcode.min.js");
+
+      const rawNormal = await makeQrDataUrl(State.targetUrl, 560);
+      const rawXL = await makeQrDataUrl(State.targetUrl, 950);
+
+      State.qrNormal = await makeBranded(rawNormal, 900);
+      State.qrXL = await makeBranded(rawXL, 1400);
+
+      $("qrImg").src = State.qrNormal;
+      note("✅ QR prêt. Teste-le au téléphone avant impression.", "ok");
+      copySignal("QR LOC préparé");
     }catch(e){
       console.error(e);
-      note("❌ Téléchargement impossible : " + (e?.message || e), "bad");
+      note("❌ Génération QR impossible : " + (e?.message || e), "bad");
     }finally{
       setBusy(false);
     }
-  };
+  }
 
-  btnSticker.onclick = async () => {
-    if(busy) return;
-    if(!qrXLDataUrl){
-      note("❌ Le sticker XL n’est pas encore prêt.", "bad");
-      return;
-    }
-    setBusy(true);
+  async function init(){
+    cleanVisibleUrl();
+
     try{
-      note("🟩 Préparation du sticker XL…", "warn");
-      directDownload(qrXLDataUrl, `DIGIY_STICKER_XL_LOC_${slug}.png`);
-      note("⬇️ Sticker XL téléchargé.", "ok");
-    }catch(e){
-      console.error(e);
-      note("❌ Sticker XL impossible : " + (e?.message || e), "bad");
-    }finally{
-      setBusy(false);
-    }
-  };
+      if(window.DIGIY_GUARD?.ready){
+        const out = window.DIGIY_GUARD.ready({redirect:false,preserve_validation:true,allow_soft_session:true});
+        if(out?.then) await out;
+      }
+    }catch(e){ console.warn("[LOC QR] guard:", e); }
 
+    State.slug = getSlug();
+    State.phone = getPhone();
+    State.access = hasAccess();
+    State.targetUrl = buildTargetUrl();
+
+    cleanVisibleUrl();
+    syncUi();
+
+    if(!State.slug){
+      note("Aucun espace reconnu. Ouvre cette page depuis ton accès LOC.", "warn");
+    }
+
+    await renderQr();
+
+    $("btnOpen").addEventListener("click", ()=> window.open(State.targetUrl, "_blank", "noopener"));
+    $("btnCopy").addEventListener("click", async ()=>{
+      try{
+        await copyText(State.targetUrl);
+        note("✅ Lien copié.", "ok");
+        copySignal("Lien QR copié");
+      }catch{
+        note("⚠️ Copie bloquée. Copie le lien affiché à la main.", "warn");
+      }
+    });
+    $("btnDownload").addEventListener("click", ()=>{
+      if(!State.qrNormal){note("QR pas encore prêt.", "warn"); return;}
+      download(State.qrNormal, "DIGIY_QR_LOC.png");
+      copySignal("QR téléchargé");
+    });
+    $("btnSticker").addEventListener("click", ()=>{
+      if(!State.qrXL){note("Sticker pas encore prêt.", "warn"); return;}
+      download(State.qrXL, "DIGIY_STICKER_LOC_XL.png");
+      copySignal("Sticker QR téléchargé");
+    });
+  }
+
+  init();
 })();
 </script>
+<script src="./loc-security-mask.js"></script>
 </body>
 </html>
+
