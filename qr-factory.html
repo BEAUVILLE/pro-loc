@@ -3,702 +3,867 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#020617"/>
-  <meta name="description" content="DIGIY — prépare tes QR d’accès pour chaque activité, avec un rendu simple, propre et humain."/>
-  <title>Mes accès DIGIY</title>
+  <meta name="theme-color" content="#061b14"/>
+  <meta name="description" content="DIGIY LOC — Préparer plusieurs QR propres, sans téléphone visible et sans identifiant sensible."/>
+  <title>Je loue • QR Factory</title>
+
+  <script>
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+    window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+
+  <script src="./qrcode.min.js?v=digiy-local-1"></script>
+  <script src="./guard.js?v=loc-qr-factory-safe-senior-v1"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
-
-  <!-- QR local -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
-      --bg:#020617;--card:rgba(11,17,32,.92);--line:rgba(148,163,184,.18);
-      --ink:#F9FAFB;--muted:#94a3b8;
-      --orange:#f97316;--gold:#facc15;--green:#22c55e;
-      --red:#ef4444;--cyan:#22d3ee;
-      --shadow:0 20px 60px rgba(0,0,0,.6);
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
-      background:
-        radial-gradient(ellipse at 5% 5%, rgba(249,115,22,.13) 0%, transparent 50%),
-        radial-gradient(ellipse at 95% 95%, rgba(34,211,238,.10) 0%, transparent 50%),
-        #020617;
-      color:var(--ink);min-height:100vh;padding:16px;
-    }
-    .header{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-      background:rgba(2,6,23,.85);border:1px solid var(--line);border-radius:20px;
-      padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);
-    }
-    .brand{display:flex;gap:12px;align-items:center}
-    .logo{
-      width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:20px;
-      background:radial-gradient(circle at 30% 20%,#fef3c7,#f97316);
-      box-shadow:0 8px 24px rgba(249,115,22,.4);flex-shrink:0;
-    }
-    .brandText h1{
-      font-size:15px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;line-height:1.1
-    }
-    .brandText .sub{
-      color:var(--muted);font-size:11px;font-weight:700;margin-top:2px
-    }
-    .headerRight{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .pill{
-      border:1px solid var(--line);padding:7px 12px;border-radius:999px;
-      background:rgba(255,255,255,.03);color:var(--muted);font-size:12px;font-weight:700;
-    }
-    .pill.active{
-      border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:#86efac
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:rgba(255,255,255,.045);
+      --line:rgba(255,255,255,.14);
+      --text:#eafff1;
+      --muted:rgba(234,255,241,.78);
+      --gold:#facc15;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --blue:#38bdf8;
+      --orange:#f59e0b;
+      --shadow:0 20px 48px rgba(0,0,0,.38);
+      --bottom:82px;
+      --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
 
-    .formCard{
-      background:var(--card);border:1px solid var(--line);border-radius:20px;
-      padding:20px;box-shadow:var(--shadow);margin-bottom:16px;
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 10% -8%, rgba(250,204,21,.15), transparent 58%),
+        radial-gradient(850px 500px at 95% 0%, rgba(34,197,94,.16), transparent 58%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:12px 12px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
     }
-    .formTitle{
-      font-weight:950;font-size:13px;text-transform:uppercase;
-      letter-spacing:.1em;margin-bottom:14px;color:var(--gold)
+
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
+    .wrap{max-width:1060px;margin:0 auto}
+
+    .hero,.card{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      padding:16px;
     }
-    .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media(max-width:600px){.fields{grid-template-columns:1fr}}
+
+    .heroTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+
+    .logo{
+      width:54px;
+      height:54px;
+      border-radius:20px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(250,204,21,.32),rgba(34,197,94,.18));
+      border:1px solid rgba(250,204,21,.35);
+      font-size:26px;
+      flex:0 0 auto;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(1.75rem,5.4vw,3rem);
+      line-height:1;
+      font-weight:1000;
+      letter-spacing:-.045em;
+    }
+
+    .sub{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:1.08rem;
+      line-height:1.45;
+      font-weight:850;
+      max-width:760px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:42px;
+      padding:9px 13px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size:1rem;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.11);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.11);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.11);color:#fecaca}
+
+    .statusRow{
+      margin-top:14px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .doctrine{
+      margin-top:14px;
+      border:1px solid rgba(250,204,21,.24);
+      background:rgba(250,204,21,.08);
+      border-radius:22px;
+      padding:14px;
+      color:#fde68a;
+      font-size:1.04rem;
+      font-weight:900;
+      line-height:1.5;
+    }
+
+    .form{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:12px;
+      align-items:end;
+    }
+
     .field label{
-      display:block;font-weight:900;font-size:11px;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px
+      display:block;
+      margin:0 0 8px;
+      color:#f8fafc;
+      font-size:1.02rem;
+      font-weight:1000;
     }
-    .field input{
-      width:100%;border-radius:12px;border:1px solid var(--line);
-      background:rgba(0,0,0,.25);color:var(--ink);padding:12px 14px;
-      font-weight:900;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
+
+    input{
+      width:100%;
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.26);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      padding:13px 15px;
+      font-size:1.1rem;
+      font-weight:950;
+      outline:none;
     }
-    .field input:focus{
-      border-color:rgba(249,115,22,.8);box-shadow:0 0 0 3px rgba(249,115,22,.12)
+    input:focus{
+      border-color:rgba(250,204,21,.55);
+      box-shadow:0 0 0 4px rgba(250,204,21,.11);
     }
-    .field .hint{color:var(--muted);font-size:11px;margin-top:5px;font-weight:600}
-    .actionRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+
+    .hint{
+      margin-top:8px;
+      color:var(--muted);
+      font-weight:850;
+      line-height:1.4;
+      font-size:.96rem;
+    }
+
     .btn{
-      border:none;border-radius:999px;padding:10px 18px;font-weight:950;cursor:pointer;
-      min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      font-size:13px;transition:transform .1s,filter .1s;font-family:"Outfit",system-ui,-apple-system,sans-serif;
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.24);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      font-size:1.03rem;
+      font-weight:1000;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      padding:13px 15px;
+      text-align:center;
+      touch-action:manipulation;
     }
-    .btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.08)}
-    .btn:disabled{opacity:.45;cursor:not-allowed}
-    .btn.primary{background:linear-gradient(135deg,var(--orange),#ea580c);color:#111}
-    .btn.red{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
-    .btn.gold{background:linear-gradient(135deg,#fef3c7,var(--gold));color:#111}
+    .btn:active{transform:scale(.99)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.36);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.36);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.32);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.11);border-color:rgba(239,68,68,.32);color:#fecaca}
+    .btn.full{width:100%}
+
+    .actionRow{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
 
     .note{
-      margin-top:12px;padding:10px 14px;border-radius:12px;font-weight:700;
-      font-size:13px;line-height:1.4;display:none;
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.035);
+      color:var(--muted);
+      font-size:1.02rem;
+      font-weight:900;
+      line-height:1.45;
+      white-space:pre-wrap;
     }
-    .note.show{display:block}
-    .note.ok{border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#86efac}
-    .note.bad{border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fca5a5}
-    .note.warn{border:1px solid rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
+    .note.ok{display:block;border-color:rgba(34,197,94,.36);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.warn{display:block;border-color:rgba(250,204,21,.36);background:rgba(250,204,21,.09);color:#fde68a}
+    .note.bad{display:block;border-color:rgba(239,68,68,.36);background:rgba(239,68,68,.09);color:#fecaca}
 
+    .sectionHead{
+      margin:18px 2px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
     .sectionTitle{
-      font-weight:950;font-size:12px;text-transform:uppercase;letter-spacing:.1em;
-      color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;
-    }
-    .sectionTitle .badge{
-      background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);
-      border-radius:999px;padding:3px 10px;color:var(--orange);font-size:11px;
+      font-size:1.2rem;
+      font-weight:1000;
     }
 
-    .modGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:12px;
+      margin-top:10px;
+    }
 
-    .modCard{
-      background:var(--card);border:1px solid var(--line);border-radius:18px;
-      padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.4);
-      transition:border-color .2s,transform .15s;position:relative;overflow:hidden;
+    .qrCard{
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:24px;
+      background:rgba(2,44,34,.27);
+      padding:14px;
+      box-shadow:0 14px 34px rgba(0,0,0,.28);
+      overflow:hidden;
     }
-    .modCard::before{
-      content:'';position:absolute;inset:0;border-radius:18px;opacity:0;
-      transition:opacity .2s;
-      background:radial-gradient(circle at top left, var(--mc), transparent 65%);
-    }
-    .modCard:hover::before{opacity:1}
-    .modCard:hover{transform:translateY(-2px);border-color:var(--mb)}
 
-    .modHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative}
-    .modIcon{
-      width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
-      font-size:18px;flex-shrink:0;background:var(--mc);border:1px solid var(--mb);
+    .qrHead{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:space-between;
     }
-    .modName{font-weight:950;font-size:14px}
-    .modDesc{color:var(--muted);font-size:11px;font-weight:700;margin-top:1px}
-    .modBadge{
-      margin-left:auto;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:900;
-      background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+    .qrTitleRow{display:flex;gap:10px;align-items:center;min-width:0}
+    .qrIcon{
+      width:46px;height:46px;border-radius:17px;
+      display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      font-size:23px;
+      flex:0 0 auto;
     }
-    .modBadge.ok{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#86efac}
-    .modBadge.bad{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#fca5a5}
+    .qrName{font-size:1.12rem;font-weight:1000;line-height:1.1}
+    .qrDesc{margin-top:3px;color:var(--muted);font-size:.94rem;font-weight:850;line-height:1.35}
 
-    .qrZone{
-      display:flex;justify-content:center;align-items:center;min-height:156px;border-radius:12px;
-      border:1px dashed rgba(148,163,184,.2);background:rgba(0,0,0,.15);margin-bottom:10px;
+    .badge{
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(0,0,0,.16);
+      color:var(--muted);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:.85rem;
+      font-weight:1000;
+      white-space:nowrap;
     }
-    .qrZone.loading{position:relative;}
-    .qrZone.loading::after{content:'⏳';font-size:22px;animation:spin 1.2s linear infinite;}
-    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .badge.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .badge.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+    .qrBox{
+      margin-top:12px;
+      min-height:190px;
+      border-radius:18px;
+      border:1px dashed rgba(250,204,21,.25);
+      background:rgba(0,0,0,.16);
+      display:grid;
+      place-items:center;
+      padding:12px;
+    }
     .qrImg{
-      width:136px;height:136px;border-radius:10px;background:#fff;padding:8px;
-      display:block;object-fit:contain;border:1px solid rgba(148,163,184,.2);
-      cursor:pointer;transition:transform .12s,box-shadow .12s;
-    }
-    .qrImg:hover{transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,.4)}
-
-    .modUrlLine{
-      font-size:11px;color:rgba(203,213,225,.72);font-weight:700;
-      margin-bottom:8px;padding:8px 10px;border-radius:10px;
-      background:rgba(0,0,0,.15);border:1px solid rgba(148,163,184,.1);line-height:1.35;
-      min-height:42px;display:flex;align-items:center;
+      width:165px;
+      height:165px;
+      background:#fff;
+      border-radius:14px;
+      padding:9px;
+      border:1px solid rgba(148,163,184,.22);
+      cursor:pointer;
     }
 
-    .modActions{display:flex;gap:6px;flex-wrap:wrap}
-    .mini{
-      padding:7px 10px;border-radius:10px;font-weight:950;font-size:11px;
-      border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;
-      cursor:pointer;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:4px;
-      transition:border-color .12s,background .12s;font-family:"Outfit",system-ui,-apple-system,sans-serif;
+    .urlLine{
+      margin-top:10px;
+      padding:11px;
+      min-height:50px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(0,0,0,.16);
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:850;
+      line-height:1.35;
+      word-break:break-word;
     }
-    .mini:hover{border-color:rgba(249,115,22,.6);background:rgba(249,115,22,.08)}
-    .mini:disabled{opacity:.4;cursor:not-allowed}
-    .mini.dl{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.07);color:#86efac}
-    .mini.dl:hover{border-color:rgba(34,197,94,.7);background:rgba(34,197,94,.15)}
-    .mini.xl{border-color:rgba(250,204,21,.3);background:rgba(250,204,21,.07);color:#fde68a}
-    .mini.xl:hover{border-color:rgba(250,204,21,.7);background:rgba(250,204,21,.15)}
-    .mini.cp{border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.07);color:#a5f3fc}
-    .mini.cp:hover{border-color:rgba(34,211,238,.7);background:rgba(34,211,238,.15)}
 
-    .histCard{
-      background:var(--card);border:1px solid var(--line);border-radius:18px;
-      padding:14px;box-shadow:var(--shadow);margin-top:16px;
+    .miniActions{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
     }
-    .histHead{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-      flex-wrap:wrap;margin-bottom:10px
+    .miniActions .btn{
+      min-height:50px;
+      border-radius:16px;
+      font-size:.95rem;
+      padding:10px;
     }
-    .histBody{max-height:240px;overflow-y:auto}
-    .hrow{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,.1);
-      background:rgba(0,0,0,.1);margin-bottom:6px;flex-wrap:wrap;
+
+    .bottomNav{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:70;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:linear-gradient(180deg, rgba(6,27,20,0), rgba(6,27,20,.96) 28%);
     }
-    .hSlug{font-weight:950;font-size:13px}
-    .hTel{color:var(--cyan);font-size:11px;font-weight:900;margin-top:2px}
-    .hPin{color:var(--gold);font-size:11px;font-weight:900}
-    .hMeta{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px}
-    .hBtns{display:flex;gap:6px}
-    .hmini{
-      padding:5px 9px;border-radius:8px;font-size:11px;font-weight:950;cursor:pointer;
-      border:1px solid var(--line);background:rgba(255,255,255,.03);color:#fff;
-      min-height:30px;display:inline-flex;align-items:center;justify-content:center;
-      font-family:"Outfit",system-ui,-apple-system,sans-serif;
+    .bottomInner{
+      max-width:1060px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(6,27,20,.95);
+      backdrop-filter:blur(10px);
+      border-radius:22px;
+      padding:7px;
+      box-shadow:0 16px 44px rgba(0,0,0,.38);
     }
-    .hmini:hover{border-color:rgba(249,115,22,.5)}
-    .hmini.del{border-color:rgba(239,68,68,.3);color:#fca5a5}
-    .empty{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;font-weight:700}
-    .wrap{max-width:1200px;margin:0 auto}
+    .navItem{
+      min-height:58px;
+      border-radius:16px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      color:rgba(234,255,241,.75);
+      font-size:.78rem;
+      font-weight:1000;
+      text-align:center;
+      border:1px solid transparent;
+    }
+    .navItem strong{font-size:1.22rem;line-height:1}
+    .navItem.active{
+      color:#fde68a;
+      background:rgba(250,204,21,.11);
+      border-color:rgba(250,204,21,.26);
+    }
+
+    @media(max-width:680px){
+      body{padding-left:10px;padding-right:10px}
+      .hero,.card{padding:14px;border-radius:24px}
+      .form{grid-template-columns:1fr}
+      .actionRow{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .miniActions{grid-template-columns:1fr}
+      h1{font-size:2rem}
+      .sub{font-size:1.02rem}
+      .bottomInner{grid-template-columns:repeat(5,1fr)}
+      .navItem{font-size:.68rem;min-height:56px}
+    }
   </style>
 </head>
+
 <body>
 <div class="wrap">
+  <section class="hero">
+    <div class="heroTop">
+      <div class="brand">
+        <div class="logo">🔳</div>
+        <div>
+          <h1>QR Factory LOC</h1>
+          <div class="sub">
+            Prépare plusieurs QR propres pour ton activité. Ici, on ne met pas le téléphone dans l’adresse :
+            le QR ouvre la porte, le code reste dans la tête du propriétaire.
+          </div>
+        </div>
+      </div>
+      <a class="pill" id="btnBackApp" href="./app.html">⬅️ Mon espace</a>
+    </div>
 
-  <div class="header">
-    <div class="brand">
-      <div class="logo">♾️</div>
-      <div class="brandText">
-        <h1>Mes accès</h1>
-        <div class="sub">Un contact, un lieu, puis tous les QR utiles prêts à partager.</div>
-      </div>
+    <div class="statusRow">
+      <span class="pill" id="pillSlug">🏷️ Espace sécurisé</span>
+      <span class="pill warn" id="pillState">Vérification…</span>
+      <span class="pill ok">🔒 Sans téléphone visible</span>
     </div>
-    <div class="headerRight">
-      <div class="pill active" id="pillInfo">Prêt</div>
-      <a class="pill" style="text-decoration:none;cursor:pointer" id="btnBackApp" href="./app.html">⬅️ Retour à mon espace</a>
-    </div>
-  </div>
 
-  <div class="formCard">
-    <div class="formTitle">⚙️ Mes informations</div>
-    <div class="fields">
-      <div class="field">
-        <label>Identifiant</label>
-        <input id="slug" placeholder="ex : hotel-mbour" autocomplete="off"/>
-        <div class="hint">Ce nom sert à retrouver la bonne activité</div>
-      </div>
-      <div class="field">
-        <label>Téléphone complet</label>
-        <input id="tel" placeholder="ex : 00221771234567" autocomplete="off" inputmode="tel"/>
-        <div class="hint">Le code se base sur les 4 derniers chiffres du numéro</div>
-      </div>
+    <div class="doctrine">
+      Doctrine DIGIY : le QR porte un lien propre. Le téléphone ne voyage pas dans l’URL.
+      Si l’identifiant est sensible, on bloque la génération au lieu d’exposer le propriétaire.
     </div>
+
+    <div class="form">
+      <div class="field">
+        <label for="slug">Identifiant public du logement</label>
+        <input id="slug" autocomplete="off" placeholder="ex : chez-baptiste-saly ou loc-room-a07c151a"/>
+        <div class="hint">Évite les identifiants avec téléphone ou longues suites de chiffres. Le QR doit rester partageable.</div>
+      </div>
+      <button class="btn green full" id="btnGen" type="button">⚡ Préparer mes QR</button>
+    </div>
+
     <div class="actionRow">
-      <button class="btn primary" id="btnGen">⚡ Préparer mes QR</button>
-      <button class="btn gold" id="btnDlAll" disabled>⬇️ Tout télécharger</button>
-      <button class="btn red" id="btnReset">🧹 Effacer</button>
+      <button class="btn gold" id="btnCopyAll" type="button" disabled>📋 Copier les liens</button>
+      <button class="btn blue" id="btnDownloadAll" type="button" disabled>⬇️ Télécharger les PNG</button>
+      <button class="btn red" id="btnReset" type="button">🧹 Effacer</button>
     </div>
+
     <div class="note" id="note"></div>
+  </section>
+
+  <div class="sectionHead">
+    <div class="sectionTitle">Mes QR disponibles</div>
+    <span class="pill" id="genCount">0 / 0</span>
   </div>
 
-  <div class="sectionTitle">
-    Mes accès disponibles
-    <span class="badge" id="genCount">0 / 0</span>
-  </div>
-  <div class="modGrid" id="modGrid"></div>
-
-  <div class="histCard">
-    <div class="histHead">
-      <div>
-        <div style="font-weight:950;font-size:14px">🕒 Mes derniers passages</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;font-weight:600">Relancer en un clic</div>
-      </div>
-      <button class="mini" id="btnClearHist">🗑️ Vider</button>
-    </div>
-    <div class="histBody" id="histBody"></div>
-  </div>
-
+  <section class="grid" id="modGrid"></section>
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navResa" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navDispo" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
+    <a class="navItem active" id="navMore" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (() => {
   "use strict";
 
   const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
-  const KEY_HIST = "DIGIY_QR_FACTORY_MULTI_V1";
+  const SIGNAL_KEY = "DIGIY_LOC_PRO_SIGNALS";
+  const $ = (id)=>document.getElementById(id);
 
   const MODULES = [
-    { id:"LOC",     label:"Je loue",                      emoji:"🏠", desc:"Location & hébergement",     mc:"rgba(34,211,238,.15)",  mb:"rgba(34,211,238,.35)"  },
-    { id:"DRIVER",  label:"Je conduis",                   emoji:"🚗", desc:"Transport & chauffeur",      mc:"rgba(249,115,22,.15)",  mb:"rgba(249,115,22,.35)"  },
-    { id:"CAISSE",  label:"Mon commerce",                 emoji:"🧾", desc:"Encaissement & caisse",      mc:"rgba(34,197,94,.15)",   mb:"rgba(34,197,94,.35)"   },
-    { id:"MARKET",  label:"Je vends",                     emoji:"🛍️", desc:"Boutiques & ventes",         mc:"rgba(250,204,21,.15)",  mb:"rgba(250,204,21,.35)"  },
-    { id:"JOBS",    label:"Je cherche du travail",        emoji:"💼", desc:"Offres & candidatures",      mc:"rgba(167,139,250,.15)", mb:"rgba(167,139,250,.35)" },
-    { id:"BUILD",   label:"Je propose mes services",      emoji:"🏗️", desc:"Travaux & interventions",    mc:"rgba(251,191,36,.15)",  mb:"rgba(251,191,36,.35)"  },
-    { id:"PAY",     label:"Mon argent",                   emoji:"💳", desc:"Paiements & suivi",          mc:"rgba(52,211,153,.15)",  mb:"rgba(52,211,153,.35)"  },
-    { id:"EXPLORE", label:"Je fais découvrir mon lieu",   emoji:"🗺️", desc:"Lieux & expériences",        mc:"rgba(99,102,241,.15)",  mb:"rgba(99,102,241,.35)"  },
-    { id:"FRET",    label:"Je livre",                     emoji:"🚚", desc:"Transport & livraisons",      mc:"rgba(244,63,94,.15)",   mb:"rgba(244,63,94,.35)"   },
-    { id:"RESTO",   label:"Mon resto",                    emoji:"🍽️", desc:"Table, menu & service",      mc:"rgba(234,179,8,.15)",   mb:"rgba(234,179,8,.35)"   },
+    { id:"LOC", label:"Je loue", emoji:"🏠", desc:"Espace logement" },
+    { id:"RESA", label:"Réserver", emoji:"📅", desc:"Demande simple client" },
+    { id:"PAY", label:"Mon argent", emoji:"💳", desc:"Paiements et traces" },
+    { id:"MARKET", label:"Je vends", emoji:"🛍️", desc:"Vitrine produits" },
+    { id:"EXPLORE", label:"Mon lieu", emoji:"🗺️", desc:"Découverte locale" }
   ];
 
-  const $ = id => document.getElementById(id);
-
-  function slugClean(v){
-    return (v||"").trim().toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-      .replace(/[^a-z0-9\-]/g,"-")
-      .replace(/-+/g,"-")
-      .replace(/^-|-$/g,"");
-  }
-
-  function cleanTel(v){
-    return (v||"").trim().replace(/\s+/g,"");
-  }
-
-  function pin4(tel){
-    return (tel||"").replace(/\D/g,"").slice(-4);
-  }
+  const State = { slug:"", generated:{} };
 
   function esc(s){
-    return String(s||"").replace(/[&<>"']/g, m => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
 
-  function buildUrl(slug, tel, mid){
+  function storageGet(k){
+    try{ const s = sessionStorage.getItem(k); if(s) return s; }catch{}
+    try{ const l = localStorage.getItem(k); if(l) return l; }catch{}
+    return "";
+  }
+
+  function storageSet(k,v){
+    if(!v) return;
+    try{ sessionStorage.setItem(k,String(v)); }catch{}
+    try{ localStorage.setItem(k,String(v)); }catch{}
+  }
+
+  function safeJson(raw,fallback){
+    try{ const p = JSON.parse(raw); return p ?? fallback; }catch{ return fallback; }
+  }
+
+  function cleanSlug(v){
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"-")
+      .replace(/-+/g,"-")
+      .replace(/^[-_]+|[-_]+$/g,"");
+  }
+
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+
+  function canExposeSlug(slug){
+    const s = cleanSlug(slug);
+    return !!s && s.length >= 3 && !isSensitiveSlug(s);
+  }
+
+  function readParam(name){
+    try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch{return "";}
+  }
+
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {}; } }
+
+  function getSlug(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return cleanSlug(
+      readParam("slug") ||
+      st.slug ||
+      gs.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_ROOM_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG")
+    );
+  }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>{
+        if(u.searchParams.has(k)){ u.searchParams.delete(k); changed = true; }
+      });
+      const s = cleanSlug(u.searchParams.get("slug") || "");
+      if(s && isSensitiveSlug(s)){ u.searchParams.delete("slug"); changed = true; }
+      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }catch{}
+  }
+
+  function withContext(path){
+    try{
+      const u = new URL(path, location.href);
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
+      if(canExposeSlug(State.slug)) u.searchParams.set("slug", State.slug);
+      else u.searchParams.delete("slug");
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
+    }catch{return path;}
+  }
+
+  function buildModuleUrl(moduleId){
     const u = new URL(QR_PRO_BASE);
-    u.searchParams.set("slug", slug);
-    u.searchParams.set("tel", tel);
-    u.searchParams.set("module", mid);
+    u.searchParams.set("module", moduleId);
+    if(canExposeSlug(State.slug)) u.searchParams.set("slug", State.slug);
+
+    const returnUrl = new URL("./app.html", location.href);
+    if(canExposeSlug(State.slug)) returnUrl.searchParams.set("slug", State.slug);
+    u.searchParams.set("return", returnUrl.toString());
+
     return u.toString();
   }
 
-  function niceDt(ts){
-    try{
-      return new Date(ts).toLocaleString("fr-FR",{
-        day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"
-      });
-    }catch{
-      return "";
-    }
+  function show(msg, type="warn"){
+    const el = $("note");
+    el.className = "note " + type;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
   }
 
-  function showNote(msg, type){
-    const n = $("note");
-    n.textContent = msg || "";
-    n.className = "note " + (type || "warn") + (msg ? " show" : "");
+  function pushSignal(type, label, target){
+    try{
+      const rows = safeJson(localStorage.getItem(SIGNAL_KEY), []);
+      rows.unshift({
+        id: String(Date.now()) + "-" + Math.random().toString(16).slice(2),
+        type,
+        label,
+        target: target || "./qr-factory.html",
+        source:"qr-factory",
+        created_at:new Date().toISOString()
+      });
+      localStorage.setItem(SIGNAL_KEY, JSON.stringify(rows.slice(0,25)));
+    }catch{}
+  }
+
+  async function waitGuard(){
+    try{
+      if(window.DIGIY_GUARD?.ready){
+        const out = window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+        if(out?.then) await out;
+      }
+    }catch{}
+  }
+
+  async function ensureQr(){
+    for(let i=0;i<20;i++){
+      if(window.QRCode?.toDataURL) return true;
+      await new Promise(r=>setTimeout(r,120));
+    }
+    return !!window.QRCode?.toDataURL;
+  }
+
+  function qrOptions(size){
+    return {
+      width:size,
+      margin:1,
+      errorCorrectionLevel:"M",
+      color:{ dark:"#111827", light:"#FFFFFF" }
+    };
+  }
+
+  function makeQrDataUrl(text,size){
+    return new Promise((resolve,reject)=>{
+      if(!window.QRCode?.toDataURL){ reject(new Error("QRCode lib missing")); return; }
+      window.QRCode.toDataURL(text, qrOptions(size), (err,url)=>{
+        if(err) reject(err); else resolve(url);
+      });
+    });
   }
 
   async function copyText(text){
-    if(navigator.clipboard?.writeText){
-      return navigator.clipboard.writeText(text);
-    }
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.cssText = "position:fixed;left:-9999px;top:-9999px";
+    if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+    const ta=document.createElement("textarea");
+    ta.value=text;
+    ta.style.position="fixed";
+    ta.style.left="-9999px";
     document.body.appendChild(ta);
     ta.select();
-    try{ document.execCommand("copy"); }catch(_){}
+    document.execCommand("copy");
     ta.remove();
   }
 
-  function directDl(dataUrl, name){
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = name;
+  function download(dataUrl,name){
+    const a=document.createElement("a");
+    a.href=dataUrl;
+    a.download=name;
     document.body.appendChild(a);
     a.click();
     a.remove();
   }
 
-  function loadHist(){
-    try{
-      const raw = localStorage.getItem(KEY_HIST);
-      const hist = raw ? JSON.parse(raw) : [];
-      return Array.isArray(hist) ? hist : [];
-    }catch{
-      return [];
-    }
-  }
-
-  function saveHist(hist){
-    try{
-      localStorage.setItem(KEY_HIST, JSON.stringify(hist));
-    }catch{}
-  }
-
-  function pushHist(slug, tel){
-    const hist = loadHist().filter(x => !(x.slug === slug && x.tel === tel));
-    hist.unshift({ slug, tel, ts: Date.now() });
-    saveHist(hist.slice(0, 10));
-    renderHist();
-  }
-
-  function renderHist(){
-    const hist = loadHist();
-    const body = $("histBody");
-
-    if(!hist.length){
-      body.innerHTML = '<div class="empty">— aucun passage récent —</div>';
-      return;
-    }
-
-    body.innerHTML = hist.map((x, i) => `
-      <div class="hrow">
-        <div>
-          <div class="hSlug">${esc(x.slug || "—")}</div>
-          <div class="hTel">📱 ${esc(x.tel || "—")} · <span class="hPin">Code : ${pin4(x.tel)}</span></div>
-          <div class="hMeta">⏱️ ${esc(niceDt(x.ts))}</div>
-        </div>
-        <div class="hBtns">
-          <button class="hmini" data-act="regen" data-i="${i}">⚡ Relancer</button>
-          <button class="hmini del" data-act="del" data-i="${i}">🗑️</button>
-        </div>
-      </div>
-    `).join("");
-
-    body.querySelectorAll("[data-act]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const idx = Number(btn.getAttribute("data-i"));
-        const list = loadHist();
-        const item = list[idx];
-        if(!item) return;
-
-        const act = btn.getAttribute("data-act");
-        if(act === "regen"){
-          $("slug").value = item.slug;
-          $("tel").value = item.tel;
-          generate();
-        } else {
-          list.splice(idx, 1);
-          saveHist(list);
-          renderHist();
-          showNote("🗑️ Passage supprimé.", "ok");
-        }
-      });
-    });
-  }
-
-  function setBadge(mid, text, kind){
-    const el = $("badge-" + mid);
-    if(!el) return;
-    el.textContent = text;
-    el.classList.remove("ok", "bad");
-    if(kind) el.classList.add(kind);
-  }
-
-  function qrOptions(size){
-    return {
-      width: size,
-      margin: 1,
-      errorCorrectionLevel: "M",
-      color: {
-        dark: "#111827",
-        light: "#FFFFFF"
-      }
-    };
-  }
-
-  function makeQrDataUrl(text, size){
-    return new Promise((resolve, reject) => {
-      if(!window.QRCode || typeof window.QRCode.toDataURL !== "function"){
-        reject(new Error("QRCode lib missing"));
-        return;
-      }
-      window.QRCode.toDataURL(text, qrOptions(size), (err, url) => {
-        if(err) reject(err);
-        else resolve(url);
-      });
-    });
-  }
-
-  let generated = {};
-  let isGenerating = false;
-
-  function renderModulesShell(){
-    const grid = $("modGrid");
-    grid.innerHTML = MODULES.map(m => `
-      <div class="modCard" id="card-${m.id}" style="--mc:${m.mc};--mb:${m.mb}">
-        <div class="modHead">
-          <div class="modIcon">${m.emoji}</div>
-          <div>
-            <div class="modName">${m.label}</div>
-            <div class="modDesc">${m.desc}</div>
+  function renderShell(){
+    $("genCount").textContent = "0 / " + MODULES.length;
+    $("modGrid").innerHTML = MODULES.map(m=>`
+      <article class="qrCard" id="card-${m.id}">
+        <div class="qrHead">
+          <div class="qrTitleRow">
+            <div class="qrIcon">${m.emoji}</div>
+            <div>
+              <div class="qrName">${esc(m.label)}</div>
+              <div class="qrDesc">${esc(m.desc)}</div>
+            </div>
           </div>
-          <div class="modBadge" id="badge-${m.id}">En attente</div>
+          <span class="badge" id="badge-${m.id}">En attente</span>
         </div>
-        <div class="qrZone loading" id="zone-${m.id}"></div>
-        <div class="modUrlLine" id="url-${m.id}">Préparation de ton accès…</div>
-        <div class="modActions">
-          <button class="mini cp" id="cp-${m.id}" disabled>📋 Copier le lien</button>
-          <button class="mini dl" id="dl-${m.id}" disabled>⬇️ PNG</button>
-          <button class="mini xl" id="xl-${m.id}" disabled>🟩 Sticker XL</button>
-          <button class="mini" id="op-${m.id}" disabled>↗ Ouvrir</button>
+        <div class="qrBox" id="zone-${m.id}">QR en attente</div>
+        <div class="urlLine" id="url-${m.id}">Prépare les QR pour obtenir un lien propre.</div>
+        <div class="miniActions">
+          <button class="btn blue" id="open-${m.id}" type="button" disabled>↗️ Ouvrir</button>
+          <button class="btn gold" id="copy-${m.id}" type="button" disabled>📋 Copier</button>
+          <button class="btn green" id="png-${m.id}" type="button" disabled>⬇️ PNG</button>
+          <button class="btn" id="xl-${m.id}" type="button" disabled>🟩 XL</button>
         </div>
-      </div>
+      </article>
     `).join("");
   }
 
-  async function buildModuleQr(slug, tel, mod){
-    const url = buildUrl(slug, tel, mod.id);
-    const zone = $("zone-" + mod.id);
-    const urlLine = $("url-" + mod.id);
-    const cp = $("cp-" + mod.id);
-    const dl = $("dl-" + mod.id);
-    const xl = $("xl-" + mod.id);
-    const op = $("op-" + mod.id);
-
-    urlLine.textContent = "Lien prêt pour ouvrir cet accès.";
+  async function buildOne(m){
+    const url = buildModuleUrl(m.id);
+    const zone = $("zone-" + m.id);
+    const badge = $("badge-" + m.id);
+    const line = $("url-" + m.id);
+    const open = $("open-" + m.id);
+    const copy = $("copy-" + m.id);
+    const png = $("png-" + m.id);
+    const xl = $("xl-" + m.id);
 
     try{
-      const qrN = await makeQrDataUrl(url, 300);
-      const qrXL = await makeQrDataUrl(url, 900);
+      zone.textContent = "Préparation…";
+      const normal = await makeQrDataUrl(url, 520);
+      const big = await makeQrDataUrl(url, 1000);
+      State.generated[m.id] = { url, normal, big };
 
-      generated[mod.id] = { url, qrN, qrXL };
-
-      zone.classList.remove("loading");
       zone.innerHTML = "";
-
       const img = document.createElement("img");
       img.className = "qrImg";
-      img.alt = "QR " + mod.label;
-      img.src = qrN;
-      img.title = "Clic → ouvrir";
-      img.addEventListener("click", () => window.open(url, "_blank", "noopener"));
+      img.alt = "QR " + m.label;
+      img.src = normal;
+      img.addEventListener("click", ()=>window.open(url, "_blank", "noopener"));
       zone.appendChild(img);
 
-      cp.disabled = false;
-      dl.disabled = false;
-      xl.disabled = false;
-      op.disabled = false;
+      line.textContent = "Lien prêt · sans téléphone dans l’adresse.";
+      badge.textContent = "Prêt";
+      badge.className = "badge ok";
 
-      cp.onclick = async () => {
-        try{
-          await copyText(url);
-          showNote("📋 Lien copié · " + mod.label, "ok");
-        }catch{
-          showNote("⚠️ Copie bloquée sur cet appareil.", "warn");
-        }
+      [open, copy, png, xl].forEach(b=>b.disabled=false);
+      open.onclick = ()=>window.open(url, "_blank", "noopener");
+      copy.onclick = async ()=>{
+        await copyText(url);
+        show("Lien copié : " + m.label, "ok");
+        pushSignal("qr_copied", "QR copié : " + m.label, "./qr-factory.html");
+      };
+      png.onclick = ()=>{
+        download(normal, `DIGIY_QR_${m.id}_${State.slug}.png`);
+        show("PNG téléchargé : " + m.label, "ok");
+        pushSignal("qr_downloaded", "QR téléchargé : " + m.label, "./qr-factory.html");
+      };
+      xl.onclick = ()=>{
+        download(big, `DIGIY_STICKER_XL_${m.id}_${State.slug}.png`);
+        show("Sticker XL téléchargé : " + m.label, "ok");
+        pushSignal("qr_downloaded", "Sticker XL téléchargé : " + m.label, "./qr-factory.html");
       };
 
-      dl.onclick = () => {
-        directDl(qrN, `DIGIY_QR_${mod.id}_${slug}_PIN${pin4(tel)}.png`);
-        showNote("⬇️ PNG prêt · " + mod.label, "ok");
-      };
-
-      xl.onclick = () => {
-        directDl(qrXL, `DIGIY_STICKER_XL_${mod.id}_${slug}_PIN${pin4(tel)}.png`);
-        showNote("🟩 Sticker XL prêt · " + mod.label, "ok");
-      };
-
-      op.onclick = () => window.open(url, "_blank", "noopener");
-
-      setBadge(mod.id, "✅ Prêt", "ok");
       return true;
-    }catch(err){
-      console.error("QR local error", mod.id, err);
-      zone.classList.remove("loading");
-      zone.innerHTML = '<div style="color:#fca5a5;font-size:12px;font-weight:700;padding:16px;text-align:center">❌ Impossible de préparer ce QR</div>';
-      urlLine.textContent = "Une erreur a bloqué la préparation de cet accès.";
-      setBadge(mod.id, "❌ Erreur", "bad");
+    }catch(e){
+      console.error(e);
+      zone.textContent = "Impossible de préparer ce QR.";
+      line.textContent = "Erreur de génération.";
+      badge.textContent = "Erreur";
+      badge.className = "badge bad";
       return false;
     }
   }
 
-  async function renderModules(slug, tel){
-    generated = {};
-    renderModulesShell();
+  async function generate(){
+    const s = cleanSlug($("slug").value || getSlug());
+    if(!s){
+      show("Ajoute un identifiant public avant de préparer les QR.", "warn");
+      return;
+    }
+    if(!canExposeSlug(s)){
+      show("Identifiant sensible détecté. Choisis un identifiant public sans téléphone ni longue suite de chiffres.", "bad");
+      return;
+    }
 
-    let done = 0;
-    let ok = 0;
+    State.slug = s;
+    storageSet("digiy_loc_slug", s);
+    storageSet("digiy_loc_last_slug", s);
+    syncUi();
 
-    $("genCount").textContent = "0 / " + MODULES.length;
+    const okLib = await ensureQr();
+    if(!okLib){
+      show("Librairie QR introuvable. Vérifie que qrcode.min.js est présent dans le dépôt.", "bad");
+      return;
+    }
 
-    for(const mod of MODULES){
-      const success = await buildModuleQr(slug, tel, mod);
-      done += 1;
-      if(success) ok += 1;
+    State.generated = {};
+    renderShell();
+    $("btnGen").disabled = true;
+    $("btnCopyAll").disabled = true;
+    $("btnDownloadAll").disabled = true;
+    show("Préparation des QR…", "warn");
+
+    let done = 0, ok = 0;
+    for(const m of MODULES){
+      const good = await buildOne(m);
+      done++;
+      if(good) ok++;
       $("genCount").textContent = done + " / " + MODULES.length;
     }
 
-    $("btnDlAll").disabled = ok !== MODULES.length;
+    $("btnGen").disabled = false;
+    $("btnCopyAll").disabled = ok === 0;
+    $("btnDownloadAll").disabled = ok === 0;
 
-    if(ok === MODULES.length){
-      showNote("✅ " + MODULES.length + " accès prêts ! Code : " + pin4(tel) + " · identifiant : " + slug, "ok");
-    }else if(ok > 0){
-      showNote("⚠️ " + ok + "/" + MODULES.length + " accès prêts. Certains ont bloqué.", "warn");
+    if(ok){
+      show(ok + " QR prêt(s). Téléphone absent des liens : propre.", "ok");
+      pushSignal("qr_ready", ok + " QR préparé(s)", "./qr-factory.html");
     }else{
-      showNote("❌ Aucun accès n'a pu être préparé. Vérifie la librairie QR locale.", "bad");
+      show("Aucun QR préparé. Vérifie la librairie QR locale.", "bad");
     }
   }
 
-  async function generate(){
-    if(isGenerating) return;
-
-    const slug = slugClean($("slug").value);
-    const tel = cleanTel($("tel").value);
-
-    if(!slug){
-      showNote("⚠️ Entre ton identifiant.", "warn");
-      return;
-    }
-    if(slug.length < 3){
-      showNote("⚠️ Identifiant trop court (minimum 3 caractères).", "warn");
-      return;
-    }
-    if(!tel){
-      showNote("⚠️ Entre le numéro de téléphone.", "warn");
-      return;
-    }
-    if(tel.replace(/\D/g, "").length < 6){
-      showNote("⚠️ Numéro trop court.", "warn");
-      return;
-    }
-
-    isGenerating = true;
-    $("btnGen").disabled = true;
-    $("btnDlAll").disabled = true;
-
-    $("pillInfo").textContent = "Identifiant : " + slug + " · Code : " + pin4(tel);
-    $("pillInfo").classList.add("active");
-
-    showNote("⏳ Préparation de " + MODULES.length + " QR en cours…", "warn");
-
-    const appUrl = new URL("./app.html", location.href);
-    appUrl.searchParams.set("slug", slug);
-    $("btnBackApp").href = appUrl.toString();
-
-    const me = new URL(location.href);
-    me.searchParams.set("slug", slug);
-    me.searchParams.set("tel", tel);
-    history.replaceState({}, "", me.toString());
-
-    try{
-      await renderModules(slug, tel);
-      pushHist(slug, tel);
-    }finally{
-      isGenerating = false;
-      $("btnGen").disabled = false;
-    }
+  async function copyAll(){
+    const rows = Object.values(State.generated);
+    if(!rows.length) return;
+    const text = [
+      "DIGIY LOC — QR propres",
+      "Espace : " + State.slug,
+      "",
+      ...Object.entries(State.generated).map(([id,row]) => id + " : " + row.url)
+    ].join("\n");
+    await copyText(text);
+    show("Tous les liens QR sont copiés.", "ok");
+    pushSignal("qr_links_copied", "Liens QR copiés", "./qr-factory.html");
   }
 
-  $("btnGen").addEventListener("click", generate);
-
-  $("slug").addEventListener("keydown", e => {
-    if(e.key === "Enter") generate();
-  });
-
-  $("tel").addEventListener("keydown", e => {
-    if(e.key === "Enter") generate();
-  });
-
-  $("btnDlAll").addEventListener("click", () => {
-    const slug = slugClean($("slug").value);
-    const tel = cleanTel($("tel").value);
-    if(!slug || !tel) return;
-
-    MODULES.forEach((mod, i) => {
-      const g = generated[mod.id];
-      if(!g?.qrN) return;
-      setTimeout(() => {
-        directDl(g.qrN, `DIGIY_QR_${mod.id}_${slug}_PIN${pin4(tel)}.png`);
-      }, i * 250);
+  function downloadAll(){
+    Object.entries(State.generated).forEach(([id,row])=>{
+      download(row.normal, `DIGIY_QR_${id}_${State.slug}.png`);
     });
-
-    showNote("⬇️ Tous les PNG ont été lancés depuis ton générateur local.", "ok");
-  });
-
-  $("btnReset").addEventListener("click", () => {
-    $("slug").value = "";
-    $("tel").value = "";
-    $("modGrid").innerHTML = "";
-    $("genCount").textContent = "0 / 0";
-    $("btnDlAll").disabled = true;
-    $("pillInfo").textContent = "Prêt";
-    $("pillInfo").classList.remove("active");
-    generated = {};
-
-    const me = new URL(location.href);
-    me.searchParams.delete("slug");
-    me.searchParams.delete("tel");
-    history.replaceState({}, "", me.toString());
-
-    showNote("C'est propre. Entre ton identifiant et ton téléphone.", "warn");
-  });
-
-  $("btnClearHist").addEventListener("click", () => {
-    if(!confirm("Vider l'historique ?")) return;
-    saveHist([]);
-    renderHist();
-    showNote("Historique vidé.", "ok");
-  });
-
-  renderHist();
-
-  try{
-    const p = new URL(location.href).searchParams;
-    const s = p.get("slug");
-    const t = p.get("tel");
-
-    if(s) $("slug").value = s;
-    if(t) $("tel").value = t;
-
-    if(s && t){
-      generate();
-    }else{
-      showNote("Entre ton identifiant et ton téléphone puis lance la préparation.", "warn");
-    }
-  }catch{
-    showNote("Entre ton identifiant et ton téléphone puis lance la préparation.", "warn");
+    show("Téléchargement des PNG lancé.", "ok");
+    pushSignal("qr_all_downloaded", "Pack QR téléchargé", "./qr-factory.html");
   }
 
-  console.log("✅ DIGIY QR FACTORY READY");
+  function reset(){
+    $("slug").value = "";
+    State.slug = "";
+    State.generated = {};
+    renderShell();
+    $("btnCopyAll").disabled = true;
+    $("btnDownloadAll").disabled = true;
+    show("Formulaire vidé.", "ok");
+    syncUi();
+  }
+
+  function syncUi(){
+    cleanVisibleUrl();
+    const current = State.slug || getSlug();
+    $("pillSlug").textContent = current && canExposeSlug(current) ? "🏷️ " + current : "🏷️ Espace sécurisé";
+    const accessOk = !!(getGuardState().access_ok || getGuardState().access || getGuardSession().access_ok || getGuardSession().ok);
+    $("pillState").textContent = accessOk ? "✅ Accès ouvert" : "👁️ Lecture";
+    $("pillState").className = "pill " + (accessOk ? "ok" : "warn");
+
+    ["btnBackApp","navHome","navResa","navDispo","navNotes","navMore"].forEach(id=>{
+      const el = $(id);
+      if(!el) return;
+      const map = {
+        btnBackApp:"./app.html",
+        navHome:"./app.html",
+        navResa:"./reservations.html",
+        navDispo:"./planning.html",
+        navNotes:"./notes.html",
+        navMore:"./manage-links.html"
+      };
+      el.href = withContext(map[id]);
+    });
+  }
+
+  async function init(){
+    renderShell();
+    cleanVisibleUrl();
+    await waitGuard();
+    State.slug = getSlug();
+    if(State.slug && canExposeSlug(State.slug)) $("slug").value = State.slug;
+    syncUi();
+
+    $("btnGen").addEventListener("click", generate);
+    $("btnCopyAll").addEventListener("click", copyAll);
+    $("btnDownloadAll").addEventListener("click", downloadAll);
+    $("btnReset").addEventListener("click", reset);
+  }
+
+  init();
 })();
 </script>
+<script src="./loc-security-mask.js"></script>
 </body>
 </html>
