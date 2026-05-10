@@ -3,6 +3,7 @@
 
   const MODULE_NAME = "LOC";
   const SESSION_KEY = "digiy_loc_session";
+
   const SESSION_KEYS = [
     "digiy_loc_session",
     "digiy_loc_guard_session",
@@ -10,6 +11,7 @@
   ];
 
   const LAST_SLUG_KEY = "digiy_loc_last_slug";
+
   const ALT_SLUG_KEYS = [
     "digiy_loc_last_slug",
     "digiy_loc_slug",
@@ -17,10 +19,25 @@
   ];
 
   const LAST_PHONE_KEY = "digiy_loc_phone";
+
   const ALT_PHONE_KEYS = [
     "digiy_loc_phone",
     "digiy_loc_last_phone",
     "DIGIY_LOC_HUB_PHONE"
+  ];
+
+  const SENSITIVE_QUERY_KEYS = [
+    "phone",
+    "tel",
+    "owner_phone",
+    "p_phone",
+    "whatsapp",
+    "client_phone",
+    "wave_phone",
+    "pin",
+    "pin4",
+    "token",
+    "session_token"
   ];
 
   const MAX_AGE_MS = 8 * 60 * 60 * 1000;
@@ -46,6 +63,13 @@
 
   function normalizePhone(value) {
     return String(value || "").replace(/[^\d]/g, "");
+  }
+
+  function maskPhone(phone) {
+    const clean = normalizePhone(phone);
+    if (!clean) return "Compte reconnu";
+    if (clean.length <= 4) return "••••";
+    return clean.slice(0, 2) + "••••" + clean.slice(-2);
   }
 
   function isSensitiveSlug(slug) {
@@ -185,6 +209,12 @@
     removeLocalStorage(key);
   }
 
+  function removeSensitiveQueryParams(url) {
+    SENSITIVE_QUERY_KEYS.forEach((key) => {
+      url.searchParams.delete(key);
+    });
+  }
+
   function writeSlugContext(slug) {
     const cleanSlug = normalizeSlug(slug);
     if (!cleanSlug) return;
@@ -209,6 +239,8 @@
       writeSessionStorage(key, cleanPhone);
       removeLocalStorage(key);
     });
+
+    writeSessionStorage("DIGIY_LOC_PHONE_MASK", maskPhone(cleanPhone));
   }
 
   function removeLegacySensitiveLocal() {
@@ -220,6 +252,20 @@
         removeLocalStorage(key);
       }
     });
+
+    [
+      "phone",
+      "tel",
+      "owner_phone",
+      "p_phone",
+      "whatsapp",
+      "client_phone",
+      "wave_phone",
+      "pin",
+      "pin4",
+      "token",
+      "session_token"
+    ].forEach(removeLocalStorage);
   }
 
   function readStoredSession() {
@@ -290,6 +336,7 @@
   function clearStoredSession() {
     SESSION_KEYS.forEach(removeStorage);
     ALT_PHONE_KEYS.forEach(removeStorage);
+    removeSessionStorage("DIGIY_LOC_PHONE_MASK");
   }
 
   function getStoredSlug() {
@@ -312,34 +359,37 @@
     const p = qs();
     return {
       slug: normalizeSlug(p.get("slug")),
-      phone: normalizePhone(p.get("phone"))
+      phone: normalizePhone(
+        p.get("phone") ||
+        p.get("tel") ||
+        p.get("owner_phone") ||
+        p.get("p_phone") ||
+        ""
+      )
     };
   }
 
   function cleanVisibleUrl(contextSlug) {
     try {
       const url = new URL(window.location.href);
-      let changed = false;
+      const before = url.toString();
 
-      if (url.searchParams.has("phone")) {
-        url.searchParams.delete("phone");
-        changed = true;
-      }
+      removeSensitiveQueryParams(url);
 
       const urlSlug = normalizeSlug(url.searchParams.get("slug") || "");
       const finalSlug = normalizeSlug(contextSlug || urlSlug || "");
 
       if (urlSlug && isSensitiveSlug(urlSlug)) {
         url.searchParams.delete("slug");
-        changed = true;
       }
 
       if (finalSlug && isSensitiveSlug(finalSlug) && url.searchParams.has("slug")) {
         url.searchParams.delete("slug");
-        changed = true;
       }
 
-      if (changed) {
+      const after = url.toString();
+
+      if (after !== before) {
         window.history.replaceState({}, "", url.pathname + url.search + url.hash);
       }
     } catch (_) {}
@@ -380,7 +430,7 @@
       const str = String(value ?? "").trim();
       if (!str) return;
 
-      if (key === "phone") return;
+      if (SENSITIVE_QUERY_KEYS.includes(key)) return;
 
       if (key === "slug") {
         const cleanSlug = normalizeSlug(str);
@@ -391,7 +441,7 @@
       base.searchParams.set(key, str);
     });
 
-    base.searchParams.delete("phone");
+    removeSensitiveQueryParams(base);
 
     const slug = normalizeSlug(base.searchParams.get("slug") || "");
     if (slug && isSensitiveSlug(slug)) {
@@ -406,11 +456,11 @@
       const url = new URL(window.location.href);
       const cleanSlug = normalizeSlug(slug);
 
-      url.searchParams.delete("phone");
+      removeSensitiveQueryParams(url);
 
       if (canExposeSlug(cleanSlug)) {
         url.searchParams.set("slug", cleanSlug);
-      } else if (url.searchParams.has("slug")) {
+      } else {
         url.searchParams.delete("slug");
       }
 
@@ -818,11 +868,115 @@
     return true;
   }
 
+  function startSecureFacadeWatcher() {
+    function scrubTextNodes() {
+      if (!document.body) return;
+
+      document.querySelectorAll("body *").forEach(function (el) {
+        if (!el || el.children.length) return;
+
+        const tag = String(el.tagName || "").toLowerCase();
+        if (["script", "style", "textarea", "input", "select", "option"].includes(tag)) return;
+
+        const txt = el.textContent || "";
+
+        let cleaned = txt
+          .replace(/(?:\+?221)?\d{9,}/g, "Compte reconnu")
+          .replace(/loc-\d{7,}/gi, "Espace sécurisé")
+          .replace(/digiy_loc_session/gi, "Session active")
+          .replace(/session_token/gi, "Session active");
+
+        if (cleaned !== txt) {
+          el.textContent = cleaned;
+        }
+      });
+    }
+
+    function scrubLinks() {
+      if (!document.body) return;
+
+      document.querySelectorAll("a[href]").forEach(function (a) {
+        try {
+          const u = new URL(a.getAttribute("href"), location.href);
+
+          removeSensitiveQueryParams(u);
+
+          const slug = normalizeSlug(u.searchParams.get("slug") || "");
+
+          if (slug && isSensitiveSlug(slug)) {
+            u.searchParams.delete("slug");
+          }
+
+          a.setAttribute(
+            "href",
+            u.origin === location.origin
+              ? u.pathname + u.search + u.hash
+              : u.toString()
+          );
+        } catch (_) {}
+      });
+    }
+
+    function scrubForms() {
+      if (!document.body) return;
+
+      document.querySelectorAll("form").forEach(function (form) {
+        try {
+          const action = form.getAttribute("action");
+          if (!action) return;
+
+          const u = new URL(action, location.href);
+          removeSensitiveQueryParams(u);
+
+          const slug = normalizeSlug(u.searchParams.get("slug") || "");
+          if (slug && isSensitiveSlug(slug)) {
+            u.searchParams.delete("slug");
+          }
+
+          form.setAttribute(
+            "action",
+            u.origin === location.origin
+              ? u.pathname + u.search + u.hash
+              : u.toString()
+          );
+        } catch (_) {}
+      });
+    }
+
+    function scrub() {
+      scrubTextNodes();
+      scrubLinks();
+      scrubForms();
+      cleanVisibleUrl(state.slug);
+    }
+
+    function begin() {
+      scrub();
+
+      try {
+        new MutationObserver(scrub).observe(document.body, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ["href", "action"]
+        });
+      } catch (_) {}
+    }
+
+    if (document.body) {
+      begin();
+    } else {
+      document.addEventListener("DOMContentLoaded", begin, { once: true });
+    }
+  }
+
   window.DIGIY_GUARD = {
     MODULE_NAME,
     MAX_AGE_MS,
-    VERSION: "loc-guard-security-v2-20260504",
+    VERSION: "loc-guard-security-v3-20260510",
     state,
+
     boot,
     ready: boot,
     logout,
@@ -830,13 +984,21 @@
     loginWithPin,
     checkAccess,
     resolvePhoneBySlug,
+
     getSb() {
       return createSupabase();
     },
+
     go,
+
     getSession() {
       return readStoredSession();
     },
+
+    getPhoneMask() {
+      return readSessionStorage("DIGIY_LOC_PHONE_MASK") || maskPhone(state.phone);
+    },
+
     saveContext(slug, phone) {
       const cleanSlug = normalizeSlug(slug);
       const cleanPhone = normalizePhone(phone);
@@ -851,13 +1013,20 @@
         phone: cleanPhone
       };
     },
+
     getContext() {
       return pickBestContext();
     },
+
     cleanUrl() {
       cleanVisibleUrl(state.slug);
+    },
+
+    buildUrl(target, params) {
+      return buildUrl(target, params || {});
     }
   };
 
   cleanVisibleUrl();
+  startSecureFacadeWatcher();
 })();
