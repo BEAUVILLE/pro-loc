@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Accès rapide</title>
+  <title>Je loue • Mon espace logement</title>
   <meta name="theme-color" content="#0b1020"/>
+  <meta name="description" content="DIGIY LOC PRO — gérer ses logements, disponibilités, demandes et paiements utiles sans exposer les identifiants sensibles."/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -16,6 +17,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=loc-20260328-10"></script>
+  <script src="./loc-security-mask.js?v=loc-mask-20260510"></script>
 
   <style>
     :root{
@@ -385,7 +387,7 @@
         <div class="logo">∞</div>
         <div>
           <div class="h1">Je loue ∞</div>
-          <div class="sub">Mon espace logement • sécurisé • 0% commission • paiement direct</div>
+          <div class="sub">Mon espace logement • sécurisé • moins d’écriture • plus de clics</div>
         </div>
       </div>
 
@@ -401,11 +403,11 @@
       <div class="locAudioTop">
         <div>
           <div class="locAudioLead"><span class="locAudioDot"></span> Conseil DIGIY · écoute courte</div>
-          <div class="locAudioTitle">🎧 Comprendre Je loue avant d’ouvrir les portes</div>
+          <div class="locAudioTitle">🎧 Comprendre Je loue avant d’agir</div>
           <div class="locAudioText">
-            Une voix courte explique les réservations, disponibilités, notes, fiche publique et paiements utiles.
+            Une voix courte explique comment gérer tes logements, tes dates, tes demandes, ta fiche publique et tes paiements utiles.
           </div>
-          <div class="locAudioHint">👉 Toutes les portes sont posées pour gérer l’essentiel.</div>
+          <div class="locAudioHint">👉 Tu cliques, tu choisis, tu ajustes : DIGIY t’aide à garder la main.</div>
         </div>
         <div class="locAudioActions">
           <button class="locAudioBtn" id="btnLocAudio" type="button">🎧 Écouter DIGIY</button>
@@ -415,24 +417,31 @@
       <div class="locAudioProgressWrap" aria-hidden="true"><div class="locAudioProgress" id="locAudioProgress"></div></div>
     </section>
 
+    <section class="card" aria-label="Doctrine Je loue" style="margin-top:14px;">
+      <h2>Doctrine Je loue</h2>
+      <div class="sub" style="margin:0;line-height:1.55">
+        Le propriétaire ne doit pas devenir technicien. Ici, il clique, il choisit, il ajuste. DIGIY garde l’entrée propre, protège les identifiants sensibles et ouvre les bonnes portes au bon moment.
+      </div>
+    </section>
+
     <div class="grid">
       <div class="card">
-        <h2>Accès rapide</h2>
+        <h2>Mes gestes utiles</h2>
         <div class="nav">
           <a class="btn" data-go="__back__" href="#">⬅️ Retour</a>
-          <a class="btn" data-go="today.html" href="#">📅 Vue du jour</a>
-          <a class="btn primary" data-go="app.html" href="#">🏠 Mon espace</a>
-          <a class="btn" data-go="reservations-pulse.html" href="#">📲 Pulse</a>
-          <a class="btn" data-go="planning.html" href="#">🗓️ Planning</a>
+          <a class="btn" data-go="today.html" href="#">📅 Aujourd’hui</a>
+          <a class="btn primary" data-go="app.html" href="#">🏠 Gérer mes logements</a>
+          <a class="btn" data-go="reservations-pulse.html" href="#">📲 Demandes reçues</a>
+          <a class="btn" data-go="planning.html" href="#">🗓️ Disponibilités</a>
           <a class="btn gold" data-go="manage-links.html" href="#">🔗 Mes liens utiles</a>
-          <a class="btn" id="btnCheckAccess" href="#">✅ Contrôler mon accès</a>
+          <a class="btn" id="btnCheckAccess" href="#">✅ Vérifier mon accès</a>
           <button class="btn" id="btnReload" type="button">↻ Recharger</button>
         </div>
         <div class="note warn" id="note"></div>
       </div>
 
       <div class="card">
-        <h2>⚡ Vue rapide</h2>
+        <h2>⚡ Repères rapides</h2>
         <div class="kv">
           <div class="k">Lieu</div>
           <div class="v" id="vLieu">—</div>
@@ -443,21 +452,21 @@
           <div class="k">Session</div>
           <div class="v" id="vSess">—</div>
 
-          <div class="k">Accès en direct</div>
+          <div class="k">Connexion</div>
           <div class="v" id="vSb">—</div>
         </div>
 
         <div class="miniActions">
-          <a class="btn" data-go="go-pin-public.html" href="#">👁️ Ouvrir la fiche publique</a>
-          <a class="btn" data-go="pin.html" href="#">🔑 Ouvrir mon accès</a>
+          <a class="btn" data-go="go-pin-public.html" href="#">👁️ Voir ma fiche publique</a>
+          <a class="btn" data-go="pin.html" href="#">🔑 Entrer avec mon code</a>
           <a class="btn gold" data-go="wave.html" href="#">💳 Paiements Wave</a>
         </div>
 
         <div class="sep"></div>
 
         <div class="sub" style="margin:0">
-          Si tu vois "accès pas encore prêt", c'est juste l’ouverture qui se termine.
-          Clique ↻ Recharger ou rouvre ton accès.
+          Si une porte reste fermée, l’ouverture est peut-être encore en cours.
+          Clique ↻ Recharger ou repasse par ton code.
         </div>
       </div>
     </div>
@@ -726,7 +735,7 @@
       function sbState(){
         const sb = getSb();
         const ok = !!(sb && typeof sb.from === "function" && typeof sb.rpc === "function");
-        $("vSb").textContent = ok ? "OK" : "Pas prêt";
+        $("vSb").textContent = ok ? "Prête" : "À relancer";
         return ok;
       }
 
@@ -742,7 +751,7 @@
             e.preventDefault();
 
             if(el.getAttribute("aria-disabled") === "true"){
-              show("🔒 Accès privé non confirmé.\n➡️ Ouvre d’abord ton accès avec ton code.", "warn");
+              show("🔒 Porte privée fermée.\n➡️ Ouvre d’abord ton accès avec ton code.", "warn");
               return;
             }
 
@@ -786,7 +795,7 @@
             ? "👁️ Aucun lieu détecté.\n➡️ Ouvre cette page depuis ton lien d’entrée ou repasse par ton accès."
             : reason === "has_access_false"
             ? "👁️ Lieu reconnu mais accès non actif.\n➡️ Passe par ton code pour ouvrir les portes privées."
-            : "👁️ Mode aperçu.\n➡️ Les portes privées restent fermées tant que l’accès n’est pas confirmé.",
+            : "👁️ Aperçu.\n➡️ Les portes privées restent fermées tant que l’accès n’est pas confirmé.",
           "warn"
         );
       }
@@ -839,7 +848,7 @@
         e.preventDefault();
 
         if(e.currentTarget.getAttribute("aria-disabled") === "true"){
-          show("🔒 Contrôle réservé à une session ouverte.\n➡️ Passe d’abord par ton accès.", "warn");
+          show("🔒 Vérification réservée à une session ouverte.\n➡️ Passe d’abord par ton accès.", "warn");
           return;
         }
 
@@ -947,7 +956,7 @@
     (function(){
       "use strict";
 
-      const AUDIO_TEXT = "Bienvenue dans Je loue by DIGIY. Ici, toutes les portes sont posées pour gérer l’essentiel de ton logement : les réservations, les disponibilités, les notes rapides, la fiche publique et les paiements utiles. Tu peux ouvrir la vue du jour, regarder ton planning, bloquer tes dates, préparer ton QR, vérifier ton accès et revenir à ton espace sans te perdre. Le client voit plus clair, le propriétaire garde la main, et l’argent reste direct. DIGIY ne prend pas la commission : il t’aide à organiser ton lieu, simplement.";
+      const AUDIO_TEXT = "Bienvenue dans Je loue by DIGIY. Ici, tu gères ton logement sans te perdre : les demandes reçues, les disponibilités, les notes rapides, la fiche publique et les paiements utiles. Le pro clique plus qu’il n’écrit : DIGIY prépare les portes, toi tu choisis, tu ajustes et tu gardes la main. Le client voit plus clair, le propriétaire reste devant, et l’argent reste direct. DIGIY ne prend pas la commission : il t’aide à organiser ton lieu, simplement.";
 
       const btnPlay = document.getElementById("btnLocAudio");
       const btnStop = document.getElementById("btnLocAudioStop");
