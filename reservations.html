@@ -5,261 +5,325 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue • Réservations</title>
   <meta name="theme-color" content="#061b14"/>
+  <meta name="description" content="Je loue by DIGIY — carnet simple des demandes et réservations logement."/>
 
   <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
     window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-reservations-rpc-v12"></script>
+  <script src="./guard.js?v=locpro-reservations-doctrine-large-20260510"></script>
+  <script src="./loc-security-mask.js?v=locpro-reservations-doctrine-large-20260510"></script>
 
   <style>
     :root{
       --bg:#061b14;
       --bg2:#0a2820;
       --card:#0b2a1f;
-      --line:rgba(255,255,255,.12);
-      --text:#eafff1;
-      --muted:rgba(234,255,241,.72);
+      --card2:rgba(2,44,34,.42);
+      --line:rgba(255,255,255,.14);
+      --text:#f4fff8;
+      --muted:rgba(234,255,241,.92);
       --gold:#facc15;
       --ok:#22c55e;
       --warn:#f59e0b;
       --bad:#ef4444;
       --blue:#38bdf8;
-      --radius:18px;
-      --shadow:0 18px 40px rgba(0,0,0,.35);
+      --radius:22px;
+      --shadow:0 18px 46px rgba(0,0,0,.36);
+      --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      --bottom:98px;
     }
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
+    html{scroll-behavior:smooth}
     body{
       min-height:100vh;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:var(--font);
       color:var(--text);
       background:
-        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
-        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        radial-gradient(900px 520px at 12% -5%, rgba(250,204,21,.16), transparent 58%),
+        radial-gradient(850px 520px at 90% 4%, rgba(34,197,94,.18), transparent 58%),
         linear-gradient(180deg,#03120d,var(--bg));
-      padding:16px;
+      padding:18px 16px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 22px);
+      font-size:18px;
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased;
     }
-
     a{color:inherit;text-decoration:none}
     button,input,select{font:inherit}
-    .wrap{max-width:1180px;margin:0 auto}
+    button{cursor:pointer}
+    .wrap{max-width:1120px;margin:0 auto}
 
     .topbar{
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      align-items:flex-start;
+      gap:14px;
       flex-wrap:wrap;
-      padding:14px;
+      padding:20px;
       border:1px solid var(--line);
-      border-radius:20px;
-      background:rgba(255,255,255,.03);
+      border-radius:30px;
+      background:rgba(255,255,255,.045);
       box-shadow:var(--shadow);
     }
-
-    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
     .ico{
-      width:44px;height:44px;border-radius:16px;
+      width:64px;height:64px;border-radius:22px;
       display:grid;place-items:center;
-      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
-      border:1px solid rgba(250,204,21,.35);
-      font-size:20px;
+      background:linear-gradient(135deg, rgba(250,204,21,.34), rgba(34,197,94,.20));
+      border:1px solid rgba(250,204,21,.38);
+      font-size:30px;
       flex:0 0 auto;
+      box-shadow:0 16px 34px rgba(0,0,0,.26);
     }
-    .title{font-size:16px;font-weight:1000;line-height:1.1}
-    .sub{margin-top:4px;font-size:12px;color:var(--muted);font-weight:800;line-height:1.35}
+    .title{font-size:30px;font-weight:1100;line-height:1.04;letter-spacing:-.03em}
+    .sub{margin-top:8px;font-size:18px;color:var(--muted);font-weight:1000;line-height:1.35}
 
-    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
     .pill{
-      border:1px solid rgba(148,163,184,.25);
+      border:1px solid rgba(148,163,184,.28);
       border-radius:999px;
-      padding:8px 10px;
-      background:rgba(255,255,255,.03);
+      padding:13px 17px;
+      background:rgba(255,255,255,.055);
       color:var(--muted);
-      font-size:12px;
-      font-weight:900;
+      font-size:17px;
+      font-weight:1100;
       white-space:nowrap;
-    }
-    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
-
-    .btn{
-      border:1px solid rgba(148,163,184,.22);
-      border-radius:14px;
-      padding:11px 13px;
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:1000;
-      cursor:pointer;
       display:inline-flex;
       align-items:center;
       justify-content:center;
       gap:8px;
-      min-height:44px;
+      min-height:64px;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.11);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.11);color:#fecaca}
+
+    .btn{
+      border:1px solid rgba(148,163,184,.24);
+      border-radius:20px;
+      padding:17px 18px;
+      background:rgba(255,255,255,.055);
+      color:var(--text);
+      font-weight:1100;
+      font-size:18px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      min-height:64px;
+      text-align:center;
+      line-height:1.08;
     }
     .btn:hover{filter:brightness(1.08)}
-    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
-    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
-    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
-    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn:active{transform:scale(.985)}
+    .btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.38);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.38);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.38);color:#fecaca}
+    .btn:disabled{opacity:.5;cursor:not-allowed;filter:grayscale(.18)}
+    .btn.full{width:100%}
 
     .access{
       margin-top:12px;
-      padding:12px 14px;
-      border-radius:18px;
-      border:1px solid rgba(250,204,21,.22);
-      background:rgba(250,204,21,.07);
+      padding:18px 20px;
+      border-radius:23px;
+      border:1px solid rgba(250,204,21,.24);
+      background:rgba(250,204,21,.08);
       color:#fde68a;
-      font-weight:900;
-      line-height:1.45;
+      font-weight:1000;
+      font-size:18px;
+      line-height:1.52;
       display:none;
       white-space:pre-wrap;
     }
 
+    .doctrine{
+      margin-top:14px;
+      padding:20px;
+      border:1px solid rgba(250,204,21,.32);
+      border-radius:24px;
+      background:
+        radial-gradient(420px 180px at 0% 0%, rgba(250,204,21,.15), transparent 60%),
+        rgba(255,255,255,.04);
+      box-shadow:var(--shadow);
+    }
+    .doctrine strong{display:block;font-size:27px;line-height:1.12;color:#fff7d6;font-weight:1100}
+    .doctrine p{margin:10px 0 0;color:var(--muted);font-size:18px;font-weight:1000;line-height:1.5}
+
     .card{
       margin-top:14px;
       border:1px solid var(--line);
-      border-radius:20px;
-      background:rgba(255,255,255,.03);
+      border-radius:24px;
+      background:rgba(255,255,255,.04);
       box-shadow:var(--shadow);
-      padding:14px;
+      padding:21px;
     }
-
-    .muted{color:var(--muted)}
+    .card h2{margin:0 0 10px;font-size:29px;line-height:1.08;font-weight:1100;color:#fff7d6}
+    .muted{color:var(--muted);font-weight:1000;line-height:1.5;font-size:18px}
     .sep{height:1px;background:rgba(148,163,184,.16);margin:12px 0}
 
     .filters{
-      margin-top:12px;
+      margin-top:18px;
       display:grid;
       grid-template-columns:2fr 1fr 1fr 1fr;
-      gap:10px;
+      gap:12px;
     }
     @media(max-width:980px){.filters{grid-template-columns:1fr 1fr}}
-    @media(max-width:560px){.filters{grid-template-columns:1fr}}
+    @media(max-width:620px){.filters{grid-template-columns:1fr}}
 
     .f label{
       display:block;
-      margin-bottom:6px;
+      margin-bottom:7px;
       color:var(--muted);
-      font-size:12px;
-      font-weight:900;
+      font-size:17px;
+      font-weight:1100;
     }
     .f input,.f select{
       width:100%;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.18);
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.30);
+      background:rgba(0,0,0,.22);
       color:var(--text);
-      padding:11px 12px;
-      font-weight:900;
+      padding:17px 16px;
+      font-weight:1100;
+      font-size:19px;
       outline:none;
+      min-height:68px;
     }
     .f input:focus,.f select:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.12);
+      border-color:rgba(250,204,21,.50);
+      box-shadow:0 0 0 3px rgba(250,204,21,.13);
     }
 
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .grid{
       display:grid;
-      grid-template-columns:1.12fr .88fr;
+      grid-template-columns:1.1fr .9fr;
       gap:14px;
       margin-top:14px;
     }
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
 
-    .list{margin-top:12px;display:flex;flex-direction:column;gap:10px}
-    .item{
-      border:1px solid rgba(148,163,184,.22);
-      border-radius:18px;
-      padding:12px;
-      background:rgba(2,44,34,.22);
-      cursor:pointer;
-      transition:transform .08s ease, border-color .08s ease;
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-top:12px;
     }
-    .item:hover{transform:translateY(-1px);border-color:rgba(250,204,21,.35)}
-    .item.active{border-color:rgba(250,204,21,.60);background:rgba(250,204,21,.08)}
+    @media(max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .stat{
+      border:1px solid rgba(148,163,184,.17);
+      border-radius:19px;
+      background:var(--card2);
+      padding:16px;
+    }
+    .stat .n{font-size:42px;font-weight:1100;line-height:1}
+    .stat .l{margin-top:8px;color:var(--muted);font-size:17px;font-weight:1100}
 
+    .list{margin-top:13px;display:flex;flex-direction:column;gap:12px}
+    .item{
+      border:1px solid rgba(148,163,184,.23);
+      border-radius:21px;
+      padding:19px;
+      background:rgba(2,44,34,.30);
+      cursor:pointer;
+      transition:transform .08s ease, border-color .08s ease, background .08s ease;
+    }
+    .item:hover{transform:translateY(-1px);border-color:rgba(250,204,21,.36)}
+    .item.active{border-color:rgba(250,204,21,.65);background:rgba(250,204,21,.09)}
     .top{
-      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
     }
-    .name{font-weight:1000}
-    .meta{color:var(--muted);font-size:12px;margin-top:4px;line-height:1.55}
-    .badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .name{font-weight:1100;font-size:24px;line-height:1.16}
+    .meta{color:var(--muted);font-size:18px;margin-top:10px;line-height:1.6;font-weight:1000}
+    .badges{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
     .badge{
-      font-size:11px;font-weight:1000;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(15,23,42,.28);
+      font-size:16px;font-weight:1100;
+      padding:10px 13px;border-radius:999px;
+      border:1px solid rgba(148,163,184,.26);
+      background:rgba(15,23,42,.30);
       white-space:nowrap;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
     }
-    .b-digiy{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .b-resa{border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10);color:#bfdbfe}
-    .b-autre{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.10);color:#ddd6fe}
-    .s-confirmed{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0}
-    .s-pending{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12);color:#fde68a}
-    .s-cancelled{border-color:rgba(249,115,115,.45);background:rgba(249,115,115,.12);color:#fecaca}
-    .p-paid{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0}
-    .p-due{border-color:rgba(249,115,115,.35);background:rgba(249,115,115,.12);color:#fecaca}
+    .b-digiy{border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.12);color:#fde68a}
+    .b-resa{border-color:rgba(59,130,246,.38);background:rgba(59,130,246,.12);color:#bfdbfe}
+    .b-autre{border-color:rgba(168,85,247,.38);background:rgba(168,85,247,.12);color:#ddd6fe}
+    .s-confirmed{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.13);color:#bbf7d0}
+    .s-pending{border-color:rgba(250,204,21,.48);background:rgba(250,204,21,.13);color:#fde68a}
+    .s-cancelled{border-color:rgba(249,115,115,.48);background:rgba(249,115,115,.13);color:#fecaca}
+    .p-paid{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.13);color:#bbf7d0}
+    .p-due{border-color:rgba(249,115,115,.38);background:rgba(249,115,115,.13);color:#fecaca}
 
     .empty{
       display:none;
-      margin-top:12px;
-      padding:16px 14px;
+      margin-top:13px;
+      padding:20px 16px;
       text-align:center;
       color:var(--muted);
-      border:1px dashed rgba(255,255,255,.16);
-      border-radius:18px;
-      background:rgba(0,0,0,.12);
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius:20px;
+      background:rgba(0,0,0,.14);
+      font-size:20px;
+      font-weight:1100;
+      line-height:1.45;
     }
 
     .detailBox{
-      margin-top:12px;
-      padding:14px;
-      border-radius:18px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(0,0,0,.12);
-      min-height:180px;
+      margin-top:13px;
+      padding:20px;
+      border-radius:23px;
+      border:1px solid rgba(148,163,184,.20);
+      background:rgba(0,0,0,.14);
+      min-height:190px;
+      font-size:19px;
+      font-weight:1000;
+      line-height:1.55;
     }
-
+    .detailTitle{font-size:28px;font-weight:1100;color:#fff7d6;line-height:1.12}
+    .detailLine{margin-top:9px;color:var(--muted)}
+    .detailLine b{color:var(--text)}
     .smallbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .smallchip{
       display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;
+      padding:9px 11px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(2,44,34,.25);
+      border:1px solid rgba(148,163,184,.20);
+      background:rgba(2,44,34,.28);
       color:var(--muted);
-      font-size:12px;
-      font-weight:900;
+      font-size:17px;
+      font-weight:1100;
     }
 
     .note{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.03);
+      margin-top:11px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.27);
+      background:rgba(255,255,255,.04);
       color:var(--muted);
-      font-weight:900;
+      font-weight:1000;
+      font-size:17px;
       white-space:pre-wrap;
       display:none;
-      line-height:1.4;
+      line-height:1.42;
     }
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-  
-    body{padding-bottom:92px}
+    .note.ok{display:block;border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.10);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.10);color:#fde68a}
+
     .bottomNav{
       position:fixed;left:0;right:0;bottom:0;z-index:60;
       padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
@@ -267,12 +331,85 @@
       border-top:1px solid rgba(255,255,255,.12);
       backdrop-filter:blur(14px);
     }
-    .bottomNavInner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-    .bottomNav a{min-height:54px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.035);color:rgba(234,255,241,.78);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:1000;text-align:center;text-decoration:none;line-height:1.05}
-    .bottomNav a strong{font-size:18px;line-height:1}
-    .bottomNav a.active{color:#fde68a;border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.11)}
-    @media(max-width:560px){body{padding:10px 10px 92px}.wrap{max-width:100%}.topbar,.card{border-radius:18px;padding:12px}.actions{width:100%}.actions .pill{width:100%;justify-content:center}.actions .btn{flex:1 1 calc(50% - 6px)}.grid{display:block}.grid .card + .card{margin-top:12px}.detailBox{min-height:120px}}
-</style>
+    .bottomNavInner{
+      max-width:760px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px
+    }
+    .bottomNav a{
+      min-height:76px;
+      border-radius:17px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.04);
+      color:rgba(234,255,241,.82);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      font-size:15px;
+      font-weight:1100;
+      text-align:center;
+      text-decoration:none;
+      line-height:1.05
+    }
+    .bottomNav a strong{font-size:28px;line-height:1}
+    .bottomNav a.active{
+      color:#fde68a;
+      border-color:rgba(250,204,21,.42);
+      background:rgba(250,204,21,.12)
+    }
+
+    @media(max-width:620px){
+      body{padding:10px 10px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 12px)}
+      .wrap{max-width:100%}
+      .topbar,.card,.doctrine{border-radius:22px;padding:14px}
+      .actions{width:100%;justify-content:stretch}
+      .actions .pill{width:100%;justify-content:center}
+      .actions .btn{flex:1 1 calc(50% - 6px)}
+      .title{font-size:30px}
+      .sub,.muted{font-size:18px}
+      .grid{display:block}
+      .grid .card + .card{margin-top:12px}
+      .detailBox{min-height:130px}
+      .top{display:grid}
+      .badges{justify-content:flex-start}
+      .btn{font-size:18px;min-height:66px}
+    }
+  
+
+    /* MODE SENIOR TERRAIN — lecture immobilière sans fatigue */
+    body{font-size:18px;font-weight:900;}
+    .topbar,.card,.doctrine,.access{border-width:1.5px;}
+    .title,.card h2,.detailTitle,.doctrine strong{letter-spacing:-.02em;}
+    .pill,.btn,.badge,.smallchip,.note,.muted,.sub,.meta,.f label,.f input,.f select{font-weight:1100;}
+    .btn{box-shadow:0 10px 24px rgba(0,0,0,.20);}
+    .item{box-shadow:0 12px 28px rgba(0,0,0,.22);}
+    .item .top{align-items:flex-start;}
+    .detailLine{font-size:18px;font-weight:1000;line-height:1.62;}
+    .empty{font-size:20px;font-weight:1100;}
+
+    @media(max-width:620px){
+      body{font-size:19px;}
+      .topbar,.card,.doctrine{padding:18px;}
+      .ico{width:60px;height:60px;font-size:30px;}
+      .title{font-size:29px;}
+      .sub{font-size:18px;}
+      .pill{font-size:17px;min-height:54px;padding:13px 16px;}
+      .card h2{font-size:28px;}
+      .f label{font-size:18px;}
+      .f input,.f select{font-size:20px;min-height:70px;}
+      .name{font-size:25px;white-space:normal;overflow:visible;text-overflow:clip;}
+      .meta{font-size:18px;}
+      .badge{font-size:16px;}
+      .detailBox{font-size:19px;}
+      .bottomNav a{min-height:78px;font-size:15px;}
+      .bottomNav a strong{font-size:29px;}
+    }
+
+  </style>
 </head>
 
 <body>
@@ -280,56 +417,68 @@
 
   <div class="topbar">
     <div class="brand">
-      <div class="ico">🧾</div>
+      <div class="ico">📋</div>
       <div>
-        <div class="title">Je loue</div>
-        <div class="sub" id="topSub">Réservations liées à ton lieu</div>
+        <div class="title">Mes réservations</div>
+        <div class="sub" id="topSub">Demandes, séjours et paiements liés à mes logements</div>
       </div>
     </div>
 
     <div class="actions">
-      <div class="pill" id="pillSlug">identifiant : —</div>
-      <div class="pill warn" id="pillState">aperçu</div>
-      <a class="btn" id="btnBack" href="./app.html">⬅️ Mon espace</a>
-      <a class="btn blue" id="btnPlanning" href="./planning.html">📅 Planning</a>
+      <div class="pill" id="pillSlug">🏠 Espace logement</div>
+      <div class="pill warn" id="pillState">Vérification…</div>
+      <a class="btn" id="btnBack" href="./app.html">⬅️ Accueil</a>
+      <a class="btn blue" id="btnPlanning" href="./planning.html">📅 Disponibilités</a>
       <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
     </div>
   </div>
 
   <div class="access" id="accessBox"></div>
 
+  <section class="doctrine" aria-label="Doctrine DIGIY LOC">
+    <strong>Le pro clique plus qu’il n’écrit.</strong>
+    <p>DIGIY range les demandes, montre les urgences et prépare les bons gestes. Le propriétaire garde la main : confirmer, contacter, encaisser, organiser.</p>
+  </section>
+
   <div class="card">
-    <h2 style="margin:0 0 8px;font-size:18px">Filtres</h2>
-    <div class="muted">Lecture sécurisée par identifiant actif, sans ouvrir la table clients.</div>
+    <h2>Voir vite</h2>
+    <div class="muted">Filtre les demandes sans fouiller. Les identifiants sensibles restent cachés : le téléphone du propriétaire et le code du logement ne sont pas affichés.</div>
+
+    <div class="stats" aria-label="Résumé réservations">
+      <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Demandes</div></div>
+      <div class="stat"><div class="n" id="statPending">0</div><div class="l">À confirmer</div></div>
+      <div class="stat"><div class="n" id="statDue">0</div><div class="l">À encaisser</div></div>
+      <div class="stat"><div class="n" id="statPaid">0</div><div class="l">Payées</div></div>
+    </div>
 
     <div class="filters">
       <div class="f">
-        <label>Recherche</label>
-        <input id="q" placeholder="Nom client / téléphone / logement / référence..." />
+        <label for="q">Recherche</label>
+        <input id="q" placeholder="Nom client, logement, référence…" autocomplete="off"/>
       </div>
 
       <div class="f">
-        <label>Source</label>
+        <label for="source">Canal</label>
         <select id="source">
-          <option value="all">Toutes</option>
+          <option value="all">Tous</option>
           <option value="digiy">DIGIY</option>
-          <option value="resa">Réservation externe</option>
-          <option value="autre">Autre canal</option>
+          <option value="resa">Externe</option>
+          <option value="autre">Autre</option>
         </select>
       </div>
 
       <div class="f">
-        <label>Statut</label>
+        <label for="status">État</label>
         <select id="status">
           <option value="all">Tous</option>
           <option value="confirmed">Confirmée</option>
-          <option value="pending">En attente</option>
+          <option value="pending">À confirmer</option>
           <option value="cancelled">Annulée</option>
         </select>
       </div>
 
       <div class="f">
-        <label>Paiement</label>
+        <label for="pay">Paiement</label>
         <select id="pay">
           <option value="all">Tous</option>
           <option value="paid">Payé</option>
@@ -338,10 +487,10 @@
       </div>
     </div>
 
-    <div class="row" style="margin-top:12px">
+    <div class="row" style="margin-top:14px">
       <button class="btn" id="reset" type="button">♻️ Réinitialiser</button>
-      <button class="btn green" id="export" type="button">⬇️ Export CSV</button>
-      <span class="pill" id="count">0 réservation</span>
+      <button class="btn green" id="export" type="button">⬇️ Export propre</button>
+      <span class="pill" id="count">0 demande</span>
     </div>
 
     <div class="note" id="noteMain"></div>
@@ -349,27 +498,27 @@
 
   <div class="grid">
     <div class="card">
-      <h2 style="margin:0;font-size:18px">Liste des réservations</h2>
-      <div class="muted" id="countSub" style="margin-top:6px">—</div>
+      <h2>Liste</h2>
+      <div class="muted" id="countSub">—</div>
 
       <div id="list" class="list"></div>
       <div id="empty" class="empty">Aucune réservation ne correspond aux filtres.</div>
     </div>
 
     <div class="card">
-      <h2 style="margin:0;font-size:18px">Vue rapide</h2>
-      <div class="muted" style="margin-top:6px">
-        Clique une réservation à gauche pour voir le détail. En mode vivant, le contact ouvre le vrai numéro du client.
+      <h2>Vue rapide</h2>
+      <div class="muted">
+        Clique une demande pour voir le détail. Les actions ouvrent le bon geste sans afficher les identifiants sensibles.
       </div>
 
       <div class="detailBox" id="detail">
-        Sélectionne une réservation à gauche.
+        Sélectionne une réservation dans la liste.
       </div>
 
-      <div class="row" style="margin-top:12px">
+      <div class="row" style="margin-top:14px">
         <button class="btn gold" id="btnPay" disabled>💸 Encaisser</button>
         <button class="btn green" id="btnContact" disabled>📞 Contacter</button>
-        <button class="btn" id="btnClose" disabled>✅ Marquer traité (UI)</button>
+        <button class="btn" id="btnClose" disabled>✅ Traité</button>
       </div>
 
       <div class="note" id="noteSide"></div>
@@ -381,7 +530,7 @@
 <nav class="bottomNav" aria-label="Navigation LOC">
   <div class="bottomNavInner">
     <a id="navAccueil" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
-    <a id="navReservations" class="active" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a id="navReservations" class="active" href="./reservations.html"><strong>📋</strong><span>Demandes</span></a>
     <a id="navDispos" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
     <a id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
     <a id="navPlus" href="./app.html#plus"><strong>⋯</strong><span>Plus</span></a>
@@ -393,64 +542,22 @@
   "use strict";
 
   const MODULE = "LOC";
-
-  // Secours terrain : évite une page morte si le lien arrive sans slug.
-  // Pour un autre propriétaire, le slug URL reste prioritaire.
-  const FALLBACK_PHONE = "221771342889";
-  const FALLBACK_SLUG = "loc-" + FALLBACK_PHONE;
-  const SB_URL =
-    String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
-  const SB_ANON =
-    String(
-      window.DIGIY_SUPABASE_ANON ||
-      window.DIGIY_SUPABASE_ANON_KEY ||
-      "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3"
-    ).trim();
-
-  const DB = {
-    rooms: "digiy_loc_rooms",
-    reservations: "digiy_loc_reservations",
-    roomTitle: "nom",
-    roomOwnerId: "owner_id",
-    roomPhone: "phone",
-    resOwnerId: "owner_id",
-    resRoomId: "room_id",
-    resClientName: "client_name",
-    resPhone: "phone",
-    resCheckin: "checkin",
-    resCheckout: "checkout",
-    resAmount: "amount_total",
-    resStatus: "status",
-    resPayStatus: "payment_status"
-  };
-
   const $ = (id)=>document.getElementById(id);
 
+  const SB_URL = String(window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co").trim();
+  const SB_ANON = String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim();
+
   const State = {
-    slug: "",
-    phone: "",
-    ownerId: "",
-    businessName: "",
-    rooms: [],
-    reservations: [],
-    filtered: [],
-    current: null,
-    mode: "preview",
-    reason: "booting"
+    slug:"",
+    phone:"",
+    access:false,
+    rows:[],
+    filtered:[],
+    current:null,
+    mode:"preview"
   };
 
   let sb = null;
-
-  function getLocalSupabase(){
-    if (sb?.from && sb?.rpc) return sb;
-
-    if (!window.supabase?.createClient) {
-      throw new Error("supabase_not_ready");
-    }
-
-    sb = window.supabase.createClient(SB_URL, SB_ANON);
-    return sb;
-  }
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, (m)=>({
@@ -458,212 +565,186 @@
     }[m]));
   }
 
+  function storageGet(key){
+    try{ const s = sessionStorage.getItem(key); if(s) return s; }catch{}
+    try{ const l = localStorage.getItem(key); if(l) return l; }catch{}
+    return "";
+  }
+
+  function storageSet(key, value){
+    if(value == null || String(value).trim() === "") return;
+    try{ sessionStorage.setItem(key, String(value).trim()); }catch{}
+    try{ localStorage.setItem(key, String(value).trim()); }catch{}
+  }
+
+  function phoneDigits(v){ return String(v || "").replace(/[^\d]/g, ""); }
+  function isSensitiveSlug(slug){ return /\d{7,}/.test(String(slug || "")); }
+
+  function displayProtectedPlace(slug){
+    const s = String(slug || "").trim().toLowerCase();
+    if(!s) return "Espace logement";
+    if(isSensitiveSlug(s)) return "Espace logement sécurisé";
+    if(s.startsWith("loc-room-")) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC sécurisé";
+  }
+
+  function cleanSensitiveVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach((key)=>{
+        if(u.searchParams.has(key)){
+          u.searchParams.delete(key);
+          changed = true;
+        }
+      });
+      const rawSlug = u.searchParams.get("slug") || "";
+      if(isSensitiveSlug(rawSlug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+      if(changed) history.replaceState({}, document.title, u.pathname + u.search + u.hash);
+    }catch(_){}
+  }
+
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {
+      preview:true,
+      access_ok:false,
+      slug:"",
+      phone:"",
+      module:MODULE,
+      reason:"guard_missing"
+    };
+  }
+
+  function normalizeSessionCandidate(obj){
+    if(!obj || typeof obj !== "object") return {};
+    const sources = [obj,obj.session,obj.state,obj.data,obj.payload,obj.guard_state].filter(Boolean);
+    let out = {slug:"",phone:"",access:false,module:MODULE};
+    for(const src of sources){
+      out.slug = out.slug || String(src.slug || src.last_slug || src.place_slug || "").trim().toLowerCase();
+      out.phone = out.phone || String(src.phone || src.owner_phone || src.user_phone || "").trim();
+      out.module = String(src.module || src.digiy_module || out.module || MODULE).trim().toUpperCase();
+      if(src.access_ok === true || src.access === true || src.has_access === true || src.ok === true || src.valid === true) out.access = true;
+    }
+    return out;
+  }
+
+  function parseJson(raw){ try{return JSON.parse(raw);}catch{return null;} }
+
+  function getStoredSession(){
+    const keys = [
+      "digiy_loc_session","digiy_loc_guard_session","digiy_guard_loc_session",
+      "DIGIY_LOC_SESSION","digiy_session_loc","DIGIY_SESSION_LOC",
+      "digiy_guard_session_loc","digiy_guard_session_LOC","digiy_guard_session",
+      "DIGIY_SESSION","digiy_session"
+    ];
+    for(const key of keys){
+      const n = normalizeSessionCandidate(parseJson(storageGet(key)));
+      if(n.slug || n.phone || n.access) return n;
+    }
+    return {};
+  }
+
+  async function bootGuard(){
+    const guard = window.DIGIY_GUARD;
+    if(!guard || typeof guard.ready !== "function") return;
+    try{
+      await guard.ready({ redirect:false, preserve_validation:true, allow_soft_session:true, timeout:8000 });
+    }catch{
+      try{ await guard.ready(); }catch(e){ console.warn("[LOC RESERVATIONS] guard:", e?.message || e); }
+    }
+  }
+
+  function getSession(){
+    const st = normalizeSessionCandidate(getGuardState());
+    const gs = normalizeSessionCandidate(window.DIGIY_GUARD?.getSession?.() || {});
+    const ss = getStoredSession();
+
+    let slugFromUrl = "";
+    let phoneFromUrl = "";
+    try{
+      const u = new URL(location.href);
+      slugFromUrl = String(u.searchParams.get("slug") || "").trim().toLowerCase();
+      phoneFromUrl = String(u.searchParams.get("phone") || "").trim();
+    }catch{}
+
+    const slug = st.slug || gs.slug || ss.slug || slugFromUrl ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      "";
+
+    const phone = st.phone || gs.phone || ss.phone || phoneFromUrl ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      storageGet("DIGIY_PHONE") ||
+      "";
+
+    const access = !!(st.access || gs.access || ss.access ||
+      storageGet("digiy_loc_access_ok") === "true" ||
+      storageGet("DIGIY_LOC_ACCESS_OK") === "true" ||
+      storageGet("digiy_loc_pin_access") === "true");
+
+    return {
+      ok: access,
+      access_ok: access,
+      preview: !access,
+      slug: String(slug || "").trim().toLowerCase(),
+      phone: phoneDigits(phone),
+      module: MODULE
+    };
+  }
+
+  function remember(){
+    if(State.slug){
+      ["digiy_loc_slug","digiy_loc_last_slug","DIGIY_LOC_SLUG","DIGIY_LOC_LAST_SLUG","digiy_last_slug"].forEach(k=>storageSet(k, State.slug));
+    }
+    if(State.phone){
+      ["digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","DIGIY_PHONE"].forEach(k=>storageSet(k, State.phone));
+    }
+  }
+
+  function getSb(){
+    if(sb?.rpc) return sb;
+    if(!window.supabase?.createClient) throw new Error("supabase_not_ready");
+    sb = window.supabase.createClient(SB_URL, SB_ANON, {
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+    });
+    return sb;
+  }
+
+  function withSlug(path){
+    const slug = State.slug || "";
+    try{
+      const u = new URL(path, location.href);
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
+      if(slug && !isSensitiveSlug(slug)) u.searchParams.set("slug", slug);
+      else u.searchParams.delete("slug");
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
+    }catch{
+      if(slug && !isSensitiveSlug(slug)) return path + (path.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
+      return path;
+    }
+  }
+
   function fmtMoney(x){
     const n = Number(x || 0);
+    if(!Number.isFinite(n) || n <= 0) return "—";
     return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
   }
 
   function fmtDate(x){
     if(!x) return "—";
     try{
-      return new Date(x).toLocaleDateString("fr-FR");
-    }catch{
-      return String(x);
-    }
-  }
-
-  function storageGet(key){
-    try{
-      const s = sessionStorage.getItem(key);
-      if (s) return s;
-    }catch{}
-    try{
-      const l = localStorage.getItem(key);
-      if (l) return l;
-    }catch{}
-    return "";
-  }
-
-  async function bootGuard(){
-    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
-      throw new Error("guard_missing");
-    }
-    await window.DIGIY_GUARD.ready();
-    return window.DIGIY_GUARD.state || {};
-  }
-
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      module: MODULE,
-      reason: "guard_missing"
-    };
-  }
-
-  function isTruthyLike(v){
-    if (v === true || v === 1) return true;
-    const s = String(v == null ? "" : v).trim().toLowerCase();
-    return s === "true" || s === "1" || s === "yes" || s === "ok";
-  }
-
-  function isFutureAccess(v){
-    if (!v) return false;
-
-    const n = Number(v);
-    if (Number.isFinite(n) && n > Date.now()) return true;
-
-    const d = Date.parse(String(v));
-    return Number.isFinite(d) && d > Date.now();
-  }
-
-  function getSession(){
-    const st = getGuardState();
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
-
-    const accessFlags = [
-      st.access_ok,
-      st.accessOk,
-      st.has_access,
-      st.hasAccess,
-      st.access,
-      st.pin_access,
-      st.pinAccess,
-      st.allowed,
-      st.is_allowed,
-      st.isAllowed,
-      st.ok,
-      raw.access_ok,
-      raw.accessOk,
-      raw.has_access,
-      raw.hasAccess,
-      raw.access,
-      raw.pin_access,
-      raw.pinAccess,
-      raw.allowed,
-      raw.is_allowed,
-      raw.isAllowed,
-      raw.ok,
-      storageGet("digiy_loc_pin_access"),
-      storageGet("digiy_loc_access_ok"),
-      storageGet("digiy_loc_has_access"),
-      storageGet("digiy_loc_access"),
-      storageGet("DIGIY_LOC_PIN_ACCESS"),
-      storageGet("DIGIY_LOC_ACCESS_OK"),
-      storageGet("DIGIY_LOC_HAS_ACCESS"),
-      storageGet("DIGIY_LOC_ACCESS")
-    ];
-
-    const untilFlags = [
-      st.pin_access_until,
-      st.access_until,
-      st.expires_at,
-      raw.pin_access_until,
-      raw.access_until,
-      raw.expires_at,
-      storageGet("digiy_loc_pin_access_until"),
-      storageGet("digiy_loc_access_until"),
-      storageGet("DIGIY_LOC_PIN_ACCESS_UNTIL"),
-      storageGet("DIGIY_LOC_ACCESS_UNTIL")
-    ];
-
-    const accessOk =
-      accessFlags.some(isTruthyLike) ||
-      untilFlags.some(isFutureAccess);
-
-    return {
-      ok: accessOk,
-      access_ok: accessOk,
-      preview: !accessOk,
-      slug: String(st.slug || raw.slug || "").trim().toLowerCase(),
-      phone: String(st.phone || raw.phone || "").trim(),
-      module: String(st.module || raw.module || MODULE).trim(),
-      reason: String(st.reason || raw.reason || "").trim()
-    };
-  }
-
-  function getSlug(){
-    const sess = getSession();
-    if (sess.slug) return sess.slug;
-
-    let slugFromUrl = "";
-    let phoneFromUrl = "";
-
-    try{
-      const u = new URL(location.href);
-      slugFromUrl = String(u.searchParams.get("slug") || "").trim().toLowerCase();
-      phoneFromUrl = phoneDigits(String(u.searchParams.get("phone") || ""));
-    }catch{}
-
-    const storedPhone = phoneDigits(
-      phoneFromUrl ||
-      storageGet("digiy_loc_phone") ||
-      storageGet("digiy_loc_last_phone") ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      FALLBACK_PHONE
-    );
-
-    const inferredFromPhone = storedPhone ? ("loc-" + storedPhone) : "";
-
-    return String(
-      slugFromUrl ||
-      storageGet("digiy_loc_slug") ||
-      storageGet("digiy_loc_last_slug") ||
-      storageGet("DIGIY_LOC_SLUG") ||
-      storageGet("DIGIY_LOC_LAST_SLUG") ||
-      storageGet("digiy_last_slug") ||
-      inferredFromPhone ||
-      FALLBACK_SLUG ||
-      ""
-    ).trim().toLowerCase();
-  }
-
-  function getPhone(){
-    const sess = getSession();
-
-    let phoneFromUrl = "";
-    try{
-      phoneFromUrl = String(new URL(location.href).searchParams.get("phone") || "").trim();
-    }catch{}
-
-    return phoneDigits(
-      sess.phone ||
-      phoneFromUrl ||
-      storageGet("digiy_loc_phone") ||
-      storageGet("digiy_loc_last_phone") ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      FALLBACK_PHONE ||
-      ""
-    );
-  }
-
-  function withSlug(path){
-    const slug = State.slug || getSlug() || "";
-    const phone = State.phone || getPhone() || "";
-
-    try{
-      const u = new URL(path, location.href);
-      if (slug) u.searchParams.set("slug", slug);
-      if (phone) u.searchParams.set("phone", phone);
-
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    }catch{
-      const params = [];
-      if (slug) params.push("slug=" + encodeURIComponent(slug));
-      if (phone) params.push("phone=" + encodeURIComponent(phone));
-      if (!params.length) return path;
-      const sep = path.includes("?") ? "&" : "?";
-      return path + sep + params.join("&");
-    }
-  }
-
-  function phoneDigits(v){
-    return String(v || "").replace(/[^\d]/g, "");
+      const d = new Date(String(x).slice(0,10) + "T00:00:00");
+      if(Number.isNaN(d.getTime())) return String(x);
+      return d.toLocaleDateString("fr-FR", { day:"2-digit", month:"short", year:"numeric" });
+    }catch{ return String(x); }
   }
 
   function setNoteMain(msg, cls="warn"){
@@ -686,546 +767,399 @@
     el.style.display = msg ? "block" : "none";
   }
 
-  function rememberAccess(){
-    if (State.slug) {
-      try{ sessionStorage.setItem("digiy_loc_slug", State.slug); }catch{}
-      try{ sessionStorage.setItem("digiy_loc_last_slug", State.slug); }catch{}
-      try{ localStorage.setItem("digiy_loc_last_slug", State.slug); }catch{}
-    }
-
-    if (State.phone) {
-      try{ sessionStorage.setItem("digiy_loc_phone", State.phone); }catch{}
-      try{ localStorage.setItem("digiy_loc_last_phone", State.phone); }catch{}
-    }
-  }
-
   function refreshTopUi(){
-    $("pillSlug").textContent = "identifiant : " + (State.slug || "—");
-
+    $("pillSlug").textContent = "🏠 " + displayProtectedPlace(State.slug);
     const pill = $("pillState");
-    if(State.mode === "live"){
-      pill.textContent = "vivant";
+    if(State.access){
+      pill.textContent = "✅ Accès ouvert";
       pill.className = "pill ok";
-    }else{
-      pill.textContent = "aperçu";
+    }else if(State.slug || State.phone){
+      pill.textContent = "👁️ Lecture seule";
       pill.className = "pill warn";
+    }else{
+      pill.textContent = "🔒 Accès fermé";
+      pill.className = "pill bad";
     }
-
     forceNavLinks();
-  }
-
-  function roomNameById(id){
-    const r = State.rooms.find(x => String(x.id) === String(id));
-    return r?.[DB.roomTitle] || r?.title || r?.name || "Logement";
   }
 
   function normalizeSource(r){
     const raw = String(r.source || r.booking_source || r.channel || "").toLowerCase();
-    if (raw.includes("digiy")) return "digiy";
-    if (raw.includes("booking") || raw.includes("airbnb") || raw.includes("expedia") || raw.includes("platform") || raw.includes("external") || raw.includes("resa")) return "resa";
+    if(raw.includes("digiy")) return "digiy";
+    if(raw.includes("booking") || raw.includes("airbnb") || raw.includes("expedia") || raw.includes("platform") || raw.includes("external") || raw.includes("resa")) return "resa";
     return "autre";
   }
 
   function normalizeStatus(r){
-    const raw = String(r?.[DB.resStatus] || r.status || "").toLowerCase();
-    if (raw.includes("cancel")) return "cancelled";
-    if (raw.includes("pending") || raw.includes("attente")) return "pending";
-    if (raw.includes("confirm")) return "confirmed";
+    const raw = String(r.status || r.reservation_status || "").toLowerCase();
+    if(raw.includes("cancel")) return "cancelled";
+    if(raw.includes("pending") || raw.includes("attente") || raw.includes("wait")) return "pending";
+    if(raw.includes("confirm") || raw.includes("ok") || raw.includes("accepted")) return "confirmed";
     return raw || "confirmed";
   }
 
   function normalizePay(r){
-    const raw = String(r?.[DB.resPayStatus] || r.payment_status || "").toLowerCase();
-    if (raw === "paid" || raw === "succeeded" || raw === "confirmé" || raw === "confirmed") return "paid";
+    const raw = String(r.payment_status || r.pay_status || r.paid_status || "").toLowerCase();
+    if(raw === "paid" || raw.includes("paid") || raw.includes("succeeded") || raw.includes("confirm") || raw.includes("payé")) return "paid";
     return "due";
   }
 
-  function badgeSource(s){
-    if(s==="digiy") return ["DIGIY","b-digiy"];
-    if(s==="resa") return ["Réservation externe","b-resa"];
-    return ["Autre canal","b-autre"];
+  function normalizeRow(r){
+    const room = r.room_name || r.nom || r.room_label || r.unit_title || r.place_name || r.logement_title || "Logement";
+    const client = r.client_name || r.customer_name || r.guest_name || r.name || "Client";
+    const phone = phoneDigits(r.phone || r.client_phone || r.customer_phone || r.guest_phone || r.whatsapp || "");
+    const checkin = String(r.checkin || r.check_in || r.start_date || r.date_arrivee || "").slice(0,10);
+    const checkout = String(r.checkout || r.check_out || r.end_date || r.date_depart || "").slice(0,10);
+    const amount = Number(r.amount_total || r.total_amount || r.amount || r.price_total || 0) || 0;
+    const source = normalizeSource(r);
+    const status = normalizeStatus(r);
+    const pay = normalizePay(r);
+    const ref = String(r.reference || r.ref || r.id || r.booking_id || "").trim();
+
+    return {
+      raw:r,
+      id:String(r.id || r.booking_id || ref || Math.random()).trim(),
+      room:String(room).trim(),
+      client:String(client).trim(),
+      phone,
+      checkin,
+      checkout,
+      amount,
+      source,
+      status,
+      pay,
+      ref
+    };
   }
 
-  function badgeStatus(s){
-    if(s==="confirmed") return ["Confirmée","s-confirmed"];
-    if(s==="pending") return ["En attente","s-pending"];
-    return ["Annulée","s-cancelled"];
+  function sourceLabel(s){
+    return s === "digiy" ? "DIGIY" : s === "resa" ? "Externe" : "Autre";
   }
 
-  function badgePay(s){
-    if(s==="paid") return ["Payé","p-paid"];
-    return ["À encaisser","p-due"];
+  function statusLabel(s){
+    return s === "pending" ? "À confirmer" : s === "cancelled" ? "Annulée" : "Confirmée";
   }
 
-  function resetDetail(){
-    State.current = null;
-    $("detail").innerHTML = "Sélectionne une réservation à gauche.";
-    $("btnPay").disabled = true;
-    $("btnContact").disabled = true;
-    $("btnClose").disabled = true;
-    setNoteSide("", "warn");
-  }
+  function payLabel(p){ return p === "paid" ? "Payé" : "À encaisser"; }
 
-  function renderDetail(r){
-    const [S] = badgeSource(r._source);
-    const [ST] = badgeStatus(r._status);
-    const [P] = badgePay(r._pay);
-
-    $("detail").innerHTML = `
-      <div style="font-weight:1000;font-size:16px;margin-bottom:8px">${esc(r._client)}</div>
-      <div class="muted" style="line-height:1.65">
-        <b>${esc(r._room)}</b><br>
-        ${esc(fmtDate(r._checkin))} → ${esc(fmtDate(r._checkout))}<br>
-        Téléphone : <b>${esc(r._phone || "—")}</b><br>
-        Réf : <b>${esc(r._ref)}</b><br><br>
-        Source : <b>${esc(S)}</b><br>
-        Statut : <b>${esc(ST)}</b><br>
-        Paiement : <b>${esc(P)}</b><br>
-        Total : <b>${esc(fmtMoney(r._amount))}</b>
-      </div>
-
-      <div class="smallbtns">
-        <div class="smallchip">🧍 Client</div>
-        <div class="smallchip">🏠 Bien</div>
-        <div class="smallchip">📆 Réservation</div>
-        <div class="smallchip">💸 Paiement</div>
-      </div>
-    `;
-
-    $("btnPay").disabled = State.mode !== "live";
-    $("btnContact").disabled = State.mode !== "live";
-    $("btnClose").disabled = State.mode !== "live";
-  }
-
-  function renderList(rows){
-    const list = $("list");
-    list.innerHTML = "";
-
-    $("count").textContent = rows.length + " réservation(s)";
-    $("countSub").textContent = rows.length
-      ? `${rows.length} ligne(s) visibles dans ce filtre`
-      : "Aucune ligne visible";
-
-    $("empty").style.display = rows.length ? "none" : "block";
-
-    rows.forEach(r=>{
-      const [S, sCls] = badgeSource(r._source);
-      const [ST, stCls] = badgeStatus(r._status);
-      const [P, pCls] = badgePay(r._pay);
-
-      const el = document.createElement("div");
-      el.className = "item" + (State.current && State.current.id === r.id ? " active" : "");
-
-      el.innerHTML = `
-        <div class="top">
-          <div>
-            <div class="name">${esc(r._client)}</div>
-            <div class="meta">
-              ${esc(r._room)}<br>
-              ${esc(fmtDate(r._checkin))} → ${esc(fmtDate(r._checkout))} • <b>${esc(fmtMoney(r._amount))}</b><br>
-              <span style="opacity:.8">${esc(r._ref)}</span>
-            </div>
-          </div>
-          <div class="badges">
-            <span class="badge ${sCls}">${esc(S)}</span>
-            <span class="badge ${stCls}">${esc(ST)}</span>
-            <span class="badge ${pCls}">${esc(P)}</span>
-          </div>
-        </div>
-      `;
-
-      el.addEventListener("click", ()=>{
-        document.querySelectorAll(".item").forEach(x=>x.classList.remove("active"));
-        el.classList.add("active");
-        State.current = r;
-        renderDetail(r);
-      });
-
-      list.appendChild(el);
-    });
-
-    if(State.current){
-      const found = rows.find(x => x.id === State.current.id);
-      if(!found){
-        resetDetail();
-      }
-    }
-  }
-
-  function applyFilters(){
-    const q = ($("q").value || "").trim().toLowerCase();
+  function matchesFilters(row){
+    const q = String($("q").value || "").trim().toLowerCase();
     const source = $("source").value;
     const status = $("status").value;
     const pay = $("pay").value;
 
-    State.filtered = State.reservations.filter(r=>{
-      const matchQ = !q || [
-        r._client,
-        r._phone,
-        r._room,
-        r._ref
-      ].join(" ").toLowerCase().includes(q);
+    const hay = [
+      row.client,row.room,row.ref,row.checkin,row.checkout,row.source,row.status,row.pay
+    ].join(" ").toLowerCase();
 
-      const matchSource = source === "all" || r._source === source;
-      const matchStatus = status === "all" || r._status === status;
-      const matchPay = pay === "all" || r._pay === pay;
-
-      return matchQ && matchSource && matchStatus && matchPay;
-    });
-
-    renderList(State.filtered);
+    return (!q || hay.includes(q)) &&
+      (source === "all" || row.source === source) &&
+      (status === "all" || row.status === status) &&
+      (pay === "all" || row.pay === pay);
   }
 
-  function exportCSV(){
-    const rows = State.filtered.length ? State.filtered : State.reservations;
-    if(!rows.length){
-      setNoteMain("Aucune réservation à exporter.", "warn");
+  function updateStats(){
+    const rows = State.rows || [];
+    $("statTotal").textContent = String(rows.length);
+    $("statPending").textContent = String(rows.filter(r=>r.status === "pending").length);
+    $("statDue").textContent = String(rows.filter(r=>r.pay === "due").length);
+    $("statPaid").textContent = String(rows.filter(r=>r.pay === "paid").length);
+  }
+
+  function renderList(){
+    const box = $("list");
+    const empty = $("empty");
+    State.filtered = State.rows.filter(matchesFilters);
+
+    $("count").textContent = State.filtered.length + (State.filtered.length > 1 ? " demandes" : " demande");
+    $("countSub").textContent = State.filtered.length
+      ? "Clique une demande pour ouvrir le détail."
+      : "Aucune demande ne correspond aux filtres.";
+
+    box.innerHTML = "";
+    empty.style.display = State.filtered.length ? "none" : "block";
+
+    State.filtered.forEach((r)=>{
+      const item = document.createElement("div");
+      item.className = "item" + (State.current?.id === r.id ? " active" : "");
+      item.tabIndex = 0;
+      item.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="name">${esc(r.client)}</div>
+            <div class="meta">
+              ${esc(r.room)}<br>
+              ${esc(fmtDate(r.checkin))} → ${esc(fmtDate(r.checkout))} · ${esc(fmtMoney(r.amount))}
+            </div>
+          </div>
+          <div class="badges">
+            <span class="badge b-${esc(r.source)}">${esc(sourceLabel(r.source))}</span>
+            <span class="badge s-${esc(r.status)}">${esc(statusLabel(r.status))}</span>
+            <span class="badge ${r.pay === "paid" ? "p-paid" : "p-due"}">${esc(payLabel(r.pay))}</span>
+          </div>
+        </div>
+      `;
+
+      item.addEventListener("click", ()=>selectRow(r));
+      item.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          selectRow(r);
+        }
+      });
+
+      box.appendChild(item);
+    });
+
+    updateStats();
+  }
+
+  function selectRow(r){
+    State.current = r;
+    renderDetail(r);
+    renderList();
+  }
+
+  function renderDetail(r){
+    const box = $("detail");
+    if(!r){
+      box.textContent = "Sélectionne une réservation dans la liste.";
+      ["btnPay","btnContact","btnClose"].forEach(id=>$(id).disabled = true);
       return;
     }
 
-    const header = [
-      "reference","client","telephone","logement","checkin","checkout","source","status","paiement","total"
+    box.innerHTML = `
+      <div class="detailTitle">${esc(r.client)}</div>
+      <div class="detailLine"><b>Logement :</b> ${esc(r.room)}</div>
+      <div class="detailLine"><b>Séjour :</b> ${esc(fmtDate(r.checkin))} → ${esc(fmtDate(r.checkout))}</div>
+      <div class="detailLine"><b>Montant :</b> ${esc(fmtMoney(r.amount))}</div>
+      <div class="detailLine"><b>État :</b> ${esc(statusLabel(r.status))} · ${esc(payLabel(r.pay))}</div>
+      <div class="detailLine"><b>Contact client :</b> ${r.phone ? "Disponible par action directe" : "Non renseigné"}</div>
+      ${r.ref ? `<div class="detailLine"><b>Référence :</b> ${esc(r.ref)}</div>` : ""}
+      <div class="smallbtns">
+        <span class="smallchip">🏠 ${esc(displayProtectedPlace(State.slug))}</span>
+        <span class="smallchip">🛡️ Identifiants protégés</span>
+      </div>
+    `;
+
+    $("btnPay").disabled = false;
+    $("btnContact").disabled = !r.phone;
+    $("btnClose").disabled = false;
+    setNoteSide("", "warn");
+  }
+
+  function forceNavLinks(){
+    const links = {
+      btnBack:"./app.html",
+      btnPlanning:"./planning.html",
+      navAccueil:"./app.html",
+      navReservations:"./reservations.html",
+      navDispos:"./planning.html",
+      navNotes:"./notes.html",
+      navPlus:"./app.html#plus"
+    };
+    Object.entries(links).forEach(([id,path])=>{
+      const el = $(id);
+      if(el) el.href = withSlug(path);
+    });
+  }
+
+  async function loadReservations(){
+    const S = getSb();
+
+    if(!State.slug) return [];
+
+    const rpcAttempts = [
+      {fn:"digiy_loc_reservations_by_slug", args:{p_slug:State.slug}},
+      {fn:"digiy_loc_get_reservations_by_slug", args:{p_slug:State.slug}},
+      {fn:"digiy_loc_reservations_for_slug", args:{p_slug:State.slug}}
     ];
 
-    const lines = rows.map(r => [
-      r._ref,
-      r._client,
-      r._phone,
-      r._room,
-      r._checkin,
-      r._checkout,
-      r._source,
-      r._status,
-      r._pay,
-      r._amount
-    ]);
-
-    const csv = [header, ...lines]
-      .map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";"))
-      .join("\n");
-
-    const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `digiy-loc-resa-${State.slug || "export"}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
-    setNoteMain("✅ Export CSV généré.", "ok");
-  }
-
-  function setPreview(reason){
-    State.mode = "preview";
-    State.reason = reason || "preview";
-    refreshTopUi();
-
-    setAccessBox(
-      reason === "slug_missing"
-        ? "👁️ Aucun identifiant détecté dans le lien. Secours LOC appliqué si possible."
-        : reason === "has_access_false"
-        ? "👁️ Slug présent mais accès non actif. Coque protégée affichée."
-        : reason === "phone_missing"
-        ? "👁️ Téléphone propriétaire introuvable. Coque protégée affichée."
-        : "👁️ Mode aperçu propre."
-    );
-
-    State.rooms = [];
-    State.reservations = [];
-    State.filtered = [];
-    renderList([]);
-    resetDetail();
-
-    setNoteMain("Passe par ton code pour voir les vraies réservations du lieu.", "warn");
-  }
-
-  function setLive(){
-    State.mode = "live";
-    State.reason = "ok";
-    refreshTopUi();
-    setAccessBox("");
-  }
-
-  async function fetchReservationsViaRpc(sbClient){
-    const candidates = [];
-
-    function addCandidate(value){
-      const v = String(value || "").trim().toLowerCase();
-      if(!v) return;
-      if(!candidates.includes(v)) candidates.push(v);
-    }
-
-    addCandidate(State.slug);
-    addCandidate(getSlug());
-
-    const urlSlug = (()=>{
-      try{return String(new URL(location.href).searchParams.get("slug") || "").trim().toLowerCase();}
-      catch{return "";}
-    })();
-    addCandidate(urlSlug);
-
-    const storedSlugs = [
-      storageGet("digiy_loc_room_slug"),
-      storageGet("DIGIY_LOC_ROOM_SLUG"),
-      storageGet("digiy_loc_slug"),
-      storageGet("digiy_loc_last_slug"),
-      storageGet("DIGIY_LOC_SLUG"),
-      storageGet("DIGIY_LOC_LAST_SLUG"),
-      storageGet("digiy_last_slug")
-    ];
-    storedSlugs.forEach(addCandidate);
-
-    const phone = phoneDigits(State.phone || getPhone());
-    if(phone) addCandidate("loc-" + phone);
-
-    let lastError = null;
-    for(const slug of candidates){
+    for(const step of rpcAttempts){
       try{
-        const { data, error } = await sbClient.rpc("digiy_loc_reservations_by_slug", {
-          p_slug: slug
-        });
+        const {data,error} = await S.rpc(step.fn, step.args);
         if(error) throw error;
-        const rows = Array.isArray(data) ? data : [];
-        if(rows.length){
-          if(State.slug !== slug){
-            State.slug = slug;
-            rememberAccess();
-            refreshTopUi();
-          }
-          return rows;
-        }
+        if(Array.isArray(data)) return data;
+        if(Array.isArray(data?.reservations)) return data.reservations;
+        if(Array.isArray(data?.data)) return data.data;
       }catch(e){
-        lastError = e;
+        console.warn("[LOC reservations RPC]", step.fn, e?.message || e);
       }
     }
 
-    if(lastError){
-      throw lastError;
-    }
-
-    return [];
+    throw new Error("reservations_unavailable");
   }
 
-  function decorateReservations(rows){
-    return (rows || []).map(r => ({
-      ...r,
-      _client: r.client_name || r.client_nom || "Client",
-      _phone: r.phone || r.client_phone || "",
-      _room: r.room_name || roomNameById(r.room_id) || "Logement",
-      _checkin: r.checkin || r.date_arrivee || "",
-      _checkout: r.checkout || r.date_depart || "",
-      _amount: Number(r.amount_total || r.montant_total || 0) || 0,
-      _source: normalizeSource(r),
-      _status: normalizeStatus(r),
-      _pay: normalizePay(r),
-      _ref: r.reference || r.id || r.tracking_code || "—"
-    }));
-  }
-
-  async function checkAccessFallback(){
-    const phone = phoneDigits(State.phone || getPhone());
-    if (!phone) return false;
-
-    try{
-      const sbClient = getLocalSupabase();
-
-      const tries = [
-        { p_phone: phone, p_module: MODULE },
-        { p_phone: phone, p_module: "loc" },
-        { phone: phone, module: MODULE },
-        { phone: phone, module: "loc" }
-      ];
-
-      for (const body of tries){
-        const { data, error } = await sbClient.rpc("digiy_has_access", body);
-        if (error) continue;
-
-        if (data === true) return true;
-        if (data?.ok === true) return true;
-        if (data?.access === true) return true;
-        if (data?.has_access === true) return true;
-      }
-    }catch(e){
-      console.warn("Fallback accès LOC impossible:", e);
-    }
-
-    return false;
-  }
-
-  async function loadLiveData(){
-    const sbClient = getLocalSupabase();
-
-    State.rooms = [];
-
-    const reservations = await fetchReservationsViaRpc(sbClient);
-
-    State.reservations = decorateReservations(reservations);
-    applyFilters();
-
-    if(!State.reservations.length){
-      setNoteMain("✅ Accès vivant OK. Aucune réservation trouvée pour cet identifiant.", "ok");
-    }else{
-      setNoteMain(`✅ ${State.reservations.length} réservation(s) chargée(s) par lecture sécurisée.`, "ok");
-    }
-  }
-
-  async function reloadAll(){
+  async function reload(){
     $("btnReload").disabled = true;
-    setNoteMain("⏳ Chargement des réservations…", "warn");
+    setNoteMain("Chargement des réservations…", "warn");
 
     try{
-      const st = getSession();
-      State.slug = getSlug();
-      State.phone = getPhone();
-      State.ownerId =
-        window.DIGIY_GUARD?.state?.owner_id ||
-        window.DIGIY_GUARD?.getSession?.()?.owner_id ||
-        storageGet("DIGIY_LOC_OWNER_ID") ||
-        storageGet("digiy_loc_owner_id") ||
-        storageGet("DIGIY_OWNER_ID") ||
-        storageGet("owner_id") ||
-        "";
-      State.businessName =
-        storageGet("DIGIY_LOC_BUSINESS_NAME") ||
-        storageGet("DIGIY_BUSINESS_NAME") ||
-        "";
+      await bootGuard();
 
-      rememberAccess();
+      const sess = getSession();
+      State.slug = sess.slug || "";
+      State.phone = sess.phone || "";
+      State.access = !!sess.access_ok;
+      State.mode = State.access ? "live" : "preview";
+
+      cleanSensitiveVisibleUrl();
+      remember();
       refreshTopUi();
 
       if(!State.slug){
-        State.phone = State.phone || FALLBACK_PHONE;
-        State.slug = FALLBACK_SLUG;
-        rememberAccess();
-        refreshTopUi();
-      }
-
-      if(!State.slug){
-        setPreview("slug_missing");
+        State.rows = [];
+        renderList();
+        setAccessBox("Aucun logement détecté. Reviens par ton code d’accès pour ouvrir le carnet.");
+        setNoteMain("Accès fermé : identifiant manquant.", "bad");
         return;
       }
 
-      if(!State.phone){
-        setPreview("phone_missing");
-        return;
+      if(!State.access){
+        setAccessBox("Lecture seule. Entre ton code pour ouvrir toutes les actions du carnet.");
+      }else{
+        setAccessBox("");
       }
 
-      let accessOk = !!st.access_ok;
+      const raw = await loadReservations();
+      State.rows = raw.map(normalizeRow).sort((a,b)=>{
+        const aa = a.checkin || "";
+        const bb = b.checkin || "";
+        return aa.localeCompare(bb);
+      });
 
-      if(!accessOk){
-        accessOk = await checkAccessFallback();
-      }
+      State.current = State.rows[0] || null;
+      renderList();
+      renderDetail(State.current);
 
-      if(!accessOk){
-        setPreview("has_access_false");
-        return;
-      }
-
-      setLive();
-      await loadLiveData();
+      setNoteMain(State.rows.length
+        ? "Carnet chargé. Les demandes sont prêtes à traiter."
+        : "Aucune réservation visible pour l’instant.", State.rows.length ? "ok" : "warn");
 
     }catch(e){
       console.error(e);
-      setNoteMain("❌ Impossible de charger les réservations.\n" + (e?.message || e), "bad");
-      renderList([]);
-      resetDetail();
+      State.rows = [];
+      State.current = null;
+      renderList();
+      renderDetail(null);
+      setNoteMain("Impossible de charger les réservations.\nRetourne à l’accueil ou réouvre ton accès.", "bad");
     }finally{
       $("btnReload").disabled = false;
     }
   }
 
-  function bindNav(){
-    refreshTopUi();
-    forceNavLinks();
+  function exportCsv(){
+    const rows = State.filtered || [];
+    if(!rows.length){
+      setNoteMain("Aucune ligne à exporter.", "warn");
+      return;
+    }
+
+    const header = ["client","logement","arrivee","depart","montant","etat","paiement","canal","reference"];
+    const lines = [header.join(",")];
+
+    rows.forEach((r)=>{
+      const vals = [
+        r.client,r.room,r.checkin,r.checkout,fmtMoney(r.amount),statusLabel(r.status),payLabel(r.pay),sourceLabel(r.source),r.ref
+      ].map(v => `"${String(v ?? "").replaceAll('"','""')}"`);
+      lines.push(vals.join(","));
+    });
+
+    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "digiy-loc-reservations.csv";
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    a.remove();
+    setNoteMain("Export préparé sans téléphone propriétaire ni identifiant sensible.", "ok");
   }
 
-  function bindFilters(){
-    $("q").addEventListener("input", applyFilters);
-    $("source").addEventListener("change", applyFilters);
-    $("status").addEventListener("change", applyFilters);
-    $("pay").addEventListener("change", applyFilters);
+  function openContact(){
+    const r = State.current;
+    if(!r || !r.phone){
+      setNoteSide("Contact client non renseigné.", "warn");
+      return;
+    }
+    const msg = [
+      "Bonjour " + r.client + " 👋",
+      "Je vous contacte au sujet de votre réservation.",
+      "Logement : " + r.room,
+      "Séjour : " + fmtDate(r.checkin) + " → " + fmtDate(r.checkout)
+    ].join("\n");
+    window.open("https://wa.me/" + encodeURIComponent(r.phone) + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
+  }
+
+  function openPay(){
+    try{
+      if(State.current?.ref) sessionStorage.setItem("digiy_loc_current_reservation_ref", State.current.ref);
+      if(State.current?.amount) sessionStorage.setItem("digiy_loc_current_amount", String(State.current.amount));
+    }catch(_){}
+    location.assign(withSlug("./pin-wave.html"));
+  }
+
+  function markTreated(){
+    const r = State.current;
+    if(!r) return;
+    setNoteSide("Marqué traité dans cette lecture. Pour modifier la vraie donnée, utilise l’action dédiée quand elle sera branchée.", "ok");
+  }
+
+  function bind(){
+    ["q","source","status","pay"].forEach(id=>{
+      $(id).addEventListener("input", renderList);
+      $(id).addEventListener("change", renderList);
+    });
 
     $("reset").addEventListener("click", ()=>{
       $("q").value = "";
       $("source").value = "all";
       $("status").value = "all";
       $("pay").value = "all";
-      resetDetail();
-      applyFilters();
+      renderList();
     });
 
-    $("export").addEventListener("click", exportCSV);
-    $("btnReload").addEventListener("click", reloadAll);
+    $("export").addEventListener("click", exportCsv);
+    $("btnReload").addEventListener("click", reload);
+    $("btnContact").addEventListener("click", openContact);
+    $("btnPay").addEventListener("click", openPay);
+    $("btnClose").addEventListener("click", markTreated);
   }
 
-  function bindActions(){
-    $("btnPay").addEventListener("click", ()=>{
-      if(!State.current) return;
-      location.assign(withSlug("./pin-wave.html"));
-    });
-
-    $("btnContact").addEventListener("click", ()=>{
-      if(!State.current) return;
-
-      const p = phoneDigits(State.current._phone);
-      if(!p){
-        setNoteSide("Numéro client indisponible.", "warn");
-        return;
-      }
-
-      const msg = `Bonjour ${State.current._client} 👋
-RESA ${State.current._ref}
-Logement : ${State.current._room}
-Dates : ${fmtDate(State.current._checkin)} → ${fmtDate(State.current._checkout)}
-
-Je loue`;
-      window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
-      setNoteSide("✅ WhatsApp client ouvert.", "ok");
-    });
-
-    $("btnClose").addEventListener("click", ()=>{
-      if(!State.current) return;
-      setNoteSide("Lecture seule pour l’instant. Rien n’est modifié en arrière-plan.", "warn");
-    });
-  }
-
-  function forceNavLinks(){
-    const back = $("btnBack");
-    const planning = $("btnPlanning");
-
-    if (back) back.href = withSlug("./app.html");
-    if (planning) planning.href = withSlug("./planning.html");
-
-    const navs = { navAccueil:"./app.html", navReservations:"./reservations.html", navDispos:"./planning.html", navMessages:"./reservations-pulse.html", navPlus:"./app.html#plus" };
-    Object.entries(navs).forEach(([id,path])=>{ const el = $(id); if(el) el.href = withSlug(path); });
-  }
-
-  async function init(){
-    forceNavLinks();
-    bindNav();
-    bindFilters();
-    bindActions();
-
-    if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
-      try{
-        await bootGuard();
-      }catch(e){
-        console.warn("Guard LOC non prêt, tentative de secours par téléphone + accès Supabase:", e);
-      }
-    }else{
-      console.warn("Guard LOC absent, tentative de secours par téléphone + accès Supabase.");
-    }
-
-    bindNav();
-    reloadAll();
-  }
-
-  try{ forceNavLinks(); }catch(_){}
-  init();
+  cleanSensitiveVisibleUrl();
+  bind();
+  refreshTopUi();
+  renderList();
+  renderDetail(null);
+  reload();
 })();
 </script>
-  <script src="./loc-security-mask.js"></script>
+
+<script>
+(function(){
+  function scrub(){
+    document.querySelectorAll("body *").forEach(function(el){
+      if(!el || el.children.length) return;
+      var t = el.textContent || "";
+      var n = t
+        .replace(/loc-\d{7,}/gi,"Espace logement sécurisé")
+        .replace(/(?:\+?221)?\d{9,}/g,function(m){return /[0-9]/.test(m) ? "Compte reconnu" : m;});
+      if(n !== t) el.textContent = n;
+    });
+    document.querySelectorAll("a[href]").forEach(function(a){
+      try{
+        var u = new URL(a.getAttribute("href"), location.href);
+        ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(function(k){u.searchParams.delete(k);});
+        var s = u.searchParams.get("slug") || "";
+        if(/\d{7,}/.test(s)) u.searchParams.delete("slug");
+        a.setAttribute("href", u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString());
+      }catch(e){}
+    });
+  }
+  scrub();
+  new MutationObserver(scrub).observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
+</script>
 </body>
 </html>
+
