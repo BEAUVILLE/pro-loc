@@ -4,11 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je prépare mon logement</title>
-  <meta name="theme-color" content="#0b1020"/>
-  <meta
-    name="description"
-    content="Je prépare mon logement, avec un brouillon gardé sur cet appareil et des photos préparées sans frais inutiles."
-  />
+  <meta name="theme-color" content="#061b14"/>
+  <meta name="description" content="DIGIY LOC — pré-fiche logement locale, brouillon sur appareil, photos locales et URLs officielles uniquement."/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -19,621 +16,267 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-prefiche-facade-v5"></script>
+  <script src="./guard.js?v=loc-prefiche-senior-url-only-v1"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
       --bg:#061b14;
       --bg2:#0a2820;
+      --card:rgba(255,255,255,.045);
       --accent:#facc15;
       --success:#22c55e;
       --danger:#ef4444;
       --info:#38bdf8;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --border:rgba(148,163,184,0.20);
-      --line:rgba(255,255,255,.10);
-      --shadow:0 20px 50px rgba(0,0,0,.35);
-      --fontA:"Outfit",system-ui,-apple-system,sans-serif;
+      --text:#f4fff8;
+      --muted:rgba(234,255,241,.82);
+      --border:rgba(255,255,255,.16);
+      --line:rgba(255,255,255,.11);
+      --shadow:0 22px 54px rgba(0,0,0,.38);
+      --bottom:86px;
+      --fontA:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{min-height:100%}
-
     body{
       font-family:var(--fontA);
       color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(250,204,21,.09), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(34,197,94,.10), transparent 28%),
-        linear-gradient(135deg,var(--bg),var(--bg2));
+        radial-gradient(900px 520px at 14% -5%, rgba(250,204,21,.15), transparent 58%),
+        radial-gradient(900px 520px at 92% 0%, rgba(34,197,94,.16), transparent 58%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:12px 12px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
     }
 
-    a{color:inherit}
+    a{color:inherit;text-decoration:none}
     button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
 
-    .container{
-      max-width:1320px;
-      margin:0 auto;
-      padding:16px;
+    .container{max-width:1180px;margin:0 auto}
+
+    .header,.banner,.card,.previewCard,.doctrine{
+      border:1px solid var(--border);
+      background:var(--card);
+      border-radius:26px;
+      box-shadow:var(--shadow);
     }
 
     .header{
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:14px;
+      align-items:flex-start;
+      gap:16px;
       flex-wrap:wrap;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.05);
-      backdrop-filter:blur(18px);
-      border-radius:20px;
       padding:18px;
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
+      margin-bottom:14px;
     }
 
-    .title{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
+    .title{display:flex;align-items:center;gap:14px;min-width:0}
     .logo{
-      width:48px;height:48px;border-radius:16px;
+      width:58px;height:58px;border-radius:20px;
       display:grid;place-items:center;
-      background:radial-gradient(circle at 30% 0%,#facc15,#f97316);
-      color:#111;
-      font-size:24px;
+      background:radial-gradient(circle at 30% 0%,#fef3c7,#facc15 55%,#f97316);
+      color:#111827;
+      font-size:29px;
       font-weight:1000;
-      box-shadow:0 12px 30px rgba(250,204,21,.25);
+      box-shadow:0 14px 32px rgba(250,204,21,.25);
+      flex:0 0 auto;
     }
 
     .title h1{
-      font-size:1.35rem;
-      line-height:1.1;
+      font-size:clamp(1.7rem,4vw,2.55rem);
+      line-height:1.02;
       margin:0;
-      color:#d1fae5;
-      font-weight:950;
+      color:#fff7cc;
+      font-weight:1000;
+      letter-spacing:-.04em;
     }
 
     .title p{
-      margin-top:4px;
+      margin-top:7px;
       color:var(--muted);
-      font-size:.92rem;
-      font-weight:700;
-    }
-
-    .head-right{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      align-items:flex-end;
-      flex:1;
-      min-width:280px;
-    }
-
-    .pills{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .pill{
-      border:1px solid rgba(148,163,184,.35);
-      padding:8px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.04);
-      color:var(--muted);
+      font-size:1.08rem;
       font-weight:900;
-      font-size:.83rem;
+      line-height:1.38;
+      max-width:680px;
+    }
+
+    .head-right{display:flex;flex-direction:column;gap:11px;align-items:flex-end;flex:1;min-width:270px}
+    .pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      border:1px solid rgba(148,163,184,.30);
+      padding:10px 13px;
+      border-radius:999px;
+      background:rgba(255,255,255,.045);
+      color:var(--muted);
+      font-weight:1000;
+      font-size:1rem;
       line-height:1;
+      white-space:nowrap;
     }
     .pill strong{color:#fff}
-    .pill.ok{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#dcfce7;
-    }
-    .pill.warn{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
+    .pill.ok{border-color:rgba(34,197,94,.40);background:rgba(34,197,94,.11);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.40);background:rgba(250,204,21,.11);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.40);background:rgba(239,68,68,.11);color:#fecaca}
 
-    .head-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:flex-end;
-    }
-
+    .head-actions,.toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
     .btn{
       border:none;
-      border-radius:12px;
-      padding:12px 14px;
-      min-height:44px;
+      border-radius:18px;
+      padding:14px 16px;
+      min-height:58px;
       cursor:pointer;
-      font-weight:900;
+      font-weight:1000;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      gap:9px;
       user-select:none;
-      line-height:1;
-      font-family:var(--fontA);
+      line-height:1.12;
+      font-size:1.05rem;
+      text-align:center;
     }
-
-    .btn:active{transform:translateY(1px)}
-    .btn-primary{
-      background:linear-gradient(135deg,#facc15,#f97316);
-      color:#111;
-      box-shadow:0 10px 24px rgba(250,204,21,.22);
-    }
-    .btn-secondary{
-      background:rgba(255,255,255,.08);
-      color:var(--text);
-      border:1px solid var(--border);
-    }
-    .btn-wa{
-      background:rgba(34,197,94,.18);
-      color:#dcfce7;
-      border:1px solid rgba(34,197,94,.35);
-    }
-    .btn-mail{
-      background:rgba(56,189,248,.16);
-      color:#dbeafe;
-      border:1px solid rgba(96,165,250,.35);
-    }
-    .btn-danger{
-      background:rgba(239,68,68,.18);
-      color:#fee2e2;
-      border:1px solid rgba(239,68,68,.35);
-    }
-    .btn-ai{
-      background:rgba(250,204,21,.14);
-      color:#fde68a;
-      border:1px solid rgba(250,204,21,.35);
-    }
+    .btn:active{transform:translateY(1px) scale(.99)}
+    .btn-primary{background:linear-gradient(135deg,#facc15,#f97316);color:#111827;box-shadow:0 12px 26px rgba(250,204,21,.22)}
+    .btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border)}
+    .btn-wa{background:rgba(34,197,94,.18);color:#dcfce7;border:1px solid rgba(34,197,94,.38)}
+    .btn-mail{background:rgba(56,189,248,.16);color:#dbeafe;border:1px solid rgba(96,165,250,.38)}
+    .btn-danger{background:rgba(239,68,68,.16);color:#fee2e2;border:1px solid rgba(239,68,68,.38)}
+    .btn-ai{background:rgba(250,204,21,.14);color:#fde68a;border:1px solid rgba(250,204,21,.38)}
 
     .banner{
-      border-radius:18px;
-      padding:14px 16px;
-      border:1px solid rgba(250,204,21,.25);
-      background:rgba(250,204,21,.08);
-      color:#fde68a;
-      font-weight:800;
-      line-height:1.65;
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1.05fr .95fr;
-      gap:16px;
-    }
-
-    @media(max-width:980px){
-      .grid{grid-template-columns:1fr}
-      .head-right{align-items:stretch}
-      .pills,.head-actions{justify-content:flex-start}
-    }
-
-    .card{
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--border);
-      border-radius:20px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .card .head{
-      padding:16px 18px;
-      border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-    }
-
-    .card .head h2{
-      margin:0;
-      font-size:1.05rem;
-      font-weight:950;
-      color:var(--accent);
-    }
-
-    .card .head p{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:.92rem;
-      font-weight:700;
-      line-height:1.5;
-    }
-
-    .card .body{
       padding:18px;
-    }
-
-    .fields{
-      display:grid;
-      gap:14px;
-    }
-
-    .row2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-
-    @media(max-width:760px){
-      .row2{grid-template-columns:1fr}
-    }
-
-    label{
-      display:grid;
-      gap:7px;
-      font-size:.92rem;
+      color:#fde68a;
       font-weight:900;
-      color:#f3f4f6;
+      line-height:1.62;
+      font-size:1.08rem;
+      margin-bottom:14px;
+      background:rgba(250,204,21,.075);
+      border-color:rgba(250,204,21,.28);
     }
 
+    .doctrine{
+      padding:16px 18px;
+      margin-bottom:14px;
+      background:rgba(34,197,94,.075);
+      border-color:rgba(34,197,94,.26);
+    }
+    .doctrine b{color:#bbf7d0;font-size:1.14rem}
+    .doctrine p{margin-top:7px;color:#d8ffe7;font-weight:900;line-height:1.45;font-size:1.02rem}
+
+    .grid{display:grid;grid-template-columns:1.02fr .98fr;gap:14px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}.head-right{align-items:stretch}.pills,.head-actions{justify-content:flex-start}}
+
+    .card{overflow:hidden}
+    .card .head{padding:18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.035)}
+    .card .head h2{margin:0;font-size:1.38rem;font-weight:1000;color:var(--accent)}
+    .card .head p{margin-top:8px;color:var(--muted);font-size:1.03rem;font-weight:900;line-height:1.45}
+    .card .body{padding:18px}
+
+    .fields{display:grid;gap:16px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:760px){.row2{grid-template-columns:1fr}}
+
+    label{display:grid;gap:8px;font-size:1.06rem;font-weight:1000;color:#fff}
     input,select,textarea{
       width:100%;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:rgba(2,6,23,.72);
-      color:#fff;
-      padding:12px 13px;
-      outline:none;
-      font-family:var(--fontA);
-    }
-
-    textarea{
-      min-height:120px;
-      resize:vertical;
-    }
-
-    input:focus,select:focus,textarea:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.10);
-    }
-
-    .mini{
-      font-size:.82rem;
-      color:var(--muted);
-      font-weight:700;
-      line-height:1.55;
-    }
-
-    .drop{
-      border:1px dashed rgba(148,163,184,.35);
-      border-radius:16px;
-      padding:14px;
-      background:rgba(255,255,255,.03);
-    }
-
-    .dropTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .gallery{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-      gap:12px;
-      margin-top:12px;
-    }
-
-    .thumb{
-      border:1px solid var(--border);
-      border-radius:16px;
-      overflow:hidden;
-      background:rgba(2,6,23,.55);
-    }
-
-    .thumb img{
-      width:100%;
-      height:110px;
-      object-fit:cover;
-      display:block;
-      background:#0b1220;
-    }
-
-    .thumb .cap{
-      padding:8px 10px;
-      font-size:.76rem;
-      color:#cbd5e1;
-      font-weight:800;
-      line-height:1.45;
-      word-break:break-word;
-    }
-
-    .toolbar{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:16px;
-    }
-
-    .status{
-      display:none;
-      margin-top:16px;
-      white-space:pre-line;
-      border-radius:16px;
-      padding:14px;
-      font-weight:850;
-      line-height:1.55;
-    }
-
-    .status.ok{
-      display:block;
-      border:1px solid rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#dcfce7;
-    }
-
-    .status.warn{
-      display:block;
-      border:1px solid rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
-
-    .status.bad{
-      display:block;
-      border:1px solid rgba(239,68,68,.35);
-      background:rgba(239,68,68,.10);
-      color:#fee2e2;
-    }
-
-    .meta{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:12px;
-      margin-top:16px;
-    }
-
-    @media(max-width:980px){
-      .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
-    }
-
-    @media(max-width:760px){
-      .meta{grid-template-columns:1fr}
-    }
-
-    .metaBox{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      border-radius:16px;
-      padding:12px 14px;
-    }
-
-    .metaK{
-      font-size:.78rem;
-      color:var(--muted);
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-    }
-
-    .metaV{
-      margin-top:6px;
-      font-size:1rem;
-      font-weight:950;
-      color:#fff;
-      word-break:break-word;
-    }
-
-    .preview{
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-
-    .previewCard{
-      border:1px solid rgba(30,64,175,.50);
-      background:radial-gradient(circle at top,rgba(15,23,42,.98),#020617);
-      border-radius:24px;
-      overflow:hidden;
-      box-shadow:0 16px 40px rgba(15,23,42,.85);
-    }
-
-    .previewCover{
-      height:260px;
-      background:#0b1220;
-      position:relative;
-    }
-
-    .previewCover img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .previewFade{
-      position:absolute;
-      inset:0;
-      background:linear-gradient(180deg, rgba(2,6,23,.04) 0%, rgba(2,6,23,.72) 80%, rgba(2,6,23,.94) 100%);
-    }
-
-    .previewTop{
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:12px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .previewName{
-      font-size:1.6rem;
-      line-height:1.1;
-      font-weight:950;
-      color:var(--accent);
-      text-shadow:0 12px 24px rgba(0,0,0,.35);
-    }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .chip{
-      width:max-content;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.28);
-      background:rgba(2,6,23,.56);
-      color:#e5e7eb;
-      font-size:.78rem;
-      font-weight:900;
-      white-space:nowrap;
-    }
-
-    .chip.green{
-      border-color:rgba(34,197,94,.45);
-      background:rgba(34,197,94,.12);
-      color:#dcfce7;
-    }
-
-    .chip.gold{
-      border-color:rgba(250,204,21,.45);
-      background:rgba(250,204,21,.12);
-      color:#fde68a;
-    }
-
-    .previewBody{
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-
-    .pbox{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .pbox .k{
-      font-size:.78rem;
-      color:#bbf7d0;
-      font-weight:950;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-    }
-
-    .pbox .v{
-      margin-top:8px;
-      color:#f8fafc;
-      font-weight:700;
-      line-height:1.65;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .pgrid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    @media(max-width:760px){
-      .pgrid{grid-template-columns:1fr}
-    }
-
-    .copyBox{
-      width:100%;
-      min-height:240px;
-      border-radius:16px;
-      border:1px solid var(--border);
-      background:rgba(2,6,23,.72);
-      color:#fff;
-      padding:14px;
-      line-height:1.6;
-      font-family:var(--fontA);
-    }
-
-    .note{
-      margin-top:16px;
-      border:1px dashed rgba(148,163,184,.30);
-      border-radius:16px;
-      padding:12px 14px;
-      color:var(--muted);
-      font-size:.88rem;
-      font-weight:700;
-      line-height:1.6;
-    }
-
-    .assistant{
-      border:1px solid rgba(250,204,21,.24);
-      background:rgba(250,204,21,.08);
       border-radius:18px;
-      padding:14px;
-      margin-top:16px;
+      border:1px solid rgba(148,163,184,.30);
+      background:rgba(2,6,23,.68);
+      color:#fff;
+      padding:15px 15px;
+      outline:none;
+      font-size:1.08rem;
+      font-weight:900;
+      min-height:56px;
     }
+    textarea{min-height:140px;resize:vertical;line-height:1.48}
+    input:focus,select:focus,textarea:focus{border-color:rgba(250,204,21,.60);box-shadow:0 0 0 4px rgba(250,204,21,.12)}
 
-    .assistantTitle{
-      font-size:1rem;
-      font-weight:950;
-      color:#fde68a;
-      margin-bottom:8px;
-    }
+    .mini{font-size:.98rem;color:var(--muted);font-weight:900;line-height:1.45}
 
-    .assistantText{
-      color:#f8f1c9;
-      font-weight:800;
-      line-height:1.6;
-      margin-bottom:10px;
-    }
-
-    .assistantList{
-      display:grid;
-      gap:8px;
-      margin-top:8px;
-    }
-
-    .assistantItem{
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      border-radius:14px;
-      padding:10px 12px;
-      font-size:.9rem;
-      line-height:1.55;
-      color:#ecfeff;
-      font-weight:800;
-    }
-
-    .assistantItem.ok{
-      border-color:rgba(34,197,94,.32);
-      background:rgba(34,197,94,.10);
-      color:#dcfce7;
-    }
-
-    .assistantItem.warn{
-      border-color:rgba(250,204,21,.30);
+    .choiceRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .choice{
+      border:1px solid rgba(250,204,21,.30);
       background:rgba(250,204,21,.10);
       color:#fde68a;
+      border-radius:999px;
+      min-height:44px;
+      padding:10px 12px;
+      font-weight:1000;
+      font-size:.95rem;
     }
+    .choice.green{border-color:rgba(34,197,94,.30);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .choice.blue{border-color:rgba(56,189,248,.30);background:rgba(56,189,248,.10);color:#bae6fd}
 
-    .assistantItem.bad{
-      border-color:rgba(239,68,68,.30);
-      background:rgba(239,68,68,.10);
-      color:#fee2e2;
+    .drop{border:1px dashed rgba(148,163,184,.38);border-radius:20px;padding:16px;background:rgba(255,255,255,.03)}
+    .dropTop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+    .thumb{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:rgba(2,6,23,.55)}
+    .thumb img{width:100%;height:118px;object-fit:cover;display:block;background:#0b1220}
+    .thumb .cap{padding:9px 10px;font-size:.86rem;color:#cbd5e1;font-weight:900;line-height:1.35;word-break:break-word}
+
+    .toolbar{justify-content:flex-start;margin-top:18px}
+    .status{display:none;margin-top:16px;white-space:pre-line;border-radius:18px;padding:15px;font-size:1.03rem;font-weight:1000;line-height:1.48}
+    .status.ok{display:block;border:1px solid rgba(34,197,94,.38);background:rgba(34,197,94,.10);color:#dcfce7}
+    .status.warn{display:block;border:1px solid rgba(250,204,21,.38);background:rgba(250,204,21,.10);color:#fde68a}
+    .status.bad{display:block;border:1px solid rgba(239,68,68,.38);background:rgba(239,68,68,.10);color:#fee2e2}
+
+    .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+    @media(max-width:760px){.meta{grid-template-columns:1fr}}
+    .metaBox{border:1px solid var(--border);background:rgba(255,255,255,.035);border-radius:18px;padding:13px 14px}
+    .metaK{font-size:.86rem;color:var(--muted);font-weight:1000;text-transform:uppercase;letter-spacing:.06em}
+    .metaV{margin-top:7px;font-size:1.08rem;font-weight:1000;color:#fff;word-break:break-word}
+
+    .preview{display:flex;flex-direction:column;gap:14px}
+    .previewCard{overflow:hidden;background:radial-gradient(circle at top,rgba(15,23,42,.98),#020617)}
+    .previewCover{height:290px;background:#0b1220;position:relative}
+    .previewCover img{width:100%;height:100%;object-fit:cover;display:block}
+    .previewFade{position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,23,.04) 0%, rgba(2,6,23,.70) 78%, rgba(2,6,23,.94) 100%)}
+    .previewTop{position:absolute;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px}
+    .previewName{font-size:2rem;line-height:1.05;font-weight:1000;color:var(--accent);text-shadow:0 12px 24px rgba(0,0,0,.38)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{width:max-content;padding:8px 11px;border-radius:999px;border:1px solid rgba(148,163,184,.28);background:rgba(2,6,23,.60);color:#e5e7eb;font-size:.95rem;font-weight:1000;white-space:nowrap}
+    .chip.green{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.12);color:#dcfce7}
+    .chip.gold{border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.12);color:#fde68a}
+    .previewBody{padding:16px;display:flex;flex-direction:column;gap:14px}
+    .pbox{border:1px solid var(--border);background:rgba(255,255,255,.035);border-radius:18px;padding:15px}
+    .pbox .k{font-size:.92rem;color:#bbf7d0;font-weight:1000;text-transform:uppercase;letter-spacing:.06em}
+    .pbox .v{margin-top:8px;color:#f8fafc;font-weight:900;line-height:1.55;white-space:pre-wrap;word-break:break-word;font-size:1.04rem}
+    .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:760px){.pgrid{grid-template-columns:1fr}}
+    .copyBox{width:100%;min-height:250px;border-radius:18px;border:1px solid var(--border);background:rgba(2,6,23,.72);color:#fff;padding:15px;line-height:1.55;font-family:var(--fontA);font-size:1rem;font-weight:850}
+
+    .noteBox{margin-top:16px;border:1px dashed rgba(148,163,184,.30);border-radius:18px;padding:13px 14px;color:var(--muted);font-size:1rem;font-weight:900;line-height:1.5}
+
+    .assistant{border:1px solid rgba(250,204,21,.28);background:rgba(250,204,21,.08);border-radius:20px;padding:15px;margin-top:16px;display:none}
+    .assistantTitle{font-size:1.18rem;font-weight:1000;color:#fde68a;margin-bottom:8px}
+    .assistantText{color:#f8f1c9;font-weight:900;line-height:1.52;margin-bottom:10px;font-size:1.04rem}
+    .assistantList{display:grid;gap:9px;margin-top:8px}
+    .assistantItem{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:12px;font-size:1rem;line-height:1.45;color:#ecfeff;font-weight:900}
+    .assistantItem.ok{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.10);color:#dcfce7}
+    .assistantItem.warn{border-color:rgba(250,204,21,.30);background:rgba(250,204,21,.10);color:#fde68a}
+    .assistantItem.bad{border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.10);color:#fee2e2}
+
+    .bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:70;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg, rgba(6,27,20,0), rgba(6,27,20,.96) 28%)}
+    .bottomInner{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;border:1px solid rgba(255,255,255,.12);background:rgba(6,27,20,.94);backdrop-filter:blur(10px);border-radius:22px;padding:7px;box-shadow:0 16px 44px rgba(0,0,0,.38)}
+    .navItem{min-height:58px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:rgba(234,255,241,.74);font-size:12px;font-weight:1000;border:1px solid transparent;text-align:center}
+    .navItem strong{font-size:20px;line-height:1}
+    .navItem.active{color:#fde68a;background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.24)}
+
+    @media(max-width:560px){
+      body{padding-left:10px;padding-right:10px}
+      .header{padding:14px;border-radius:22px}
+      .head-actions .btn,.toolbar .btn{width:100%}
+      .title h1{font-size:1.55rem}
+      .title p{font-size:1rem}
+      .banner{font-size:1rem}
+      .btn{min-height:60px}
     }
   </style>
 </head>
@@ -646,36 +289,35 @@
       <div class="logo">🏠</div>
       <div>
         <h1>Je prépare mon logement</h1>
-        <p>Accès protégé • brouillon gardé sur cet appareil • photos préparées sans frais inutiles</p>
+        <p>Brouillon local · photos locales · URLs officielles seulement</p>
       </div>
     </div>
 
     <div class="head-right">
       <div class="pills">
-        <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
-        <div class="pill" id="pillPhone">📞 <strong>—</strong></div>
+        <div class="pill" id="pillSlug">🏷️ <strong>Espace sécurisé</strong></div>
+        <div class="pill" id="pillPhone">👤 <strong>Compte sécurisé</strong></div>
         <div class="pill warn" id="pillState">🔒 Session en attente</div>
       </div>
 
       <div class="head-actions">
-        <a class="btn btn-secondary" id="btnBackApp" href="#">⬅️ Retour ma gestion</a>
-        <a class="btn btn-secondary" id="btnOpenPin" href="#">🔑 Ouvrir le PIN</a>
-        <button class="btn btn-secondary" id="btnLoadDraft" type="button">↻ Recharger brouillon</button>
-        <button class="btn btn-primary" id="btnSaveDraft" type="button">💾 Sauver brouillon</button>
-        <button class="btn btn-danger" id="btnLogout" type="button" style="display:none">🚪 Déconnexion</button>
+        <a class="btn btn-secondary" id="btnBackApp" href="#">⬅️ Ma gestion</a>
+        <a class="btn btn-secondary" id="btnOpenPin" href="#">🔑 PIN</a>
+        <button class="btn btn-secondary" id="btnLoadDraft" type="button">↻ Recharger</button>
+        <button class="btn btn-primary" id="btnSaveDraft" type="button">💾 Sauver</button>
+        <button class="btn btn-danger" id="btnLogout" type="button" style="display:none">🚪 Sortir</button>
       </div>
     </div>
   </div>
 
   <div class="banner">
-    ⚠️ <b>Préparation du logement</b><br><br>
-    Ici, les photos restent <b>sur l’appareil du propriétaire</b> pour éviter les frais de stockage inutiles.<br><br>
-    1️⃣ Le propriétaire remplit la pré-fiche et prépare son dossier.<br>
-    2️⃣ Les photos sont envoyées humainement à DIGIY par WhatsApp / email si besoin.<br>
-    3️⃣ DIGIY traite, héberge et renvoie les <b>URLs officielles</b>.<br>
-    4️⃣ Le propriétaire colle ensuite ces URLs dans la zone prévue.<br><br>
-    ✔ Parcours voulu : <b>pré-fiche locale → traitement humain DIGIY → URLs officielles → publication</b>.<br>
-    ✔ Protection marge DIGIY : <b>pas de commission, pas de frais de stockage inutiles</b>.
+    <b>Règle économique DIGIY :</b><br>
+    Les photos lourdes restent hors Supabase. Ici on prépare le dossier, on garde les aperçus sur le téléphone, puis on colle uniquement des <b>URLs officielles</b> quand elles sont prêtes.
+  </div>
+
+  <div class="doctrine">
+    <b>Le pro clique plus qu’il n’écrit.</b>
+    <p>DIGIY propose des phrases, le propriétaire ajuste, puis valide avec sa vérité. Aucun fichier lourd n’est envoyé depuis cette page.</p>
   </div>
 
   <div class="grid">
@@ -690,12 +332,13 @@
           <div class="row2">
             <label>
               Nom du propriétaire
-              <input id="owner_name" type="text" placeholder="Ex : Astou Ndiaye">
+              <input id="owner_name" type="text" placeholder="Ex : Astou Ndiaye" autocomplete="name">
             </label>
 
             <label>
               Téléphone / WhatsApp propriétaire
-              <input id="owner_phone" type="text" placeholder="Ex : +221771234567">
+              <input id="owner_phone" type="text" placeholder="Ex : +221771234567" inputmode="tel" autocomplete="tel">
+              <div class="mini">Ce numéro sert seulement au suivi humain DIGIY. Il n’est pas mis dans les liens.</div>
             </label>
           </div>
 
@@ -750,17 +393,27 @@
           <label>
             Description du logement
             <textarea id="description" placeholder="Décris le logement simplement, clairement, humainement."></textarea>
+            <div class="choiceRow">
+              <button class="choice" type="button" data-desc="Appartement confortable dans une zone calme, adapté aux séjours courts ou en famille. Contact direct propriétaire, 0% commission DIGIY.">Calme / famille</button>
+              <button class="choice green" type="button" data-desc="Logement propre, simple et bien situé. Idéal pour dormir tranquillement, se déplacer facilement et garder un contact direct avec le propriétaire.">Simple et propre</button>
+              <button class="choice blue" type="button" data-desc="Villa agréable avec espace de vie confortable, pensée pour recevoir une famille ou un petit groupe dans de bonnes conditions.">Villa / groupe</button>
+            </div>
           </label>
 
           <label>
             Message / besoin
             <textarea id="need_text" placeholder="Ex : Je veux mon accès DIGIY LOC, préparer ma fiche, faire traiter mes photos et recevoir mes URLs officielles."></textarea>
+            <div class="choiceRow">
+              <button class="choice" type="button" data-need="Je veux préparer ma fiche DIGIY LOC, faire vérifier les informations et recevoir les URLs officielles des photos.">Préparer ma fiche</button>
+              <button class="choice green" type="button" data-need="Je veux faire traiter mes photos, recevoir les liens officiels, puis publier une fiche propre pour mes clients.">Traiter mes photos</button>
+              <button class="choice blue" type="button" data-need="Je veux une fiche claire avec prix, photos, contact direct et demande client simple.">Fiche complète</button>
+            </div>
           </label>
 
           <div class="drop">
             <div class="dropTop">
               <div>
-                <div style="font-weight:950;color:#fff">Photos du logement</div>
+                <div style="font-weight:1000;color:#fff;font-size:1.12rem">Photos du logement</div>
                 <div class="mini">Prévisualisation locale uniquement. Rien n’est envoyé ailleurs depuis cette page.</div>
               </div>
               <label class="btn btn-secondary" style="cursor:pointer">
@@ -771,72 +424,51 @@
 
             <div class="mini">
               Les photos restent sur l’appareil. DIGIY les récupère ensuite par canal humain si besoin,
-              puis renvoie les URLs officielles.
+              puis renvoie uniquement des URLs officielles.
             </div>
 
             <div class="gallery" id="gallery"></div>
           </div>
 
           <label>
-            Photos officielles (URLs DIGIY)
+            Photos officielles — URLs seulement
             <textarea id="photos_urls" placeholder="Collez ici les URLs des photos envoyées par DIGIY.
 Une URL par ligne.
 
 Exemple :
 https://digiylyfe.com/media/loc/villa-saly/photo1.jpg
-https://digiylyfe.com/media/loc/villa-saly/photo2.jpg
-https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
-            <div class="mini">
-              Quand ces URLs sont collées, la fiche devient prête pour publication officielle.
-            </div>
+https://digiylyfe.com/media/loc/villa-saly/photo2.jpg"></textarea>
+            <div class="mini">Aucun fichier lourd ici. Seulement des liens https:// propres.</div>
           </label>
         </div>
 
         <div class="toolbar">
           <button class="btn btn-ai" id="btnAdvice" type="button">✨ Analyse DIGIY</button>
-          <button class="btn btn-wa" id="btnWhatsApp" type="button">📲 Préparer WhatsApp DIGIY</button>
-          <button class="btn btn-mail" id="btnEmail" type="button">✉️ Préparer email DIGIY</button>
-          <button class="btn btn-secondary" id="btnCopyText" type="button">📋 Copier le texte</button>
-          <button class="btn btn-danger" id="btnReset" type="button">🗑️ Vider la page</button>
+          <button class="btn btn-wa" id="btnWhatsApp" type="button">📲 WhatsApp DIGIY</button>
+          <button class="btn btn-mail" id="btnEmail" type="button">✉️ Email DIGIY</button>
+          <button class="btn btn-secondary" id="btnCopyText" type="button">📋 Copier</button>
+          <button class="btn btn-danger" id="btnReset" type="button">🗑️ Vider</button>
         </div>
 
         <div class="status" id="statusBox"></div>
 
-        <div class="assistant" id="assistantBox" style="display:none">
+        <div class="assistant" id="assistantBox">
           <div class="assistantTitle">✨ Lecture DIGIY</div>
           <div class="assistantText" id="assistantIntro"></div>
           <div class="assistantList" id="assistantList"></div>
         </div>
 
         <div class="meta">
-          <div class="metaBox">
-            <div class="metaK">Identifiant propriétaire</div>
-            <div class="metaV" id="metaSlug">—</div>
-          </div>
-          <div class="metaBox">
-            <div class="metaK">Session</div>
-            <div class="metaV" id="metaSession">En attente</div>
-          </div>
-          <div class="metaBox">
-            <div class="metaK">WhatsApp DIGIY</div>
-            <div class="metaV">+221771342889</div>
-          </div>
-          <div class="metaBox">
-            <div class="metaK">Email DIGIY</div>
-            <div class="metaV">digiylyfe@gmail.com</div>
-          </div>
-          <div class="metaBox">
-            <div class="metaK">Photos sélectionnées</div>
-            <div class="metaV" id="metaPhotos">0</div>
-          </div>
-          <div class="metaBox">
-            <div class="metaK">Statut dossier</div>
-            <div class="metaV" id="metaState">Préparation en attente</div>
-          </div>
+          <div class="metaBox"><div class="metaK">Espace</div><div class="metaV" id="metaSlug">—</div></div>
+          <div class="metaBox"><div class="metaK">Session</div><div class="metaV" id="metaSession">En attente</div></div>
+          <div class="metaBox"><div class="metaK">WhatsApp DIGIY</div><div class="metaV">+221771342889</div></div>
+          <div class="metaBox"><div class="metaK">Email DIGIY</div><div class="metaV">digiylyfe@gmail.com</div></div>
+          <div class="metaBox"><div class="metaK">Photos locales</div><div class="metaV" id="metaPhotos">0</div></div>
+          <div class="metaBox"><div class="metaK">Statut dossier</div><div class="metaV" id="metaState">Préparation en attente</div></div>
         </div>
 
-        <div class="note">
-          Parcours DIGIY LOC : <b>préparation du logement → envoi humain DIGIY → traitement des photos → liens officiels → fiche prête à publier</b>.
+        <div class="noteBox">
+          Parcours DIGIY LOC : <b>préparation locale → envoi humain DIGIY → traitement des photos → URLs officielles → fiche prête à publier</b>.
         </div>
       </div>
     </section>
@@ -857,57 +489,33 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
         </div>
 
         <div class="previewBody">
-          <div class="pbox">
-            <div class="k">Description</div>
-            <div class="v" id="pvDesc">La description apparaîtra ici.</div>
-          </div>
-
+          <div class="pbox"><div class="k">Description</div><div class="v" id="pvDesc">La description apparaîtra ici.</div></div>
           <div class="pgrid">
-            <div class="pbox">
-              <div class="k">Propriétaire</div>
-              <div class="v" id="pvOwner">—</div>
-            </div>
-            <div class="pbox">
-              <div class="k">Téléphone</div>
-              <div class="v" id="pvPhone">—</div>
-            </div>
-            <div class="pbox">
-              <div class="k">Capacité</div>
-              <div class="v" id="pvCap">—</div>
-            </div>
-            <div class="pbox">
-              <div class="k">Prix / Nuit</div>
-              <div class="v" id="pvPn">—</div>
-            </div>
-            <div class="pbox">
-              <div class="k">Prix / Semaine</div>
-              <div class="v" id="pvPs">—</div>
-            </div>
-            <div class="pbox">
-              <div class="k">Prix / Mois</div>
-              <div class="v" id="pvPm">—</div>
-            </div>
+            <div class="pbox"><div class="k">Propriétaire</div><div class="v" id="pvOwner">—</div></div>
+            <div class="pbox"><div class="k">Contact</div><div class="v" id="pvPhone">—</div></div>
+            <div class="pbox"><div class="k">Capacité</div><div class="v" id="pvCap">—</div></div>
+            <div class="pbox"><div class="k">Prix / Nuit</div><div class="v" id="pvPn">—</div></div>
+            <div class="pbox"><div class="k">Prix / Semaine</div><div class="v" id="pvPs">—</div></div>
+            <div class="pbox"><div class="k">Prix / Mois</div><div class="v" id="pvPm">—</div></div>
           </div>
-
-          <div class="pbox">
-            <div class="k">Besoin exprimé</div>
-            <div class="v" id="pvNeed">Le besoin apparaîtra ici.</div>
-          </div>
-
-          <div class="pbox">
-            <div class="k">URLs photos officielles</div>
-            <div class="v" id="pvUrls">En attente des URLs photos DIGIY.</div>
-          </div>
-
-          <div class="pbox">
-            <div class="k">Texte prêt à envoyer</div>
-            <textarea class="copyBox" id="messageBox" readonly></textarea>
-          </div>
+          <div class="pbox"><div class="k">Besoin exprimé</div><div class="v" id="pvNeed">Le besoin apparaîtra ici.</div></div>
+          <div class="pbox"><div class="k">URLs photos officielles</div><div class="v" id="pvUrls">En attente des URLs photos DIGIY.</div></div>
+          <div class="pbox"><div class="k">Texte prêt à envoyer</div><textarea class="copyBox" id="messageBox" readonly></textarea></div>
         </div>
       </div>
     </aside>
   </div>
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navResa" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navDispo" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem active" id="navFiche" href="./fiche-abo.html"><strong>🏠</strong><span>Pré-fiche</span></a>
+    <a class="navItem" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (() => {
@@ -915,319 +523,186 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
   const TEAM_WA = "221771342889";
   const TEAM_EMAIL = "digiylyfe@gmail.com";
-  const DRAFT_BASE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V4";
-  const LEGACY_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V3";
+  const DRAFT_BASE_KEY = "DIGIY_LOC_PREFICHE_DRAFT_V5";
+  const LEGACY_KEYS = ["DIGIY_LOC_PREFICHE_DRAFT_V4", "DIGIY_LOC_PREFICHE_DRAFT_V3"];
+  const SIGNAL_KEY = "DIGIY_LOC_PRO_SIGNALS";
+  const SENSITIVE_PARAMS = ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"];
 
   function makeFallbackSvg(label){
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
-        <defs>
-          <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stop-color="#0f172a"/>
-            <stop offset="100%" stop-color="#052e16"/>
-          </linearGradient>
-        </defs>
-        <rect width="1400" height="900" fill="url(#g)"/>
-        <circle cx="1120" cy="180" r="180" fill="rgba(250,204,21,.18)"/>
-        <circle cx="240" cy="120" r="140" fill="rgba(34,197,94,.14)"/>
-        <text x="80" y="430" fill="#facc15" font-size="66" font-family="Arial, sans-serif" font-weight="700">DIGIY LOC</text>
-        <text x="80" y="520" fill="#e5e7eb" font-size="34" font-family="Arial, sans-serif">${String(label || "Pré-fiche locale propriétaire").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>
-      </svg>
-    `;
+    const safeLabel = String(label || "Pré-fiche locale propriétaire").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#0f172a"/><stop offset="100%" stop-color="#052e16"/></linearGradient></defs><rect width="1400" height="900" fill="url(#g)"/><circle cx="1120" cy="180" r="180" fill="rgba(250,204,21,.18)"/><circle cx="240" cy="120" r="140" fill="rgba(34,197,94,.14)"/><text x="80" y="430" fill="#facc15" font-size="66" font-family="Arial, sans-serif" font-weight="700">DIGIY LOC</text><text x="80" y="520" fill="#e5e7eb" font-size="34" font-family="Arial, sans-serif">${safeLabel}</text></svg>`;
     return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
   }
 
   const FALLBACK_IMG = makeFallbackSvg("Pré-fiche locale propriétaire");
-
-  const state = {
-    photos: []
-  };
+  const state = { photos: [] };
+  const $ = (id)=>document.getElementById(id);
 
   const els = {
-    owner_name: document.getElementById("owner_name"),
-    owner_phone: document.getElementById("owner_phone"),
-    nom: document.getElementById("nom"),
-    adresse: document.getElementById("adresse"),
-    type_logement: document.getElementById("type_logement"),
-    personnes_max: document.getElementById("personnes_max"),
-    prix_nuit: document.getElementById("prix_nuit"),
-    prix_semaine: document.getElementById("prix_semaine"),
-    prix_mois: document.getElementById("prix_mois"),
-    description: document.getElementById("description"),
-    need_text: document.getElementById("need_text"),
-    photos: document.getElementById("photos"),
-    photos_urls: document.getElementById("photos_urls"),
-    gallery: document.getElementById("gallery"),
-    statusBox: document.getElementById("statusBox"),
-    metaPhotos: document.getElementById("metaPhotos"),
-    metaState: document.getElementById("metaState"),
-    metaSlug: document.getElementById("metaSlug"),
-    metaSession: document.getElementById("metaSession"),
-    btnAdvice: document.getElementById("btnAdvice"),
-    btnWhatsApp: document.getElementById("btnWhatsApp"),
-    btnEmail: document.getElementById("btnEmail"),
-    btnCopyText: document.getElementById("btnCopyText"),
-    btnSaveDraft: document.getElementById("btnSaveDraft"),
-    btnLoadDraft: document.getElementById("btnLoadDraft"),
-    btnReset: document.getElementById("btnReset"),
-    btnBackApp: document.getElementById("btnBackApp"),
-    btnOpenPin: document.getElementById("btnOpenPin"),
-    btnLogout: document.getElementById("btnLogout"),
-    pillSlug: document.getElementById("pillSlug"),
-    pillPhone: document.getElementById("pillPhone"),
-    pillState: document.getElementById("pillState"),
-    assistantBox: document.getElementById("assistantBox"),
-    assistantIntro: document.getElementById("assistantIntro"),
-    assistantList: document.getElementById("assistantList"),
-    pvCover: document.getElementById("pvCover"),
-    pvNom: document.getElementById("pvNom"),
-    pvType: document.getElementById("pvType"),
-    pvVille: document.getElementById("pvVille"),
-    pvDesc: document.getElementById("pvDesc"),
-    pvOwner: document.getElementById("pvOwner"),
-    pvPhone: document.getElementById("pvPhone"),
-    pvCap: document.getElementById("pvCap"),
-    pvPn: document.getElementById("pvPn"),
-    pvPs: document.getElementById("pvPs"),
-    pvPm: document.getElementById("pvPm"),
-    pvNeed: document.getElementById("pvNeed"),
-    pvUrls: document.getElementById("pvUrls"),
-    pvState: document.getElementById("pvState"),
-    messageBox: document.getElementById("messageBox")
+    owner_name: $("owner_name"), owner_phone: $("owner_phone"), nom: $("nom"), adresse: $("adresse"),
+    type_logement: $("type_logement"), personnes_max: $("personnes_max"), prix_nuit: $("prix_nuit"),
+    prix_semaine: $("prix_semaine"), prix_mois: $("prix_mois"), description: $("description"), need_text: $("need_text"),
+    photos: $("photos"), photos_urls: $("photos_urls"), gallery: $("gallery"), statusBox: $("statusBox"),
+    metaPhotos: $("metaPhotos"), metaState: $("metaState"), metaSlug: $("metaSlug"), metaSession: $("metaSession"),
+    btnAdvice: $("btnAdvice"), btnWhatsApp: $("btnWhatsApp"), btnEmail: $("btnEmail"), btnCopyText: $("btnCopyText"),
+    btnSaveDraft: $("btnSaveDraft"), btnLoadDraft: $("btnLoadDraft"), btnReset: $("btnReset"), btnBackApp: $("btnBackApp"),
+    btnOpenPin: $("btnOpenPin"), btnLogout: $("btnLogout"), pillSlug: $("pillSlug"), pillPhone: $("pillPhone"), pillState: $("pillState"),
+    assistantBox: $("assistantBox"), assistantIntro: $("assistantIntro"), assistantList: $("assistantList"), pvCover: $("pvCover"),
+    pvNom: $("pvNom"), pvType: $("pvType"), pvVille: $("pvVille"), pvDesc: $("pvDesc"), pvOwner: $("pvOwner"),
+    pvPhone: $("pvPhone"), pvCap: $("pvCap"), pvPn: $("pvPn"), pvPs: $("pvPs"), pvPm: $("pvPm"), pvNeed: $("pvNeed"),
+    pvUrls: $("pvUrls"), pvState: $("pvState"), messageBox: $("messageBox"),
+    navHome: $("navHome"), navResa: $("navResa"), navDispo: $("navDispo"), navFiche: $("navFiche"), navPlus: $("navPlus")
   };
 
-  function safe(v){
-    return String(v ?? "").trim();
-  }
+  function safe(v){ return String(v ?? "").trim(); }
+  function money(v){ const n = Number(v); return Number.isFinite(n) && n > 0 ? n.toLocaleString("fr-FR") + " FCFA" : "—"; }
+  function digits(v){ return String(v || "").replace(/\D/g, ""); }
+  function cleanSlug(s){ return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\-_]/g,"").replace(/-+/g,"-").replace(/^[-_]+|[-_]+$/g,""); }
+  function isSensitiveSlug(slug){ return /\d{7,}/.test(String(slug || "")); }
+  function canExposeSlug(slug){ const s = cleanSlug(slug); return !!s && !isSensitiveSlug(s); }
+  function displaySpace(slug){ const s = cleanSlug(slug); if(!s || isSensitiveSlug(s)) return "Espace sécurisé"; if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase(); return "Espace LOC"; }
 
-  function money(v){
-    const n = Number(v);
-    if (!Number.isFinite(n) || n <= 0) return "—";
-    return n.toLocaleString("fr-FR") + " FCFA";
-  }
-
-  function buildSafeUrl(base, params = {}){
-    const baseStr = String(base || "").trim();
-    if (!baseStr) return location.href;
-
-    try{
-      const u = new URL(baseStr, location.href);
-      Object.entries(params).forEach(([k, v]) => {
-        const val = String(v ?? "").trim();
-        if (val) u.searchParams.set(k, val);
-      });
-      return u.toString();
-    }catch(_){
-      try{
-        const query = new URLSearchParams();
-        Object.entries(params).forEach(([k, v]) => {
-          const val = String(v ?? "").trim();
-          if (val) query.set(k, val);
-        });
-        const qs = query.toString();
-        if (!qs) return baseStr;
-        return baseStr + (baseStr.includes("?") ? "&" : "?") + qs;
-      }catch(__){
-        return baseStr;
-      }
-    }
-  }
-
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {};
-  }
-
-  function getRawSession(){
-    return window.DIGIY_GUARD?.getSession?.() || {};
-  }
-
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getRawSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};}}
+  function storageGet(key){ try{const s=sessionStorage.getItem(key); if(s) return s;}catch{} try{const l=localStorage.getItem(key); if(l) return l;}catch{} return ""; }
   function getSession(){
     const st = getGuardState();
     const raw = getRawSession();
-
-    const access = !!(
-      st.access === true ||
-      st.access_ok === true ||
-      raw.access === true ||
-      raw.ok === true
-    );
-
+    const access = !!(st.access === true || st.access_ok === true || raw.access === true || raw.ok === true || raw.access_ok === true);
     return {
       ok: access,
       access_ok: access,
       reason: st.reason || raw.reason || "",
       module: st.module || raw.module || "LOC",
-      slug: safe(st.slug || raw.slug || ""),
-      phone: safe(st.phone || raw.phone || ""),
-      validated_at: raw.validated_at || st.validated_at || "",
-      session_token: raw.session_token || st.session_token || ""
+      slug: safe(st.slug || raw.slug || storageGet("digiy_loc_slug") || storageGet("digiy_loc_last_slug") || storageGet("DIGIY_LOC_SLUG") || ""),
+      phone: safe(st.phone || raw.phone || storageGet("digiy_loc_phone") || storageGet("DIGIY_LOC_PHONE") || ""),
+      validated_at: raw.validated_at || st.validated_at || ""
     };
   }
+  function readParam(name){ try{return safe(new URL(location.href).searchParams.get(name));}catch{return "";} }
+  function getSlug(){ return cleanSlug(getSession().slug || readParam("slug")); }
+  function getPhone(){ return safe(getSession().phone || readParam("phone") || readParam("tel")); }
 
-  function getSlug(){
-    return safe(
-      getSession().slug ||
-      new URLSearchParams(location.search).get("slug")
-    );
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      SENSITIVE_PARAMS.forEach(k=>{ if(u.searchParams.has(k)){ u.searchParams.delete(k); changed = true; }});
+      const slug = cleanSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){ u.searchParams.delete("slug"); changed = true; }
+      if(changed) history.replaceState({}, document.title, u.pathname + u.search + u.hash);
+    }catch{}
   }
 
-  function getPhone(){
-    return safe(
-      getSession().phone ||
-      new URLSearchParams(location.search).get("phone")
-    );
+  function buildSafeUrl(base){
+    try{
+      const u = new URL(base, location.href);
+      SENSITIVE_PARAMS.forEach(k=>u.searchParams.delete(k));
+      const slug = getSlug();
+      if(canExposeSlug(slug)) u.searchParams.set("slug", cleanSlug(slug));
+      else u.searchParams.delete("slug");
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
+    }catch{return base;}
   }
 
-  function withContext(path){
-    return buildSafeUrl(path, {
-      slug: getSlug(),
-      phone: getPhone()
-    });
-  }
-
-  function draftKey(){
-    const slug = getSlug();
-    return slug ? `${DRAFT_BASE_KEY}:${slug}` : DRAFT_BASE_KEY;
-  }
+  function draftKey(){ const slug = getSlug(); return slug ? `${DRAFT_BASE_KEY}:${slug}` : DRAFT_BASE_KEY; }
 
   async function bootGuard(){
-    if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
-      throw new Error("guard_missing");
+    if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
+      await window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
     }
-
-    await window.DIGIY_GUARD.ready({
-      redirect: true,
-      preserve_validation: true,
-      allow_soft_session: true
-    });
   }
 
   function showStatus(msg, type="ok"){
     els.statusBox.className = "status " + type;
     els.statusBox.textContent = msg || "";
   }
+  function hideStatus(){ els.statusBox.className = "status"; els.statusBox.textContent = ""; }
 
-  function hideStatus(){
-    els.statusBox.className = "status";
-    els.statusBox.textContent = "";
+  function pushSignal(type, label, href){
+    try{
+      const rows = JSON.parse(localStorage.getItem(SIGNAL_KEY) || "[]");
+      rows.unshift({ type, label, href: buildSafeUrl(href || "./fiche-abo.html"), source:"fiche-abo", created_at:new Date().toISOString() });
+      localStorage.setItem(SIGNAL_KEY, JSON.stringify(rows.slice(0,30)));
+    }catch{}
   }
 
-  function photoNames(){
-    return state.photos.map((p, i) => `${i + 1}. ${p.name}`).join("\n") || "Aucune photo sélectionnée";
+  function photoNames(){ return state.photos.map((p, i) => `${i + 1}. ${p.name}`).join("\n") || "Aucune photo sélectionnée"; }
+  function normalizeUrl(u){
+    u = safe(u);
+    if(!u) return "";
+    if(/^data:/i.test(u) || /^javascript:/i.test(u) || /^blob:/i.test(u)) return "";
+    if(!/^https?:\/\//i.test(u)) return "";
+    return u;
   }
-
   function parseOfficialUrls(){
-    return safe(els.photos_urls.value)
-      .split("\n")
-      .map(x => x.trim())
-      .filter(Boolean);
+    const seen = new Set();
+    return safe(els.photos_urls.value).split(/\r?\n|,/).map(normalizeUrl).filter(Boolean).filter(u=>{ if(seen.has(u)) return false; seen.add(u); return true; });
   }
-
-  function hasOfficialUrls(){
-    return parseOfficialUrls().length > 0;
-  }
-
-  function currentStateLabel(){
-    return hasOfficialUrls()
-      ? "Fiche prête pour publication"
-      : "Préparation en attente";
-  }
+  function hasOfficialUrls(){ return parseOfficialUrls().length > 0; }
+  function currentStateLabel(){ return hasOfficialUrls() ? "Fiche prête pour publication" : "Préparation en attente"; }
 
   function buildMessage(){
     const lines = [
-      "Bonjour DIGIY 👋",
-      "",
-      "Je vous envoie ma pré-fiche DIGIY LOC.",
-      "",
-      "CONTEXTE",
-      `Identifiant propriétaire : ${getSlug() || "—"}`,
-      `Statut : ${currentStateLabel()}`,
-      "",
-      "PROPRIÉTAIRE",
-      `Nom : ${safe(els.owner_name.value) || "—"}`,
-      `Téléphone : ${safe(els.owner_phone.value) || "—"}`,
-      "",
-      "LOGEMENT",
-      `Nom : ${safe(els.nom.value) || "—"}`,
-      `Ville / adresse : ${safe(els.adresse.value) || "—"}`,
-      `Type : ${safe(els.type_logement.value) || "—"}`,
-      `Capacité : ${safe(els.personnes_max.value) || "—"}`,
-      `Prix / nuit : ${money(els.prix_nuit.value)}`,
-      `Prix / semaine : ${money(els.prix_semaine.value)}`,
-      `Prix / mois : ${money(els.prix_mois.value)}`,
-      "",
-      "DESCRIPTION",
-      safe(els.description.value) || "—",
-      "",
-      "BESOIN",
-      safe(els.need_text.value) || "—",
-      "",
-      "PHOTOS SÉLECTIONNÉES (LOCALES)",
-      photoNames(),
-      "",
-      "PHOTOS OFFICIELLES (URLS DIGIY)",
-      safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.",
-      "",
-      "NOTE",
-      "Les photos ne partent pas depuis cette page. Parcours local pour protéger les coûts."
+      "Bonjour DIGIY 👋", "", "Je vous envoie ma pré-fiche DIGIY LOC.", "",
+      "CONTEXTE", `Espace : ${displaySpace(getSlug())}`, `Statut : ${currentStateLabel()}`, "",
+      "PROPRIÉTAIRE", `Nom : ${safe(els.owner_name.value) || "—"}`, `Téléphone : ${safe(els.owner_phone.value) || "—"}`, "",
+      "LOGEMENT", `Nom : ${safe(els.nom.value) || "—"}`, `Ville / adresse : ${safe(els.adresse.value) || "—"}`, `Type : ${safe(els.type_logement.value) || "—"}`,
+      `Capacité : ${safe(els.personnes_max.value) || "—"}`, `Prix / nuit : ${money(els.prix_nuit.value)}`, `Prix / semaine : ${money(els.prix_semaine.value)}`, `Prix / mois : ${money(els.prix_mois.value)}`, "",
+      "DESCRIPTION", safe(els.description.value) || "—", "",
+      "BESOIN", safe(els.need_text.value) || "—", "",
+      "PHOTOS SÉLECTIONNÉES SUR LE TÉLÉPHONE", photoNames(), "",
+      "PHOTOS OFFICIELLES — URLS SEULEMENT", parseOfficialUrls().join("\n") || "En attente des URLs photos DIGIY.", "",
+      "NOTE", "Les photos ne partent pas depuis cette page. Supabase ne doit recevoir que des URLs propres."
     ];
-
     return lines.join("\n");
   }
 
   function refreshContextUI(){
     const slug = getSlug();
     const sess = getSession();
-    const phone = safe(sess.phone);
-
-    els.pillSlug.innerHTML = `🏷️ <strong>${slug || "—"}</strong>`;
-    els.pillPhone.innerHTML = `📞 <strong>${phone || "—"}</strong>`;
-
-    els.metaSlug.textContent = slug || "—";
-    els.metaSession.textContent = sess.ok ? "Accès ouvert" : "Session en attente";
-
-    if (sess.ok) {
-      els.pillState.textContent = "✅ Connecté";
-      els.pillState.classList.remove("warn");
-      els.pillState.classList.add("ok");
+    const phone = getPhone();
+    els.pillSlug.innerHTML = `🏷️ <strong>${displaySpace(slug)}</strong>`;
+    els.pillPhone.innerHTML = phone ? `👤 <strong>Compte reconnu</strong>` : `👤 <strong>Compte sécurisé</strong>`;
+    els.metaSlug.textContent = displaySpace(slug);
+    els.metaSession.textContent = sess.ok ? "Accès ouvert" : "Session à vérifier";
+    if(sess.ok){
+      els.pillState.textContent = "✅ Accès ouvert";
+      els.pillState.className = "pill ok";
       els.btnLogout.style.display = "inline-flex";
-    } else {
-      els.pillState.textContent = "🔒 Session en attente";
-      els.pillState.classList.remove("ok");
-      els.pillState.classList.add("warn");
+    }else{
+      els.pillState.textContent = "🔒 Session à vérifier";
+      els.pillState.className = slug || phone ? "pill warn" : "pill bad";
       els.btnLogout.style.display = "none";
     }
-
-    els.btnBackApp.href = withContext("./app.html");
-    els.btnOpenPin.href = withContext("./pin.html");
-
-    if (!safe(els.owner_phone.value) && phone) {
-      els.owner_phone.value = phone;
-    }
+    els.btnBackApp.href = buildSafeUrl("./app.html");
+    els.btnOpenPin.href = buildSafeUrl("./pin.html");
+    els.navHome.href = buildSafeUrl("./app.html");
+    els.navResa.href = buildSafeUrl("./reservations.html");
+    els.navDispo.href = buildSafeUrl("./planning.html");
+    els.navFiche.href = buildSafeUrl("./fiche-abo.html");
+    els.navPlus.href = buildSafeUrl("./manage-links.html");
+    if(!safe(els.owner_phone.value) && phone) els.owner_phone.value = phone;
   }
 
   function updatePreview(){
-    const firstPhoto = state.photos[0]?.url || FALLBACK_IMG;
-
+    const urls = parseOfficialUrls();
+    const firstOfficial = urls[0] || "";
+    const firstPhoto = firstOfficial || state.photos[0]?.url || FALLBACK_IMG;
     els.pvCover.src = firstPhoto;
-    els.pvCover.onerror = () => {
-      els.pvCover.onerror = null;
-      els.pvCover.src = FALLBACK_IMG;
-    };
-
+    els.pvCover.onerror = () => { els.pvCover.onerror = null; els.pvCover.src = FALLBACK_IMG; };
     els.pvNom.textContent = safe(els.nom.value) || "Nom logement";
     els.pvType.textContent = safe(els.type_logement.value) || "Type";
     els.pvVille.textContent = safe(els.adresse.value) || "Ville";
     els.pvDesc.textContent = safe(els.description.value) || "La description apparaîtra ici.";
     els.pvOwner.textContent = safe(els.owner_name.value) || "—";
-    els.pvPhone.textContent = safe(els.owner_phone.value) || "—";
+    els.pvPhone.textContent = safe(els.owner_phone.value) ? "Contact renseigné" : "—";
     els.pvCap.textContent = safe(els.personnes_max.value) ? `${safe(els.personnes_max.value)} pers.` : "—";
     els.pvPn.textContent = money(els.prix_nuit.value);
     els.pvPs.textContent = money(els.prix_semaine.value);
     els.pvPm.textContent = money(els.prix_mois.value);
     els.pvNeed.textContent = safe(els.need_text.value) || "Le besoin apparaîtra ici.";
-    els.pvUrls.textContent = safe(els.photos_urls.value) || "En attente des URLs photos DIGIY.";
-
+    els.pvUrls.textContent = urls.length ? urls.join("\n") : "En attente des URLs photos DIGIY.";
     const stateLabel = currentStateLabel();
     els.pvState.textContent = stateLabel;
     els.metaState.textContent = stateLabel;
@@ -1237,338 +712,131 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
 
   function renderGallery(){
     els.gallery.innerHTML = "";
-
-    if (!state.photos.length) {
+    if(!state.photos.length){
       const div = document.createElement("div");
       div.className = "mini";
-      div.textContent = "Aucune photo sélectionnée pour le moment.";
+      div.textContent = "Aucune photo locale sélectionnée pour le moment.";
       els.gallery.appendChild(div);
       updatePreview();
       return;
     }
-
-    state.photos.forEach((photo, i) => {
+    state.photos.forEach((photo, i)=>{
       const item = document.createElement("div");
       item.className = "thumb";
-      item.innerHTML = `
-        <img src="${photo.url}" alt="Photo ${i + 1}">
-        <div class="cap">${i + 1}. ${photo.name}</div>
-      `;
-      els.gallery.appendChild(item);
+      const img = document.createElement("img");
+      img.src = photo.url;
+      img.alt = "Photo " + (i+1);
+      const cap = document.createElement("div");
+      cap.className = "cap";
+      cap.textContent = `${i + 1}. ${photo.name}`;
+      item.appendChild(img); item.appendChild(cap); els.gallery.appendChild(item);
     });
-
     updatePreview();
   }
 
   function validateBeforeSend(){
-    if (!getSlug()) {
-      showStatus("Identifiant propriétaire introuvable. Reconnecte-toi avec ton code.", "bad");
-      return false;
-    }
-
-    if (!safe(els.owner_name.value)) {
-      showStatus("Ajoute le nom du propriétaire.", "warn");
-      els.owner_name.focus();
-      return false;
-    }
-
-    if (!safe(els.owner_phone.value)) {
-      showStatus("Ajoute le téléphone du propriétaire.", "warn");
-      els.owner_phone.focus();
-      return false;
-    }
-
-    if (!safe(els.nom.value)) {
-      showStatus("Ajoute le nom du logement.", "warn");
-      els.nom.focus();
-      return false;
-    }
-
-    hideStatus();
-    return true;
+    if(!getSlug()){ showStatus("Espace introuvable. Reconnecte-toi avec ton code.", "bad"); return false; }
+    if(!safe(els.owner_name.value)){ showStatus("Ajoute le nom du propriétaire.", "warn"); els.owner_name.focus(); return false; }
+    if(!safe(els.owner_phone.value)){ showStatus("Ajoute le téléphone du propriétaire pour le suivi humain DIGIY.", "warn"); els.owner_phone.focus(); return false; }
+    if(!safe(els.nom.value)){ showStatus("Ajoute le nom du logement.", "warn"); els.nom.focus(); return false; }
+    hideStatus(); return true;
   }
 
   function getDraftPayload(){
     return {
-      owner_name: els.owner_name.value,
-      owner_phone: els.owner_phone.value,
-      nom: els.nom.value,
-      adresse: els.adresse.value,
-      type_logement: els.type_logement.value,
-      personnes_max: els.personnes_max.value,
-      prix_nuit: els.prix_nuit.value,
-      prix_semaine: els.prix_semaine.value,
-      prix_mois: els.prix_mois.value,
-      description: els.description.value,
-      need_text: els.need_text.value,
-      photos_urls: els.photos_urls.value,
-      saved_at: new Date().toISOString(),
-      slug: getSlug()
+      owner_name: els.owner_name.value, owner_phone: els.owner_phone.value, nom: els.nom.value, adresse: els.adresse.value,
+      type_logement: els.type_logement.value, personnes_max: els.personnes_max.value, prix_nuit: els.prix_nuit.value,
+      prix_semaine: els.prix_semaine.value, prix_mois: els.prix_mois.value, description: els.description.value,
+      need_text: els.need_text.value, photos_urls: parseOfficialUrls().join("\n"), saved_at: new Date().toISOString(), slug: getSlug()
     };
   }
-
   function saveDraft(){
     try{
       localStorage.setItem(draftKey(), JSON.stringify(getDraftPayload()));
-      showStatus(
-        "Brouillon sauvegardé localement ✅\n" +
-        `Clé locale : ${draftKey()}\n` +
-        "Aucune photo n’a été envoyée depuis cette page.",
-        "ok"
-      );
-    }catch(_){
-      showStatus("Impossible de sauvegarder le brouillon localement.", "bad");
-    }
+      pushSignal("prefiche_saved", "Pré-fiche logement sauvegardée", "./fiche-abo.html");
+      showStatus("Brouillon sauvegardé localement ✅\nAucune photo lourde envoyée. URLs seulement.", "ok");
+    }catch{ showStatus("Impossible de sauvegarder le brouillon localement.", "bad"); }
   }
-
   function applyDraft(d){
-    els.owner_name.value = d.owner_name || "";
-    els.owner_phone.value = d.owner_phone || "";
-    els.nom.value = d.nom || "";
-    els.adresse.value = d.adresse || "";
-    els.type_logement.value = d.type_logement || "";
-    els.personnes_max.value = d.personnes_max || "";
-    els.prix_nuit.value = d.prix_nuit || "";
-    els.prix_semaine.value = d.prix_semaine || "";
-    els.prix_mois.value = d.prix_mois || "";
-    els.description.value = d.description || "";
-    els.need_text.value = d.need_text || "";
-    els.photos_urls.value = d.photos_urls || "";
+    els.owner_name.value = d.owner_name || ""; els.owner_phone.value = d.owner_phone || ""; els.nom.value = d.nom || ""; els.adresse.value = d.adresse || "";
+    els.type_logement.value = d.type_logement || ""; els.personnes_max.value = d.personnes_max || ""; els.prix_nuit.value = d.prix_nuit || ""; els.prix_semaine.value = d.prix_semaine || ""; els.prix_mois.value = d.prix_mois || "";
+    els.description.value = d.description || ""; els.need_text.value = d.need_text || ""; els.photos_urls.value = d.photos_urls || "";
     updatePreview();
   }
-
   function loadDraft(){
     try{
-      const candidates = [draftKey(), LEGACY_KEY];
+      const candidates = [draftKey(), ...LEGACY_KEYS];
       let raw = "";
-
-      for (const key of candidates) {
-        raw = localStorage.getItem(key) || "";
-        if (raw) break;
-      }
-
-      if (!raw) {
-        showStatus("Aucun brouillon local trouvé pour cette page.", "warn");
-        return;
-      }
-
-      const d = JSON.parse(raw);
-      applyDraft(d);
-
-      const savedAt = safe(d.saved_at);
-      showStatus(
-        "Brouillon rechargé ✅\n" +
-        (savedAt ? `Dernière sauvegarde : ${savedAt}\n` : "") +
-        "Note : les photos locales ne sont jamais restaurées automatiquement.",
-        "ok"
-      );
-    }catch(_){
-      showStatus("Impossible de relire le brouillon local.", "bad");
-    }
+      for(const key of candidates){ raw = localStorage.getItem(key) || ""; if(raw) break; }
+      if(!raw){ showStatus("Aucun brouillon local trouvé.", "warn"); return; }
+      const d = JSON.parse(raw); applyDraft(d);
+      showStatus("Brouillon rechargé ✅\nLes photos locales ne sont jamais restaurées automatiquement.", "ok");
+    }catch{ showStatus("Impossible de relire le brouillon local.", "bad"); }
   }
-
   function resetAll(){
-    const ok = confirm("Vider la pré-fiche locale en cours ?");
-    if (!ok) return;
-
-    [
-      els.owner_name, els.owner_phone, els.nom, els.adresse, els.personnes_max,
-      els.prix_nuit, els.prix_semaine, els.prix_mois, els.description,
-      els.need_text, els.photos_urls
-    ].forEach(el => { el.value = ""; });
-
-    els.type_logement.value = "";
-    els.photos.value = "";
-
-    state.photos.forEach(p => {
-      try { URL.revokeObjectURL(p.url); } catch (_) {}
-    });
-    state.photos = [];
-
-    const sess = getSession();
-    if (sess.phone) {
-      els.owner_phone.value = sess.phone;
-    }
-
-    els.assistantBox.style.display = "none";
-    els.assistantIntro.textContent = "";
-    els.assistantList.innerHTML = "";
-
-    renderGallery();
-    updatePreview();
-    hideStatus();
-
-    try{
-      localStorage.removeItem(draftKey());
-    }catch(_){}
+    if(!confirm("Vider la pré-fiche locale en cours ?")) return;
+    [els.owner_name, els.owner_phone, els.nom, els.adresse, els.personnes_max, els.prix_nuit, els.prix_semaine, els.prix_mois, els.description, els.need_text, els.photos_urls].forEach(el=>{ el.value=""; });
+    els.type_logement.value = ""; els.photos.value = "";
+    state.photos.forEach(p=>{ try{URL.revokeObjectURL(p.url);}catch{} }); state.photos = [];
+    const phone = getPhone(); if(phone) els.owner_phone.value = phone;
+    els.assistantBox.style.display = "none"; els.assistantIntro.textContent = ""; els.assistantList.innerHTML = "";
+    renderGallery(); updatePreview(); hideStatus(); try{localStorage.removeItem(draftKey());}catch{}
   }
-
   async function copyText(){
-    try{
-      await navigator.clipboard.writeText(buildMessage());
-      showStatus("Texte copié ✅", "ok");
-    }catch(_){
-      els.messageBox.focus();
-      els.messageBox.select();
-      showStatus("Copie automatique impossible. Le texte est sélectionné à droite.", "warn");
-    }
+    try{ await navigator.clipboard.writeText(buildMessage()); showStatus("Texte copié ✅", "ok"); }
+    catch{ els.messageBox.focus(); els.messageBox.select(); showStatus("Copie automatique impossible. Le texte est sélectionné à droite.", "warn"); }
   }
-
   function openWhatsApp(){
-    if (!validateBeforeSend()) return;
-
-    const url = `https://wa.me/${TEAM_WA}?text=${encodeURIComponent(buildMessage())}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-
-    showStatus(
-      "WhatsApp DIGIY ouvert ✅\n" +
-      "Étape suivante : joins les photos humainement si besoin.\n" +
-      "Les photos ne quittent pas cet écran depuis cette page.",
-      "ok"
-    );
+    if(!validateBeforeSend()) return;
+    window.open(`https://wa.me/${TEAM_WA}?text=${encodeURIComponent(buildMessage())}`, "_blank", "noopener,noreferrer");
+    pushSignal("prefiche_sent", "Pré-fiche prête à envoyer à DIGIY", "./fiche-abo.html");
+    showStatus("WhatsApp DIGIY ouvert ✅\nJoins les photos humainement si besoin. Cette page n’envoie aucun fichier lourd.", "ok");
   }
-
   function openEmail(){
-    if (!validateBeforeSend()) return;
-
+    if(!validateBeforeSend()) return;
     const subject = `DIGIY LOC — Pré-fiche propriétaire — ${safe(els.nom.value) || "logement"}`;
-    const body = buildMessage();
-    const mailto = `mailto:${encodeURIComponent(TEAM_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
-
-    showStatus(
-      "Email DIGIY préparé ✅\n" +
-      "Tu peux y joindre les photos si besoin.\n" +
-      "Les URLs officielles seront collées plus tard.",
-      "ok"
-    );
+    window.location.href = `mailto:${encodeURIComponent(TEAM_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildMessage())}`;
+    pushSignal("prefiche_email", "Email pré-fiche préparé", "./fiche-abo.html");
+    showStatus("Email DIGIY préparé ✅\nTu peux y joindre les photos si besoin.", "ok");
   }
-
   function onPhotosChanged(files){
-    state.photos.forEach(p => {
-      try { URL.revokeObjectURL(p.url); } catch (_) {}
-    });
-
-    state.photos = Array.from(files || []).map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file)
-    }));
-
+    state.photos.forEach(p=>{ try{URL.revokeObjectURL(p.url);}catch{} });
+    state.photos = Array.from(files || []).map(file=>({ name:file.name, url:URL.createObjectURL(file) }));
     renderGallery();
-
-    if (state.photos.length) {
-      showStatus(
-        `${state.photos.length} photo(s) chargée(s) dans l’aperçu local ✅\n` +
-        "Aucun envoi photo effectué.",
-        "ok"
-      );
-    } else {
-      hideStatus();
-    }
+    showStatus(state.photos.length ? `${state.photos.length} photo(s) chargée(s) en aperçu local ✅\nAucun envoi photo effectué.` : "", state.photos.length ? "ok" : "warn");
   }
-
   function buildAdvice(){
     const items = [];
-
-    const ownerName = safe(els.owner_name.value);
-    const ownerPhone = safe(els.owner_phone.value);
-    const nom = safe(els.nom.value);
-    const adresse = safe(els.adresse.value);
-    const type = safe(els.type_logement.value);
-    const cap = Number(els.personnes_max.value || 0);
-    const prixNuit = Number(els.prix_nuit.value || 0);
-    const prixSemaine = Number(els.prix_semaine.value || 0);
-    const prixMois = Number(els.prix_mois.value || 0);
-    const desc = safe(els.description.value);
-    const need = safe(els.need_text.value);
     const urls = parseOfficialUrls();
-
-    if (!getSlug()) items.push({ cls:"bad", text:"L’identifiant propriétaire manque. Reviens par le PIN ou Ma gestion avant d’utiliser cette page." });
-    else items.push({ cls:"ok", text:`Identifiant propriétaire détecté : ${getSlug()}` });
-
-    if (!ownerName) items.push({ cls:"bad", text:"Ajoute le nom du propriétaire pour que DIGIY sache à qui rattacher le dossier." });
-    else items.push({ cls:"ok", text:"Nom propriétaire présent." });
-
-    if (!ownerPhone) items.push({ cls:"bad", text:"Ajoute un téléphone / WhatsApp propriétaire. C’est vital pour le suivi humain." });
-    else items.push({ cls:"ok", text:"Téléphone propriétaire présent." });
-
-    if (!nom) items.push({ cls:"bad", text:"Ajoute un nom logement clair. Un logement sans nom convertit mal." });
-    else items.push({ cls:"ok", text:"Nom logement présent." });
-
-    if (!adresse) items.push({ cls:"warn", text:"Précise mieux la ville / zone. Le terrain doit être lisible tout de suite." });
-    else items.push({ cls:"ok", text:"Adresse / ville présente." });
-
-    if (!type) items.push({ cls:"warn", text:"Choisis le type de logement pour éviter une fiche floue." });
-    else items.push({ cls:"ok", text:"Type de logement renseigné." });
-
-    if (!cap || cap < 1) items.push({ cls:"warn", text:"Ajoute la capacité du logement. C’est une info décisive." });
-    else items.push({ cls:"ok", text:`Capacité renseignée : ${cap} pers.` });
-
-    if (!prixNuit && !prixSemaine && !prixMois) {
-      items.push({ cls:"bad", text:"Aucun prix visible. Mets au moins un prix pour éviter une fiche trop floue." });
-    } else {
-      items.push({ cls:"ok", text:"Au moins un prix est renseigné." });
-    }
-
-    if (desc.length < 80) {
-      items.push({ cls:"warn", text:"La description est encore faible. Raconte l’ambiance, le confort, la zone et les atouts." });
-    } else {
-      items.push({ cls:"ok", text:"Description assez solide pour une pré-fiche." });
-    }
-
-    if (state.photos.length < 3 && urls.length === 0) {
-      items.push({ cls:"warn", text:"Ajoute au moins 3 photos locales ou attends les URLs officielles DIGIY." });
-    } else if (urls.length > 0) {
-      items.push({ cls:"ok", text:`URLs officielles présentes : ${urls.length}. La fiche peut passer vers la publication.` });
-    } else {
-      items.push({ cls:"ok", text:`Photos locales présentes : ${state.photos.length}.` });
-    }
-
-    if (!need) {
-      items.push({ cls:"warn", text:"Explique le besoin : accès, publication, accompagnement, abonnement, traitement photo..." });
-    } else {
-      items.push({ cls:"ok", text:"Besoin exprimé clairement." });
-    }
-
-    if (urls.length === 0) {
-      items.push({ cls:"warn", text:"Pas encore d’URLs officielles : statut pré-fiche locale en attente." });
-    } else {
-      items.push({ cls:"ok", text:"URLs officielles collées : statut prêt pour publication." });
-    }
-
+    if(!getSlug()) items.push({cls:"bad", text:"Espace introuvable. Reviens par PIN ou Ma gestion."}); else items.push({cls:"ok", text:"Espace propriétaire détecté sans exposer l’identifiant sensible."});
+    if(!safe(els.owner_name.value)) items.push({cls:"bad", text:"Ajoute le nom du propriétaire."}); else items.push({cls:"ok", text:"Nom propriétaire présent."});
+    if(!safe(els.owner_phone.value)) items.push({cls:"warn", text:"Ajoute le téléphone pour le suivi humain DIGIY."}); else items.push({cls:"ok", text:"Contact propriétaire renseigné pour le suivi humain."});
+    if(!safe(els.nom.value)) items.push({cls:"bad", text:"Ajoute le nom du logement."}); else items.push({cls:"ok", text:"Nom logement présent."});
+    if(!safe(els.adresse.value)) items.push({cls:"warn", text:"Précise la zone : Saly, Ngaparou, Mbour, Somone…"}); else items.push({cls:"ok", text:"Zone / adresse présente."});
+    if(!safe(els.type_logement.value)) items.push({cls:"warn", text:"Choisis le type de logement."}); else items.push({cls:"ok", text:"Type de logement renseigné."});
+    if(!Number(els.prix_nuit.value || 0) && !Number(els.prix_semaine.value || 0) && !Number(els.prix_mois.value || 0)) items.push({cls:"bad", text:"Mets au moins un prix pour éviter une fiche floue."}); else items.push({cls:"ok", text:"Au moins un prix est renseigné."});
+    if(safe(els.description.value).length < 80) items.push({cls:"warn", text:"La description peut être renforcée : ambiance, zone, confort, contact direct."}); else items.push({cls:"ok", text:"Description solide pour une pré-fiche."});
+    if(urls.length) items.push({cls:"ok", text:`URLs officielles présentes : ${urls.length}. Supabase pourra recevoir des liens légers seulement.`}); else items.push({cls:"warn", text:"Pas encore d’URLs officielles : on reste en pré-fiche locale."});
+    if(state.photos.length) items.push({cls:"ok", text:`Photos locales en aperçu : ${state.photos.length}. Elles ne sont pas envoyées par cette page.`});
     return items;
   }
-
   function openAdvice(){
     const items = buildAdvice();
     els.assistantBox.style.display = "block";
-
-    if (hasOfficialUrls()) {
-      els.assistantIntro.textContent = "Lecture DIGIY : la pré-fiche est proche du parcours publication. On finalise les détails puis on avance.";
-    } else {
-      els.assistantIntro.textContent = "Lecture DIGIY : dossier local propre, sans coût stockage. On consolide ce qui manque avant publication.";
-    }
-
-    els.assistantList.innerHTML = items.map(item => {
-      return `<div class="assistantItem ${item.cls}">${item.text}</div>`;
-    }).join("");
-
+    els.assistantIntro.textContent = hasOfficialUrls()
+      ? "Lecture DIGIY : les URLs officielles sont présentes. Le dossier se rapproche de la publication."
+      : "Lecture DIGIY : dossier local propre. On prépare sans charger Supabase avec des fichiers lourds.";
+    els.assistantList.innerHTML = items.map(item=>`<div class="assistantItem ${item.cls}">${item.text}</div>`).join("");
+    pushSignal("prefiche_review", "Pré-fiche analysée par DIGIY", "./fiche-abo.html");
     showStatus("Lecture DIGIY affichée ✅\nConseils locaux, sans envoi photo, sans coût inutile.", "ok");
   }
-
+  function appendTo(el, text){ const old=safe(el.value); el.value = old ? old + "\n\n" + text : text; el.dispatchEvent(new Event("input", {bubbles:true})); }
   function bind(){
-    const watched = [
-      els.owner_name, els.owner_phone, els.nom, els.adresse, els.type_logement,
-      els.personnes_max, els.prix_nuit, els.prix_semaine, els.prix_mois,
-      els.description, els.need_text, els.photos_urls
-    ];
-
-    watched.forEach(el => {
-      const evt = el.tagName === "SELECT" ? "change" : "input";
-      el.addEventListener(evt, updatePreview);
-    });
-
-    els.photos.addEventListener("change", (e) => onPhotosChanged(e.target.files));
+    const watched = [els.owner_name, els.owner_phone, els.nom, els.adresse, els.type_logement, els.personnes_max, els.prix_nuit, els.prix_semaine, els.prix_mois, els.description, els.need_text, els.photos_urls];
+    watched.forEach(el=>{ const evt = el.tagName === "SELECT" ? "change" : "input"; el.addEventListener(evt, updatePreview); });
+    document.querySelectorAll("[data-desc]").forEach(btn=>btn.addEventListener("click",()=>appendTo(els.description, btn.dataset.desc)));
+    document.querySelectorAll("[data-need]").forEach(btn=>btn.addEventListener("click",()=>appendTo(els.need_text, btn.dataset.need)));
+    els.photos.addEventListener("change", e=>onPhotosChanged(e.target.files));
     els.btnAdvice.addEventListener("click", openAdvice);
     els.btnWhatsApp.addEventListener("click", openWhatsApp);
     els.btnEmail.addEventListener("click", openEmail);
@@ -1576,47 +844,24 @@ https://digiylyfe.com/media/loc/villa-saly/photo3.jpg"></textarea>
     els.btnSaveDraft.addEventListener("click", saveDraft);
     els.btnLoadDraft.addEventListener("click", loadDraft);
     els.btnReset.addEventListener("click", resetAll);
-
-    els.btnLogout.addEventListener("click", () => {
-      window.DIGIY_GUARD?.logout?.();
-    });
+    els.btnLogout.addEventListener("click", ()=>window.DIGIY_GUARD?.logout?.());
   }
 
   async function init(){
-    bind();
-    renderGallery();
-    updatePreview();
-
-    try{
-      await bootGuard();
-      refreshContextUI();
-
-      if (!getSlug()) {
-        showStatus("Identifiant propriétaire introuvable. Reviens par ton code ou par ton espace.", "bad");
-      } else {
-        showStatus(
-          "Préparation active ✅\n" +
-          "Brouillon gardé pour cet identifiant.\n" +
-          "Aucun envoi photo depuis cette page.",
-          "ok"
-        );
-      }
-
-      loadDraft();
-      updatePreview();
-    }catch(_){
-      refreshContextUI();
-      showStatus(
-        "Vérification non prête ou session indisponible.\n" +
-        "Recharge la page ou reconnecte-toi avec ton code pour retrouver l’accès propriétaire.",
-        "bad"
-      );
-    }
+    cleanVisibleUrl();
+    bind(); renderGallery(); updatePreview();
+    try{ await bootGuard(); }
+    catch(e){ console.warn("guard ready", e); }
+    refreshContextUI(); updatePreview();
+    if(!getSlug()) showStatus("Espace propriétaire introuvable. Reviens par ton code ou par Ma gestion.", "warn");
+    else showStatus("Préparation active ✅\nBrouillon gardé sur cet appareil. Aucun envoi photo depuis cette page.", "ok");
+    try{ loadDraft(); }catch{}
   }
 
   init();
 })();
 </script>
-
+<script src="./loc-security-mask.js"></script>
 </body>
 </html>
+
