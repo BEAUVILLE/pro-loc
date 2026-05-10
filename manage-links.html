@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Plus</title>
+  <title>Je loue • Mes outils</title>
   <meta name="theme-color" content="#061b14"/>
-  <meta name="description" content="DIGIY LOC — outils rangés derrière : tarifs, photos, fiche, QR, liens, accès et support."/>
+  <meta name="description" content="DIGIY LOC — carrefour propre des outils propriétaire : réservations, disponibilités, photos, fiche, QR, notes et messages."/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -16,22 +16,23 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-plus-mobile-v1"></script>
+  <script src="./guard.js?v=loc-plus-senior-safe-v2"></script>
 
   <style>
     :root{
       --bg:#061b14;
       --bg2:#0a2820;
-      --card:#0b2a1f;
-      --line:rgba(255,255,255,.12);
-      --text:#eafff1;
-      --muted:rgba(234,255,241,.72);
+      --card:rgba(255,255,255,.045);
+      --line:rgba(255,255,255,.15);
+      --text:#f2fff7;
+      --muted:rgba(242,255,247,.82);
       --gold:#facc15;
       --ok:#22c55e;
       --bad:#ef4444;
       --blue:#38bdf8;
-      --shadow:0 18px 40px rgba(0,0,0,.35);
-      --bottom:78px;
+      --shadow:0 18px 42px rgba(0,0,0,.36);
+      --bottom:92px;
+      --radius:24px;
     }
 
     *{box-sizing:border-box}
@@ -41,10 +42,11 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--text);
       background:
-        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
-        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.20), transparent 55%),
+        radial-gradient(800px 520px at 90% 0%, rgba(250,204,21,.16), transparent 50%),
         linear-gradient(180deg,#03120d,var(--bg));
       padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
+      font-size:18px;
     }
 
     a{color:inherit;text-decoration:none}
@@ -52,140 +54,182 @@
 
     .wrap{max-width:980px;margin:0 auto}
 
-    .hero{
+    .hero,.section{
       border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(255,255,255,.035);
+      border-radius:var(--radius);
+      background:var(--card);
       box-shadow:var(--shadow);
-      padding:14px;
+      padding:18px;
     }
+    .section{margin-top:16px}
 
     .top{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
-      gap:12px;
+      gap:14px;
       flex-wrap:wrap;
     }
 
-    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .brand{display:flex;align-items:center;gap:14px;min-width:0}
     .ico{
-      width:44px;height:44px;border-radius:16px;
+      width:58px;height:58px;border-radius:20px;
       display:grid;place-items:center;
-      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
-      border:1px solid rgba(250,204,21,.35);
-      font-size:20px;
+      background:linear-gradient(135deg, rgba(250,204,21,.30), rgba(34,197,94,.20));
+      border:1px solid rgba(250,204,21,.38);
+      font-size:28px;
       flex:0 0 auto;
     }
-    h1{font-size:20px;margin:0;letter-spacing:-.02em}
-    .sub{margin-top:4px;color:var(--muted);font-weight:850;line-height:1.35;font-size:13px}
+    h1{
+      font-size:clamp(28px,7vw,42px);
+      margin:0;
+      line-height:1;
+      letter-spacing:-.04em;
+      font-weight:1000;
+      color:#fff7c2;
+    }
+    .sub{
+      margin-top:8px;
+      color:var(--muted);
+      font-weight:900;
+      line-height:1.45;
+      font-size:18px;
+      max-width:62ch;
+    }
+
+    .statusBox{
+      display:grid;
+      gap:8px;
+      min-width:min(100%,250px);
+    }
 
     .pill{
-      display:inline-flex;align-items:center;gap:6px;
-      border:1px solid rgba(148,163,184,.25);
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      border:1px solid rgba(148,163,184,.28);
       border-radius:999px;
-      padding:8px 10px;
-      background:rgba(255,255,255,.035);
+      padding:10px 13px;
+      background:rgba(255,255,255,.045);
       color:var(--muted);
-      font-size:12px;
-      font-weight:950;
+      font-size:16px;
+      font-weight:1000;
       white-space:nowrap;
+      min-height:44px;
     }
-    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+    .pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.40);background:rgba(250,204,21,.12);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.12);color:#fecaca}
+
+    .doctrine{
+      margin-top:14px;
+      border:1px solid rgba(250,204,21,.28);
+      border-radius:20px;
+      background:rgba(250,204,21,.09);
+      padding:14px;
+      color:#fde68a;
+      font-weight:950;
+      line-height:1.45;
+      font-size:18px;
+    }
 
     .quick{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-      margin-top:14px;
+      gap:12px;
+      margin-top:16px;
     }
 
     .btn{
-      min-height:48px;
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
+      min-height:64px;
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.055);
       color:var(--text);
       font-weight:1000;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      padding:11px 12px;
+      gap:10px;
+      padding:14px 15px;
       cursor:pointer;
       text-align:center;
+      font-size:18px;
+      line-height:1.15;
+      touch-action:manipulation;
     }
-    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
-    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
-    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
-    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.38);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.38);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fecaca}
     .btn:active{transform:translateY(1px)}
-
-    .section{
-      margin-top:14px;
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(255,255,255,.03);
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
 
     .sectionHead{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
-      gap:10px;
-      margin-bottom:10px;
+      gap:12px;
+      margin-bottom:12px;
     }
 
-    .sectionTitle{font-size:16px;font-weight:1000}
-    .sectionSub{margin-top:4px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.35}
+    .sectionTitle{
+      font-size:24px;
+      font-weight:1000;
+      color:#fff7c2;
+      letter-spacing:-.02em;
+    }
+    .sectionSub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:17px;
+      font-weight:900;
+      line-height:1.4;
+    }
 
     .toolGrid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
+      gap:12px;
     }
 
     .tool{
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:18px;
-      background:rgba(2,44,34,.26);
-      padding:12px;
-      min-height:92px;
+      border:1px solid rgba(148,163,184,.20);
+      border-radius:22px;
+      background:rgba(2,44,34,.28);
+      padding:16px;
+      min-height:120px;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
-      gap:8px;
+      gap:10px;
     }
 
-    .tool b{font-size:15px}
-    .tool span{color:var(--muted);font-size:12px;line-height:1.35;font-weight:800}
-
-    .miniActions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:10px;
+    .tool b{
+      font-size:20px;
+      line-height:1.2;
+      color:#ffffff;
+    }
+    .tool span{
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.4;
+      font-weight:850;
     }
 
     .note{
       display:none;
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.03);
+      margin-top:12px;
+      padding:13px 14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.26);
+      background:rgba(255,255,255,.04);
       color:var(--muted);
-      font-weight:900;
+      font-weight:950;
       white-space:pre-wrap;
-      line-height:1.4;
+      line-height:1.45;
+      font-size:17px;
     }
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.ok{display:block;border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .note.warn{display:block;border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.10);color:#fde68a}
+    .note.bad{display:block;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.10);color:#fecaca}
 
     .bottomNav{
       position:fixed;
@@ -200,43 +244,49 @@
       margin:0 auto;
       display:grid;
       grid-template-columns:repeat(5,1fr);
-      gap:6px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(6,27,20,.94);
+      gap:7px;
+      border:1px solid rgba(255,255,255,.13);
+      background:rgba(6,27,20,.95);
       backdrop-filter:blur(10px);
-      border-radius:22px;
-      padding:7px;
-      box-shadow:0 16px 44px rgba(0,0,0,.38);
+      border-radius:24px;
+      padding:8px;
+      box-shadow:0 16px 44px rgba(0,0,0,.40);
     }
 
     .navItem{
-      min-height:52px;
-      border-radius:16px;
+      min-height:66px;
+      border-radius:18px;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:3px;
-      color:rgba(234,255,241,.72);
-      font-size:11px;
-      font-weight:950;
+      gap:4px;
+      color:rgba(234,255,241,.78);
+      font-size:13px;
+      font-weight:1000;
       border:1px solid transparent;
       text-align:center;
+      line-height:1.05;
     }
 
-    .navItem strong{font-size:18px;line-height:1}
+    .navItem strong{font-size:22px;line-height:1}
     .navItem.active{
       color:#fde68a;
-      background:rgba(250,204,21,.10);
-      border-color:rgba(250,204,21,.24);
+      background:rgba(250,204,21,.12);
+      border-color:rgba(250,204,21,.28);
     }
 
-    @media(max-width:560px){
-      body{padding-left:10px;padding-right:10px}
-      .quick{grid-template-columns:1fr 1fr}
+    @media(max-width:640px){
+      body{padding-left:10px;padding-right:10px;font-size:17px}
+      .hero,.section{padding:15px;border-radius:22px}
+      .quick{grid-template-columns:1fr}
       .toolGrid{grid-template-columns:1fr}
-      h1{font-size:18px}
-      .btn{min-height:46px;padding:10px}
+      .btn{min-height:62px;font-size:17px}
+      .tool{min-height:112px}
+      .statusBox{width:100%}
+      .pill{width:100%}
+      .navItem{font-size:12px;min-height:62px}
+      .navItem strong{font-size:20px}
     }
   </style>
 </head>
@@ -248,20 +298,27 @@
       <div class="brand">
         <div class="ico">⋯</div>
         <div>
-          <h1>Plus</h1>
-          <div class="sub">Les outils secondaires sont rangés ici. Le calendrier reste léger.</div>
+          <h1>Mes outils</h1>
+          <div class="sub">
+            Les actions utiles du propriétaire sont rangées ici.
+            L’écran reste simple : je vois, je clique, je gère.
+          </div>
         </div>
       </div>
-      <div>
-        <div class="pill" id="pillSlug">identifiant : —</div>
-        <div class="pill warn" id="pillState" style="margin-top:6px">aperçu</div>
+      <div class="statusBox">
+        <div class="pill" id="pillSlug">Espace sécurisé</div>
+        <div class="pill warn" id="pillState">Lecture</div>
       </div>
+    </div>
+
+    <div class="doctrine">
+      Le pro clique plus qu’il n’écrit. DIGIY range les outils, protège les accès, et garde le chemin clair.
     </div>
 
     <div class="quick">
       <a class="btn green" id="goPlanning" href="./planning.html">📅 Disponibilités</a>
       <a class="btn blue" id="goReservations" href="./reservations.html">📋 Réservations</a>
-      <a class="btn gold" id="goNotes" href="./notes.html">📝 Notes rapides</a>
+      <a class="btn gold" id="goNotesQuick" href="./notes.html">📝 Notes rapides</a>
       <button class="btn" id="btnCopyPack" type="button">📋 Copier mes liens</button>
     </div>
 
@@ -271,16 +328,16 @@
   <section class="section">
     <div class="sectionHead">
       <div>
-        <div class="sectionTitle">Réglages utiles</div>
-        <div class="sectionSub">Ce qui sert parfois, mais ne doit pas charger l’écran calendrier.</div>
+        <div class="sectionTitle">Gérer le logement</div>
+        <div class="sectionSub">Les gestes qui font vivre l’annonce et la location.</div>
       </div>
     </div>
 
     <div class="toolGrid">
-      <a class="tool" id="goTarifs" href="./tarifs.html"><b>💰 Tarifs</b><span>Prix de base, semaine, mois, caution.</span></a>
-      <a class="tool" id="goPhotos" href="./photos.html"><b>🖼️ Photos</b><span>Images du logement et présentation visuelle.</span></a>
-      <a class="tool" id="goGenerator" href="./generator.html"><b>🏠 Préparer une fiche</b><span>Créer une fiche logement publique sur le vrai rail LOC.</span></a>
-      <a class="tool" id="goListing" href="./listing.html"><b>📋 Ma fiche</b><span>Informations visibles côté client.</span></a>
+      <a class="tool" id="goTarifs" href="./tarifs.html"><b>💰 Tarifs</b><span>Prix nuit, semaine, mois, caution et repères de paiement.</span></a>
+      <a class="tool" id="goPhotos" href="./photos.html"><b>🖼️ Photos</b><span>Liens photo uniquement. Pas d’images lourdes dans Supabase.</span></a>
+      <a class="tool" id="goGenerator" href="./generator.html"><b>🏠 Préparer une fiche</b><span>Créer une fiche claire avec des choix guidés.</span></a>
+      <a class="tool" id="goListing" href="./listing.html"><b>📋 Lecture du jour</b><span>Arrivées, départs, présents, partage rapide.</span></a>
       <a class="tool" id="goPrefiche" href="./fiche-abo.html"><b>📝 Pré-fiche</b><span>Préparer les éléments avant publication.</span></a>
     </div>
   </section>
@@ -288,15 +345,15 @@
   <section class="section">
     <div class="sectionHead">
       <div>
-        <div class="sectionTitle">Partage et accès</div>
-        <div class="sectionSub">QR, lien public, code PIN, liens terrain.</div>
+        <div class="sectionTitle">Partager et sécuriser</div>
+        <div class="sectionSub">QR, lien public, accès PIN, et chemins utiles.</div>
       </div>
     </div>
 
     <div class="toolGrid">
       <a class="tool" id="goQr" href="./qr.html"><b>🔳 Mon QR</b><span>Partager l’accès ou la fiche du logement.</span></a>
       <a class="tool" id="goQrFactory" href="./qr-factory.html"><b>🏭 QR Factory</b><span>Préparer plusieurs QR propres.</span></a>
-      <a class="tool" id="goLinks" href="./manage-links.html"><b>🔗 Mes liens</b><span>Regrouper les boutons utiles.</span></a>
+      <a class="tool" id="goLinks" href="./manage-links.html"><b>🔗 Mes liens</b><span>Regrouper les chemins utiles au même endroit.</span></a>
       <a class="tool" id="goPin" href="./pin.html"><b>🔐 Mon accès</b><span>Retour par code si la session expire.</span></a>
       <a class="tool" id="goPublic" href="./go-pin-public.html"><b>👁️ Fiche publique</b><span>Voir ce que le client peut ouvrir.</span></a>
       <a class="tool" id="goWave" href="./pin-wave.html"><b>🌊 Code Wave</b><span>Déclarations et preuves de paiement.</span></a>
@@ -306,17 +363,17 @@
   <section class="section">
     <div class="sectionHead">
       <div>
-        <div class="sectionTitle">Aide DIGIY</div>
-        <div class="sectionSub">Assistance, entraide et pages de soutien.</div>
+        <div class="sectionTitle">Aide et suivi client</div>
+        <div class="sectionSub">Messages, notes, entraide et accueil principal.</div>
       </div>
     </div>
 
     <div class="toolGrid">
       <a class="tool" id="goNdimbal" href="./ndimbal.html"><b>🤝 Entraide</b><span>Aide générale DIGIY.</span></a>
       <a class="tool" id="goNdimbalLoc" href="./ndimbal-loc.html"><b>🏠 Entraide logement</b><span>Aide adaptée à la location.</span></a>
-      <a class="tool" id="goNotes" href="./notes.html"><b>📝 Notes rapides</b><span>Écrire une trace simple et préparer la passerelle vers Mon argent.</span></a>
+      <a class="tool" id="goNotesHelp" href="./notes.html"><b>📝 Notes rapides</b><span>Écrire une trace simple et préparer Mon Argent.</span></a>
       <a class="tool" id="goPulse" href="./reservations-pulse.html"><b>💬 Messages clients</b><span>Préparer un message, valider, choisir le canal.</span></a>
-      <a class="tool" id="goApp" href="./app.html"><b>🏠 Accueil</b><span>Arrivées, départs, alertes du jour.</span></a>
+      <a class="tool" id="goApp" href="./app.html"><b>🏠 Accueil</b><span>Retour au chef des indications.</span></a>
     </div>
   </section>
 </div>
@@ -335,27 +392,17 @@
 (function(){
   "use strict";
 
-  const MODULE = "LOC";
   const $ = (id)=>document.getElementById(id);
 
   function storageGet(key){
-    try{
-      const s = sessionStorage.getItem(key);
-      if(s) return s;
-    }catch{}
-    try{
-      const l = localStorage.getItem(key);
-      if(l) return l;
-    }catch{}
+    try{ const s = sessionStorage.getItem(key); if(s) return s; }catch{}
+    try{ const l = localStorage.getItem(key); if(l) return l; }catch{}
     return "";
   }
 
   function readParam(name){
-    try{
-      return String(new URL(location.href).searchParams.get(name) || "").trim();
-    }catch{
-      return "";
-    }
+    try{ return String(new URL(location.href).searchParams.get(name) || "").trim(); }
+    catch{ return ""; }
   }
 
   function cleanSlug(s){
@@ -368,17 +415,48 @@
       .replace(/^[-_]+|[-_]+$/g, "");
   }
 
-  function phoneDigits(v){
-    return String(v || "").replace(/[^\d]/g, "");
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
   }
 
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {};
+  function canExposeSlug(slug){
+    const s = cleanSlug(slug);
+    return !!s && !isSensitiveSlug(s);
   }
 
-  function getGuardSession(){
-    try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};}
+  function displaySpace(slug){
+    const s = cleanSlug(slug);
+    if(!s || isSensitiveSlug(s)) return "Espace sécurisé";
+    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
   }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(function(key){
+        if(u.searchParams.has(key)){
+          u.searchParams.delete(key);
+          changed = true;
+        }
+      });
+
+      const slug = cleanSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+
+      if(changed){
+        history.replaceState({}, document.title, u.pathname + u.search + u.hash);
+      }
+    }catch(_){}
+  }
+
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};} }
 
   function getSlug(){
     const st = getGuardState();
@@ -396,35 +474,31 @@
     );
   }
 
-  function getPhone(){
-    const st = getGuardState();
-    const gs = getGuardSession();
-    return phoneDigits(
-      readParam("phone") ||
-      st.phone ||
-      gs.phone ||
-      storageGet("digiy_loc_phone") ||
-      storageGet("digiy_loc_last_phone") ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE")
-    );
-  }
-
   function withContext(path){
     const slug = getSlug();
-    const phone = getPhone();
+
     try{
       const u = new URL(path, location.href);
-      if(slug) u.searchParams.set("slug", slug);
-      if(phone) u.searchParams.set("phone", phone);
+
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(function(key){
+        u.searchParams.delete(key);
+      });
+
+      if(slug && canExposeSlug(slug) && !u.searchParams.get("slug")){
+        u.searchParams.set("slug", slug);
+      }else if(u.searchParams.has("slug") && isSensitiveSlug(u.searchParams.get("slug"))){
+        u.searchParams.delete("slug");
+      }
+
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{
-      const qs = new URLSearchParams();
-      if(slug) qs.set("slug", slug);
-      if(phone) qs.set("phone", phone);
-      const tail = qs.toString();
-      return path + (tail ? (path.includes("?") ? "&" : "?") + tail : "");
+      if(slug && canExposeSlug(slug)){
+        const qs = new URLSearchParams();
+        qs.set("slug", slug);
+        return path + (path.includes("?") ? "&" : "?") + qs.toString();
+      }
+      return path;
     }
   }
 
@@ -437,10 +511,12 @@
   }
 
   function syncLinks(){
+    cleanVisibleUrl();
+
     const links = [
       ["goPlanning","./planning.html"],
       ["goReservations","./reservations.html"],
-      ["goNotes","./notes.html"],
+      ["goNotesQuick","./notes.html"],
       ["goTarifs","./tarifs.html"],
       ["goPhotos","./photos.html"],
       ["goGenerator","./generator.html"],
@@ -454,7 +530,7 @@
       ["goWave","./pin-wave.html"],
       ["goNdimbal","./ndimbal.html"],
       ["goNdimbalLoc","./ndimbal-loc.html"],
-      ["goNotes","./notes.html"],
+      ["goNotesHelp","./notes.html"],
       ["goPulse","./reservations-pulse.html"],
       ["goApp","./app.html"],
       ["navHome","./app.html"],
@@ -464,26 +540,27 @@
       ["navPlus","./manage-links.html"]
     ];
 
-    links.forEach(([id,path])=>{
-      const el = $(id);
-      if(el) el.href = withContext(path);
+    links.forEach(function(pair){
+      const el = $(pair[0]);
+      if(el) el.href = withContext(pair[1]);
     });
 
     const slug = getSlug();
-    const phone = getPhone();
-
-    $("pillSlug").textContent = "identifiant : " + (slug || "—");
+    $("pillSlug").textContent = displaySpace(slug);
 
     const pill = $("pillState");
-    const accessOk = !!(getGuardState().access_ok || getGuardSession().access_ok || getGuardSession().ok);
+    const st = getGuardState();
+    const gs = getGuardSession();
+    const accessOk = !!(st.access_ok || st.access || st.ok || gs.access_ok || gs.access || gs.ok);
+
     if(accessOk){
-      pill.textContent = "accès ouvert";
+      pill.textContent = "Accès ouvert";
       pill.className = "pill ok";
-    }else if(slug || phone){
-      pill.textContent = "lecture";
+    }else if(slug){
+      pill.textContent = "Lecture";
       pill.className = "pill warn";
     }else{
-      pill.textContent = "accès à vérifier";
+      pill.textContent = "Accès à vérifier";
       pill.className = "pill bad";
     }
   }
@@ -491,11 +568,12 @@
   async function copyPack(){
     const lines = [
       "DIGIY LOC — Liens utiles",
-      "Identifiant : " + (getSlug() || "—"),
+      "Espace : " + displaySpace(getSlug()),
       "",
       "Accueil : " + withContext("./app.html"),
       "Réservations : " + withContext("./reservations.html"),
       "Disponibilités : " + withContext("./planning.html"),
+      "Photos : " + withContext("./photos.html"),
       "Préparer une fiche : " + withContext("./generator.html"),
       "Messages : " + withContext("./reservations-pulse.html"),
       "Notes rapides : " + withContext("./notes.html"),
@@ -505,16 +583,19 @@
     ];
 
     const txt = lines.join("\n");
+
     try{
       await navigator.clipboard.writeText(txt);
-      show("✅ Liens copiés.", "ok");
+      show("✅ Liens copiés. Aucun téléphone ni identifiant sensible ajouté.", "ok");
     }catch{
-      show("❌ Copie impossible sur ce téléphone.", "bad");
+      show("❌ Copie impossible sur ce téléphone. Tu peux ouvrir les liens un par un.", "bad");
     }
   }
 
   async function init(){
+    cleanVisibleUrl();
     syncLinks();
+
     $("btnCopyPack")?.addEventListener("click", copyPack);
 
     if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
@@ -531,7 +612,7 @@
   init();
 })();
 </script>
-  <script src="./loc-security-mask.js"></script>
+<script src="./loc-security-mask.js"></script>
 </body>
 </html>
 
