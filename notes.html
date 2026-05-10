@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue • Notes rapides</title>
   <meta name="theme-color" content="#061b14"/>
-  <meta name="description" content="DIGIY LOC — notes rapides location, aide-mémoire et passerelle vers Mon argent."/>
+  <meta name="description" content="Je loue — notes rapides, aide-mémoire, traces location et passerelle vers Mon Argent."/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -17,21 +17,22 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=loc-security-v2-20260504"></script>
+  <script src="./loc-security-mask.js?v=loc-notes-senior-20260510"></script>
 
   <style>
     :root{
       --bg:#061b14;
       --bg2:#0a2820;
       --card:#0b2a1f;
-      --line:rgba(255,255,255,.12);
-      --text:#eafff1;
-      --muted:rgba(234,255,241,.72);
+      --line:rgba(255,255,255,.15);
+      --text:#f4fff7;
+      --muted:rgba(244,255,247,.82);
       --gold:#facc15;
       --ok:#22c55e;
       --bad:#ef4444;
       --blue:#38bdf8;
-      --shadow:0 18px 40px rgba(0,0,0,.35);
-      --bottom:78px;
+      --shadow:0 20px 46px rgba(0,0,0,.38);
+      --bottom:92px;
     }
 
     *{box-sizing:border-box}
@@ -41,262 +42,229 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--text);
       background:
-        radial-gradient(900px 500px at 15% 10%, rgba(34,197,94,.18), transparent 55%),
-        radial-gradient(800px 520px at 90% 10%, rgba(250,204,21,.14), transparent 50%),
+        radial-gradient(920px 540px at 15% 4%, rgba(34,197,94,.20), transparent 56%),
+        radial-gradient(820px 520px at 90% 4%, rgba(250,204,21,.15), transparent 52%),
         linear-gradient(180deg,#03120d,var(--bg));
       padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
+      font-size:18px;
     }
 
     a{color:inherit;text-decoration:none}
     button,textarea,input,select{font:inherit}
-
-    .wrap{max-width:860px;margin:0 auto}
+    .wrap{max-width:920px;margin:0 auto}
     .hero,.card{
       border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(255,255,255,.035);
+      border-radius:26px;
+      background:rgba(255,255,255,.045);
       box-shadow:var(--shadow);
-      padding:14px;
+      padding:18px;
     }
-
-    .card{margin-top:14px}
+    .card{margin-top:16px}
 
     .top{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap:16px;
       flex-wrap:wrap;
     }
-
-    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .brand{display:flex;align-items:center;gap:14px;min-width:0}
     .ico{
-      width:44px;height:44px;border-radius:16px;
+      width:58px;height:58px;border-radius:20px;
       display:grid;place-items:center;
-      background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(34,197,94,.18));
-      border:1px solid rgba(250,204,21,.35);
-      font-size:20px;
+      background:linear-gradient(135deg, rgba(250,204,21,.30), rgba(34,197,94,.20));
+      border:1px solid rgba(250,204,21,.38);
+      font-size:28px;
       flex:0 0 auto;
     }
-
-    h1{font-size:20px;margin:0;letter-spacing:-.02em}
-    h2{font-size:16px;margin:0 0 6px}
-    .sub{margin-top:4px;color:var(--muted);font-weight:850;line-height:1.35;font-size:13px}
+    h1{font-size:32px;margin:0;letter-spacing:-.03em;line-height:1.04;font-weight:1100}
+    h2{font-size:24px;margin:0 0 8px;font-weight:1100;line-height:1.08}
+    .sub{margin-top:7px;color:var(--muted);font-weight:950;line-height:1.45;font-size:18px}
 
     .pill{
-      display:inline-flex;align-items:center;gap:6px;
-      border:1px solid rgba(148,163,184,.25);
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      border:1px solid rgba(148,163,184,.30);
       border-radius:999px;
-      padding:8px 10px;
-      background:rgba(255,255,255,.035);
+      padding:11px 14px;
+      background:rgba(255,255,255,.045);
       color:var(--muted);
-      font-size:12px;
-      font-weight:950;
+      font-size:16px;
+      font-weight:1000;
       white-space:nowrap;
     }
-    .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+    .pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.11);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.40);background:rgba(250,204,21,.11);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.11);color:#fecaca}
+
+    .doctrine{
+      margin-top:16px;
+      border:1px solid rgba(250,204,21,.32);
+      border-radius:22px;
+      padding:15px;
+      background:linear-gradient(180deg, rgba(250,204,21,.12), rgba(34,197,94,.06));
+      color:#fff6d5;
+      font-size:18px;
+      font-weight:1000;
+      line-height:1.45;
+    }
+    .doctrine b{color:#ffffff}
 
     .examples{
       display:flex;
-      gap:8px;
+      gap:10px;
       flex-wrap:wrap;
-      margin-top:12px;
+      margin-top:18px;
     }
-
     .chip{
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(255,255,255,.055);
       color:var(--text);
       border-radius:999px;
-      padding:8px 10px;
-      font-weight:950;
-      font-size:12px;
+      padding:12px 15px;
+      font-weight:1000;
+      font-size:17px;
       cursor:pointer;
+      min-height:48px;
     }
 
     .input{
       width:100%;
-      min-height:110px;
-      margin-top:12px;
+      min-height:158px;
+      margin-top:16px;
       resize:vertical;
-      border-radius:18px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(0,0,0,.16);
+      border-radius:22px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(0,0,0,.20);
       color:var(--text);
-      padding:12px;
-      font-weight:900;
-      line-height:1.4;
+      padding:16px;
+      font-weight:1000;
+      line-height:1.45;
       outline:none;
+      font-size:20px;
     }
-
-    .input:focus{
-      border-color:rgba(250,204,21,.48);
-      box-shadow:0 0 0 3px rgba(250,204,21,.10);
-    }
+    .input::placeholder{color:rgba(244,255,247,.50)}
+    .input:focus{border-color:rgba(250,204,21,.52);box-shadow:0 0 0 4px rgba(250,204,21,.12)}
 
     .actions{
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:9px;
-      margin-top:10px;
+      gap:12px;
+      margin-top:14px;
     }
-
     .btn{
-      min-height:48px;
-      border-radius:16px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.04);
+      min-height:62px;
+      border-radius:19px;
+      border:1px solid rgba(148,163,184,.26);
+      background:rgba(255,255,255,.055);
       color:var(--text);
-      font-weight:1000;
+      font-weight:1100;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      padding:11px 12px;
+      gap:10px;
+      padding:14px 16px;
       cursor:pointer;
       text-align:center;
+      font-size:18px;
+      line-height:1.15;
     }
-    .btn.gold{background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.35);color:#fde68a}
-    .btn.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:#bbf7d0}
-    .btn.blue{background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.30);color:#bae6fd}
-    .btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .btn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.42);color:#fde68a}
+    .btn.green{background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.42);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
+    .btn.red{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.38);color:#fecaca}
     .btn:disabled{opacity:.55;cursor:not-allowed}
 
     .draft{
       display:none;
-      margin-top:12px;
-      border:1px solid rgba(34,197,94,.32);
-      background:rgba(34,197,94,.08);
+      margin-top:16px;
+      border:1px solid rgba(34,197,94,.36);
+      background:rgba(34,197,94,.10);
       color:#bbf7d0;
-      border-radius:18px;
-      padding:12px;
-      font-weight:900;
-      line-height:1.45;
+      border-radius:22px;
+      padding:16px;
+      font-weight:1000;
+      line-height:1.55;
       white-space:pre-wrap;
+      font-size:19px;
     }
-
     .draft.show{display:block}
-    .draft b{color:#fff}
+    .draft b{color:#fff;font-size:22px}
 
-    .memory{
-      display:grid;
-      gap:10px;
-      margin-top:12px;
-    }
-
+    .memory{display:grid;gap:12px;margin-top:16px}
     .memoryItem{
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:18px;
-      background:rgba(2,44,34,.26);
-      padding:12px;
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:22px;
+      background:rgba(2,44,34,.30);
+      padding:16px;
     }
-
-    .memoryTop{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:flex-start;
-    }
-
-    .memoryTitle{font-weight:1000}
-    .memoryAmount{font-weight:1000;color:#bbf7d0;white-space:nowrap}
-    .memoryMeta{margin-top:6px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.35}
-    .memoryNote{margin-top:8px;font-weight:850;line-height:1.38}
-
+    .memoryTop{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+    .memoryTitle{font-weight:1100;font-size:20px;line-height:1.25}
+    .memoryAmount{font-weight:1100;color:#bbf7d0;white-space:nowrap;font-size:20px}
+    .memoryMeta{margin-top:9px;color:var(--muted);font-size:16px;font-weight:950;line-height:1.4}
+    .memoryNote{margin-top:10px;font-weight:950;line-height:1.45;font-size:18px}
     .smallLink{
       display:inline-flex;
-      margin-top:9px;
-      min-height:36px;
+      margin-top:12px;
+      min-height:48px;
       align-items:center;
       justify-content:center;
       border-radius:999px;
-      padding:8px 11px;
-      border:1px solid rgba(250,204,21,.32);
-      background:rgba(250,204,21,.12);
+      padding:12px 15px;
+      border:1px solid rgba(250,204,21,.36);
+      background:rgba(250,204,21,.14);
       color:#fde68a;
-      font-size:12px;
-      font-weight:1000;
+      font-size:17px;
+      font-weight:1100;
       cursor:pointer;
     }
-
     .empty{
-      padding:12px;
-      border-radius:16px;
-      border:1px dashed rgba(148,163,184,.22);
+      padding:18px;
+      border-radius:20px;
+      border:1px dashed rgba(148,163,184,.30);
       color:var(--muted);
-      font-size:13px;
-      font-weight:850;
-      line-height:1.4;
+      font-size:18px;
+      font-weight:950;
+      line-height:1.45;
       text-align:center;
     }
 
     .note{
       display:none;
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.03);
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(255,255,255,.04);
       color:var(--muted);
-      font-weight:900;
+      font-weight:1000;
       white-space:pre-wrap;
-      line-height:1.4;
+      line-height:1.45;
+      font-size:18px;
     }
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+    .note.ok{display:block;border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .note.warn{display:block;border-color:rgba(250,204,21,.40);background:rgba(250,204,21,.11);color:#fde68a}
+    .note.bad{display:block;border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.11);color:#fecaca}
 
-    .bottomNav{
-      position:fixed;
-      left:0;right:0;bottom:0;
-      z-index:70;
-      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
-      background:linear-gradient(180deg, rgba(6,27,20,0), rgba(6,27,20,.96) 28%);
-    }
-
-    .bottomInner{
-      max-width:980px;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:6px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(6,27,20,.94);
-      backdrop-filter:blur(10px);
-      border-radius:22px;
-      padding:7px;
-      box-shadow:0 16px 44px rgba(0,0,0,.38);
-    }
-
-    .navItem{
-      min-height:52px;
-      border-radius:16px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:3px;
-      color:rgba(234,255,241,.72);
-      font-size:11px;
-      font-weight:950;
-      border:1px solid transparent;
-      text-align:center;
-    }
-
-    .navItem strong{font-size:18px;line-height:1}
-    .navItem.active{
-      color:#fde68a;
-      background:rgba(250,204,21,.10);
-      border-color:rgba(250,204,21,.24);
-    }
+    .bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:70;padding:9px 10px calc(9px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg, rgba(6,27,20,0), rgba(6,27,20,.97) 28%)}
+    .bottomInner{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;border:1px solid rgba(255,255,255,.14);background:rgba(6,27,20,.96);backdrop-filter:blur(10px);border-radius:24px;padding:8px;box-shadow:0 16px 44px rgba(0,0,0,.40)}
+    .navItem{min-height:64px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:rgba(234,255,241,.78);font-size:13px;font-weight:1000;border:1px solid transparent;text-align:center}
+    .navItem strong{font-size:22px;line-height:1}
+    .navItem.active{color:#fde68a;background:rgba(250,204,21,.12);border-color:rgba(250,204,21,.28)}
 
     @media(max-width:560px){
-      body{padding-left:10px;padding-right:10px}
+      body{padding-left:10px;padding-right:10px;font-size:17px}
+      .hero,.card{padding:15px;border-radius:23px}
+      .ico{width:52px;height:52px;font-size:25px}
+      h1{font-size:28px}
+      h2{font-size:22px}
+      .sub{font-size:17px}
       .actions{grid-template-columns:1fr}
-      h1{font-size:18px}
+      .btn{min-height:60px;font-size:18px}
+      .input{font-size:19px;min-height:145px}
+      .chip{font-size:16px;width:100%;justify-content:flex-start;text-align:left;border-radius:18px}
+      .bottomInner{grid-template-columns:repeat(5,1fr);gap:4px;padding:6px}
+      .navItem{min-height:60px;font-size:12px;border-radius:16px}
+      .navItem strong{font-size:20px}
     }
   </style>
 </head>
@@ -309,13 +277,18 @@
         <div class="ico">📝</div>
         <div>
           <h1>Notes rapides</h1>
-          <div class="sub">Écris comme tu parles. DIGIY prépare. Tu valides. Puis ça peut partir vers Mon argent.</div>
+          <div class="sub">Parle simple. DIGIY prépare la trace. Tu relis, puis tu confirmes.</div>
         </div>
       </div>
       <div>
         <div class="pill" id="pillSlug">Espace sécurisé</div>
-        <div class="pill warn" id="pillState" style="margin-top:6px">lecture</div>
+        <div class="pill warn" id="pillState" style="margin-top:8px">lecture</div>
       </div>
+    </div>
+
+    <div class="doctrine">
+      <b>Le pro clique plus qu’il n’écrit.</b><br>
+      Une phrase suffit : paiement, dépense, ménage, réparation, date à bloquer. DIGIY classe et remonte l’indication au chef de bord.
     </div>
 
     <div class="examples" id="examples">
@@ -327,7 +300,7 @@
       <button class="chip" type="button">Bloquer samedi dimanche</button>
     </div>
 
-    <textarea class="input" id="quickInput" placeholder="Ex : Client a payé 30000 cash chambre"></textarea>
+    <textarea class="input" id="quickInput" placeholder="Exemple : Client a payé 30000 cash chambre"></textarea>
 
     <div class="actions">
       <button class="btn gold" id="btnPrepare" type="button">Préparer</button>
@@ -342,10 +315,10 @@
   <section class="card">
     <div class="top">
       <div>
-        <h2>🧠 Aide-mémoire location</h2>
-        <div class="sub">Dernières notes confirmées ici. Les notes argent gardent une passerelle vers Mon argent.</div>
+        <h2>🧠 Aide-mémoire logement</h2>
+        <div class="sub">Les dernières traces confirmées ici. Les notes avec montant peuvent partir vers Mon Argent.</div>
       </div>
-      <button class="btn red" id="btnClearMemory" type="button" style="min-height:42px">Vider</button>
+      <button class="btn red" id="btnClearMemory" type="button">Vider</button>
     </div>
 
     <div class="memory" id="memoryList">
@@ -370,6 +343,7 @@
 
   const MODULE = "LOC";
   const MEMORY_PREFIX = "DIGIY_LOC_NOTES_V1:";
+  const SIGNAL_KEY = "DIGIY_LOC_PRO_SIGNALS";
   const PAY_ADMIN_BASE = "https://pro-pay.digiylyfe.com/admin.html";
   const $ = (id)=>document.getElementById(id);
   let prepared = null;
@@ -379,170 +353,72 @@
     try{ const l = localStorage.getItem(key); if(l) return l; }catch{}
     return "";
   }
-
-  function storageSet(key,value){
-    try{ localStorage.setItem(key,value); }catch{}
-  }
-
+  function storageSet(key,value){ try{ localStorage.setItem(key,value); }catch{} }
+  function sessionSet(key,value){ try{ sessionStorage.setItem(key,value); }catch{} }
   function safeJson(raw,fallback){
     if(raw == null || raw === "") return fallback;
-    try{
-      const parsed = JSON.parse(raw);
-      return parsed == null ? fallback : parsed;
-    }catch{
-      return fallback;
-    }
+    try{ const parsed = JSON.parse(raw); return parsed == null ? fallback : parsed; }catch{ return fallback; }
   }
-
-  function readParam(name){
-    try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch{return "";}
-  }
-
+  function readParam(name){ try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch{return "";} }
   function cleanSlug(s){
-    return String(s || "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\-_]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^[-_]+|[-_]+$/g, "");
+    return String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\-_]/g, "").replace(/-+/g, "-").replace(/^[-_]+|[-_]+$/g, "");
   }
-
-  function isSensitiveSlug(slug){
-    return /\d{7,}/.test(String(slug || ""));
-  }
-
-  function canExposeSlug(slug){
-    const s = cleanSlug(slug);
-    return !!s && !isSensitiveSlug(s);
-  }
-
+  function isSensitiveSlug(slug){ return /\d{7,}/.test(String(slug || "")); }
+  function canExposeSlug(slug){ const s = cleanSlug(slug); return !!s && !isSensitiveSlug(s); }
   function displaySpace(slug){
     const s = cleanSlug(slug);
-    if(!s) return "Espace sécurisé";
-    if(isSensitiveSlug(s)) return "Espace sécurisé";
+    if(!s || isSensitiveSlug(s)) return "Espace sécurisé";
     if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
     return "Espace LOC";
   }
-
-  function phoneDigits(v){
-    return String(v || "").replace(/[^\d]/g, "");
-  }
+  function phoneDigits(v){ return String(v || "").replace(/[^\d]/g, ""); }
 
   function cleanVisibleUrl(){
     try{
       const u = new URL(location.href);
       let changed = false;
-
-      if(u.searchParams.has("phone")){
-        u.searchParams.delete("phone");
-        changed = true;
-      }
-
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(function(k){ if(u.searchParams.has(k)){ u.searchParams.delete(k); changed = true; } });
       const slug = cleanSlug(u.searchParams.get("slug") || "");
-      if(slug && isSensitiveSlug(slug)){
-        u.searchParams.delete("slug");
-        changed = true;
-      }
-
-      if(changed){
-        history.replaceState({}, "", u.pathname + u.search + u.hash);
-      }
+      if(slug && isSensitiveSlug(slug)){ u.searchParams.delete("slug"); changed = true; }
+      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
     }catch(_){}
   }
-
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {};
-  }
-
-  function getGuardSession(){
-    try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};}
-  }
-
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};} }
   function getSlug(){
-    const st = getGuardState();
-    const gs = getGuardSession();
-    return cleanSlug(
-      readParam("slug") ||
-      st.slug ||
-      gs.slug ||
-      storageGet("digiy_loc_slug") ||
-      storageGet("digiy_loc_last_slug") ||
-      storageGet("DIGIY_LOC_SLUG") ||
-      storageGet("DIGIY_LOC_LAST_SLUG") ||
-      storageGet("digiy_last_slug") ||
-      storageGet("DIGIY_SLUG")
-    );
+    const st = getGuardState(); const gs = getGuardSession();
+    return cleanSlug(readParam("slug") || st.slug || gs.slug || storageGet("digiy_loc_slug") || storageGet("digiy_loc_last_slug") || storageGet("DIGIY_LOC_SLUG") || storageGet("DIGIY_LOC_LAST_SLUG") || storageGet("digiy_last_slug") || storageGet("DIGIY_SLUG"));
   }
-
   function getPhone(){
-    const st = getGuardState();
-    const gs = getGuardSession();
-    return phoneDigits(
-      readParam("phone") ||
-      st.phone ||
-      gs.phone ||
-      storageGet("digiy_loc_phone") ||
-      storageGet("digiy_loc_last_phone") ||
-      storageGet("DIGIY_PHONE") ||
-      storageGet("DIGIY_LOC_PHONE") ||
-      storageGet("DIGIY_LOC_HUB_PHONE")
-    );
+    const st = getGuardState(); const gs = getGuardSession();
+    return phoneDigits(readParam("phone") || st.phone || gs.phone || storageGet("digiy_loc_phone") || storageGet("digiy_loc_last_phone") || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || storageGet("DIGIY_LOC_HUB_PHONE"));
   }
-
   function withContext(path){
     const slug = getSlug();
-
     try{
       const u = new URL(path, location.href);
-      u.searchParams.delete("phone");
-
-      if(slug && canExposeSlug(slug) && !u.searchParams.get("slug")){
-        u.searchParams.set("slug", slug);
-      }
-
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
+      if(slug && canExposeSlug(slug) && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
     }catch{
-      if(slug && canExposeSlug(slug)){
-        const qs = new URLSearchParams();
-        qs.set("slug", slug);
-        const tail = qs.toString();
-        return path + (tail ? (path.includes("?") ? "&" : "?") + tail : "");
-      }
-
+      if(slug && canExposeSlug(slug)) return path + (path.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
       return path;
     }
   }
-
-  function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, m => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
-  }
-
+  function esc(s){ return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
   function show(msg, cls){
-    const el = $("note");
-    if(!el) return;
+    const el = $("note"); if(!el) return;
     el.className = "note " + (cls || "warn");
     el.textContent = msg || "";
     el.style.display = msg ? "block" : "none";
   }
-
   function amountFromText(text){
     const m = String(text || "").replace(/\s+/g," ").match(/(\d[\d\s.,]*)\s*(f|fcfa|xof)?/i);
     if(!m) return 0;
     const n = Number(String(m[1] || "").replace(/[^\d]/g,""));
     return Number.isFinite(n) ? n : 0;
   }
-
-  function norm(text){
-    return String(text || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g,"");
-  }
-
+  function norm(text){ return String(text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
   function channelFromText(text){
     const t = norm(text);
     if(/\bwave\b/.test(t)) return "wave";
@@ -551,29 +427,35 @@
     if(/\b(banque|virement)\b/.test(t)) return "bank";
     return "à préciser";
   }
-
   function kindFromText(text){
     const t = norm(text);
-
-    if(/\b(menage|nettoyage|reparation|robinet|plomberie|electricite|eau|facture|achat|depense|clim|serrure)\b/.test(t)){
-      return { direction:"out", category:"dépense location", title:"Dépense location" };
-    }
-
-    if(/\b(acompte|paye|payé|paiement|regle|réglé|verse|versé|recu|reçu)\b/.test(t)){
-      return { direction:"in", category:"recette location", title:"Paiement client" };
-    }
-
-    if(/\b(bloquer|fermer|indisponible|reserve|réservé|resa)\b/.test(t)){
-      return { direction:"todo", category:"calendrier", title:"Note calendrier" };
-    }
-
+    if(/\b(menage|nettoyage|reparation|robinet|plomberie|electricite|eau|facture|achat|depense|clim|serrure)\b/.test(t)) return { direction:"out", category:"dépense location", title:"Dépense location" };
+    if(/\b(acompte|paye|payé|paiement|regle|réglé|verse|versé|recu|reçu)\b/.test(t)) return { direction:"in", category:"recette location", title:"Paiement client" };
+    if(/\b(bloquer|fermer|indisponible|reserve|réservé|resa|reservation|réservation)\b/.test(t)) return { direction:"todo", category:"calendrier", title:"Note calendrier" };
     return { direction:"note", category:"à classer", title:"Note location" };
   }
-
   function money(n){
     const v = Number(n || 0);
     if(!Number.isFinite(v) || v <= 0) return "";
     return new Intl.NumberFormat("fr-FR").format(v) + " F CFA";
+  }
+
+  function pushSignal(signal){
+    const row = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      ts: new Date().toISOString(),
+      source:"notes",
+      module:"LOC",
+      href: withContext("./notes.html"),
+      safe_space: displaySpace(getSlug()),
+      ...signal
+    };
+    const rows = safeJson(localStorage.getItem(SIGNAL_KEY), []);
+    const next = Array.isArray(rows) ? rows : [];
+    next.unshift(row);
+    storageSet(SIGNAL_KEY, JSON.stringify(next.slice(0,30)));
+    try{ window.dispatchEvent(new CustomEvent("digiy:loc-signal", { detail: row })); }catch(_){ }
+    return row;
   }
 
   function buildPayUrl(record){
@@ -581,243 +463,128 @@
     const phone = getPhone();
     const locSlug = getSlug();
     const paySlug = phone ? ("pay-" + phone) : "";
-
     const u = new URL(PAY_ADMIN_BASE);
-
     if(paySlug) u.searchParams.set("slug", paySlug);
     if(phone) u.searchParams.set("phone", phone);
-
     u.searchParams.set("fromDraft", "1");
     u.searchParams.set("intent", "quick_note");
     u.searchParams.set("source_module", "LOC");
-
     if(r.id) u.searchParams.set("source_id", "loc-note:" + r.id);
-
-    if(locSlug && canExposeSlug(locSlug)){
-      u.searchParams.set("source_slug", locSlug);
-    }
-
-    if(r.amount){
-      u.searchParams.set("amount", String(r.amount));
-      u.searchParams.set("amount_xof", String(r.amount));
-    }
-
-    if(r.channel && r.channel !== "à préciser") u.searchParams.set("channel", r.channel);
-    else u.searchParams.set("channel", "other");
-
+    if(locSlug && canExposeSlug(locSlug)) u.searchParams.set("source_slug", locSlug);
+    if(r.amount){ u.searchParams.set("amount", String(r.amount)); u.searchParams.set("amount_xof", String(r.amount)); }
+    if(r.channel && r.channel !== "à préciser") u.searchParams.set("channel", r.channel); else u.searchParams.set("channel", "other");
     u.searchParams.set("scope", "pro");
     u.searchParams.set("movement_date", new Date().toISOString().slice(0, 10));
-
     if(r.direction === "out"){
-      u.searchParams.set("direction", "out");
-      u.searchParams.set("kind", "expense");
-      u.searchParams.set("category", "loc_expense");
-      u.searchParams.set("label", r.title || "Dépense location");
+      u.searchParams.set("direction", "out"); u.searchParams.set("kind", "expense"); u.searchParams.set("category", "loc_expense"); u.searchParams.set("label", r.title || "Dépense location");
     }else{
-      u.searchParams.set("direction", "in");
-      u.searchParams.set("kind", "sale");
-      u.searchParams.set("category", "rent_income");
-      u.searchParams.set("label", r.title || "Recette location");
+      u.searchParams.set("direction", "in"); u.searchParams.set("kind", "sale"); u.searchParams.set("category", "rent_income"); u.searchParams.set("label", r.title || "Recette location");
     }
-
-    if(r.text){
-      u.searchParams.set("note", r.text);
-      u.searchParams.set("complement", r.text);
-    }
-
+    if(r.text){ u.searchParams.set("note", r.text); u.searchParams.set("complement", r.text); }
     return u.toString();
   }
-
-  function memoryKey(){
-    return MEMORY_PREFIX + (getSlug() || "noslug");
-  }
-
-  function loadMemory(){
-    const rows = safeJson(localStorage.getItem(memoryKey()), []);
-    return Array.isArray(rows) ? rows : [];
-  }
-
-  function saveMemory(rows){
-    const safeRows = Array.isArray(rows) ? rows : [];
-    storageSet(memoryKey(), JSON.stringify(safeRows.slice(0,20)));
-  }
+  function memoryKey(){ return MEMORY_PREFIX + (getSlug() || "noslug"); }
+  function loadMemory(){ const rows = safeJson(localStorage.getItem(memoryKey()), []); return Array.isArray(rows) ? rows : []; }
+  function saveMemory(rows){ storageSet(memoryKey(), JSON.stringify((Array.isArray(rows) ? rows : []).slice(0,20))); }
 
   function prepareNote(){
     const text = String($("quickInput").value || "").trim();
-    if(!text){
-      show("Écris une phrase d’abord.", "warn");
-      return;
-    }
-
+    if(!text){ show("Écris une phrase d’abord.", "warn"); return; }
     const amount = amountFromText(text);
     const channel = channelFromText(text);
     const kind = kindFromText(text);
-
     prepared = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      ts: new Date().toISOString(),
-      text,
-      amount,
-      channel,
-      direction: kind.direction,
-      category: kind.category,
-      title: kind.title,
-      slug: getSlug(),
-      phone: getPhone()
+      ts: new Date().toISOString(), text, amount, channel,
+      direction: kind.direction, category: kind.category, title: kind.title,
+      slug: getSlug(), phone: getPhone()
     };
-
     $("draft").className = "draft show";
-    $("draft").innerHTML =
-      `<b>${esc(prepared.title)}</b>\n` +
+    $("draft").innerHTML = `<b>${esc(prepared.title)}</b>\n` +
       (amount ? `Montant : ${esc(money(amount))}\n` : "Montant : —\n") +
       `Canal : ${esc(channel)}\n` +
       `Catégorie : ${esc(kind.category)}\n\n` +
       `${esc(text)}`;
-
     $("btnConfirm").disabled = false;
+    pushSignal({ type:"note_prepared", label: amount ? `Note préparée · ${money(amount)}` : "Note préparée", priority: amount ? "money" : "info" });
     show("DIGIY a préparé la trace. Relis puis confirme.", "ok");
   }
 
   function confirmNote(){
-    if(!prepared){
-      show("Prépare une note avant de confirmer.", "warn");
-      return;
-    }
-
+    if(!prepared){ show("Prépare une note avant de confirmer.", "warn"); return; }
     const confirmed = { ...prepared };
-    const rows = loadMemory();
-    rows.unshift(confirmed);
-    saveMemory(rows);
-
+    const rows = loadMemory(); rows.unshift(confirmed); saveMemory(rows);
     prepared = null;
-    $("quickInput").value = "";
-    $("draft").className = "draft";
-    $("draft").textContent = "";
-    $("btnConfirm").disabled = true;
-
+    $("quickInput").value = ""; $("draft").className = "draft"; $("draft").textContent = ""; $("btnConfirm").disabled = true;
     renderMemory();
-
+    pushSignal({
+      type:"note_confirmed",
+      label: confirmed.amount ? `${confirmed.title} · ${money(confirmed.amount)}` : confirmed.title,
+      priority: confirmed.amount ? "money" : confirmed.direction === "todo" ? "calendar" : "info",
+      href: withContext("./notes.html")
+    });
     if(confirmed.amount && Number(confirmed.amount) > 0){
-      show("✅ Note confirmée. Ouverture de Mon argent avec la trace préparée…", "ok");
+      show("✅ Note confirmée. Mon Argent va s’ouvrir avec la trace préparée…", "ok");
       window.location.href = buildPayUrl(confirmed);
       return;
     }
-
-    show("✅ Note confirmée dans l’aide-mémoire. Aucun montant détecté, donc Mon argent n’est pas ouvert.", "ok");
+    show("✅ Note confirmée dans l’aide-mémoire. Elle remonte aussi au chef des indications.", "ok");
   }
 
   function renderMemory(){
     const box = $("memoryList");
     const rows = loadMemory();
-
-    if(!rows.length){
-      box.innerHTML = `<div class="empty">Aucune note LOC confirmée pour le moment.</div>`;
-      return;
-    }
-
+    if(!rows.length){ box.innerHTML = `<div class="empty">Aucune note LOC confirmée pour le moment.</div>`; return; }
     box.innerHTML = rows.map(r => {
       const amount = r.amount ? `<div class="memoryAmount">${esc(money(r.amount))}</div>` : "";
-      const payLink = r.amount
-        ? `<a class="smallLink" href="${esc(buildPayUrl(r))}">💼 Ouvrir Mon argent</a>
-           <div class="memoryMeta">La trace est préparée dans l’URL. Mon argent doit valider l’enregistrement.</div>`
-        : "";
-
-      return `
-        <div class="memoryItem">
-          <div class="memoryTop">
-            <div class="memoryTitle">✅ ${esc(r.title || "Note location")}</div>
-            ${amount}
-          </div>
-          <div class="memoryMeta">${esc(r.channel || "à préciser")} · ${esc(r.category || "à classer")} · ${new Date(r.ts || Date.now()).toLocaleString("fr-FR")}</div>
-          <div class="memoryNote">${esc(r.text || "")}</div>
-          ${payLink}
-        </div>
-      `;
+      const payLink = r.amount ? `<a class="smallLink" href="${esc(buildPayUrl(r))}">💼 Ouvrir Mon Argent</a><div class="memoryMeta">La trace est préparée. Mon Argent valide l’enregistrement.</div>` : "";
+      return `<div class="memoryItem"><div class="memoryTop"><div class="memoryTitle">✅ ${esc(r.title || "Note location")}</div>${amount}</div><div class="memoryMeta">${esc(r.channel || "à préciser")} · ${esc(r.category || "à classer")} · ${new Date(r.ts || Date.now()).toLocaleString("fr-FR")}</div><div class="memoryNote">${esc(r.text || "")}</div>${payLink}</div>`;
     }).join("");
   }
 
   function syncLinks(){
     cleanVisibleUrl();
-
-    const links = [
-      ["navHome","./app.html"],
-      ["navReservations","./reservations.html"],
-      ["navPlanning","./planning.html"],
-      ["navNotes","./notes.html"],
-      ["navPlus","./manage-links.html"]
-    ];
-
-    links.forEach(([id,path])=>{
-      const el = $(id);
-      if(el) el.href = withContext(path);
-    });
-
-    $("pillSlug").textContent = displaySpace(getSlug());
-
+    const links = [["navHome","./app.html"],["navReservations","./reservations.html"],["navPlanning","./planning.html"],["navNotes","./notes.html"],["navPlus","./manage-links.html"]];
+    links.forEach(([id,path])=>{ const el = $(id); if(el) el.href = withContext(path); });
+    const slug = getSlug(); const phone = getPhone();
+    if(slug) sessionSet("digiy_loc_slug", slug);
+    if(phone) sessionSet("digiy_loc_phone", phone);
+    $("pillSlug").textContent = displaySpace(slug);
     const pill = $("pillState");
-    const accessOk = !!(
-      getGuardState().access_ok ||
-      getGuardState().access ||
-      getGuardSession().access_ok ||
-      getGuardSession().access ||
-      getGuardSession().ok
-    );
-
-    if(accessOk){
-      pill.textContent = "accès ouvert";
-      pill.className = "pill ok";
-    }else if(getSlug() || getPhone()){
-      pill.textContent = "lecture";
-      pill.className = "pill warn";
-    }else{
-      pill.textContent = "accès à vérifier";
-      pill.className = "pill bad";
-    }
+    const accessOk = !!(getGuardState().access_ok || getGuardState().access || getGuardSession().access_ok || getGuardSession().access || getGuardSession().ok);
+    if(accessOk){ pill.textContent = "accès ouvert"; pill.className = "pill ok"; }
+    else if(slug || phone){ pill.textContent = "lecture"; pill.className = "pill warn"; }
+    else{ pill.textContent = "accès à vérifier"; pill.className = "pill bad"; }
   }
 
   async function init(){
-    cleanVisibleUrl();
+    cleanVisibleUrl(); syncLinks();
+    try{ const out = window.DIGIY_GUARD?.ready?.({ redirect:false, preserve_validation:true, allow_soft_session:true }); if(out?.then) await out; }catch(_){ }
     syncLinks();
-
-    $("examples")?.querySelectorAll("button").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        $("quickInput").value = btn.textContent.trim();
-        $("quickInput").focus();
-      });
-    });
-
+    $("examples")?.querySelectorAll("button").forEach(btn=>{ btn.addEventListener("click", ()=>{ $("quickInput").value = btn.textContent.trim(); $("quickInput").focus(); prepareNote(); }); });
     $("btnPrepare")?.addEventListener("click", prepareNote);
     $("btnConfirm")?.addEventListener("click", confirmNote);
-    $("btnClear")?.addEventListener("click", ()=>{
-      $("quickInput").value = "";
-      prepared = null;
-      $("draft").className = "draft";
-      $("draft").textContent = "";
-      $("btnConfirm").disabled = true;
-      show("", "warn");
-    });
-
-    $("btnClearMemory")?.addEventListener("click", ()=>{
-      if(!confirm("Vider les notes rapides de ce téléphone ?")) return;
-      saveMemory([]);
-      renderMemory();
-      show("Aide-mémoire vidé sur ce téléphone.", "warn");
-    });
-
-    if(window.DIGIY_GUARD && typeof window.DIGIY_GUARD.ready === "function"){
-      try{
-        await window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true });
-      }catch{
-        try{ await window.DIGIY_GUARD.ready({ redirect:false }); }catch{}
-      }
-    }
-
-    cleanVisibleUrl();
-    syncLinks();
+    $("btnClear")?.addEventListener("click", ()=>{ $("quickInput").value = ""; prepared = null; $("draft").className = "draft"; $("draft").textContent = ""; $("btnConfirm").disabled = true; show("", "warn"); });
+    $("btnClearMemory")?.addEventListener("click", ()=>{ if(!confirm("Vider les notes LOC de ce téléphone ?")) return; saveMemory([]); renderMemory(); pushSignal({ type:"notes_cleared", label:"Aide-mémoire vidé", priority:"info" }); show("Aide-mémoire vidé.", "ok"); });
     renderMemory();
   }
 
   init();
+})();
+</script>
+
+<script>
+(function(){
+  function scrub(){
+    document.querySelectorAll('body *').forEach(function(el){
+      if(!el || el.children.length) return;
+      var t=el.textContent||'';
+      var n=t.replace(/loc-\d{7,}/gi,'Espace logement sécurisé').replace(/(?:\+?221)?\d{9,}/g,function(m){return /[0-9]/.test(m)?'Compte reconnu':m});
+      if(n!==t) el.textContent=n;
+    });
+    document.querySelectorAll('a[href]').forEach(function(a){try{var u=new URL(a.getAttribute('href'),location.href);['phone','tel','owner_phone','p_phone','whatsapp','client_phone'].forEach(function(k){u.searchParams.delete(k)});var s=u.searchParams.get('slug')||'';if(/\d{7,}/.test(s))u.searchParams.delete('slug');a.setAttribute('href',u.origin===location.origin?u.pathname+u.search+u.hash:u.toString());}catch(e){}});
+  }
+  scrub(); new MutationObserver(scrub).observe(document.body,{childList:true,subtree:true,characterData:true});
 })();
 </script>
 </body>
