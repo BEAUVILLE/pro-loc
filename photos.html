@@ -868,17 +868,37 @@
     }
   }
 
+  function urlOnlyForSupabase(list){
+    // Règle DIGIY LOC : dans Supabase, une photo = une URL texte.
+    // Aucun objet {url, cover}, aucune métadonnée, aucun base64, aucun fichier binaire.
+    const urls = [];
+    (list || []).forEach(function(item){
+      const url = normalizeUrl(item?.url || item || "");
+      if(url && !urls.includes(url)) urls.push(url);
+    });
+    return urls;
+  }
+
   async function saveRemotePhotos(){
     const S = getSb();
     if(!S || !State.slug) return {ok:false,reason:"not_ready"};
+
     const clean = uniqueCover(State.photos);
-    const coverUrl = clean.find(x=>x.cover)?.url || clean[0]?.url || null;
-    const galleryUrls = clean.map(x=>x.url);
+    const galleryUrls = urlOnlyForSupabase(clean);
+    const coverChoice = clean.find(x=>x.cover)?.url || "";
+    const coverUrl = galleryUrls.includes(coverChoice) ? coverChoice : (galleryUrls[0] || null);
+
+    // Payload volontairement strict : Supabase reçoit seulement des colonnes URL.
+    // photo_url = URL principale ; gallery_urls = tableau de chaînes URL.
+    const payload = {
+      photo_url: coverUrl,
+      gallery_urls: galleryUrls
+    };
 
     try{
       const {data,error} = await S
         .from("digiy_loc_rooms")
-        .update({ photo_url:coverUrl, gallery_urls:galleryUrls })
+        .update(payload)
         .eq("slug", State.slug)
         .select("slug,photo_url,gallery_urls")
         .limit(1)
@@ -995,4 +1015,5 @@
 </script>
 </body>
 </html>
+
 
