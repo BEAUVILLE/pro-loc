@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Messages clients</title>
+  <title>Je loue • Messages à envoyer</title>
   <meta name="theme-color" content="#061b14"/>
 
   <script>
@@ -16,6 +16,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=locpro-messages-clients-v1"></script>
+  <script src="./loc-security-mask.js?v=loc-pulse-senior-20260510"></script>
 
   <style>
     :root{
@@ -290,6 +291,76 @@
       .sendGrid{grid-template-columns:1fr 1fr}
       .list{max-height:none;overflow:visible}
     }
+    /* DIGIY LOC · grand format propriétaire immobilier */
+    body{font-size:18px;line-height:1.45}
+    .wrap{max-width:1040px}
+    .topbar{padding:18px;border-radius:26px}
+    .ico{width:58px;height:58px;border-radius:20px;font-size:28px}
+    .title{font-size:26px;font-weight:1100;line-height:1.08}
+    .sub{font-size:18px;font-weight:950;line-height:1.35;color:rgba(234,255,241,.86)}
+    .pill{font-size:17px;font-weight:1100;min-height:44px;padding:10px 14px}
+    .hero{padding:18px;border-radius:26px}
+    .hero h1{font-size:34px;font-weight:1100;line-height:1.06}
+    .hero p{font-size:20px;font-weight:950;line-height:1.42;color:rgba(234,255,241,.88)}
+    .btn{min-height:62px;border-radius:20px;padding:14px 18px;font-size:18px;font-weight:1100}
+    .toolbar{gap:12px;margin-top:14px}
+    .kpis{gap:12px}
+    .kpi{min-height:104px;padding:16px;border-radius:22px}
+    .kpi b{font-size:40px;font-weight:1200}
+    .kpi span{font-size:17px;font-weight:1000;color:rgba(234,255,241,.88)}
+    .grid{gap:16px;margin-top:16px}
+    .card{border-radius:26px}
+    .cardHead{padding:18px}
+    .cardHead h2{font-size:25px;font-weight:1100}
+    .cardBody{padding:18px}
+    .segment{gap:10px;margin-bottom:14px}
+    .segBtn{min-height:58px;font-size:18px;font-weight:1100;padding:12px 14px}
+    .list{gap:12px}
+    .item{padding:16px;border-radius:22px}
+    .name{font-size:22px;font-weight:1100}
+    .meta{font-size:18px;font-weight:950;color:rgba(234,255,241,.86)}
+    .badge{font-size:16px;font-weight:1100;padding:8px 12px}
+    .empty,.detailEmpty{font-size:19px;font-weight:950;line-height:1.5}
+    .detailTitle{font-size:28px;font-weight:1100}
+    .detailSub{font-size:20px;font-weight:950;color:rgba(234,255,241,.88)}
+    .choiceGrid{gap:12px;margin-top:16px}
+    textarea{font-size:21px;font-weight:950;line-height:1.55;min-height:230px;padding:18px;border-radius:24px}
+    .sendGrid{gap:12px;margin-top:14px}
+    .note{font-size:18px;font-weight:1000;line-height:1.45}
+    .bottomInner{max-width:1040px;border-radius:26px}
+    .navItem{min-height:74px;font-size:15px;font-weight:1050}
+    .navItem strong{font-size:24px}
+    .toast{font-size:18px;padding:14px 18px;border-radius:18px}
+
+    .bridgeBox{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:22px;
+      border:1px solid rgba(250,204,21,.30);
+      background:rgba(250,204,21,.08);
+      color:#fde68a;
+      font-size:18px;
+      font-weight:1000;
+      line-height:1.45;
+    }
+
+    @media(max-width:560px){
+      body{font-size:18px}
+      .topbar{padding:15px}
+      .title{font-size:23px}
+      .sub{font-size:17px}
+      .hero h1{font-size:30px}
+      .hero p{font-size:19px}
+      .toolbar,.sendGrid{grid-template-columns:1fr}
+      .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .kpi{min-height:98px}
+      .kpi b{font-size:36px}
+      .grid{grid-template-columns:1fr}
+      .btn{min-height:64px;font-size:18px}
+      .segBtn{font-size:17px}
+      .navItem{min-height:76px;font-size:14px}
+    }
+
   </style>
 </head>
 
@@ -299,8 +370,8 @@
     <div class="brand">
       <div class="ico">💬</div>
       <div>
-        <div class="title">Messages clients</div>
-        <div class="sub">DIGIY prépare. Tu valides. Tu choisis le canal.</div>
+        <div class="title">Messages à envoyer</div>
+        <div class="sub">DIGIY prépare le texte. Tu relis, tu ajustes, puis tu choisis le canal.</div>
       </div>
     </div>
     <div class="pill warn" id="pillState">aperçu</div>
@@ -308,8 +379,8 @@
 
   <section class="hero">
     <div class="pill" id="pillSlug">identifiant : —</div>
-    <h1>Qui dois-tu contacter ?</h1>
-    <p>Accueil, départ, rappel simple : le message se prépare ici. Rien ne part sans ta validation.</p>
+    <h1>À qui envoyer un message ?</h1>
+    <p>Arrivée, départ, rappel simple : le bon message remonte ici. Rien ne part sans ta validation.</p>
     <div class="toolbar">
       <button class="btn gold" id="btnReload" type="button">↻ Recharger</button>
       <a class="btn ghost" id="btnReservations" href="./reservations.html">📋 Réservations</a>
@@ -321,12 +392,13 @@
       <div class="kpi"><b id="kTodo">0</b><span>Messages à faire</span></div>
     </div>
     <div class="note" id="noteMain"></div>
+    <div class="bridgeBox" id="bridgeBox">Chef des indications : chargement des messages à faire…</div>
   </section>
 
   <div class="grid">
     <section class="card">
       <div class="cardHead">
-        <h2>Clients</h2>
+        <h2>Clients à suivre</h2>
         <span class="pill" id="countLabel">0</span>
       </div>
       <div class="cardBody">
@@ -341,11 +413,11 @@
 
     <section class="card">
       <div class="cardHead">
-        <h2>Message préparé</h2>
+        <h2>Message prêt à valider</h2>
         <span class="pill" id="selectedLabel">aucun client</span>
       </div>
       <div class="cardBody" id="detailBox">
-        <div class="detailEmpty">Sélectionne un client à gauche. DIGIY préparera un texte que tu peux modifier avant d’envoyer ou copier.</div>
+        <div class="detailEmpty">Choisis un client. DIGIY prépare un texte clair, que tu peux modifier avant d’envoyer ou copier.</div>
       </div>
     </section>
   </div>
@@ -484,14 +556,109 @@
     return flags.some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1");
   }
 
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+
+  function canExposeSlug(slug){
+    const s = String(slug || "").trim().toLowerCase();
+    return !!s && !isSensitiveSlug(s);
+  }
+
+  function safeSpaceLabel(slug){
+    const s = String(slug || "").trim().toLowerCase();
+    if(!s || isSensitiveSlug(s)) return "Espace logement sécurisé";
+    if(s.startsWith("loc-room-")) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
+  }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(key=>{
+        if(u.searchParams.has(key)){ u.searchParams.delete(key); changed = true; }
+      });
+      const slug = String(u.searchParams.get("slug") || "").trim().toLowerCase();
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }catch{}
+  }
+
+  function storageSetSafe(k,v){
+    if(!v) return;
+    try{ sessionStorage.setItem(k, String(v)); }catch{}
+    if(!/phone|tel/i.test(k)){
+      try{ localStorage.setItem(k, String(v)); }catch{}
+    }
+  }
+
+  function pushLocSignal(type, label, payload={}){
+    const safe = {
+      id: String(Date.now()) + "-" + Math.random().toString(16).slice(2),
+      module: "LOC",
+      source: "reservations-pulse",
+      type: String(type || "message"),
+      label: String(label || "Indication LOC"),
+      created_at: new Date().toISOString(),
+      safe_space: safeSpaceLabel(State.slug || getSlug()),
+      payload: {
+        count: Number(payload.count || 0) || 0,
+        filter: String(payload.filter || State.filter || ""),
+        action: String(payload.action || "")
+      }
+    };
+
+    try{
+      const key = "DIGIY_LOC_PRO_SIGNALS";
+      const rows = JSON.parse(localStorage.getItem(key) || "[]");
+      const next = [safe].concat(Array.isArray(rows) ? rows : []).slice(0, 30);
+      localStorage.setItem(key, JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent("digiy:loc-signal", { detail:safe }));
+    }catch{}
+  }
+
+  function updateBridgeBox(){
+    const el = $("bridgeBox");
+    if(!el) return;
+    const todo = State.reservations.filter(needsMessage).length;
+    const arr = State.reservations.filter(isTodayArrival).length;
+    const dep = State.reservations.filter(isTodayDeparture).length;
+
+    if(State.mode !== "live"){
+      el.textContent = "Chef des indications : ouvre ton accès pour faire remonter les messages clients.";
+      return;
+    }
+
+    if(!State.reservations.length){
+      el.textContent = "Chef des indications : aucun message client urgent pour le moment.";
+      return;
+    }
+
+    el.textContent = `Chef des indications : ${todo} message(s) à faire · ${arr} arrivée(s) · ${dep} départ(s).`;
+    pushLocSignal("messages_summary", el.textContent, { count:todo, filter:State.filter });
+  }
+
   function buildUrl(path, extra={}){
     try{
       const u = new URL(path, location.href);
       const slug = State.slug || getSlug();
-      const phone = State.phone || getPhone();
-      if(slug) u.searchParams.set("slug", slug);
-      if(phone) u.searchParams.set("phone", phone);
-      Object.entries(extra).forEach(([k,v])=>{ if(v) u.searchParams.set(k,String(v)); });
+
+      if(slug && canExposeSlug(slug)){
+        u.searchParams.set("slug", slug);
+      }
+
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(key=>u.searchParams.delete(key));
+      Object.entries(extra).forEach(([k,v])=>{
+        if(!v) return;
+        if(["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].includes(k)) return;
+        if(k === "slug" && !canExposeSlug(v)) return;
+        u.searchParams.set(k,String(v));
+      });
+
       if(u.origin === location.origin) return u.pathname + u.search + u.hash;
       return u.toString();
     }catch{ return path; }
@@ -501,17 +668,17 @@
     State.slug = State.slug || getSlug();
     State.phone = State.phone || getPhone();
     if(State.slug){
-      storageSet("digiy_loc_slug", State.slug);
-      storageSet("digiy_loc_last_slug", State.slug);
-      storageSet("DIGIY_LOC_SLUG", State.slug);
+      storageSetSafe("digiy_loc_slug", State.slug);
+      storageSetSafe("digiy_loc_last_slug", State.slug);
+      storageSetSafe("DIGIY_LOC_SLUG", State.slug);
     }
     if(State.phone){
-      storageSet("digiy_loc_phone", State.phone);
-      storageSet("digiy_loc_last_phone", State.phone);
-      storageSet("DIGIY_LOC_PHONE", State.phone);
+      storageSetSafe("digiy_loc_phone", State.phone);
+      storageSetSafe("digiy_loc_last_phone", State.phone);
+      storageSetSafe("DIGIY_LOC_PHONE", State.phone);
     }
 
-    $("pillSlug").textContent = "identifiant : " + (State.slug || "—");
+    $("pillSlug").textContent = "Espace : " + safeSpaceLabel(State.slug || getSlug());
     const accessOk = hasAccess();
     State.mode = accessOk ? "live" : "preview";
     $("pillState").textContent = accessOk ? "accès actif" : "aperçu";
@@ -610,7 +777,7 @@
             </div>
             ${statusBadge(row)}
           </div>
-          <div class="meta">${esc(tags || "réservation")}<br>📞 ${esc(row.phone || "—")}</div>
+          <div class="meta">${esc(tags || "réservation")}<br>Contact client disponible par action directe</div>
         </div>`;
     }).join("");
 
@@ -667,7 +834,7 @@
         🏠 ${esc(row.room)}<br>
         📅 ${esc(frDate(row.checkin))} → ${esc(frDate(row.checkout))}<br>
         💰 ${esc(money(row.amount))} · ${esc(row.payment_status || "paiement à vérifier")}<br>
-        📞 ${esc(row.phone || "téléphone absent")}${row.email ? `<br>📧 ${esc(row.email)}` : ""}
+        Contact client : boutons SMS / WhatsApp / Appel${row.email ? `<br>📧 Email disponible` : ""}
       </div>
 
       <div class="choiceGrid">
@@ -761,6 +928,8 @@
     markSent(State.selected, State.draftKind || "welcome");
     updateKpis();
     renderList();
+    pushLocSignal("message_done", "Message client marqué comme fait", { count:1, action:State.draftKind || "message" });
+    updateBridgeBox();
     side("✅ Suivi marqué comme fait sur ce téléphone.", "ok");
   }
 
@@ -848,6 +1017,7 @@
   function renderAll(){
     updateKpis();
     renderList();
+    updateBridgeBox();
     if(State.selected){
       const found = State.reservations.find(x => x.id === State.selected.id);
       if(!found){ State.selected = null; $("detailBox").innerHTML = `<div class="detailEmpty">Sélectionne un client à gauche.</div>`; }
@@ -867,6 +1037,7 @@
   }
 
   async function boot(){
+    cleanVisibleUrl();
     bind();
     syncNav();
     try{
@@ -881,6 +1052,32 @@
   boot();
 })();
 </script>
+<script>
+(function(){
+  function scrub(){
+    document.querySelectorAll('body *').forEach(function(el){
+      if(!el || el.children.length) return;
+      var t=el.textContent||'';
+      var n=t
+        .replace(/loc-\d{7,}/gi,'Espace logement sécurisé')
+        .replace(/(?:\+?221)?\d{9,}/g,function(m){return /[0-9]/.test(m)?'Contact masqué':m;});
+      if(n!==t) el.textContent=n;
+    });
+    document.querySelectorAll('a[href]').forEach(function(a){
+      try{
+        var u=new URL(a.getAttribute('href'),location.href);
+        ['phone','tel','owner_phone','p_phone','whatsapp','client_phone'].forEach(function(k){u.searchParams.delete(k);});
+        var s=u.searchParams.get('slug')||'';
+        if(/\d{7,}/.test(s)) u.searchParams.delete('slug');
+        a.setAttribute('href',u.origin===location.origin?u.pathname+u.search+u.hash:u.toString());
+      }catch(e){}
+    });
+  }
+  scrub();
+  new MutationObserver(scrub).observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
+</script>
+
 </body>
 </html>
 
