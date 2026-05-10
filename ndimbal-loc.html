@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NDIMBAL LOC — Activer un logement</title>
+<title>Je loue • NDIMBAL logement</title>
 <meta name="theme-color" content="#022c22"/>
 
 <script>
@@ -15,302 +15,326 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=locpro-ndimbal-loc-clean-20260329"></script>
+<script src="./guard.js?v=loc-ndimbal-senior-safe-v1"></script>
 
 <style>
   :root{
     --bg:#022c22;
-    --bg2:#065f46;
-    --card:rgba(0,0,0,.25);
-    --line:rgba(255,255,255,.12);
-    --ink:#e5e7eb;
-    --muted:rgba(229,231,235,.78);
+    --bg2:#064e3b;
+    --card:rgba(0,0,0,.26);
+    --line:rgba(255,255,255,.16);
+    --ink:#f0fdf4;
+    --muted:rgba(240,253,244,.82);
     --gold:#facc15;
     --ok:#22c55e;
     --bad:#ef4444;
     --warn:#f59e0b;
-    --shadow:0 20px 40px rgba(0,0,0,.35);
-    --r:18px;
+    --shadow:0 24px 54px rgba(0,0,0,.42);
+    --r:24px;
+    --bottom:82px;
   }
 
   *{box-sizing:border-box}
-
+  html,body{margin:0;padding:0}
   body{
-    margin:0;
+    min-height:100vh;
     font-family:Outfit,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     background:
-      radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.10), transparent 60%),
-      radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
+      radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.14), transparent 60%),
+      radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.14), transparent 60%),
       linear-gradient(135deg,var(--bg),var(--bg2));
     color:var(--ink);
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:16px;
+    padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
   }
 
-  .card{
-    width:460px;
-    max-width:96%;
+  a{color:inherit;text-decoration:none}
+  button{font:inherit}
+  .wrap{max-width:760px;margin:0 auto}
+
+  .hero,.card{
     background:var(--card);
     border-radius:var(--r);
-    padding:22px;
-    backdrop-filter:blur(6px);
+    padding:18px;
+    backdrop-filter:blur(8px);
     border:1px solid var(--line);
     box-shadow:var(--shadow);
   }
 
-  h1{
-    margin:0 0 10px 0;
-    font-size:20px;
-  }
+  .card{margin-top:14px}
 
-  .desc{
-    font-size:13px;
-    opacity:.9;
-    margin-bottom:16px;
-    line-height:1.5em;
-    color:var(--muted);
-  }
-
-  .topPills{
+  .top{
     display:flex;
-    gap:8px;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
     flex-wrap:wrap;
-    margin-bottom:14px;
   }
 
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .logo{
+    width:58px;height:58px;border-radius:20px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(34,197,94,.20));
+    border:1px solid rgba(250,204,21,.36);
+    box-shadow:0 14px 28px rgba(0,0,0,.28);
+    font-size:28px;
+    flex:0 0 auto;
+  }
+
+  h1{
+    margin:0;
+    font-size:clamp(2rem,7vw,3rem);
+    line-height:1.02;
+    letter-spacing:-.04em;
+    font-weight:1000;
+    color:#fff7cc;
+  }
+
+  .sub{
+    margin-top:8px;
+    color:var(--muted);
+    font-size:1.12rem;
+    line-height:1.48;
+    font-weight:850;
+  }
+
+  .pillRow{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   .pill{
     display:inline-flex;
     align-items:center;
     gap:8px;
-    padding:8px 10px;
+    padding:10px 12px;
     border-radius:999px;
-    border:1px solid rgba(255,255,255,.12);
-    background:rgba(255,255,255,.04);
-    color:var(--muted);
-    font-size:.82rem;
-    font-weight:950;
-  }
-
-  .pill.ok{
-    border-color:rgba(34,197,94,.35);
-    background:rgba(34,197,94,.10);
-    color:#bbf7d0;
-  }
-
-  .pill.warn{
-    border-color:rgba(245,158,11,.35);
-    background:rgba(245,158,11,.10);
-    color:#fde68a;
-  }
-
-  .pill.bad{
-    border-color:rgba(239,68,68,.35);
-    background:rgba(239,68,68,.10);
-    color:#fecaca;
-  }
-
-  .mono{
-    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-  }
-
-  .switch{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-top:14px;
-    padding:12px 14px;
-    border-radius:12px;
+    border:1px solid rgba(255,255,255,.16);
     background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.12);
-  }
-
-  .switch .left{
-    min-width:0;
-  }
-
-  .switch .label{
-    font-weight:900;
-    font-size:13px;
     color:var(--muted);
-  }
-
-  .state{
+    font-size:1rem;
     font-weight:1000;
-    font-size:16px;
-    margin-top:4px;
-  }
-
-  .meta{
-    margin-top:14px;
-    display:grid;
-    grid-template-columns:110px 1fr;
-    gap:8px;
-  }
-
-  .meta div{
-    padding:9px 10px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.03);
-  }
-
-  .meta .k{
-    color:var(--muted);
-    font-weight:950;
-  }
-
-  .meta .v{
-    font-weight:1000;
-    overflow:hidden;
-    text-overflow:ellipsis;
     white-space:nowrap;
   }
+  .pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12);color:#bbf7d0}
+  .pill.warn{border-color:rgba(245,158,11,.38);background:rgba(245,158,11,.12);color:#fde68a}
+  .pill.bad{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.12);color:#fecaca}
 
-  .row{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:18px;
+  .doctrine{
+    margin-top:14px;
+    border:1px solid rgba(250,204,21,.30);
+    background:rgba(250,204,21,.10);
+    border-radius:20px;
+    padding:14px 15px;
+    color:#fde68a;
+    font-size:1.1rem;
+    font-weight:950;
+    line-height:1.5;
   }
 
-  button, .btn{
+  .ruleGrid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+  @media(max-width:620px){.ruleGrid{grid-template-columns:1fr}}
+
+  .rule{
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.045);
+    border-radius:20px;
+    padding:14px;
+    min-height:110px;
+  }
+  .rule b{display:block;font-size:1.22rem;font-weight:1000;color:#fff;margin-bottom:6px}
+  .rule span{color:var(--muted);font-size:1.02rem;font-weight:850;line-height:1.45}
+
+  .switchBox{
+    display:grid;
+    gap:12px;
+    margin-top:14px;
+  }
+
+  .statusBig{
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.055);
+    border-radius:22px;
+    padding:18px;
+    text-align:center;
+  }
+  .statusLabel{
+    color:var(--muted);
+    font-size:1rem;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .state{
+    margin-top:8px;
+    font-weight:1000;
+    font-size:clamp(2rem,9vw,3.4rem);
+    letter-spacing:-.05em;
+  }
+  .state.on{color:#bbf7d0}
+  .state.off{color:rgba(240,253,244,.62)}
+
+  .safeMeta{
+    margin-top:12px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  @media(max-width:560px){.safeMeta{grid-template-columns:1fr}}
+  .metaBox{
+    padding:12px 13px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.04);
+  }
+  .metaK{color:var(--muted);font-size:.95rem;font-weight:950;text-transform:uppercase;letter-spacing:.06em}
+  .metaV{margin-top:6px;font-size:1.16rem;font-weight:1000;color:#fff;word-break:break-word}
+
+  .row{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+  .btn{
     width:100%;
     border:0;
-    border-radius:12px;
-    padding:12px;
+    border-radius:18px;
+    padding:15px 16px;
     font-weight:1000;
-    font-size:14px;
+    font-size:1.15rem;
     cursor:pointer;
     text-decoration:none;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:8px;
-    min-height:46px;
+    gap:10px;
+    min-height:60px;
+    text-align:center;
   }
-
-  button.primary{
-    background:var(--gold);
-    color:#052e16;
-  }
-
-  button.secondary, .btn.secondary{
-    background:rgba(255,255,255,.08);
-    color:var(--ink);
-    border:1px solid rgba(255,255,255,.14);
-  }
-
-  button.ghost, .btn.ghost{
-    background:transparent;
-    color:var(--ink);
-    border:1px solid rgba(255,255,255,.14);
-  }
-
-  button:disabled{
-    opacity:.55;
-    cursor:not-allowed;
-  }
+  .btn.primary{background:linear-gradient(180deg,#facc15,#f59e0b);color:#052e16;box-shadow:0 14px 28px rgba(250,204,21,.18)}
+  .btn.secondary{background:rgba(255,255,255,.08);color:var(--ink);border:1px solid rgba(255,255,255,.16)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.16)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
 
   .alert{
     margin-top:14px;
-    padding:10px 12px;
-    border-radius:12px;
+    padding:13px 14px;
+    border-radius:18px;
     border:1px solid rgba(239,68,68,.35);
     background:rgba(239,68,68,.10);
     color:#fecaca;
-    font-weight:900;
+    font-size:1.05rem;
+    font-weight:950;
     display:none;
     white-space:pre-wrap;
-    line-height:1.35;
+    line-height:1.45;
   }
-
-  .alert.ok{
-    border-color:rgba(34,197,94,.35);
-    background:rgba(34,197,94,.10);
-    color:#bbf7d0;
-  }
-
-  .alert.warn{
-    border-color:rgba(250,204,21,.35);
-    background:rgba(250,204,21,.10);
-    color:#fde68a;
-  }
+  .alert.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+  .alert.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 
   .notice{
-    margin-top:16px;
-    font-size:12px;
-    opacity:.78;
-    line-height:1.45em;
+    margin-top:14px;
+    font-size:1rem;
+    line-height:1.55;
     color:var(--muted);
+    font-weight:850;
   }
 
-  code{
-    background:rgba(0,0,0,.22);
+  .bottomNav{
+    position:fixed;left:0;right:0;bottom:0;z-index:70;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(180deg,rgba(2,44,34,0),rgba(2,44,34,.96) 30%);
+  }
+  .bottomInner{
+    max-width:760px;margin:0 auto;
+    display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
     border:1px solid rgba(255,255,255,.12);
-    padding:2px 6px;
-    border-radius:10px;
+    background:rgba(2,44,34,.94);
+    backdrop-filter:blur(10px);
+    border-radius:22px;
+    padding:7px;
+    box-shadow:0 16px 44px rgba(0,0,0,.38);
   }
-
-  @media (max-width:560px){
-    .meta{grid-template-columns:1fr}
+  .navItem{
+    min-height:56px;
+    border-radius:16px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    color:rgba(240,253,244,.78);
+    font-size:.78rem;font-weight:1000;
+    border:1px solid transparent;
+    text-align:center;
   }
+  .navItem strong{font-size:20px;line-height:1}
+  .navItem.active{color:#fde68a;background:rgba(250,204,21,.12);border-color:rgba(250,204,21,.26)}
 </style>
 </head>
 <body>
-
-<div class="card">
-  <h1>🤍 NDIMBAL LOC</h1>
-
-  <div class="desc">
-    Active l’hospitalité NDIMBAL sur ton logement.<br>
-    <b>1 nuit réservée → 2 nuits sur place</b><br>
-    <b>2 nuits réservées → 3 nuits sur place</b><br><br>
-    Tu restes totalement libre. DIGIY ne finance rien.
-  </div>
-
-  <div class="topPills">
-    <span class="pill">activité : <span class="mono">LOC</span></span>
-    <span class="pill mono" id="pillSlug">identifiant : —</span>
-    <span class="pill warn" id="pillState">mode: aperçu</span>
-  </div>
-
-  <div class="switch">
-    <div class="left">
-      <div class="label">Statut actuel</div>
-      <div class="state" id="state">—</div>
+<div class="wrap">
+  <section class="hero">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">🤍</div>
+        <div>
+          <h1>NDIMBAL logement</h1>
+          <div class="sub">Un geste d’hospitalité choisi par le propriétaire. Le client comprend la règle, le propriétaire garde la main.</div>
+        </div>
+      </div>
+      <div class="pillRow">
+        <span class="pill">activité : LOC</span>
+        <span class="pill" id="pillSlug">espace sécurisé</span>
+        <span class="pill warn" id="pillState">aperçu</span>
+      </div>
     </div>
-  </div>
 
-  <div class="meta">
-    <div class="k">Slug</div>
-    <div class="v mono" id="metaSlug">—</div>
+    <div class="doctrine">
+      Le pro clique plus qu’il n’écrit. Ici, il choisit seulement si NDIMBAL est actif ou non.
+    </div>
 
-    <div class="k">Téléphone</div>
-    <div class="v mono" id="metaPhone">—</div>
-  </div>
+    <div class="ruleGrid">
+      <div class="rule"><b>1 nuit réservée</b><span>Le propriétaire peut offrir 2 nuits sur place, selon sa règle NDIMBAL.</span></div>
+      <div class="rule"><b>2 nuits réservées</b><span>Le propriétaire peut offrir 3 nuits sur place. DIGIY organise, ne finance pas.</span></div>
+    </div>
+  </section>
 
-  <div class="alert" id="alert"></div>
+  <section class="card">
+    <div class="switchBox">
+      <div class="statusBig">
+        <div class="statusLabel">Statut actuel</div>
+        <div class="state off" id="state">—</div>
+      </div>
 
-  <div class="row">
-    <button class="primary" id="toggleBtn" disabled>Activer / Désactiver</button>
-  </div>
+      <div class="safeMeta">
+        <div class="metaBox">
+          <div class="metaK">Logement</div>
+          <div class="metaV" id="metaSlug">Espace sécurisé</div>
+        </div>
+        <div class="metaBox">
+          <div class="metaK">Compte</div>
+          <div class="metaV" id="metaAccount">Compte reconnu</div>
+        </div>
+      </div>
 
-  <div class="row">
-    <a class="btn secondary" id="appBtn" href="./app.html">⬅️ Retour espace</a>
-    <a class="btn ghost" id="pinBtn" href="./pin.html">🔐 Ouvrir mon code</a>
-  </div>
+      <div class="alert" id="alert"></div>
 
-  <div class="notice">
-    NDIMBAL est un geste volontaire du propriétaire.<br>
-    DIGIY ne collecte ni dons ni argent solidaire.<br>
-    L’outil organise seulement la règle +1 nuit.<br><br>
-    Fichier attendu dans le dépôt : <code>ndimbal-loc.html</code>
-  </div>
+      <div class="row">
+        <button class="btn primary" id="toggleBtn" disabled>Activer / Désactiver NDIMBAL</button>
+        <a class="btn secondary" id="appBtn" href="./app.html">⬅️ Retour espace</a>
+        <a class="btn ghost" id="pinBtn" href="./pin.html">🔐 Ouvrir mon code</a>
+      </div>
+
+      <div class="notice">
+        NDIMBAL est volontaire. DIGIY ne collecte pas d’argent solidaire ici. La page garde seulement la règle active ou inactive sur le logement.
+      </div>
+    </div>
+  </section>
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
+    <a class="navItem active" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (() => {
@@ -328,16 +352,9 @@
   const pillSlug = document.getElementById("pillSlug");
   const pillState = document.getElementById("pillState");
   const metaSlug = document.getElementById("metaSlug");
-  const metaPhone = document.getElementById("metaPhone");
+  const metaAccount = document.getElementById("metaAccount");
 
-  const State = {
-    slug: "",
-    phone: "",
-    ndimbal: false,
-    mode: "preview",
-    reason: "booting"
-  };
-
+  const State = { slug:"", phone:"", ndimbal:false, mode:"preview", reason:"booting" };
   let sb = null;
 
   function showAlert(msg, kind = "warn"){
@@ -348,12 +365,20 @@
 
   function cleanSlug(v){
     return String(v || "")
-      .trim()
-      .toLowerCase()
+      .trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9\-_]/g, "")
       .replace(/-+/g, "-")
       .replace(/^[-_]+|[-_]+$/g, "");
+  }
+
+  function isSensitiveSlug(slug){ return /\d{7,}/.test(String(slug || "")); }
+  function displaySpace(slug){
+    const s = cleanSlug(slug);
+    if(!s || isSensitiveSlug(s)) return "Espace logement sécurisé";
+    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
   }
 
   function normPhone(p){
@@ -365,44 +390,21 @@
   }
 
   function storageGet(key){
-    try{
-      const v1 = sessionStorage.getItem(key);
-      if(v1) return v1;
-    }catch(_){}
-    try{
-      const v2 = localStorage.getItem(key);
-      if(v2) return v2;
-    }catch(_){}
+    try{ const v1 = sessionStorage.getItem(key); if(v1) return v1; }catch(_){}
+    try{ const v2 = localStorage.getItem(key); if(v2) return v2; }catch(_){}
     return "";
   }
 
   function getLocalSupabase(){
-    try{
-      const guardSb = window.DIGIY_GUARD?.getSb?.();
-      if (guardSb?.rpc) return guardSb;
-    } catch(_) {}
-
+    try{ const guardSb = window.DIGIY_GUARD?.getSb?.(); if (guardSb?.rpc) return guardSb; }catch(_){}
     if (sb?.rpc) return sb;
     if (!window.supabase?.createClient) throw new Error("supabase_not_ready");
-    sb = window.supabase.createClient(SB_URL, SB_ANON, {
-      auth:{
-        persistSession:false,
-        autoRefreshToken:false,
-        detectSessionInUrl:false
-      }
-    });
+    sb = window.supabase.createClient(SB_URL, SB_ANON, { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } });
     return sb;
   }
 
   function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      module: MODULE,
-      reason: "guard_missing"
-    };
+    return window.DIGIY_GUARD?.state || { preview:true, access_ok:false, slug:"", phone:"", module:MODULE, reason:"guard_missing" };
   }
 
   function getSession(){
@@ -412,20 +414,8 @@
       ok: !!st.access_ok,
       access_ok: !!st.access_ok,
       preview: !!st.preview,
-      slug: String(
-        st.slug ||
-        raw.slug ||
-        storageGet("digiy_loc_slug") ||
-        storageGet("digiy_last_slug") ||
-        ""
-      ).trim().toLowerCase(),
-      phone: String(
-        st.phone ||
-        raw.phone ||
-        storageGet("DIGIY_PHONE") ||
-        storageGet("DIGIY_LOC_PHONE") ||
-        ""
-      ).trim(),
+      slug: String(st.slug || raw.slug || storageGet("digiy_loc_slug") || storageGet("digiy_last_slug") || "").trim().toLowerCase(),
+      phone: String(st.phone || raw.phone || storageGet("DIGIY_PHONE") || storageGet("DIGIY_LOC_PHONE") || "").trim(),
       reason: String(st.reason || raw.reason || "").trim(),
       module: String(st.module || raw.module || MODULE).trim()
     };
@@ -433,19 +423,13 @@
 
   async function waitGuardReady(){
     if (!window.DIGIY_GUARD) throw new Error("guard_missing");
-
     const ready = window.DIGIY_GUARD.ready;
-
     if (typeof ready === "function") {
       const maybe = ready(8000);
       if (maybe && typeof maybe.then === "function") return await maybe;
       return maybe;
     }
-
-    if (ready && typeof ready.then === "function") {
-      return await ready;
-    }
-
+    if (ready && typeof ready.then === "function") return await ready;
     if (ready) return true;
     throw new Error("guard_not_ready");
   }
@@ -453,63 +437,80 @@
   function getSlug(){
     const qs = cleanSlug(new URLSearchParams(location.search).get("slug") || "");
     if (qs) return qs;
-
     const sess = getSession();
     if (sess.slug) return cleanSlug(sess.slug);
-
     return cleanSlug(window.DIGIY_GUARD?.getSlug?.() || "");
   }
 
-  function getPhone(){
-    const sess = getSession();
-    return normPhone(sess.phone || "");
+  function getPhone(){ return normPhone(getSession().phone || ""); }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone","wave_phone","pin","pin4"].forEach(k => {
+        if(u.searchParams.has(k)){ u.searchParams.delete(k); changed = true; }
+      });
+      const s = cleanSlug(u.searchParams.get("slug") || "");
+      if(s && isSensitiveSlug(s)){ u.searchParams.delete("slug"); changed = true; }
+      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }catch(_){}
   }
 
-  function withSlug(url){
-    if (!State.slug) return url;
-
-    try {
+  function safeLink(url){
+    try{
       const u = new URL(url, location.href);
-      u.searchParams.set("slug", State.slug);
-      if (u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    } catch {
-      const sep = String(url).includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(State.slug);
-    }
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone","wave_phone","pin","pin4"].forEach(k => u.searchParams.delete(k));
+      const slug = State.slug;
+      if(slug && !isSensitiveSlug(slug)) u.searchParams.set("slug", slug);
+      else u.searchParams.delete("slug");
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
+    }catch{return url;}
   }
 
   function refreshNav(){
-    appBtn.href = withSlug("./app.html");
-    pinBtn.href = withSlug("./pin.html");
+    [
+      ["appBtn","./app.html"],["pinBtn","./pin.html"],["navHome","./app.html"],
+      ["navReservations","./reservations.html"],["navPlanning","./planning.html"],
+      ["navNotes","./notes.html"],["navPlus","./manage-links.html"]
+    ].forEach(([id,path]) => { const el = document.getElementById(id); if(el) el.href = safeLink(path); });
+  }
+
+  function pushSignal(label, href){
+    try{
+      const key = "DIGIY_LOC_PRO_SIGNALS";
+      const rows = JSON.parse(localStorage.getItem(key) || "[]");
+      rows.unshift({ type:"ndimbal", label, href: safeLink(href || "./ndimbal-loc.html"), at:new Date().toISOString(), source:"ndimbal-loc" });
+      localStorage.setItem(key, JSON.stringify(rows.slice(0,25)));
+    }catch(_){}
   }
 
   function paint(){
-    pillSlug.textContent = "identifiant : " + (State.slug || "—");
-    metaSlug.textContent = State.slug || "—";
-    metaPhone.textContent = State.phone || "—";
+    pillSlug.textContent = displaySpace(State.slug);
+    metaSlug.textContent = displaySpace(State.slug);
+    metaAccount.textContent = State.phone ? "Compte reconnu" : "Compte sécurisé";
 
     if (State.mode === "live") {
-      pillState.textContent = "mode: vivant";
+      pillState.textContent = "accès ouvert";
       pillState.className = "pill ok";
     } else if (State.reason === "guard_missing" || State.reason === "guard_not_ready") {
-      pillState.textContent = "mode: erreur";
+      pillState.textContent = "vérification";
       pillState.className = "pill bad";
     } else {
-      pillState.textContent = "mode: aperçu";
+      pillState.textContent = "lecture";
       pillState.className = "pill warn";
     }
 
-    stateEl.textContent = State.ndimbal ? "NDIMBAL ON" : "NDIMBAL OFF";
-    stateEl.style.color = State.ndimbal ? "#22c55e" : "#9ca3af";
+    stateEl.textContent = State.ndimbal ? "ACTIF" : "INACTIF";
+    stateEl.className = "state " + (State.ndimbal ? "on" : "off");
   }
 
   function setPreview(reason){
     State.mode = "preview";
     State.reason = reason || "preview";
     btn.disabled = false;
-    btn.textContent = "Ouvrir le PIN";
-    btn.onclick = () => location.href = withSlug("./pin.html");
+    btn.textContent = "🔐 Ouvrir mon code";
+    btn.onclick = () => location.href = safeLink("./pin.html");
     paint();
   }
 
@@ -517,223 +518,132 @@
     State.mode = "live";
     State.reason = "ok";
     btn.disabled = false;
-    btn.textContent = "Activer / Désactiver";
+    btn.textContent = State.ndimbal ? "Désactiver NDIMBAL" : "Activer NDIMBAL";
     btn.onclick = toggle;
     paint();
   }
 
   async function readNdimbal(){
     const S = getLocalSupabase();
-
     const attempts = [
       async () => {
-        const { data, error } = await S.rpc("digiy_loc_get_ndimbal", {
-          p_slug: State.slug,
-          p_owner_phone: State.phone
-        });
+        const { data, error } = await S.rpc("digiy_loc_get_ndimbal", { p_slug: State.slug, p_owner_phone: State.phone });
         if (error) throw error;
         if (typeof data === "boolean") return { ok:true, enabled:data };
-        if (data && typeof data === "object" && ("enabled" in data || "ok" in data)) {
-          return { ok: data.ok !== false, enabled: !!data.enabled, reason: data.reason || "" };
-        }
+        if (data && typeof data === "object" && ("enabled" in data || "ok" in data)) return { ok:data.ok !== false, enabled:!!data.enabled, reason:data.reason || "" };
         throw new Error("bad_rpc_payload");
       },
       async () => {
-        const { data, error } = await S.rpc("digiy_loc_get_ndimbal", {
-          p_slug: State.slug
-        });
+        const { data, error } = await S.rpc("digiy_loc_get_ndimbal", { p_slug: State.slug });
         if (error) throw error;
         if (typeof data === "boolean") return { ok:true, enabled:data };
-        if (data && typeof data === "object" && ("enabled" in data || "ok" in data)) {
-          return { ok: data.ok !== false, enabled: !!data.enabled, reason: data.reason || "" };
-        }
+        if (data && typeof data === "object" && ("enabled" in data || "ok" in data)) return { ok:data.ok !== false, enabled:!!data.enabled, reason:data.reason || "" };
         throw new Error("bad_rpc_payload");
       },
       async () => {
-        const { data, error } = await S
-          .from("go_pins")
-          .select("ndimbal_enabled")
-          .eq("category", "loc")
-          .eq("slug", State.slug)
-          .single();
+        const { data, error } = await S.from("go_pins").select("ndimbal_enabled").eq("category", "loc").eq("slug", State.slug).single();
         if (error) throw error;
-        return { ok:true, enabled: !!data?.ndimbal_enabled };
+        return { ok:true, enabled:!!data?.ndimbal_enabled };
       },
       async () => {
-        const { data, error } = await S
-          .from("digiy_loc_rooms")
-          .select("ndimbal_enabled")
-          .eq("slug", State.slug)
-          .single();
+        const { data, error } = await S.from("digiy_loc_rooms").select("ndimbal_enabled").eq("slug", State.slug).single();
         if (error) throw error;
-        return { ok:true, enabled: !!data?.ndimbal_enabled };
+        return { ok:true, enabled:!!data?.ndimbal_enabled };
       }
     ];
-
     let lastErr = null;
-
-    for (const run of attempts) {
-      try {
-        const res = await run();
-        if (res?.ok) return res;
-      } catch (e) {
-        lastErr = e;
-      }
-    }
-
-    return { ok:false, reason: String(lastErr?.message || lastErr || "read_failed") };
+    for (const run of attempts) { try { const res = await run(); if (res?.ok) return res; } catch(e){ lastErr = e; } }
+    return { ok:false, reason:String(lastErr?.message || lastErr || "read_failed") };
   }
 
   async function writeNdimbal(target){
     const S = getLocalSupabase();
-
     const attempts = [
       async () => {
-        const { data, error } = await S.rpc("digiy_loc_set_ndimbal", {
-          p_slug: State.slug,
-          p_enabled: target,
-          p_owner_phone: State.phone
-        });
+        const { data, error } = await S.rpc("digiy_loc_set_ndimbal", { p_slug: State.slug, p_enabled: target, p_owner_phone: State.phone });
         if (error) throw error;
         if (typeof data === "boolean") return { ok:true, enabled:data };
-        if (data && typeof data === "object") {
-          if (data.ok === true || data.ok === undefined) {
-            return { ok:true, enabled: ("enabled" in data) ? !!data.enabled : target };
-          }
-          return { ok:false, reason: data.reason || "rpc_not_ok" };
-        }
+        if (data && typeof data === "object") return data.ok === false ? { ok:false, reason:data.reason || "rpc_not_ok" } : { ok:true, enabled:("enabled" in data) ? !!data.enabled : target };
         throw new Error("bad_rpc_payload");
       },
       async () => {
-        const { data, error } = await S.rpc("digiy_loc_set_ndimbal", {
-          p_slug: State.slug,
-          p_enabled: target
-        });
+        const { data, error } = await S.rpc("digiy_loc_set_ndimbal", { p_slug: State.slug, p_enabled: target });
         if (error) throw error;
         if (typeof data === "boolean") return { ok:true, enabled:data };
-        if (data && typeof data === "object") {
-          if (data.ok === true || data.ok === undefined) {
-            return { ok:true, enabled: ("enabled" in data) ? !!data.enabled : target };
-          }
-          return { ok:false, reason: data.reason || "rpc_not_ok" };
-        }
+        if (data && typeof data === "object") return data.ok === false ? { ok:false, reason:data.reason || "rpc_not_ok" } : { ok:true, enabled:("enabled" in data) ? !!data.enabled : target };
         throw new Error("bad_rpc_payload");
       },
       async () => {
-        const { error } = await S
-          .from("go_pins")
-          .update({ ndimbal_enabled: target })
-          .eq("category", "loc")
-          .eq("slug", State.slug);
+        const { error } = await S.from("go_pins").update({ ndimbal_enabled: target }).eq("category", "loc").eq("slug", State.slug);
         if (error) throw error;
         return { ok:true, enabled:target };
       },
       async () => {
-        const { error } = await S
-          .from("digiy_loc_rooms")
-          .update({ ndimbal_enabled: target })
-          .eq("slug", State.slug);
+        const { error } = await S.from("digiy_loc_rooms").update({ ndimbal_enabled: target }).eq("slug", State.slug);
         if (error) throw error;
         return { ok:true, enabled:target };
       }
     ];
-
     let lastErr = null;
-
-    for (const run of attempts) {
-      try {
-        const res = await run();
-        if (res?.ok) return res;
-      } catch (e) {
-        lastErr = e;
-      }
-    }
-
-    return { ok:false, reason: String(lastErr?.message || lastErr || "write_failed") };
+    for (const run of attempts) { try { const res = await run(); if (res?.ok) return res; } catch(e){ lastErr = e; } }
+    return { ok:false, reason:String(lastErr?.message || lastErr || "write_failed") };
   }
 
   async function toggle(){
     btn.disabled = true;
-    showAlert("⏳ Mise à jour NDIMBAL…", "warn");
-
-    try {
+    showAlert("Mise à jour NDIMBAL…", "warn");
+    try{
       const target = !State.ndimbal;
       const res = await writeNdimbal(target);
-
-      if (!res.ok) {
-        showAlert("❌ Impossible de modifier NDIMBAL.\nDétail: " + (res.reason || "droits / RPC / session"), "bad");
-        btn.disabled = false;
-        return;
-      }
-
+      if(!res.ok){ showAlert("Impossible de modifier NDIMBAL.\nDétail : " + (res.reason || "droits / RPC / session"), "bad"); btn.disabled = false; return; }
       State.ndimbal = !!res.enabled;
-      paint();
-      showAlert(State.ndimbal ? "✅ NDIMBAL activé." : "✅ NDIMBAL désactivé.", "ok");
+      setLive();
+      const label = State.ndimbal ? "NDIMBAL activé sur le logement" : "NDIMBAL désactivé sur le logement";
+      pushSignal(label, "./ndimbal-loc.html");
+      showAlert("✅ " + label + ".", "ok");
       btn.disabled = false;
-    } catch (e) {
+    }catch(e){
       console.error(e);
-      showAlert("❌ Problème technique.\nDétail: " + String(e?.message || e), "bad");
+      showAlert("Problème technique.\nDétail : " + String(e?.message || e), "bad");
       btn.disabled = false;
     }
   }
 
   async function init(){
+    cleanVisibleUrl();
     State.slug = getSlug();
     State.phone = getPhone();
     refreshNav();
     paint();
 
-    if (!window.DIGIY_GUARD) {
-      showAlert("❌ Guard absent ou non chargé.", "bad");
-      setPreview("guard_missing");
-      return;
-    }
+    if(!window.DIGIY_GUARD){ showAlert("Vérification absente ou non chargée.", "bad"); setPreview("guard_missing"); return; }
 
-    try {
-      await waitGuardReady();
-    } catch (e) {
-      console.error(e);
-      showAlert("❌ Guard non prêt. Recharge la page.", "bad");
-      setPreview("guard_not_ready");
-      return;
-    }
+    try{ await waitGuardReady(); }
+    catch(e){ console.error(e); showAlert("Vérification non prête. Recharge la page.", "bad"); setPreview("guard_not_ready"); return; }
 
     State.slug = getSlug();
     State.phone = getPhone();
+    cleanVisibleUrl();
     refreshNav();
     paint();
 
-    if (!State.slug) {
-      showAlert("❌ Slug manquant.\nAjoute par exemple ?slug=loc-221...", "bad");
-      btn.disabled = true;
-      return;
-    }
+    if(!State.slug){ showAlert("Identifiant manquant. Reviens par ton espace ou par ton code.", "bad"); btn.disabled = true; return; }
 
     const sess = getSession();
-    if (!sess.access_ok) {
-      showAlert("🔐 Tu dois être connecté par PIN pour gérer NDIMBAL.", "warn");
-      setPreview("access_required");
-      return;
-    }
+    if(!sess.access_ok){ showAlert("Passe par ton code pour gérer NDIMBAL.", "warn"); setPreview("access_required"); return; }
 
     setLive();
-    showAlert("⏳ Lecture NDIMBAL…", "warn");
-
+    showAlert("Lecture NDIMBAL…", "warn");
     const cur = await readNdimbal();
-    if (!cur.ok) {
-      showAlert("❌ Impossible de charger NDIMBAL.\nDétail: " + (cur.reason || "RLS / RPC / table"), "bad");
-      btn.disabled = true;
-      return;
-    }
+    if(!cur.ok){ showAlert("Impossible de charger NDIMBAL.\nDétail : " + (cur.reason || "RLS / RPC / table"), "bad"); btn.disabled = true; return; }
 
     State.ndimbal = !!cur.enabled;
-    paint();
+    setLive();
     showAlert("✅ NDIMBAL chargé.", "ok");
   }
 
   init();
 })();
 </script>
-
 </body>
 </html>
