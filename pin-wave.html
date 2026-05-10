@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue • Paiements</title>
-  <meta name="theme-color" content="#16a34a"/>
+  <title>Je loue • Paiements directs</title>
+  <meta name="theme-color" content="#061b14"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -15,320 +15,442 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=pinwave-v6-bridge-no-double-pin"></script>
+  <script src="./guard.js?v=pinwave-loc-doctrine-senior-safe-v1"></script>
 
   <style>
     :root{
-      --bg:#020617;
-      --card:#0b1020;
-      --line:#1f2937;
-      --ink:#f9fafb;
-      --muted:#94a3b8;
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:rgba(255,255,255,.045);
+      --line:rgba(255,255,255,.14);
+      --ink:#eafff1;
+      --muted:rgba(234,255,241,.80);
       --gold:#facc15;
       --ok:#22c55e;
       --bad:#ef4444;
-      --shadow:0 22px 55px rgba(0,0,0,.55);
-      --r:16px;
+      --blue:#38bdf8;
+      --shadow:0 22px 55px rgba(0,0,0,.42);
+      --radius:24px;
+      --font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     }
+
     *{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100%}
     body{
       min-height:100vh;
-      background:
-        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.12), transparent 60%),
-        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
-        linear-gradient(180deg,#0b1020,#020617);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      display:flex;align-items:center;justify-content:center;
-      padding:16px;
+      font-family:var(--font);
       color:var(--ink);
+      background:
+        radial-gradient(900px 520px at 12% -8%, rgba(250,204,21,.15), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.17), transparent 60%),
+        linear-gradient(180deg,#03120d,var(--bg));
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+
     .box{
       width:100%;
-      max-width:460px;
-      background:rgba(255,255,255,.03);
+      max-width:620px;
       border:1px solid var(--line);
-      border-radius:var(--r);
-      padding:20px;
+      border-radius:var(--radius);
+      background:var(--card);
       box-shadow:var(--shadow);
+      padding:18px;
     }
-    h2{margin:0 0 10px;font-size:1.15rem}
+
+    .top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .ico{
+      width:58px;height:58px;border-radius:20px;
+      display:grid;place-items:center;
+      font-size:28px;
+      background:linear-gradient(135deg, rgba(250,204,21,.35), rgba(34,197,94,.20));
+      border:1px solid rgba(250,204,21,.34);
+      flex:0 0 auto;
+    }
+    h1{
+      font-size:clamp(1.75rem,5vw,2.35rem);
+      line-height:1.02;
+      font-weight:1000;
+      letter-spacing:-.04em;
+      color:#fff;
+    }
     .sub{
+      margin-top:8px;
       color:var(--muted);
-      font-weight:800;
-      font-size:.9rem;
-      line-height:1.4;
-      margin-bottom:14px;
+      font-size:1.08rem;
+      line-height:1.45;
+      font-weight:850;
     }
-    .row{display:flex;gap:10px;flex-wrap:wrap}
+
+    .pillRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
     .pill{
       display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.20);
+      min-height:40px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(255,255,255,.045);
       color:var(--muted);
-      font-weight:900;font-size:.82rem;
-    }
-    .pill.ok{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#bbf7d0;
-    }
-    .pill.warn{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-    .kv{
-      display:grid;
-      grid-template-columns:120px 1fr;
-      gap:8px;
-      margin-top:14px;
-    }
-    .kv div{
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(255,255,255,.02);
-    }
-    .kv .k{
-      color:var(--muted);
-      font-weight:900;
-    }
-    .kv .v{
+      font-size:.98rem;
       font-weight:1000;
-      overflow:hidden;
-      text-overflow:ellipsis;
       white-space:nowrap;
     }
+    .pill.ok{border-color:rgba(34,197,94,.36);background:rgba(34,197,94,.11);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.11);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.11);color:#fecaca}
+
+    .doctrine{
+      margin-top:16px;
+      border:1px solid rgba(250,204,21,.30);
+      border-radius:20px;
+      background:rgba(250,204,21,.08);
+      color:#fde68a;
+      padding:14px;
+      font-size:1.06rem;
+      font-weight:900;
+      line-height:1.55;
+    }
+
+    .panel{
+      margin-top:16px;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:22px;
+      background:rgba(0,0,0,.12);
+      padding:14px;
+    }
+    .panelTitle{
+      font-size:1.25rem;
+      font-weight:1000;
+      color:#fff;
+    }
+    .panelText{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:1.03rem;
+      line-height:1.45;
+      font-weight:850;
+    }
+
+    .steps{display:grid;gap:10px;margin-top:14px}
+    .step{
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(255,255,255,.035);
+      border-radius:18px;
+      padding:13px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .num{
+      width:34px;height:34px;border-radius:14px;
+      display:grid;place-items:center;
+      background:rgba(250,204,21,.14);
+      color:#fde68a;
+      border:1px solid rgba(250,204,21,.30);
+      font-weight:1000;
+      flex:0 0 auto;
+    }
+    .step b{display:block;color:#fff;font-size:1.05rem;font-weight:1000}
+    .step span{display:block;margin-top:3px;color:var(--muted);font-size:1rem;font-weight:850;line-height:1.35}
+
+    .btnGrid{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
     .btn{
+      min-height:60px;
       width:100%;
-      padding:12px;
-      border-radius:12px;
-      border:0;
-      background:rgba(34,197,94,.95);
-      color:#052e16;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(255,255,255,.05);
+      color:var(--ink);
+      font-size:1.08rem;
       font-weight:1000;
       cursor:pointer;
-      min-height:46px;
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      transition:.15s ease;
-      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      padding:13px 14px;
+      text-align:center;
     }
-    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-    .btn:active{transform:translateY(0)}
-    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-    .btn.ghost{
-      background:transparent;
-      border:1px solid rgba(148,163,184,.22);
-      color:var(--ink);
-    }
-    .btn.gold{
-      background:rgba(250,204,21,.14);
-      border:1px solid rgba(250,204,21,.35);
-      color:#fde68a;
-    }
+    .btn:active{transform:translateY(1px)}
+    .btn.green{background:linear-gradient(180deg,#22c55e,#16a34a);color:#04160e;border-color:rgba(34,197,94,.36)}
+    .btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.36);color:#fde68a}
+    .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.32);color:#bae6fd}
+    .btn.ghost{background:rgba(255,255,255,.035)}
+
     .note{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(255,255,255,.02);
+      display:none;
+      margin-top:14px;
+      padding:13px 14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.035);
       color:var(--muted);
+      font-size:1.02rem;
       font-weight:900;
       white-space:pre-wrap;
-      display:none;
-      line-height:1.35;
+      line-height:1.45;
     }
-    .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a}
-    .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#bbf7d0}
-    .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#fecaca}
-    .small{
+    .note.ok{display:block;border-color:rgba(34,197,94,.36);background:rgba(34,197,94,.09);color:#bbf7d0}
+    .note.warn{display:block;border-color:rgba(250,204,21,.36);background:rgba(250,204,21,.09);color:#fde68a}
+    .note.bad{display:block;border-color:rgba(239,68,68,.36);background:rgba(239,68,68,.09);color:#fecaca}
+
+    .safeLine{
+      margin-top:14px;
       color:var(--muted);
-      font-size:.82rem;
+      font-size:.96rem;
+      line-height:1.45;
       font-weight:850;
-      line-height:1.35;
-      margin-top:10px;
+    }
+
+    @media(max-width:560px){
+      body{padding:10px;align-items:flex-start}
+      .box{padding:14px;border-radius:22px}
+      .ico{width:52px;height:52px}
+      .btn{min-height:58px;font-size:1.05rem}
     }
   </style>
 </head>
-
 <body>
-  <div class="box">
-    <h2>🔐 Accès paiement</h2>
-    <div class="sub">
-      Cette page sert de <b>passage rapide</b> vers tes paiements.<br>
-      Tout est déjà rangé dans ton espace.<br>
-      On garde toujours ton <b>identifiant</b>.
+  <main class="box">
+    <div class="top">
+      <div class="brand">
+        <div class="ico">🌊</div>
+        <div>
+          <h1>Paiements directs</h1>
+          <div class="sub">Le propriétaire garde la main. DIGIY guide le passage, sans prendre l’argent.</div>
+        </div>
+      </div>
     </div>
 
-    <div class="row" style="margin-bottom:12px">
-      <span class="pill">activité : <span class="mono">LOC</span></span>
-      <span class="pill mono" id="pillSlug">identifiant : —</span>
-      <span class="pill warn" id="pillState">aperçu</span>
+    <div class="pillRow">
+      <span class="pill">🏠 LOC</span>
+      <span class="pill" id="pillSlug">Espace logement</span>
+      <span class="pill warn" id="pillState">Vérification…</span>
     </div>
 
-    <div class="kv">
-      <div class="k">Lieu</div>
-      <div class="v mono" id="slugValue">—</div>
-
-      <div class="k">Téléphone</div>
-      <div class="v mono" id="phoneValue">—</div>
-
-      <div class="k">Accès</div>
-      <div class="v" id="accessValue">—</div>
+    <div class="doctrine">
+      Paiement direct au propriétaire. 0% commission DIGIY. Le téléphone reste protégé dans la session : il ne voyage pas dans l’adresse visible.
     </div>
 
-    <div class="row" style="margin-top:14px">
-      <button class="btn" id="goApp" type="button">🔓 Ouvrir mon espace</button>
-    </div>
+    <section class="panel">
+      <div class="panelTitle">Que veux-tu faire ?</div>
+      <div class="panelText">Cette page t’ouvre la bonne porte : espace propriétaire, code PIN, ou retour aux outils LOC.</div>
 
-    <div class="row" style="margin-top:10px">
-      <button class="btn gold" id="goPin" type="button">🔐 Passer par mon code</button>
-      <button class="btn ghost" id="back" type="button">⬅️ Retour espace</button>
+      <div class="steps">
+        <div class="step"><div class="num">1</div><div><b>Session ouverte</b><span>Tu entres directement dans ta gestion.</span></div></div>
+        <div class="step"><div class="num">2</div><div><b>Session fermée</b><span>Tu passes par ton code, sans double demande inutile.</span></div></div>
+        <div class="step"><div class="num">3</div><div><b>Paiement direct</b><span>DIGIY accompagne, mais l’argent reste chez le propriétaire.</span></div></div>
+      </div>
+    </section>
+
+    <div class="btnGrid">
+      <button class="btn green" id="goApp" type="button">🔓 Ouvrir ma gestion</button>
+      <button class="btn gold" id="goPin" type="button">🔐 Entrer avec mon code</button>
+      <button class="btn blue" id="goWave" type="button">🌊 Ouvrir mes paiements</button>
+      <button class="btn ghost" id="back" type="button">⬅️ Retour accueil LOC</button>
     </div>
 
     <div class="note warn" id="note"></div>
 
-    <div class="small">
-      On évite ici de redemander le code deux fois.
-      Si la session n’est pas ouverte, cette page renvoie simplement vers ton code principal.
+    <div class="safeLine">
+      Sécurité façade : pas de téléphone affiché, pas de téléphone dans l’URL, pas de slug sensible visible. Les infos utiles restent dans la session propriétaire.
     </div>
-  </div>
+  </main>
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const note = $("note");
+  const noteEl = $("note");
   const pillState = $("pillState");
+  const pillSlug = $("pillSlug");
 
-  function show(msg, cls) {
-    note.className = "note " + (cls || "warn");
-    note.textContent = msg || "";
-    note.style.display = msg ? "block" : "none";
+  const SENSITIVE_PARAMS = ["phone","tel","owner_phone","p_phone","whatsapp","client_phone","wave_phone"];
+
+  function show(msg, cls){
+    noteEl.className = "note " + (cls || "warn");
+    noteEl.textContent = msg || "";
+    noteEl.style.display = msg ? "block" : "none";
   }
 
-  function cleanSlug(v) {
+  function cleanSlug(v){
     return String(v || "")
       .trim()
       .toLowerCase()
-      .replace(/\s+/g, "-")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\-_]/g, "")
       .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
+      .replace(/^[-_]+|[-_]+$/g, "");
   }
 
-  function withSlug(url, slug) {
-    if (!slug) return url;
-    try {
-      const u = new URL(url, location.href);
-      u.searchParams.set("slug", slug);
-      if (u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
-    } catch {
-      const sep = String(url).includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(slug);
+  function isSensitiveSlug(slug){
+    return /\d{7,}/.test(String(slug || ""));
+  }
+
+  function canExposeSlug(slug){
+    const s = cleanSlug(slug);
+    return !!s && !isSensitiveSlug(s);
+  }
+
+  function displaySpace(slug){
+    const s = cleanSlug(slug);
+    if(!s || isSensitiveSlug(s)) return "🏠 Espace logement sécurisé";
+    if(s.startsWith("loc-room-")) return "🏠 Logement " + s.slice(-6).toUpperCase();
+    return "🏠 Espace LOC";
+  }
+
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      SENSITIVE_PARAMS.forEach((key) => {
+        if(u.searchParams.has(key)){
+          u.searchParams.delete(key);
+          changed = true;
+        }
+      });
+      const slug = cleanSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+      if(changed){
+        history.replaceState({}, "", u.pathname + u.search + u.hash);
+      }
+    }catch(_){ }
+  }
+
+  function storageGet(key){
+    try{ const s = sessionStorage.getItem(key); if(s) return s; }catch{}
+    try{ const l = localStorage.getItem(key); if(l) return l; }catch{}
+    return "";
+  }
+
+  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
+  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};} }
+
+  function getSlug(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    let qs = "";
+    try{ qs = new URL(location.href).searchParams.get("slug") || ""; }catch{}
+    return cleanSlug(
+      qs || st.slug || gs.slug ||
+      storageGet("digiy_loc_slug") || storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") || storageGet("DIGIY_SLUG") ||
+      ""
+    );
+  }
+
+  function hasAccess(){
+    const st = getGuardState();
+    const gs = getGuardSession();
+    return [st.access_ok, st.access, st.ok, st.has_access, gs.access_ok, gs.access, gs.ok, gs.has_access]
+      .some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1");
+  }
+
+  function safeUrl(path){
+    const slug = getSlug();
+    try{
+      const u = new URL(path, location.href);
+      SENSITIVE_PARAMS.forEach(key => u.searchParams.delete(key));
+      if(canExposeSlug(slug)) u.searchParams.set("slug", slug);
+      else u.searchParams.delete("slug");
+      return u.origin === location.origin ? (u.pathname + u.search + u.hash) : u.toString();
+    }catch{
+      if(canExposeSlug(slug)){
+        const sep = String(path).includes("?") ? "&" : "?";
+        return path + sep + "slug=" + encodeURIComponent(slug);
+      }
+      return path;
     }
   }
 
-  function getGuardState() {
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      module: "LOC",
-      reason: "guard_missing"
-    };
+  function pushSignal(type, label, href){
+    try{
+      const key = "DIGIY_LOC_PRO_SIGNALS";
+      const rows = JSON.parse(localStorage.getItem(key) || "[]");
+      rows.unshift({
+        id: "pin-wave:" + Date.now(),
+        type: type || "payment_gate",
+        label: label || "Paiements consultés",
+        href: href || "./pin-wave.html",
+        source: "pin-wave",
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem(key, JSON.stringify(rows.slice(0, 20)));
+    }catch(_){ }
   }
 
-  function getSession() {
-    const st = getGuardState();
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
-    return {
-      ok: !!st.access_ok,
-      access_ok: !!st.access_ok,
-      slug: cleanSlug(st.slug || raw.slug || ""),
-      phone: String(st.phone || raw.phone || "").trim(),
-      reason: String(st.reason || raw.reason || "").trim()
-    };
+  cleanVisibleUrl();
+
+  try{
+    if(window.DIGIY_GUARD?.ready){
+      const out = window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+      if(out?.then) await out;
+    }
+  }catch(e){
+    console.warn("guard ready fallback", e);
   }
 
-  function getSlug() {
-    const qsSlug = cleanSlug(new URLSearchParams(location.search).get("slug") || "");
-    if (qsSlug) return qsSlug;
-
-    const sess = getSession();
-    if (sess.slug) return sess.slug;
-
-    return cleanSlug(window.DIGIY_GUARD?.getSlug?.() || "");
-  }
-
-  if (!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function") {
-    show("❌ Guard absent.\nVérifie que ./guard.js est bien chargé.", "bad");
-    return;
-  }
-
-  try {
-    await window.DIGIY_GUARD.ready();
-  } catch (e) {
-    console.error(e);
-    show("❌ Guard non prêt.\nRecharge la page.", "bad");
-    return;
-  }
+  cleanVisibleUrl();
 
   const slug = getSlug();
-  const sess = getSession();
+  const accessOk = hasAccess();
 
-  $("pillSlug").textContent = "identifiant : " + (slug || "—");
-  $("slugValue").textContent = slug || "—";
-  $("phoneValue").textContent = sess.phone || "—";
+  pillSlug.textContent = displaySpace(slug);
 
-  if (sess.access_ok) {
-    pillState.textContent = "connecté";
+  if(accessOk){
+    pillState.textContent = "✅ Accès ouvert";
     pillState.className = "pill ok";
-    $("accessValue").textContent = "Session propriétaire active";
-    show("✅ Session déjà ouverte. Tu peux entrer directement dans l’app.", "ok");
-  } else {
-    pillState.textContent = "PIN requis";
+    show("Session ouverte. Tu peux entrer dans ta gestion ou consulter tes paiements.", "ok");
+  }else if(slug){
+    pillState.textContent = "🔐 Code requis";
     pillState.className = "pill warn";
-    $("accessValue").textContent = "Passe par ton code";
-    show("🔐 La session n’est pas encore ouverte.\nPasse par ton code puis reviens ici si besoin.", "warn");
+    show("Passe par ton code pour ouvrir la gestion complète.", "warn");
+  }else{
+    pillState.textContent = "⚠️ Accès à vérifier";
+    pillState.className = "pill bad";
+    show("Identifiant introuvable. Reviens par l’accueil LOC ou par ton code.", "bad");
   }
 
-  $("goApp").addEventListener("click", () => {
-    if (!slug) {
-      show("❌ Slug manquant.\nRetourne à l’app ou au planning pour ouvrir cette page avec le bon slug.", "bad");
-      return;
-    }
-
-    if (getSession().access_ok) {
-      location.replace(withSlug("./app.html", slug));
-      return;
-    }
-
-    location.replace(withSlug("./pin.html", slug));
+  $("goApp")?.addEventListener("click", () => {
+    const target = accessOk ? "./app.html" : "./pin.html";
+    pushSignal("payment_gate", "Passage paiement ouvert", "./pin-wave.html");
+    location.href = safeUrl(target);
   });
 
-  $("goPin").addEventListener("click", () => {
-    if (!slug) {
-      show("❌ Slug manquant.", "bad");
-      return;
-    }
-    location.replace(withSlug("./pin.html", slug));
+  $("goPin")?.addEventListener("click", () => {
+    location.href = safeUrl("./pin.html");
   });
 
-  $("back").addEventListener("click", () => {
-    if (!slug) {
-      location.href = "./app.html";
-      return;
-    }
-    location.href = withSlug("./app.html", slug);
+  $("goWave")?.addEventListener("click", () => {
+    pushSignal("payment_gate", "Paiements consultés", "./pin-wave.html");
+    location.href = safeUrl("./wave.html");
+  });
+
+  $("back")?.addEventListener("click", () => {
+    location.href = safeUrl("./app.html");
   });
 });
 </script>
-  <script src="./loc-security-mask.js"></script>
 </body>
 </html>
+
