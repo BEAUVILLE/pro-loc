@@ -1027,6 +1027,5 @@
     }
   };
 
-  cleanVisibleUrl();
-  startSecureFacadeWatcher();
+cleanVisibleUrl();
 })();
