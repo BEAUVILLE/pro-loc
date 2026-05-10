@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue • Photos</title>
-  <meta name="theme-color" content="#0b1020" />
+  <meta name="theme-color" content="#061b14"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -15,174 +15,210 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=locpro-photos-clean-20260329"></script>
+  <script src="./guard.js?v=locpro-photos-doctrine-senior-20260510"></script>
+  <script src="./loc-security-mask.js?v=loc-photos-mask-20260510" defer></script>
 
   <style>
     :root{
-      --bg:#020617;
-      --bg2:#0b1020;
-      --card:rgba(255,255,255,.04);
-      --accent:#facc15;
-      --muted:#9ca3af;
-      --text:#e5e7eb;
-      --line:rgba(148,163,184,0.18);
-      --danger:#ef4444;
+      --bg:#061b14;
+      --bg2:#0a2820;
+      --card:rgba(255,255,255,.045);
+      --line:rgba(255,255,255,.14);
+      --text:#f5fff8;
+      --muted:rgba(245,255,248,.82);
+      --gold:#facc15;
       --ok:#22c55e;
-      --warn:#f59e0b;
+      --bad:#ef4444;
+      --blue:#38bdf8;
       --shadow:0 22px 55px rgba(0,0,0,.45);
+      --bottom:86px;
+      --radius:24px;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
-
+    html,body{min-height:100%}
     body{
-      font-family:Outfit,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.12), transparent 60%),
-        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.10), transparent 60%),
+        radial-gradient(900px 520px at 12% -10%, rgba(250,204,21,.16), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, rgba(34,197,94,.14), transparent 60%),
         linear-gradient(180deg,var(--bg2),var(--bg));
       color:var(--text);
-      min-height:100vh;
+      padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 22px);
     }
 
-    .wrap{max-width:880px;margin:auto;padding:18px}
+    a{color:inherit;text-decoration:none}
+    button,input,textarea{font:inherit}
+    .wrap{max-width:980px;margin:0 auto}
 
-    .top{
+    .top,.card,.doctrine{
       background:var(--card);
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:16px;
+      border-radius:var(--radius);
+      padding:18px;
       box-shadow:var(--shadow);
     }
 
-    .title{
-      font-size:1.35rem;
+    .card,.doctrine{margin-top:14px}
+    .topLine{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .brand{display:flex;gap:13px;align-items:center;min-width:0}
+    .ico{
+      width:54px;height:54px;border-radius:20px;
+      display:grid;place-items:center;
+      font-size:28px;
+      background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(34,197,94,.18));
+      border:1px solid rgba(250,204,21,.34);
+      flex:0 0 auto;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(1.55rem,4vw,2.25rem);
+      line-height:1.05;
       font-weight:1100;
-      margin-bottom:6px;
+      letter-spacing:-.03em;
+    }
+
+    h2{
+      margin:0;
+      font-size:clamp(1.25rem,3vw,1.65rem);
+      line-height:1.12;
+      font-weight:1100;
     }
 
     .sub{
+      margin-top:7px;
       color:var(--muted);
-      line-height:1.45;
-      font-weight:850;
-    }
-
-    .nav{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:14px;
+      line-height:1.42;
+      font-weight:950;
+      font-size:clamp(1.05rem,2.6vw,1.18rem);
     }
 
     .pillbar{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-top:12px;
+      margin-top:14px;
     }
 
     .pill{
       display:inline-flex;
       align-items:center;
+      justify-content:center;
       gap:8px;
-      padding:8px 10px;
+      padding:10px 14px;
+      min-height:44px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(255,255,255,.02);
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(255,255,255,.035);
       color:var(--muted);
-      font-weight:950;
-      font-size:.86rem;
+      font-weight:1000;
+      font-size:1rem;
+      white-space:nowrap;
     }
+    .pill.ok{border-color:rgba(34,197,94,.36);background:rgba(34,197,94,.11);color:#bbf7d0}
+    .pill.warn{border-color:rgba(250,204,21,.40);background:rgba(250,204,21,.12);color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.36);background:rgba(239,68,68,.11);color:#fecaca}
 
-    .pill strong{color:#fff}
-
-    .pill.ok{
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.10);
-      color:#bbf7d0;
-    }
-
-    .pill.warn{
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.10);
-      color:#fde68a;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:16px;
+    .nav,.actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
       margin-top:14px;
-      box-shadow:var(--shadow);
     }
 
     .btn{
-      padding:12px 14px;
-      border-radius:14px;
-      font-weight:1000;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
+      min-height:60px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.24);
+      background:rgba(255,255,255,.04);
       color:var(--text);
+      font-weight:1100;
+      font-size:1.08rem;
       cursor:pointer;
-      text-decoration:none;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      min-height:46px;
-      transition:.15s ease;
+      gap:10px;
+      text-align:center;
+      line-height:1.15;
+      touch-action:manipulation;
+    }
+    .btn:active{transform:scale(.985)}
+    .btn:disabled{opacity:.52;cursor:not-allowed}
+    .btn.primary{background:linear-gradient(180deg,#facc15,#f59e0b);color:#112016;border-color:rgba(250,204,21,.50)}
+    .btn.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.38);color:#bbf7d0}
+    .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.32);color:#bae6fd}
+    .btn.bad{background:rgba(239,68,68,.11);border-color:rgba(239,68,68,.36);color:#fecaca}
+    .btn.ghost{background:rgba(255,255,255,.035);border-color:rgba(250,204,21,.24)}
+
+    .doctrine{
+      border-color:rgba(250,204,21,.28);
+      background:
+        radial-gradient(520px 160px at 8% 0%,rgba(250,204,21,.14),transparent 68%),
+        rgba(255,255,255,.04);
+    }
+    .doctrineTitle{
+      color:#fde68a;
+      font-weight:1100;
+      font-size:1.2rem;
+      margin-bottom:6px;
+    }
+    .doctrineText{
+      color:var(--muted);
+      font-size:1.05rem;
+      font-weight:950;
+      line-height:1.45;
     }
 
-    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-    .btn:active{transform:translateY(0)}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-
-    .btn.primary{
-      background:var(--accent);
-      color:#022c22;
-      border-color:rgba(250,204,21,.35);
-    }
-
-    .btn.ghost{
-      background:transparent;
-      border-color:rgba(250,204,21,.35);
-      color:#fff;
-    }
-
-    .btn.ok{
-      background:rgba(34,197,94,.10);
-      border-color:rgba(34,197,94,.35);
-      color:#bbf7d0;
-    }
-
-    .btn.bad{
-      background:rgba(239,68,68,.10);
-      border-color:rgba(239,68,68,.35);
-      color:#fecaca;
-    }
-
-    .actions{
+    .infoGrid{
       display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
+      grid-template-columns:repeat(3,minmax(0,1fr));
       gap:10px;
       margin-top:14px;
+    }
+    .infoBox{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(0,0,0,.12);
+    }
+    .infoLabel{
+      color:var(--muted);
+      font-weight:1000;
+      font-size:.95rem;
+    }
+    .infoValue{
+      margin-top:6px;
+      font-weight:1100;
+      font-size:1.2rem;
+      color:#fff;
     }
 
     .gallery{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-top:14px;
+      gap:12px;
+      margin-top:16px;
     }
 
     .tile{
       position:relative;
-      border-radius:16px;
-      overflow:hidden;
+      min-height:210px;
       aspect-ratio:1/1;
-      border:1px solid rgba(250,204,21,.14);
+      border-radius:22px;
+      overflow:hidden;
+      border:1px solid rgba(250,204,21,.18);
       background:#022c22;
-      user-select:none;
+      box-shadow:0 14px 30px rgba(0,0,0,.28);
     }
 
     .tile img{
@@ -193,163 +229,160 @@
       background:#02150d;
     }
 
-    .empty{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:1.8rem;
-      font-weight:900;
-      color:var(--accent);
+    .emptyTile{
       height:100%;
+      min-height:210px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:18px;
+      color:#fde68a;
+      font-size:1.45rem;
+      line-height:1.25;
+      font-weight:1100;
+      background:rgba(250,204,21,.07);
     }
 
     .badge{
       position:absolute;
-      top:8px;
-      left:8px;
-      background:rgba(0,0,0,.65);
-      padding:5px 9px;
-      font-size:.72rem;
-      border-radius:999px;
-      border:1px solid rgba(250,204,21,.35);
-      font-weight:800;
+      top:10px;
+      left:10px;
       z-index:3;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(0,0,0,.72);
+      border:1px solid rgba(250,204,21,.40);
+      color:#fde68a;
+      font-size:.92rem;
+      font-weight:1100;
     }
 
     .iconbtn{
       position:absolute;
-      top:8px;
-      right:8px;
-      width:34px;
-      height:34px;
-      border-radius:10px;
-      border:none;
-      font-weight:1000;
-      cursor:pointer;
-      background:rgba(239,68,68,.85);
-      color:#fff;
+      top:10px;
+      right:10px;
       z-index:4;
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.20);
+      background:rgba(239,68,68,.90);
+      color:#fff;
+      font-size:1.4rem;
+      font-weight:1100;
+      cursor:pointer;
     }
 
     .menu{
       position:absolute;
-      left:8px;
-      right:8px;
-      bottom:8px;
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
+      left:10px;
+      right:10px;
+      bottom:10px;
       z-index:4;
-    }
-
-    .chip{
-      flex:1;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(0,0,0,.60);
-      color:#fff;
-      padding:8px 10px;
-      font-weight:950;
-      cursor:pointer;
-      min-height:38px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+      display:grid;
+      grid-template-columns:1fr 1fr;
       gap:8px;
     }
 
-    .chip.gold{border-color:rgba(250,204,21,.35)}
-    .chip.ok{border-color:rgba(34,197,94,.35)}
+    .chip{
+      min-height:46px;
+      border-radius:15px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(0,0,0,.64);
+      color:#fff;
+      font-weight:1100;
+      font-size:.98rem;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      text-align:center;
+    }
+    .chip.gold{border-color:rgba(250,204,21,.45);color:#fde68a}
+    .chip.ok{border-color:rgba(34,197,94,.45);color:#bbf7d0}
     .chip:disabled{opacity:.55;cursor:not-allowed}
 
     .note{
-      margin-top:12px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--line);
+      margin-top:14px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,.24);
       display:none;
       white-space:pre-wrap;
-      line-height:1.35;
-      font-weight:900;
+      line-height:1.45;
+      font-weight:1000;
+      font-size:1.05rem;
     }
-
-    .note.ok{
-      display:block;
-      border-color:rgba(34,197,94,.35);
-      background:rgba(34,197,94,.09);
-      color:#bbf7d0;
-    }
-
-    .note.bad{
-      display:block;
-      border-color:rgba(239,68,68,.35);
-      background:rgba(239,68,68,.09);
-      color:#fecaca;
-    }
-
-    .note.warn{
-      display:block;
-      border-color:rgba(250,204,21,.35);
-      background:rgba(250,204,21,.09);
-      color:#fde68a;
-    }
-
-    .mini{
-      margin-top:12px;
-      color:var(--muted);
-      font-size:.9rem;
-    }
-
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-    }
+    .note.ok{display:block;border-color:rgba(34,197,94,.36);background:rgba(34,197,94,.10);color:#bbf7d0}
+    .note.bad{display:block;border-color:rgba(239,68,68,.36);background:rgba(239,68,68,.10);color:#fecaca}
+    .note.warn{display:block;border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.11);color:#fde68a}
 
     .help{
       margin-top:14px;
       color:var(--muted);
-      font-size:.93rem;
-      line-height:1.45;
+      font-size:1.06rem;
+      line-height:1.5;
+      font-weight:920;
     }
-
     .help b{color:#fff}
 
-    .hr{
-      height:1px;
-      background:rgba(148,163,184,0.18);
-      margin-top:14px;
+    .bottomNav{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:80;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:linear-gradient(180deg,rgba(6,27,20,0),rgba(6,27,20,.96) 30%);
     }
-
-    .kv{
+    .bottomInner{
+      max-width:980px;
+      margin:0 auto;
       display:grid;
-      grid-template-columns:150px 1fr;
-      gap:8px;
-      margin-top:12px;
+      grid-template-columns:repeat(5,1fr);
+      gap:7px;
+      border:1px solid rgba(255,255,255,.13);
+      background:rgba(6,27,20,.96);
+      backdrop-filter:blur(12px);
+      border-radius:24px;
+      padding:7px;
+      box-shadow:0 16px 44px rgba(0,0,0,.40);
     }
-
-    .kv div{
-      padding:9px 10px;
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:12px;
-      background:rgba(255,255,255,.02);
-    }
-
-    .kv .k{
-      color:var(--muted);
-      font-weight:950;
-    }
-
-    .kv .v{
+    .navItem{
+      min-height:62px;
+      border-radius:18px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      color:rgba(245,255,248,.78);
+      font-size:.82rem;
       font-weight:1000;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
+      border:1px solid transparent;
+      text-align:center;
+    }
+    .navItem strong{font-size:1.32rem;line-height:1}
+    .navItem.active{
+      color:#fde68a;
+      background:rgba(250,204,21,.12);
+      border-color:rgba(250,204,21,.28);
     }
 
-    @media(max-width:620px){
+    @media(max-width:740px){
+      .wrap{max-width:100%}
+      .nav,.actions,.infoGrid{grid-template-columns:1fr}
       .gallery{grid-template-columns:repeat(2,1fr)}
-      .actions{grid-template-columns:1fr}
-      .kv{grid-template-columns:1fr}
-      .btn{width:100%}
+      .tile,.emptyTile{min-height:178px}
+      .btn{width:100%;font-size:1.06rem}
+    }
+
+    @media(max-width:420px){
+      body{padding-left:10px;padding-right:10px}
+      .top,.card,.doctrine{padding:14px;border-radius:20px}
+      .gallery{grid-template-columns:1fr}
+      .tile,.emptyTile{min-height:240px}
+      .bottomInner{gap:5px;padding:6px}
+      .navItem{font-size:.76rem;min-height:58px}
     }
   </style>
 </head>
@@ -357,394 +390,375 @@
 <body>
 <div class="wrap">
 
-  <div class="top">
-    <div class="title">🖼️ Je loue • Photos</div>
-    <div class="sub">
-      Ici on garde seulement des <b>liens photo</b>.<br>
-      Parcours simple : bibliothèque WordPress → liens propres → collage ici → sauvegarde sur le logement.
+  <section class="top">
+    <div class="topLine">
+      <div class="brand">
+        <div class="ico">🖼️</div>
+        <div>
+          <h1>Photos du logement</h1>
+          <div class="sub">Ajoute les liens photo, choisis la photo principale, puis sauvegarde. Simple, lisible, sans upload lourd.</div>
+        </div>
+      </div>
+      <div class="pill warn" id="pillState">Lecture</div>
     </div>
 
     <div class="pillbar">
-      <div class="pill" id="pillPhone">📞 <strong>—</strong></div>
-      <div class="pill" id="pillSlug">🏷️ <strong>—</strong></div>
-      <div class="pill warn" id="pillState">🔒 Aperçu</div>
+      <div class="pill" id="pillSpace">🏠 Espace sécurisé</div>
+      <div class="pill" id="pillCount">0 photo</div>
     </div>
 
     <div class="nav">
-      <a class="btn ghost" id="btnApp" href="./app.html">🏠 Retour à mon espace</a>
-      <a class="btn ghost" id="btnPin" href="./pin.html">🔐 PIN</a>
+      <a class="btn ghost" id="btnApp" href="./app.html">🏠 Mon espace</a>
+      <a class="btn ghost" id="btnPin" href="./pin.html">🔐 Ouvrir l’accès</a>
       <a class="btn ghost" id="btnPrefiche" href="./fiche-abo.html">📝 Pré-fiche</a>
     </div>
-  </div>
+  </section>
 
-  <div class="card">
-    <h2 style="margin-bottom:8px">📸 Galerie</h2>
+  <section class="doctrine">
+    <div class="doctrineTitle">Doctrine LOC</div>
+    <div class="doctrineText">
+      Le propriétaire ne doit pas gérer une usine. Il ajoute une photo, choisit la principale, sauvegarde.
+      DIGIY garde les liens propres et fait remonter l’information à l’accueil.
+    </div>
+  </section>
 
-    <div class="kv">
-      <div class="k">Mode</div><div class="v" id="kvMode">—</div>
-      <div class="k">Identifiant</div><div class="v" id="kvSlug">—</div>
-      <div class="k">Téléphone</div><div class="v" id="kvPhone">—</div>
+  <section class="card">
+    <h2>Galerie</h2>
+    <div class="sub">Les images restent légères : on garde seulement des URLs stables, idéalement WordPress, JPG, PNG ou WebP.</div>
+
+    <div class="infoGrid">
+      <div class="infoBox">
+        <div class="infoLabel">Mode</div>
+        <div class="infoValue" id="kvMode">Lecture</div>
+      </div>
+      <div class="infoBox">
+        <div class="infoLabel">Espace</div>
+        <div class="infoValue" id="kvSpace">Sécurisé</div>
+      </div>
+      <div class="infoBox">
+        <div class="infoLabel">Couverture</div>
+        <div class="infoValue" id="kvCover">—</div>
+      </div>
     </div>
 
     <div class="actions">
       <button class="btn primary" id="btnAdd" type="button">➕ Ajouter une photo</button>
-      <button class="btn ok" id="btnSave" type="button">💾 Sauvegarder les URLs</button>
+      <button class="btn ok" id="btnSave" type="button">💾 Sauvegarder</button>
+      <button class="btn blue" id="btnCopyGallery" type="button">📋 Copier les liens</button>
     </div>
 
     <div class="gallery" id="gallery"></div>
-
     <div class="note" id="note"></div>
-    <div class="mini mono" id="dbg"></div>
-
-    <div class="hr"></div>
 
     <div class="help">
-      ✅ <b>Stockage léger :</b> seules les URLs sont gardées.<br/>
-      ⛔️ <b>Jamais</b> d’image binaire, base64 ou upload direct depuis cette page.<br/><br/>
-      📲 <b>Méthode DIGIY :</b> le pro t’envoie ses photos → tu les poses dans WordPress → tu colles les URLs ici.<br/>
-      💡 Utilise des liens <b>https://</b> stables, propres, idéalement en <b>.jpg</b>, <b>.png</b> ou <b>.webp</b>.
+      ✅ <b>Méthode terrain :</b> le pro envoie ses photos → tu les poses dans WordPress → tu colles les URLs ici.<br>
+      ⛔️ <b>Sécurité :</b> pas de téléphone affiché, pas de slug sensible visible, pas d’image base64 dans cette page.
     </div>
-  </div>
+  </section>
 
 </div>
+
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem active" id="navPhotos" href="./photos.html"><strong>🖼️</strong><span>Photos</span></a>
+    <a class="navItem" id="navMore" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
 
 <script>
 (async function(){
   "use strict";
 
   const MODULE = "LOC";
+  const SIGNAL_KEY = "DIGIY_LOC_PRO_SIGNALS";
   const $ = (id)=>document.getElementById(id);
 
   const State = {
-    slug: "",
-    phone: "",
-    mode: "preview",
-    reason: "booting",
-    photos: []
+    slug:"",
+    phone:"",
+    mode:"preview",
+    photos:[]
   };
 
   let sb = null;
 
-  function show(msg, cls){
-    const el = $("note");
-    if(!el) return;
-    el.className = "note " + (cls || "warn");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-  }
-
-  function dbg(txt){
-    const el = $("dbg");
-    if(el) el.textContent = txt || "";
-  }
-
   function esc(s){
-    return String(s || "").replace(/[&<>"']/g, function(m){
-      return ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        "\"":"&quot;",
-        "'":"&#39;"
-      })[m];
-    });
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
   }
 
   function storageGet(key){
-    try{
-      const v1 = sessionStorage.getItem(key);
-      if(v1) return v1;
-    }catch(_){}
-    try{
-      const v2 = localStorage.getItem(key);
-      if(v2) return v2;
-    }catch(_){}
+    try{ const s = sessionStorage.getItem(key); if(s) return s; }catch(_){}
+    try{ const l = localStorage.getItem(key); if(l) return l; }catch(_){}
     return "";
   }
 
-  function digitsOnly(v){
-    return String(v || "").replace(/\D/g, "");
+  function storageSet(key,value,local=true){
+    if(value == null || String(value).trim()==="") return;
+    try{ sessionStorage.setItem(key,String(value)); }catch(_){}
+    if(local){ try{ localStorage.setItem(key,String(value)); }catch(_){} }
   }
 
-  function normPhone(v){
-    let p = String(v || "").trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
-    if(p.startsWith("00221")) p = "+221" + p.slice(5);
-    if(!p.startsWith("+") && p.startsWith("221")) p = "+" + p;
-    if(!p.startsWith("+221") && /^\d{9}$/.test(p)) p = "+221" + p;
-    return p;
+  function safeJson(raw,fallback){
+    try{ return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; }
   }
 
-  function phoneDigits(v){
-    return digitsOnly(normPhone(v));
+  function readParam(name){
+    try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch(_){return "";}
   }
 
   function cleanSlug(v){
     return String(v || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9\-_]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^[-_]+|[-_]+$/g, "");
+      .trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"")
+      .replace(/-+/g,"-")
+      .replace(/^[-_]+|[-_]+$/g,"");
   }
 
-  function getGuardState(){
-    return window.DIGIY_GUARD?.state || {
-      preview: true,
-      access_ok: false,
-      slug: "",
-      phone: "",
-      module: MODULE,
-      reason: "guard_missing"
-    };
+  function digits(v){return String(v || "").replace(/\D/g,"");}
+  function isSensitiveSlug(slug){return /\d{7,}/.test(String(slug || ""));}
+  function canExposeSlug(slug){const s=cleanSlug(slug); return !!s && !isSensitiveSlug(s);}
+  function displaySpace(slug){
+    const s = cleanSlug(slug);
+    if(!s || isSensitiveSlug(s)) return "Espace sécurisé";
+    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+    return "Espace LOC";
   }
 
-  function getSession(){
-    const st = getGuardState();
-    const raw = window.DIGIY_GUARD?.getSession?.() || {};
-    return {
-      ok: !!st.access_ok,
-      access_ok: !!st.access_ok,
-      preview: !!st.preview,
-      slug: String(
-        st.slug ||
-        raw.slug ||
-        storageGet("digiy_loc_slug") ||
-        storageGet("digiy_last_slug") ||
-        ""
-      ).trim().toLowerCase(),
-      phone: String(
-        st.phone ||
-        raw.phone ||
-        storageGet("DIGIY_PHONE") ||
-        storageGet("DIGIY_LOC_PHONE") ||
-        ""
-      ).trim(),
-      reason: String(st.reason || raw.reason || "").trim(),
-      module: String(st.module || raw.module || MODULE).trim()
-    };
+  function cleanVisibleUrl(){
+    try{
+      const u = new URL(location.href);
+      let changed = false;
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>{
+        if(u.searchParams.has(k)){ u.searchParams.delete(k); changed = true; }
+      });
+      const slug = cleanSlug(u.searchParams.get("slug") || "");
+      if(slug && isSensitiveSlug(slug)){
+        u.searchParams.delete("slug");
+        changed = true;
+      }
+      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }catch(_){}
   }
 
-  async function waitGuardReady(){
-    if(!window.DIGIY_GUARD) throw new Error("guard_missing");
-
-    const ready = window.DIGIY_GUARD.ready;
-
-    if(typeof ready === "function"){
-      const maybe = ready(8000);
-      if(maybe && typeof maybe.then === "function") return await maybe;
-      return maybe;
-    }
-
-    if(ready && typeof ready.then === "function"){
-      return await ready;
-    }
-
-    if(ready) return true;
-    throw new Error("guard_not_ready");
-  }
-
+  function getGuardState(){return window.DIGIY_GUARD?.state || {};}
+  function getGuardSession(){try{return window.DIGIY_GUARD?.getSession?.() || {};}catch(_){return {};}}
   function getSlug(){
-    const sess = getSession();
-    if(sess.slug) return cleanSlug(sess.slug);
-
-    try{
-      return cleanSlug(String(new URL(location.href).searchParams.get("slug") || ""));
-    }catch(_){
-      return "";
-    }
+    const st = getGuardState(), gs = getGuardSession();
+    return cleanSlug(
+      readParam("slug") ||
+      st.slug || gs.slug ||
+      storageGet("digiy_loc_slug") ||
+      storageGet("digiy_loc_last_slug") ||
+      storageGet("DIGIY_LOC_SLUG") ||
+      storageGet("DIGIY_LOC_LAST_SLUG") ||
+      storageGet("digiy_last_slug") ||
+      storageGet("DIGIY_SLUG")
+    );
   }
-
   function getPhone(){
-    const sess = getSession();
-    return normPhone(sess.phone || "");
+    const st = getGuardState(), gs = getGuardSession();
+    return digits(
+      readParam("phone") ||
+      st.phone || gs.phone ||
+      storageGet("digiy_loc_phone") ||
+      storageGet("digiy_loc_last_phone") ||
+      storageGet("DIGIY_PHONE") ||
+      storageGet("DIGIY_LOC_PHONE") ||
+      storageGet("DIGIY_LOC_HUB_PHONE")
+    );
   }
 
-  function withSlug(url){
-    const slug = State.slug || getSlug();
-    if(!slug) return url;
+  function hasAccess(){
+    const st = getGuardState(), gs = getGuardSession();
+    const flags = [st.access_ok, st.ok, st.access, st.has_access, gs.access_ok, gs.ok, gs.access, gs.has_access];
+    return flags.some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1");
+  }
 
+  function withContext(path){
+    const slug = State.slug || getSlug();
     try{
-      const u = new URL(url, location.href);
-      u.searchParams.set("slug", slug);
-      if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-      return u.toString();
+      const u = new URL(path, location.href);
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
+      if(slug && canExposeSlug(slug) && !u.searchParams.get("slug")) u.searchParams.set("slug", slug);
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
     }catch(_){
-      const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "slug=" + encodeURIComponent(slug);
+      if(slug && canExposeSlug(slug)){
+        return path + (path.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
+      }
+      return path;
     }
   }
 
-  function isLive(){
-    return State.mode === "live" && !!State.slug && !!getSession().access_ok;
+  function show(msg, cls="warn"){
+    const el = $("note");
+    if(!el) return;
+    el.className = "note " + cls;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function pushSignal(type,label,href,detail){
+    try{
+      const rows = safeJson(localStorage.getItem(SIGNAL_KEY), []);
+      const next = {
+        id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        type:type || "photos",
+        label:label || "Photos modifiées",
+        source:"photos",
+        href:href || "./photos.html",
+        detail:detail || "",
+        created_at:new Date().toISOString()
+      };
+      rows.unshift(next);
+      localStorage.setItem(SIGNAL_KEY, JSON.stringify(rows.slice(0,30)));
+    }catch(_){}
   }
 
   function normalizeUrl(u){
     u = String(u || "").trim();
     if(!u) return "";
-
     const lower = u.toLowerCase();
     if(lower.startsWith("javascript:") || lower.startsWith("data:")) return "";
-
-    if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)){
-      if(u.includes(".")) u = "https://" + u;
-    }
-
+    if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u) && u.includes(".")) u = "https://" + u;
     if(!/^https?:\/\//i.test(u)) return "";
     return u;
   }
 
   function normalizeGalleryUrls(raw){
-    if(Array.isArray(raw)){
-      return raw
-        .map(x => normalizeUrl(x))
-        .filter(Boolean);
-    }
-
+    if(Array.isArray(raw)) return raw.map(normalizeUrl).filter(Boolean);
     if(typeof raw === "string"){
       const text = raw.trim();
       if(!text) return [];
-
       try{
         const parsed = JSON.parse(text);
-        if(Array.isArray(parsed)){
-          return parsed.map(x => normalizeUrl(x)).filter(Boolean);
-        }
+        if(Array.isArray(parsed)) return parsed.map(normalizeUrl).filter(Boolean);
       }catch(_){}
-
-      return text
-        .split(/\r?\n|,/)
-        .map(x => normalizeUrl(x))
-        .filter(Boolean);
+      return text.split(/\r?\n|,/).map(normalizeUrl).filter(Boolean);
     }
-
     return [];
-  }
-
-  function getLSKey(){
-    return "DIGIY_LOC_PHOTOS_CACHE_V2:" + (State.slug || "noslug");
-  }
-
-  function saveLocal(){
-    try{
-      localStorage.setItem(getLSKey(), JSON.stringify({
-        slug: State.slug,
-        phone: State.phone,
-        photos: State.photos,
-        ts: Date.now()
-      }));
-    }catch(_){}
-  }
-
-  function loadLocal(){
-    try{
-      const raw = localStorage.getItem(getLSKey());
-      if(!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed?.photos) ? parsed.photos : [];
-    }catch(_){
-      return [];
-    }
   }
 
   function uniqueCover(list){
     let found = false;
-
     const cleaned = (list || [])
-      .map(function(x){
-        return {
-          url: normalizeUrl(x?.url || ""),
-          cover: !!x?.cover
-        };
-      })
+      .map(x => ({ url:normalizeUrl(x?.url || x || ""), cover:!!x?.cover }))
       .filter(x => x.url);
 
-    return cleaned.map(function(x, idx){
+    const dedup = [];
+    cleaned.forEach(x=>{
+      if(!dedup.some(p => p.url === x.url)) dedup.push(x);
+    });
+
+    return dedup.map((x,idx)=>{
       let cover = x.cover;
-      if(cover && !found){
-        found = true;
-      }else{
-        cover = false;
-      }
-
-      if(idx === 0 && !found){
-        cover = true;
-        found = true;
-      }
-
-      return {
-        url: x.url,
-        cover
-      };
+      if(cover && !found) found = true;
+      else cover = false;
+      if(idx === 0 && !found){ cover = true; found = true; }
+      return { url:x.url, cover };
     });
   }
 
-  function mergeRemotePhotos(photoUrl, galleryUrls){
+  function mergeRemotePhotos(photoUrl,galleryUrls){
     const list = [];
     const main = normalizeUrl(photoUrl || "");
     const gallery = normalizeGalleryUrls(galleryUrls);
-
-    if(main){
-      list.push({ url: main, cover: true });
-    }
-
-    gallery.forEach(function(url){
-      if(!list.some(x => x.url === url)){
-        list.push({ url, cover: false });
-      }
+    if(main) list.push({url:main,cover:true});
+    gallery.forEach(url=>{
+      if(!list.some(x=>x.url===url)) list.push({url,cover:false});
     });
-
     return uniqueCover(list);
   }
 
-  function refreshTopUi(){
-    const sess = getSession();
+  function getLSKey(){return "DIGIY_LOC_PHOTOS_CACHE_V3:" + (State.slug || "noslug");}
+  function saveLocal(){
+    try{
+      localStorage.setItem(getLSKey(), JSON.stringify({
+        slug:State.slug,
+        photos:State.photos,
+        ts:Date.now()
+      }));
+    }catch(_){}
+  }
+  function loadLocal(){
+    return safeJson(localStorage.getItem(getLSKey()), {})?.photos || [];
+  }
 
-    $("pillPhone").innerHTML = "📞 <strong>" + esc(State.phone || "—") + "</strong>";
-    $("pillSlug").innerHTML = "🏷️ <strong>" + esc(State.slug || "—") + "</strong>";
-
-    const pillState = $("pillState");
-    if(isLive()){
-      pillState.textContent = "✅ Connecté";
-      pillState.className = "pill ok";
-    }else{
-      pillState.textContent = "🔒 Aperçu";
-      pillState.className = "pill warn";
-    }
-
-    $("kvMode").textContent = isLive() ? "live" : "preview";
-    $("kvSlug").textContent = State.slug || "—";
-    $("kvPhone").textContent = State.phone || "—";
-
-    $("btnApp").href = withSlug("./app.html");
-    $("btnPin").href = withSlug("./pin.html");
-    $("btnPrefiche").href = withSlug("./fiche-abo.html");
-
-    dbg(
-      "mode=" + State.mode +
-      " • slug=" + (State.slug || "—") +
-      " • phone=" + (State.phone || "—") +
-      " • access_ok=" + (sess.access_ok ? "true" : "false") +
-      " • photos=" + State.photos.length
+  function getSb(){
+    try{
+      const guardSb = window.DIGIY_GUARD?.getSb?.();
+      if(guardSb) return guardSb;
+    }catch(_){}
+    if(sb) return sb;
+    if(!window.supabase?.createClient) return null;
+    sb = window.supabase.createClient(
+      String(window.DIGIY_SUPABASE_URL || "").trim(),
+      String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim(),
+      { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } }
     );
+    return sb;
+  }
+
+  async function waitGuardReady(){
+    if(!window.DIGIY_GUARD?.ready) return;
+    try{
+      const out = window.DIGIY_GUARD.ready({ redirect:false, preserve_validation:true, allow_soft_session:true });
+      if(out?.then) await out;
+    }catch(_){
+      try{ await window.DIGIY_GUARD.ready({ redirect:false }); }catch(__){}
+    }
+  }
+
+  function isLive(){return State.mode === "live" && !!State.slug && hasAccess();}
+
+  function refreshUi(){
+    const live = isLive();
+    $("pillState").textContent = live ? "✅ Accès ouvert" : "👁️ Lecture";
+    $("pillState").className = "pill " + (live ? "ok" : "warn");
+    $("pillSpace").textContent = "🏠 " + displaySpace(State.slug);
+    $("pillCount").textContent = State.photos.length + (State.photos.length > 1 ? " photos" : " photo");
+    $("kvMode").textContent = live ? "Ouvert" : "Lecture";
+    $("kvSpace").textContent = displaySpace(State.slug);
+    $("kvCover").textContent = State.photos.findIndex(p=>p.cover) >= 0 ? "Photo " + (State.photos.findIndex(p=>p.cover) + 1) : "—";
+
+    const links = [
+      ["btnApp","./app.html"],
+      ["btnPin","./pin.html"],
+      ["btnPrefiche","./fiche-abo.html"],
+      ["navHome","./app.html"],
+      ["navReservations","./reservations.html"],
+      ["navPlanning","./planning.html"],
+      ["navPhotos","./photos.html"],
+      ["navMore","./manage-links.html"]
+    ];
+    links.forEach(([id,path])=>{
+      const el = $(id);
+      if(el) el.href = withContext(path);
+    });
+
+    $("btnAdd").disabled = !live;
+    $("btnSave").disabled = !live;
   }
 
   function render(){
     const box = $("gallery");
-    if(!box) return;
-
     box.innerHTML = "";
 
     if(!State.photos.length){
       const tile = document.createElement("div");
       tile.className = "tile";
-      tile.innerHTML = "<div class='empty'>+</div>";
+      tile.innerHTML = "<div class='emptyTile'>Aucune photo.<br>Ajoute une URL pour commencer.</div>";
       box.appendChild(tile);
-      refreshTopUi();
+      refreshUi();
       return;
     }
 
-    State.photos.forEach(function(photo, idx){
+    State.photos.forEach((photo,idx)=>{
       const tile = document.createElement("div");
       tile.className = "tile";
 
@@ -752,14 +766,12 @@
       img.src = photo.url;
       img.alt = "Photo logement " + (idx + 1);
       img.loading = "lazy";
-      img.onerror = function(){
-        this.style.display = "none";
-      };
+      img.onerror = function(){ this.style.display = "none"; };
 
       if(photo.cover){
         const badge = document.createElement("div");
         badge.className = "badge";
-        badge.textContent = "⭐ Cover";
+        badge.textContent = "⭐ Principale";
         tile.appendChild(badge);
       }
 
@@ -768,18 +780,14 @@
       del.type = "button";
       del.textContent = "×";
       del.disabled = !isLive();
-      del.title = isLive() ? "Supprimer" : "Mode aperçu";
+      del.title = isLive() ? "Supprimer" : "Lecture";
       del.addEventListener("click", function(){
-        if(!isLive()){
-          show("👁️ En aperçu, suppression désactivée.", "warn");
-          return;
-        }
-
-        State.photos.splice(idx, 1);
+        if(!isLive()){ show("Passe par ton code pour modifier les photos.", "warn"); return; }
+        State.photos.splice(idx,1);
         State.photos = uniqueCover(State.photos);
         saveLocal();
         render();
-        show("🗑️ Photo supprimée. Pense à sauvegarder les URLs.", "warn");
+        show("Photo retirée. Clique sur Sauvegarder pour confirmer.", "warn");
       });
 
       const menu = document.createElement("div");
@@ -789,23 +797,13 @@
       bCover.className = "chip gold";
       bCover.type = "button";
       bCover.disabled = !isLive();
-      bCover.textContent = photo.cover ? "⭐ Cover" : "Mettre cover";
+      bCover.textContent = photo.cover ? "⭐ OK" : "Principale";
       bCover.addEventListener("click", function(){
-        if(!isLive()){
-          show("👁️ En aperçu, action désactivée.", "warn");
-          return;
-        }
-
-        State.photos = State.photos.map(function(p, i){
-          return {
-            url: p.url,
-            cover: i === idx
-          };
-        });
-
+        if(!isLive()){ show("Passe par ton code pour choisir la photo principale.", "warn"); return; }
+        State.photos = State.photos.map((p,i)=>({url:p.url,cover:i===idx}));
         saveLocal();
         render();
-        show("✅ Cover définie. Pense à sauvegarder les URLs.", "ok");
+        show("Photo principale choisie. Clique sur Sauvegarder.", "ok");
       });
 
       const bOpen = document.createElement("button");
@@ -825,278 +823,176 @@
       box.appendChild(tile);
     });
 
-    refreshTopUi();
+    refreshUi();
   }
 
   function addPhoto(){
     if(!isLive()){
-      show(
-        !State.slug
-          ? "👁️ Aucun identifiant détecté. Passe par ton lien d’entrée."
-          : "👁️ Mode aperçu. Passe par PIN pour gérer les URLs photos.",
-        "warn"
-      );
+      show("Passe par ton code pour ajouter des photos.", "warn");
       return;
     }
 
-    const raw = prompt("Colle l’URL de la photo WordPress (https://...)");
+    const raw = prompt("Colle l’URL de la photo (https://...)");
     if(raw === null) return;
-
     const url = normalizeUrl(raw);
     if(!url){
-      show("❌ URL invalide. Utilise une vraie URL https://...", "bad");
+      show("URL invalide. Utilise un lien https:// propre.", "bad");
+      return;
+    }
+    if(State.photos.some(x=>x.url===url)){
+      show("Cette photo est déjà dans la galerie.", "warn");
       return;
     }
 
-    if(State.photos.some(x => x.url === url)){
-      show("⚠️ Cette photo est déjà dans la galerie.", "warn");
-      return;
-    }
-
-    State.photos.push({
-      url,
-      cover: State.photos.length === 0
-    });
-
+    State.photos.push({url,cover:State.photos.length===0});
     State.photos = uniqueCover(State.photos);
     saveLocal();
     render();
-    show("✅ URL photo ajoutée. Clique maintenant sur Sauvegarder.", "ok");
+    show("Photo ajoutée. Clique sur Sauvegarder pour l’envoyer sur le logement.", "ok");
   }
 
   async function readRemotePhotos(){
     const S = getSb();
-    if(!S) return { ok:false, reason:"supabase_not_ready" };
-    if(!State.slug) return { ok:false, reason:"slug_missing" };
-
+    if(!S || !State.slug) return {ok:false,reason:"not_ready"};
     try{
-      const { data, error } = await S
+      const {data,error} = await S
         .from("digiy_loc_rooms")
-        .select("slug,phone,photo_url,gallery_urls")
+        .select("slug,photo_url,gallery_urls")
         .eq("slug", State.slug)
-        .single();
-
+        .limit(1)
+        .maybeSingle();
       if(error) throw error;
-
-      return {
-        ok:true,
-        photos: mergeRemotePhotos(data?.photo_url, data?.gallery_urls),
-        row:data
-      };
+      return {ok:true,photos:mergeRemotePhotos(data?.photo_url,data?.gallery_urls)};
     }catch(e){
-      return { ok:false, reason:String(e?.message || e) };
+      return {ok:false,reason:String(e?.message || e)};
     }
   }
 
   async function saveRemotePhotos(){
     const S = getSb();
-    if(!S) return { ok:false, reason:"supabase_not_ready" };
-    if(!State.slug) return { ok:false, reason:"slug_missing" };
-
+    if(!S || !State.slug) return {ok:false,reason:"not_ready"};
     const clean = uniqueCover(State.photos);
-    const coverUrl = clean.find(x => x.cover)?.url || clean[0]?.url || null;
-    const galleryUrls = clean.map(x => x.url);
+    const coverUrl = clean.find(x=>x.cover)?.url || clean[0]?.url || null;
+    const galleryUrls = clean.map(x=>x.url);
 
-    const payload = {
-      photo_url: coverUrl,
-      gallery_urls: galleryUrls
-    };
-
-    const slug = State.slug;
-    const phone = phoneDigits(State.phone);
-
-    const attempts = [];
-
-    if(phone){
-      attempts.push(async function(){
-        return await S
-          .from("digiy_loc_rooms")
-          .update(payload)
-          .eq("slug", slug)
-          .eq("phone", phone)
-          .select("slug,photo_url,gallery_urls")
-          .single();
-      });
-    }
-
-    attempts.push(async function(){
-      return await S
-        .from("digiy_loc_rooms")
-        .update(payload)
-        .eq("slug", slug)
-        .select("slug,photo_url,gallery_urls")
-        .single();
-    });
-
-    let lastErr = null;
-
-    for(const run of attempts){
-      try{
-        const { data, error } = await run();
-        if(error) throw error;
-
-        return {
-          ok:true,
-          row:data
-        };
-      }catch(e){
-        lastErr = e;
-      }
-    }
-
-    return { ok:false, reason:String(lastErr?.message || lastErr || "save_failed") };
-  }
-
-  function getSb(){
     try{
-      const guardSb = window.DIGIY_GUARD?.getSb?.();
-      if(guardSb) return guardSb;
-    }catch(_){}
-
-    if(sb) return sb;
-
-    if(!window.supabase?.createClient) return null;
-
-    sb = window.supabase.createClient(
-      String(window.DIGIY_SUPABASE_URL || "").trim(),
-      String(window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY || "").trim(),
-      {
-        auth:{
-          persistSession:false,
-          autoRefreshToken:false,
-          detectSessionInUrl:false
-        }
-      }
-    );
-
-    return sb;
+      const {data,error} = await S
+        .from("digiy_loc_rooms")
+        .update({ photo_url:coverUrl, gallery_urls:galleryUrls })
+        .eq("slug", State.slug)
+        .select("slug,photo_url,gallery_urls")
+        .limit(1)
+        .maybeSingle();
+      if(error) throw error;
+      return {ok:true,row:data};
+    }catch(e){
+      return {ok:false,reason:String(e?.message || e)};
+    }
   }
 
   async function savePhotos(){
     if(!isLive()){
-      show("👁️ Mode aperçu. Sauvegarde désactivée.", "warn");
+      show("Passe par ton code pour sauvegarder.", "warn");
       return;
     }
-
     State.photos = uniqueCover(State.photos);
     saveLocal();
-    render();
-
-    show("⏳ Sauvegarde réelle en cours…", "warn");
-
-    const res = await saveRemotePhotos();
-    if(!res.ok){
-      show(
-        "⚠️ Cache local mis à jour, mais la sauvegarde réelle a échoué.\nDétail: " + (res.reason || "save_failed"),
-        "bad"
-      );
+    show("Sauvegarde en cours…", "warn");
+    const out = await saveRemotePhotos();
+    if(!out.ok){
+      show("Impossible de sauvegarder sur le logement.\n" + out.reason + "\nLes photos restent gardées sur ce téléphone.", "bad");
       return;
     }
-
-    const remotePhotos = mergeRemotePhotos(res.row?.photo_url, res.row?.gallery_urls);
-    State.photos = remotePhotos;
-    saveLocal();
-    render();
-
-    show("✅ URLs sauvegardées sur le logement.", "ok");
+    pushSignal("photos_saved", State.photos.length + " photo(s) sauvegardée(s)", withContext("./photos.html"), "Galerie logement mise à jour.");
+    show("✅ Photos sauvegardées. L’accueil recevra l’indication.", "ok");
   }
 
-  function disablePreviewUi(reason){
-    State.mode = "preview";
-    State.reason = reason || "preview";
-
-    $("btnAdd").disabled = true;
-    $("btnSave").disabled = true;
-
-    show(
-      reason === "slug_missing"
-        ? "👁️ Aucun identifiant détecté. Tu vois un aperçu propre.\n➡️ Ouvre la page depuis ton lien d’entrée."
-        : reason === "has_access_false"
-        ? "👁️ Slug présent mais accès non actif.\n➡️ Passe par PIN ou active l’accès."
-        : "👁️ Mode aperçu. Ajout et sauvegarde désactivés.",
-      "warn"
-    );
+  async function copyGallery(){
+    const links = State.photos.map(p=>p.url).join("\n");
+    if(!links){ show("Aucun lien photo à copier.", "warn"); return; }
+    try{
+      await navigator.clipboard.writeText(links);
+      show("Liens copiés.", "ok");
+    }catch(_){
+      show("Copie automatique impossible. Ouvre les photos une par une.", "warn");
+    }
   }
 
-  function enableLiveUi(){
-    State.mode = "live";
-    State.reason = "ok";
+  function syncState(){
+    State.slug = getSlug();
+    State.phone = getPhone();
+    State.mode = hasAccess() ? "live" : "preview";
 
-    $("btnAdd").disabled = false;
-    $("btnSave").disabled = false;
-
-    show("✅ Accès OK. Tu peux gérer les URLs photos.", "ok");
-  }
-
-  function bindUi(){
-    $("btnAdd").addEventListener("click", addPhoto);
-    $("btnSave").addEventListener("click", savePhotos);
+    if(State.slug){
+      storageSet("digiy_loc_slug", State.slug);
+      storageSet("digiy_loc_last_slug", State.slug);
+      storageSet("DIGIY_LOC_SLUG", State.slug);
+    }
+    if(State.phone){
+      storageSet("digiy_loc_phone", State.phone, false);
+      storageSet("DIGIY_LOC_PHONE", State.phone, false);
+    }
   }
 
   async function init(){
-    bindUi();
+    cleanVisibleUrl();
+    await waitGuardReady();
+    cleanVisibleUrl();
+    syncState();
+
+    $("btnAdd").addEventListener("click", addPhoto);
+    $("btnSave").addEventListener("click", savePhotos);
+    $("btnCopyGallery").addEventListener("click", copyGallery);
 
     State.photos = uniqueCover(loadLocal());
-    State.slug = getSlug();
-    State.phone = getPhone();
-    refreshTopUi();
     render();
-
-    if(!window.DIGIY_GUARD){
-      show("❌ Guard absent ou non chargé.", "bad");
-      return;
-    }
-
-    try{
-      await waitGuardReady();
-    }catch(e){
-      console.error(e);
-      show("❌ Guard non prêt.", "bad");
-      return;
-    }
-
-    State.slug = getSlug();
-    State.phone = getPhone();
-    State.reason = getSession().reason || "preview";
-    refreshTopUi();
-    render();
-
-    if(!State.slug){
-      disablePreviewUi("slug_missing");
-      refreshTopUi();
-      return;
-    }
-
-    if(!getSession().access_ok){
-      disablePreviewUi("has_access_false");
-      refreshTopUi();
-      return;
-    }
-
-    enableLiveUi();
-    refreshTopUi();
-
-    show("⏳ Lecture réelle des photos…", "warn");
 
     const remote = await readRemotePhotos();
-    if(!remote.ok){
-      State.photos = uniqueCover(loadLocal());
+    if(remote.ok && remote.photos.length){
+      State.photos = uniqueCover(remote.photos);
+      saveLocal();
       render();
-      show(
-        "⚠️ Lecture réelle impossible pour le moment.\nJe garde le cache local comme secours.\nDétail: " + (remote.reason || "read_failed"),
-        "warn"
-      );
-      return;
+      show("Photos chargées depuis le logement.", "ok");
+    }else if(State.photos.length){
+      show("Photos chargées depuis ce téléphone. Sauvegarde pour les envoyer sur le logement.", "warn");
+    }else{
+      show(isLive() ? "Galerie prête. Ajoute les liens photo." : "Lecture seulement. Passe par ton code pour gérer les photos.", isLive() ? "ok" : "warn");
     }
-
-    State.photos = remote.photos;
-    saveLocal();
-    render();
-    show("✅ Photos chargées depuis le logement.", "ok");
   }
 
-  init();
+  init().catch(e=>{
+    console.error(e);
+    show("Erreur au chargement des photos : " + (e?.message || e), "bad");
+    render();
+  });
+})();
+</script>
+
+<script>
+(function(){
+  function scrub(){
+    document.querySelectorAll('body *').forEach(function(el){
+      if(!el || el.children.length) return;
+      var t=el.textContent||'';
+      var n=t
+        .replace(/loc-\d{7,}/gi,'Espace sécurisé')
+        .replace(/(?:\+?221)?\d{9,}/g,function(m){return /[0-9]/.test(m)?'Compte reconnu':m});
+      if(n!==t) el.textContent=n;
+    });
+    document.querySelectorAll('a[href]').forEach(function(a){
+      try{
+        var u=new URL(a.getAttribute('href'),location.href);
+        ['phone','tel','owner_phone','p_phone','whatsapp','client_phone'].forEach(function(k){u.searchParams.delete(k);});
+        var s=u.searchParams.get('slug')||'';
+        if(/\d{7,}/.test(s))u.searchParams.delete('slug');
+        a.setAttribute('href',u.origin===location.origin?u.pathname+u.search+u.hash:u.toString());
+      }catch(e){}
+    });
+  }
+  scrub();
+  new MutationObserver(scrub).observe(document.body,{childList:true,subtree:true,characterData:true});
 })();
 </script>
 </body>
 </html>
+
