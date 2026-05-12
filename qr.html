@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#061b14"/>
-<meta name="description" content="Je loue — QR DIGIY LOC sécurisé, sans téléphone visible, sans identifiant sensible en façade."/>
+<meta name="description" content="Je loue — QR DIGIY LOC public, sans téléphone visible, sans identifiant sensible en façade."/>
 <title>Je loue • Mon QR</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -20,7 +20,7 @@
 </script>
 
 <script src="./qrcode.min.js?v=digiy-local-1"></script>
-<script src="./guard.js?v=loc-qr-safe-senior-v1"></script>
+<script src="./guard.js?v=loc-qr-public-v2"></script>
 
 <style>
 :root{
@@ -38,8 +38,10 @@
   --bottom:86px;
   --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
+
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+
 body{
   min-height:100vh;
   font-family:var(--font);
@@ -50,17 +52,23 @@ body{
     linear-gradient(180deg,#03120d,var(--bg));
   padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
 }
+
 a{color:inherit;text-decoration:none}
 button{font:inherit}
+
 .wrap{max-width:860px;margin:0 auto}
-.hero,.card{
+
+.hero,
+.card{
   border:1px solid var(--line);
   border-radius:26px;
   background:var(--card);
   box-shadow:var(--shadow);
   padding:18px;
 }
+
 .card{margin-top:14px}
+
 .top{
   display:flex;
   justify-content:space-between;
@@ -68,14 +76,26 @@ button{font:inherit}
   gap:14px;
   flex-wrap:wrap;
 }
-.brand{display:flex;gap:12px;align-items:center;min-width:0}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+}
+
 .logo{
-  width:58px;height:58px;border-radius:20px;
-  display:grid;place-items:center;
+  width:58px;
+  height:58px;
+  border-radius:20px;
+  display:grid;
+  place-items:center;
   background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(34,197,94,.20));
   border:1px solid rgba(250,204,21,.36);
-  font-size:28px;flex:0 0 auto;
+  font-size:28px;
+  flex:0 0 auto;
 }
+
 h1{
   margin:0;
   font-size:clamp(30px,6vw,46px);
@@ -84,6 +104,7 @@ h1{
   letter-spacing:-.045em;
   color:#fff7cc;
 }
+
 .sub{
   margin-top:8px;
   color:var(--muted);
@@ -92,9 +113,19 @@ h1{
   font-weight:850;
   max-width:62ch;
 }
-.pillRow{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+
+.pillRow{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
 .pill{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
   min-height:42px;
   padding:9px 13px;
   border-radius:999px;
@@ -105,9 +136,25 @@ h1{
   font-weight:1000;
   white-space:nowrap;
 }
-.pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-.pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
-.pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+
+.pill.ok{
+  border-color:rgba(34,197,94,.35);
+  background:rgba(34,197,94,.10);
+  color:#bbf7d0;
+}
+
+.pill.warn{
+  border-color:rgba(250,204,21,.35);
+  background:rgba(250,204,21,.10);
+  color:#fde68a;
+}
+
+.pill.bad{
+  border-color:rgba(239,68,68,.35);
+  background:rgba(239,68,68,.10);
+  color:#fecaca;
+}
+
 .btn{
   appearance:none;
   border:1px solid rgba(148,163,184,.24);
@@ -126,18 +173,41 @@ h1{
   text-align:center;
   touch-action:manipulation;
 }
+
 .btn:active{transform:translateY(1px) scale(.99)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
-.btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.38);color:#fde68a}
-.btn.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.36);color:#bbf7d0}
-.btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
-.btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.32);color:#fecaca}
+
+.btn.gold{
+  background:rgba(250,204,21,.13);
+  border-color:rgba(250,204,21,.38);
+  color:#fde68a;
+}
+
+.btn.green{
+  background:rgba(34,197,94,.12);
+  border-color:rgba(34,197,94,.36);
+  color:#bbf7d0;
+}
+
+.btn.blue{
+  background:rgba(56,189,248,.12);
+  border-color:rgba(56,189,248,.34);
+  color:#bae6fd;
+}
+
+.btn.red{
+  background:rgba(239,68,68,.10);
+  border-color:rgba(239,68,68,.32);
+  color:#fecaca;
+}
+
 .actions{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
   margin-top:16px;
 }
+
 .qrBox{
   margin-top:14px;
   min-height:330px;
@@ -148,6 +218,7 @@ h1{
   place-items:center;
   padding:18px;
 }
+
 .qrImg{
   width:min(360px,100%);
   height:auto;
@@ -157,6 +228,7 @@ h1{
   border:1px solid rgba(148,163,184,.24);
   display:block;
 }
+
 .sectionTitle{
   font-size:24px;
   font-weight:1100;
@@ -164,12 +236,14 @@ h1{
   margin:0 0 8px;
   letter-spacing:-.02em;
 }
+
 .safeText{
   color:var(--muted);
   font-size:17px;
   line-height:1.55;
   font-weight:850;
 }
+
 .linkBox{
   margin-top:14px;
   padding:14px;
@@ -177,12 +251,14 @@ h1{
   border:1px solid rgba(148,163,184,.22);
   background:rgba(0,0,0,.16);
 }
+
 .linkLabel{
   color:#fde68a;
   font-weight:1100;
   font-size:16px;
   margin-bottom:8px;
 }
+
 .linkValue{
   color:#dbeafe;
   font-size:15px;
@@ -190,6 +266,7 @@ h1{
   font-weight:850;
   word-break:break-all;
 }
+
 .doctrine{
   margin-top:14px;
   border:1px solid rgba(34,197,94,.28);
@@ -201,6 +278,7 @@ h1{
   line-height:1.55;
   font-weight:900;
 }
+
 .note{
   display:none;
   margin-top:12px;
@@ -214,16 +292,41 @@ h1{
   font-weight:950;
   white-space:pre-wrap;
 }
-.note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
-.note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
-.note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+
+.note.ok{
+  display:block;
+  border-color:rgba(34,197,94,.35);
+  background:rgba(34,197,94,.09);
+  color:#bbf7d0;
+}
+
+.note.warn{
+  display:block;
+  border-color:rgba(250,204,21,.35);
+  background:rgba(250,204,21,.09);
+  color:#fde68a;
+}
+
+.note.bad{
+  display:block;
+  border-color:rgba(239,68,68,.35);
+  background:rgba(239,68,68,.09);
+  color:#fecaca;
+}
+
 .bottomNav{
-  position:fixed;left:0;right:0;bottom:0;z-index:70;
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:70;
   padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
   background:linear-gradient(180deg,rgba(6,27,20,0),rgba(6,27,20,.96) 28%);
 }
+
 .bottomInner{
-  max-width:980px;margin:0 auto;
+  max-width:980px;
+  margin:0 auto;
   display:grid;
   grid-template-columns:repeat(5,1fr);
   gap:6px;
@@ -234,6 +337,7 @@ h1{
   padding:7px;
   box-shadow:0 16px 44px rgba(0,0,0,.38);
 }
+
 .navItem{
   min-height:60px;
   border-radius:16px;
@@ -248,16 +352,50 @@ h1{
   border:1px solid transparent;
   text-align:center;
 }
-.navItem strong{font-size:21px;line-height:1}
-.navItem.active{color:#fde68a;background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.24)}
+
+.navItem strong{
+  font-size:21px;
+  line-height:1;
+}
+
+.navItem.active{
+  color:#fde68a;
+  background:rgba(250,204,21,.10);
+  border-color:rgba(250,204,21,.24);
+}
+
 @media(max-width:620px){
-  body{padding-left:10px;padding-right:10px}
-  .hero,.card{padding:15px;border-radius:22px}
-  .actions{grid-template-columns:1fr}
-  .sub{font-size:17px}
-  .btn{font-size:17px;min-height:60px}
-  .qrBox{min-height:280px}
-  .navItem{font-size:12px}
+  body{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .hero,
+  .card{
+    padding:15px;
+    border-radius:22px;
+  }
+
+  .actions{
+    grid-template-columns:1fr;
+  }
+
+  .sub{
+    font-size:17px;
+  }
+
+  .btn{
+    font-size:17px;
+    min-height:60px;
+  }
+
+  .qrBox{
+    min-height:280px;
+  }
+
+  .navItem{
+    font-size:12px;
+  }
 }
 </style>
 </head>
@@ -271,25 +409,27 @@ h1{
         <div>
           <h1>Mon QR</h1>
           <div class="sub">
-            Un QR propre pour partager le logement et retrouver l’accès DIGIY.
+            Un QR propre pour partager le logement côté public.
+            Il ouvre la fiche logement, pas l’espace PRO.
             Pas de téléphone affiché. Pas d’identifiant sensible en façade.
           </div>
         </div>
       </div>
+
       <div>
-        <div class="pill" id="pillSpace">Espace sécurisé</div>
+        <div class="pill" id="pillSpace">Espace logement sécurisé</div>
         <div class="pill warn" id="pillState" style="margin-top:8px">vérification…</div>
       </div>
     </div>
 
     <div class="pillRow">
       <span class="pill ok">0% commission</span>
-      <span class="pill">Lien léger</span>
-      <span class="pill">QR local</span>
+      <span class="pill">Lien public</span>
+      <span class="pill">QR logement</span>
     </div>
 
     <div class="actions">
-      <button class="btn green" id="btnOpen" type="button">↗️ Ouvrir le lien</button>
+      <button class="btn green" id="btnOpen" type="button">↗️ Ouvrir la fiche</button>
       <button class="btn gold" id="btnCopy" type="button">📋 Copier le lien</button>
       <button class="btn blue" id="btnDownload" type="button">⬇️ Télécharger QR</button>
       <button class="btn" id="btnSticker" type="button">🟩 Sticker XL</button>
@@ -300,12 +440,14 @@ h1{
 
   <section class="card">
     <h2 class="sectionTitle">QR prêt à partager</h2>
+
     <div class="safeText">
-      Teste le QR avec un téléphone avant impression. Le lien ne transporte pas le numéro du propriétaire.
+      Teste le QR avec un téléphone avant impression. Il doit ouvrir la fiche publique du logement,
+      sans demander de PIN au client.
     </div>
 
     <div class="qrBox">
-      <a id="qrAnchor" href="#" target="_blank" rel="noopener">
+      <a id="qrAnchor" href="#" target="_blank" rel="noopener" aria-label="Ouvrir la fiche publique LOC">
         <img id="qrImg" class="qrImg" alt="QR DIGIY LOC"/>
       </a>
     </div>
@@ -316,8 +458,8 @@ h1{
     </div>
 
     <div class="doctrine">
-      Doctrine DIGIY LOC : le QR ouvre le chemin, mais ne montre pas le téléphone du propriétaire.
-      Les infos sensibles restent dans l’accès, pas dans l’adresse visible.
+      Doctrine DIGIY LOC : le QR ouvre la fiche publique du logement.
+      L’espace PRO reste protégé par PIN. Le client ne doit pas tomber sur le cockpit.
     </div>
   </section>
 </div>
@@ -336,7 +478,14 @@ h1{
 (async function(){
   "use strict";
 
-  const QR_PRO_BASE = "https://beauville.github.io/digiy-qr-pro/";
+  /*
+    IMPORTANT :
+    Ce fichier reste côté PRO pour générer / imprimer le QR.
+    Mais le QR généré pointe vers une fiche publique LOC, sans PIN.
+    Si ton domaine public LOC change, remplace seulement cette URL.
+  */
+  const LOC_PUBLIC_FICHE = "https://loc.digiylyfe.com/fiche-loc.html";
+
   const $ = (id)=>document.getElementById(id);
 
   const State = {
@@ -350,8 +499,16 @@ h1{
   };
 
   function storageGet(k){
-    try{const s=sessionStorage.getItem(k); if(s) return s;}catch{}
-    try{const l=localStorage.getItem(k); if(l) return l;}catch{}
+    try{
+      const s = sessionStorage.getItem(k);
+      if(s) return s;
+    }catch(_){}
+
+    try{
+      const l = localStorage.getItem(k);
+      if(l) return l;
+    }catch(_){}
+
     return "";
   }
 
@@ -365,7 +522,9 @@ h1{
       .replace(/^[-_]+|[-_]+$/g,"");
   }
 
-  function digits(v){ return String(v || "").replace(/\D/g,""); }
+  function digits(v){
+    return String(v || "").replace(/\D/g,"");
+  }
 
   function isSensitiveSlug(slug){
     return /\d{7,}/.test(String(slug || ""));
@@ -378,37 +537,78 @@ h1{
 
   function safeSpaceLabel(slug){
     const s = cleanSlug(slug);
-    if(!s || isSensitiveSlug(s)) return "Espace logement sécurisé";
-    if(/^loc-room-/i.test(s)) return "Logement " + s.slice(-6).toUpperCase();
+
+    if(!s || isSensitiveSlug(s)){
+      return "Espace logement sécurisé";
+    }
+
+    if(/^loc-room-/i.test(s)){
+      return "Logement " + s.slice(-6).toUpperCase();
+    }
+
     return "Espace LOC";
   }
 
-  function getGuardState(){ return window.DIGIY_GUARD?.state || {}; }
-  function getGuardSession(){ try{return window.DIGIY_GUARD?.getSession?.() || {};}catch{return {};} }
+  function getGuardState(){
+    return window.DIGIY_GUARD?.state || {};
+  }
+
+  function getGuardSession(){
+    try{
+      return window.DIGIY_GUARD?.getSession?.() || {};
+    }catch(_){
+      return {};
+    }
+  }
 
   function readParam(name){
-    try{return String(new URL(location.href).searchParams.get(name) || "").trim();}catch{return "";}
+    try{
+      return String(new URL(location.href).searchParams.get(name) || "").trim();
+    }catch(_){
+      return "";
+    }
   }
 
   function cleanVisibleUrl(){
     try{
       const u = new URL(location.href);
       let changed = false;
-      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>{
-        if(u.searchParams.has(k)){u.searchParams.delete(k);changed=true;}
+
+      [
+        "phone",
+        "tel",
+        "owner_phone",
+        "p_phone",
+        "whatsapp",
+        "client_phone",
+        "token",
+        "session_token",
+        "pin",
+        "pin4"
+      ].forEach(k=>{
+        if(u.searchParams.has(k)){
+          u.searchParams.delete(k);
+          changed = true;
+        }
       });
+
       const slug = cleanSlug(u.searchParams.get("slug") || "");
+
       if(slug && isSensitiveSlug(slug)){
         u.searchParams.delete("slug");
         changed = true;
       }
-      if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
-    }catch{}
+
+      if(changed){
+        history.replaceState({}, "", u.pathname + u.search + u.hash);
+      }
+    }catch(_){}
   }
 
   function getSlug(){
     const st = getGuardState();
     const gs = getGuardSession();
+
     return cleanSlug(
       readParam("slug") ||
       st.slug ||
@@ -425,6 +625,7 @@ h1{
   function getPhone(){
     const st = getGuardState();
     const gs = getGuardSession();
+
     return digits(
       st.phone ||
       gs.phone ||
@@ -438,8 +639,15 @@ h1{
   function hasAccess(){
     const st = getGuardState();
     const gs = getGuardSession();
-    return [st.access_ok,st.access,st.ok,gs.access_ok,gs.access,gs.ok]
-      .some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1");
+
+    return [
+      st.access_ok,
+      st.access,
+      st.ok,
+      gs.access_ok,
+      gs.access,
+      gs.ok
+    ].some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1");
   }
 
   function note(msg, cls="warn"){
@@ -451,45 +659,59 @@ h1{
 
   function setBusy(on){
     State.busy = !!on;
-    ["btnOpen","btnCopy","btnDownload","btnSticker"].forEach(id=>{
-      const el=$(id); if(el) el.disabled = !!on;
+
+    [
+      "btnOpen",
+      "btnCopy",
+      "btnDownload",
+      "btnSticker"
+    ].forEach(id=>{
+      const el = $(id);
+      if(el) el.disabled = !!on;
     });
   }
 
   function buildInternal(path){
     const u = new URL(path, location.href);
-    if(canExposeSlug(State.slug)) u.searchParams.set("slug", State.slug);
-    ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
+
+    if(canExposeSlug(State.slug)){
+      u.searchParams.set("slug", State.slug);
+    }
+
+    [
+      "phone",
+      "tel",
+      "owner_phone",
+      "p_phone",
+      "whatsapp",
+      "client_phone",
+      "token",
+      "session_token",
+      "pin",
+      "pin4"
+    ].forEach(k=>u.searchParams.delete(k));
+
     return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
   }
 
   function buildTargetUrl(){
-    const qr = new URL(QR_PRO_BASE);
-    qr.searchParams.set("module", "LOC");
-
-    // Le slug n’est envoyé que s’il n’est pas sensible.
-    // Si le slug contient un téléphone ou un identifiant brut, le QR mène vers l’entrée PIN propre.
-    if(canExposeSlug(State.slug)){
-      qr.searchParams.set("slug", State.slug);
-    }
-
-    const returnUrl = new URL(buildInternal("./app.html"), location.href);
-    const publicUrl = new URL(buildInternal("./go-pin-public.html"), location.href);
-
-    qr.searchParams.set("return", returnUrl.toString());
-    qr.searchParams.set("public", publicUrl.toString());
-
-    return qr.toString();
+    /*
+      Avant : le QR envoyait vers DIGIY QR PRO avec return=app.html / public=go-pin-public.html.
+      Maintenant : le QR ouvre directement la fiche publique LOC.
+    */
+    return LOC_PUBLIC_FICHE;
   }
 
   function syncUi(){
     $("pillSpace").textContent = safeSpaceLabel(State.slug);
+
     const pill = $("pillState");
+
     if(State.access){
-      pill.textContent = "accès ouvert";
+      pill.textContent = "QR public prêt";
       pill.className = "pill ok";
     }else if(State.slug || State.phone){
-      pill.textContent = "lecture";
+      pill.textContent = "lecture locale";
       pill.className = "pill warn";
     }else{
       pill.textContent = "accès à vérifier";
@@ -517,40 +739,56 @@ h1{
       const raw = localStorage.getItem(key);
       const rows = raw ? JSON.parse(raw) : [];
       const next = Array.isArray(rows) ? rows : [];
+
       next.unshift({
         id:"loc-qr-" + Date.now(),
         type:"qr",
         source:"qr",
         label:label || "QR LOC préparé",
         href:buildInternal("./qr.html"),
+        target:State.targetUrl,
         created_at:new Date().toISOString()
       });
+
       localStorage.setItem(key, JSON.stringify(next.slice(0,20)));
-    }catch{}
+    }catch(_){}
   }
 
   async function copyText(text){
-    if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
-    const ta=document.createElement("textarea");
-    ta.value=text; ta.setAttribute("readonly","");
-    ta.style.position="fixed"; ta.style.left="-9999px";
-    document.body.appendChild(ta); ta.select();
-    const ok=document.execCommand("copy");
+    if(navigator.clipboard?.writeText){
+      return navigator.clipboard.writeText(text);
+    }
+
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly","");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+
+    document.body.appendChild(ta);
+    ta.select();
+
+    const ok = document.execCommand("copy");
     ta.remove();
-    if(!ok) throw new Error("copy_failed");
+
+    if(!ok){
+      throw new Error("copy_failed");
+    }
   }
 
   function loadImage(src){
     return new Promise((resolve,reject)=>{
-      const img=new Image();
-      img.onload=()=>resolve(img);
-      img.onerror=()=>reject(new Error("image_load_failed"));
-      img.src=src;
+      const img = new Image();
+
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error("image_load_failed"));
+      img.src = src;
     });
   }
 
   function roundRect(ctx,x,y,w,h,r){
-    const rr=Math.min(r,w/2,h/2);
+    const rr = Math.min(r,w/2,h/2);
+
     ctx.beginPath();
     ctx.moveTo(x+rr,y);
     ctx.arcTo(x+w,y,x+w,y+h,rr);
@@ -565,95 +803,143 @@ h1{
       width:size,
       margin:1,
       errorCorrectionLevel:"M",
-      color:{dark:"#111827", light:"#FFFFFF"}
+      color:{
+        dark:"#111827",
+        light:"#FFFFFF"
+      }
     };
   }
 
   async function ensureQrLib(){
     for(let i=0;i<25;i++){
-      if(window.QRCode?.toDataURL) return true;
+      if(window.QRCode?.toDataURL){
+        return true;
+      }
+
       await new Promise(r=>setTimeout(r,120));
     }
+
     return !!window.QRCode?.toDataURL;
   }
 
   function makeQrDataUrl(text,size){
     return new Promise((resolve,reject)=>{
-      if(!window.QRCode?.toDataURL){ reject(new Error("QRCode lib missing")); return; }
+      if(!window.QRCode?.toDataURL){
+        reject(new Error("QRCode lib missing"));
+        return;
+      }
+
       window.QRCode.toDataURL(text, qrOptions(size), (err,dataUrl)=>{
-        if(err) reject(err); else resolve(dataUrl);
+        if(err){
+          reject(err);
+        }else{
+          resolve(dataUrl);
+        }
       });
     });
   }
 
   async function makeBranded(qrDataUrl,size){
     const qr = await loadImage(qrDataUrl);
-    const W=size, H=Math.round(size*1.34);
-    const pad=Math.round(size*.07);
-    const qrSize=Math.round(size*.70);
-    const canvas=document.createElement("canvas");
-    canvas.width=W; canvas.height=H;
-    const ctx=canvas.getContext("2d");
 
-    const grad=ctx.createLinearGradient(0,0,W,H);
+    const W = size;
+    const H = Math.round(size * 1.34);
+    const pad = Math.round(size * .07);
+    const qrSize = Math.round(size * .70);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+
+    const ctx = canvas.getContext("2d");
+
+    const grad = ctx.createLinearGradient(0,0,W,H);
     grad.addColorStop(0,"#020617");
     grad.addColorStop(.55,"#052e16");
     grad.addColorStop(1,"#07140f");
-    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
 
-    ctx.fillStyle="rgba(250,204,21,.11)";
-    ctx.beginPath(); ctx.arc(W*.18,H*.10,W*.30,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="rgba(34,197,94,.12)";
-    ctx.beginPath(); ctx.arc(W*.94,H*.82,W*.36,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
 
-    ctx.fillStyle="rgba(255,255,255,.06)";
-    roundRect(ctx,pad,pad,W-pad*2,H-pad*2,Math.round(size*.05)); ctx.fill();
-    ctx.strokeStyle="rgba(250,204,21,.42)";
-    ctx.lineWidth=Math.max(2,Math.round(size*.004));
-    roundRect(ctx,pad,pad,W-pad*2,H-pad*2,Math.round(size*.05)); ctx.stroke();
+    ctx.fillStyle = "rgba(250,204,21,.11)";
+    ctx.beginPath();
+    ctx.arc(W*.18,H*.10,W*.30,0,Math.PI*2);
+    ctx.fill();
 
-    ctx.fillStyle="#fff7cc"; ctx.textAlign="center";
-    ctx.font=`900 ${Math.round(size*.058)}px Outfit, system-ui, Arial`;
+    ctx.fillStyle = "rgba(34,197,94,.12)";
+    ctx.beginPath();
+    ctx.arc(W*.94,H*.82,W*.36,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255,255,255,.06)";
+    roundRect(ctx,pad,pad,W-pad*2,H-pad*2,Math.round(size*.05));
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(250,204,21,.42)";
+    ctx.lineWidth = Math.max(2,Math.round(size*.004));
+    roundRect(ctx,pad,pad,W-pad*2,H-pad*2,Math.round(size*.05));
+    ctx.stroke();
+
+    ctx.fillStyle = "#fff7cc";
+    ctx.textAlign = "center";
+    ctx.font = `900 ${Math.round(size*.058)}px Outfit, system-ui, Arial`;
     ctx.fillText("DIGIYLYFE", W/2, pad + Math.round(size*.095));
 
-    ctx.fillStyle="rgba(229,231,235,.88)";
-    ctx.font=`800 ${Math.round(size*.034)}px Outfit, system-ui, Arial`;
-    ctx.fillText("Je loue • accès direct • 0% commission", W/2, pad + Math.round(size*.145));
+    ctx.fillStyle = "rgba(229,231,235,.88)";
+    ctx.font = `800 ${Math.round(size*.034)}px Outfit, system-ui, Arial`;
+    ctx.fillText("Je loue • fiche publique • 0% commission", W/2, pad + Math.round(size*.145));
 
-    const qx=Math.round((W-qrSize)/2);
-    const qy=pad + Math.round(size*.18);
-    ctx.fillStyle="#fff";
-    roundRect(ctx,qx-Math.round(size*.025),qy-Math.round(size*.025),qrSize+Math.round(size*.05),qrSize+Math.round(size*.05),Math.round(size*.035));
+    const qx = Math.round((W - qrSize) / 2);
+    const qy = pad + Math.round(size * .18);
+
+    ctx.fillStyle = "#fff";
+    roundRect(
+      ctx,
+      qx - Math.round(size*.025),
+      qy - Math.round(size*.025),
+      qrSize + Math.round(size*.05),
+      qrSize + Math.round(size*.05),
+      Math.round(size*.035)
+    );
     ctx.fill();
+
     ctx.drawImage(qr,qx,qy,qrSize,qrSize);
 
-    ctx.fillStyle="#facc15";
-    ctx.font=`900 ${Math.round(size*.038)}px Outfit, system-ui, Arial`;
-    ctx.fillText(safeSpaceLabel(State.slug), W/2, qy+qrSize+Math.round(size*.075));
+    ctx.fillStyle = "#facc15";
+    ctx.font = `900 ${Math.round(size*.038)}px Outfit, system-ui, Arial`;
+    ctx.fillText(safeSpaceLabel(State.slug), W/2, qy + qrSize + Math.round(size*.075));
 
-    ctx.fillStyle="rgba(229,231,235,.82)";
-    ctx.font=`800 ${Math.round(size*.030)}px Outfit, system-ui, Arial`;
-    ctx.fillText("Scanne pour ouvrir DIGIY LOC", W/2, qy+qrSize+Math.round(size*.12));
+    ctx.fillStyle = "rgba(229,231,235,.82)";
+    ctx.font = `800 ${Math.round(size*.030)}px Outfit, system-ui, Arial`;
+    ctx.fillText("Scanne pour ouvrir la fiche publique", W/2, qy + qrSize + Math.round(size*.12));
 
-    ctx.fillStyle="rgba(203,213,225,.78)";
-    ctx.font=`700 ${Math.round(size*.025)}px Outfit, system-ui, Arial`;
-    ctx.fillText("Powered by DIGIYLYFE", W/2, H-pad-Math.round(size*.030));
+    ctx.fillStyle = "rgba(203,213,225,.78)";
+    ctx.font = `700 ${Math.round(size*.025)}px Outfit, system-ui, Arial`;
+    ctx.fillText("Powered by DIGIYLYFE", W/2, H - pad - Math.round(size*.030));
 
     return canvas.toDataURL("image/png");
   }
 
   function download(dataUrl, filename){
-    const a=document.createElement("a");
-    a.href=dataUrl; a.download=filename;
-    document.body.appendChild(a); a.click(); a.remove();
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   async function renderQr(){
-    note("⏳ Préparation du QR local…", "warn");
+    note("⏳ Préparation du QR public LOC…", "warn");
     setBusy(true);
+
     try{
       const ok = await ensureQrLib();
-      if(!ok) throw new Error("Librairie QR introuvable : vérifie qrcode.min.js");
+
+      if(!ok){
+        throw new Error("Librairie QR introuvable : vérifie qrcode.min.js");
+      }
 
       const rawNormal = await makeQrDataUrl(State.targetUrl, 560);
       const rawXL = await makeQrDataUrl(State.targetUrl, 950);
@@ -662,8 +948,9 @@ h1{
       State.qrXL = await makeBranded(rawXL, 1400);
 
       $("qrImg").src = State.qrNormal;
-      note("✅ QR prêt. Teste-le au téléphone avant impression.", "ok");
-      copySignal("QR LOC préparé");
+
+      note("✅ QR prêt. Il ouvre la fiche publique LOC, pas l’espace PRO.", "ok");
+      copySignal("QR LOC public préparé");
     }catch(e){
       console.error(e);
       note("❌ Génération QR impossible : " + (e?.message || e), "bad");
@@ -677,10 +964,19 @@ h1{
 
     try{
       if(window.DIGIY_GUARD?.ready){
-        const out = window.DIGIY_GUARD.ready({redirect:false,preserve_validation:true,allow_soft_session:true});
-        if(out?.then) await out;
+        const out = window.DIGIY_GUARD.ready({
+          redirect:false,
+          preserve_validation:true,
+          allow_soft_session:true
+        });
+
+        if(out?.then){
+          await out;
+        }
       }
-    }catch(e){ console.warn("[LOC QR] guard:", e); }
+    }catch(e){
+      console.warn("[LOC QR] guard:", e);
+    }
 
     State.slug = getSlug();
     State.phone = getPhone();
@@ -691,37 +987,50 @@ h1{
     syncUi();
 
     if(!State.slug){
-      note("Aucun espace reconnu. Ouvre cette page depuis ton accès LOC.", "warn");
+      note("Aucun espace reconnu. Le QR public reste généré, mais vérifie la fiche publique LOC.", "warn");
     }
 
     await renderQr();
 
-    $("btnOpen").addEventListener("click", ()=> window.open(State.targetUrl, "_blank", "noopener"));
+    $("btnOpen").addEventListener("click", ()=>{
+      window.open(State.targetUrl, "_blank", "noopener");
+    });
+
     $("btnCopy").addEventListener("click", async ()=>{
       try{
         await copyText(State.targetUrl);
-        note("✅ Lien copié.", "ok");
-        copySignal("Lien QR copié");
-      }catch{
+        note("✅ Lien public copié.", "ok");
+        copySignal("Lien QR LOC public copié");
+      }catch(_){
         note("⚠️ Copie bloquée. Copie le lien affiché à la main.", "warn");
       }
     });
+
     $("btnDownload").addEventListener("click", ()=>{
-      if(!State.qrNormal){note("QR pas encore prêt.", "warn"); return;}
-      download(State.qrNormal, "DIGIY_QR_LOC.png");
-      copySignal("QR téléchargé");
+      if(!State.qrNormal){
+        note("QR pas encore prêt.", "warn");
+        return;
+      }
+
+      download(State.qrNormal, "DIGIY_QR_LOC_PUBLIC.png");
+      copySignal("QR LOC public téléchargé");
     });
+
     $("btnSticker").addEventListener("click", ()=>{
-      if(!State.qrXL){note("Sticker pas encore prêt.", "warn"); return;}
-      download(State.qrXL, "DIGIY_STICKER_LOC_XL.png");
-      copySignal("Sticker QR téléchargé");
+      if(!State.qrXL){
+        note("Sticker pas encore prêt.", "warn");
+        return;
+      }
+
+      download(State.qrXL, "DIGIY_STICKER_LOC_PUBLIC_XL.png");
+      copySignal("Sticker QR LOC public téléchargé");
     });
   }
 
   init();
 })();
 </script>
+
 <script src="./loc-security-mask.js"></script>
 </body>
 </html>
-
