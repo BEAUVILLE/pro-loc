@@ -410,7 +410,7 @@ h1{
           <h1>Mon QR</h1>
           <div class="sub">
             Un QR propre pour partager le logement côté public.
-            Il ouvre la fiche Astou LOC, pas l’espace PRO.
+            Il ouvre la fiche DIGIY LOC, pas l’espace PRO.
             Pas de téléphone affiché. Pas d’identifiant sensible en façade.
           </div>
         </div>
@@ -442,12 +442,12 @@ h1{
     <h2 class="sectionTitle">QR prêt à partager</h2>
 
     <div class="safeText">
-      Teste le QR avec un téléphone avant impression. Il doit ouvrir la fiche publique Astou LOC,
+      Teste le QR avec un téléphone avant impression. Il doit ouvrir la fiche publique DIGIY LOC,
       sans demander de PIN au client.
     </div>
 
     <div class="qrBox">
-      <a id="qrAnchor" href="#" target="_blank" rel="noopener" aria-label="Ouvrir la fiche publique Astou LOC">
+      <a id="qrAnchor" href="#" target="_blank" rel="noopener" aria-label="Ouvrir la fiche publique DIGIY LOC">
         <img id="qrImg" class="qrImg" alt="QR DIGIY LOC"/>
       </a>
     </div>
@@ -483,7 +483,7 @@ h1{
     Ce fichier reste côté PRO pour générer / imprimer le QR.
     Mais le QR généré pointe vers une fiche publique LOC, sans PIN.
   */
-  const LOC_PUBLIC_FICHE = "https://pro-loc.digiylyfe.com/fiche-astou-loc.html";
+  const LOC_PUBLIC_FICHE = "https://loc.digiylyfe.com/fiche-astou-loc.html";
 
   const $ = (id)=>document.getElementById(id);
 
@@ -944,8 +944,8 @@ h1{
 
       $("qrImg").src = State.qrNormal;
 
-      note("✅ QR prêt. Il ouvre la fiche publique Astou LOC, pas l’espace PRO.", "ok");
-      copySignal("QR LOC public préparé");
+      note("✅ QR prêt. Il ouvre la fiche publique DIGIY LOC, pas l’espace PRO.", "ok");
+      copySignal("QR LOC public vers loc.digiylyfe.com préparé");
     }catch(e){
       console.error(e);
       note("❌ Génération QR impossible : " + (e?.message || e), "bad");
@@ -982,7 +982,7 @@ h1{
     syncUi();
 
     if(!State.slug){
-      note("Aucun espace reconnu. Le QR public reste généré, mais vérifie la fiche publique Astou LOC.", "warn");
+      note("Aucun espace reconnu. Le QR public reste généré, mais vérifie la fiche publique DIGIY LOC.", "warn");
     }
 
     await renderQr();
@@ -1007,7 +1007,7 @@ h1{
         return;
       }
 
-      download(State.qrNormal, "DIGIY_QR_LOC_ASTOU_PUBLIC.png");
+      download(State.qrNormal, "DIGIY_QR_LOC_PUBLIC.png");
       copySignal("QR LOC public téléchargé");
     });
 
@@ -1017,7 +1017,7 @@ h1{
         return;
       }
 
-      download(State.qrXL, "DIGIY_STICKER_LOC_ASTOU_PUBLIC_XL.png");
+      download(State.qrXL, "DIGIY_STICKER_LOC_PUBLIC_XL.png");
       copySignal("Sticker QR LOC public téléchargé");
     });
   }
