@@ -433,6 +433,38 @@ h1{
   display:none;
 }
 .morePanel.show{display:block}
+    .payUpsellCard{
+      margin:14px 0;padding:16px;border-radius:22px;
+      border:2px solid rgba(250,204,21,.42);
+      background:
+        radial-gradient(circle at right top,rgba(250,204,21,.12),transparent 34%),
+        linear-gradient(160deg,rgba(12,30,22,.97),rgba(6,20,15,.97));
+      box-shadow:0 0 0 1px rgba(250,204,21,.08),0 16px 40px rgba(0,0,0,.28);
+    }
+    .payUpsellBadge{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;
+      border-radius:999px;border:1px solid rgba(250,204,21,.40);
+      background:rgba(250,204,21,.10);color:#fef3c7;
+      font-size:11px;font-weight:1000;letter-spacing:.06em;text-transform:uppercase;
+      margin-bottom:9px;
+    }
+    .payUpsellTitle{font-size:17px;font-weight:1000;color:#fff8dc;margin-bottom:5px;line-height:1.25;}
+    .payUpsellLead{font-size:13px;color:rgba(184,207,196,.82);font-weight:900;line-height:1.5;margin-bottom:11px;}
+    .payUpsellPrice{
+      display:inline-flex;align-items:baseline;gap:5px;padding:7px 13px;
+      border-radius:999px;border:1px solid rgba(250,204,21,.30);
+      background:rgba(250,204,21,.07);color:#fef3c7;
+      font-size:13px;font-weight:1000;margin-bottom:13px;
+    }
+    .payUpsellPrice strong{font-size:18px;color:#facc15;}
+    .payUpsellBtn{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      min-height:52px;border-radius:18px;border:none;width:100%;
+      background:linear-gradient(135deg,#facc15,#f59e0b);
+      color:#1a1200;font-size:15px;font-weight:1000;cursor:pointer;
+      box-shadow:0 8px 20px rgba(250,204,21,.20);
+    }
+    .payUpsellBtn:hover{filter:brightness(1.06);}
 .moreGrid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -672,6 +704,18 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
           </div>
         </div>
       </div>
+    </section>
+    <section class="payUpsellCard" id="payUpsellSection" style="display:none;">
+      <div class="payUpsellBadge">✦ Nouveau · Mon Argent PAY</div>
+      <div class="payUpsellTitle">💰 Pilote ta location à la voix</div>
+      <div class="payUpsellLead">
+        Tu dictes "Arrhes Wave 30 000" — DIGIY prépare, toi tu valides.
+        Arrhes, soldes, ménage, réparations, net du mois : tout lu proprement sans cahier.
+      </div>
+      <div class="payUpsellPrice">À partir de <strong>4 900 F</strong> · 9 € / mois</div>
+      <a class="payUpsellBtn" id="btnMonArgent" href="#">
+        💰 Activer Mon Argent — Starter
+      </a>
     </section>
   </main>
 </div>
@@ -1258,6 +1302,46 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
     }
   }
 
+  // ── PAY upsell ──────────────────────────────────────────────
+  const PAY_COCKPIT_URL = "https://pay.digiylyfe.com/cockpit.html";
+
+  function buildPayUpsellUrl(){
+    const base = "https://commencer-a-payer.digiylyfe.com/";
+    const u = new URL(base);
+    u.searchParams.set("module","PAY");
+    u.searchParams.set("plan","9A");
+    u.searchParams.set("from","loc");
+    if(State.slug) u.searchParams.set("slug", State.slug);
+    u.searchParams.set("return", location.href.split("?")[0]);
+    return u.toString();
+  }
+
+  async function checkPayAccess(){
+    const S = sb || window.DIGIY_SB;
+    if(!S || !State.phone) return false;
+    try{
+      const { data, error } = await S.rpc("digiy_check_module_access",{
+        p_phone: State.phone,
+        p_module: "PAY"
+      });
+      if(error) return false;
+      return data === true;
+    }catch(_){ return false; }
+  }
+
+  function applyPayAccess(hasPayAccess){
+    const card = document.getElementById("payUpsellSection");
+    const btn  = document.getElementById("btnMonArgent");
+    if(hasPayAccess){
+      if(card) card.style.display = "none";
+      const url = PAY_COCKPIT_URL + (State.slug ? "?slug=" + encodeURIComponent(State.slug) : "");
+      if(btn){ btn.href = url; btn.textContent = "💰 Ouvrir Mon Argent"; }
+    } else {
+      if(card) card.style.display = "";
+      if(btn) btn.href = buildPayUpsellUrl();
+    }
+  }
+
   async function reload(){
     const btn = $("btnRefresh");
     if(btn) btn.disabled = true;
@@ -1297,6 +1381,9 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       if(State.access){
         showNote("Accueil chargé. Les arrivées, départs et paiements à traiter sont devant.", "ok");
       }
+
+      // Vérif PAY async après session
+      if(State.phone) checkPayAccess().then(applyPayAccess);
 
     }catch(e){
       console.error(e);
@@ -1339,6 +1426,10 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
 </script>
 </body>
 </html>
+
+
+
+
 
 
 
