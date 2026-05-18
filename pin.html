@@ -6,603 +6,311 @@
   <title>Accès • DIGIY</title>
   <meta name="theme-color" content="#020617"/>
 
-  <!-- ╔══════════════════════════════════════════════╗
-       ║  CONFIG — à adapter par module               ║
-       ║  Copier ce bloc dans chaque pin.html         ║
-       ╚══════════════════════════════════════════════╝ -->
+  <!-- CONFIG — changer ces 5 lignes par module -->
   <script>
     window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_MODULE            = "LOC";          // LOC | DRIVER | CAISSE | MARKET | BUILD | JOBS | PAY | RESA | EXPLORE
-    window.DIGIY_MODULE_LABEL      = "Je loue";      // Nom affiché
-    window.DIGIY_MODULE_ICON       = "🏠";           // Emoji du module
-    window.DIGIY_INDEX_URL         = "./index.html"; // Page cible après login
-    window.DIGIY_SLUG_PREFIX       = "loc";          // Préfixe slug : loc | driver | pos | market | build | jobs | pay | resa | explore
+    window.DIGIY_MODULE            = "LOC";
+    window.DIGIY_MODULE_LABEL      = "Je loue";
+    window.DIGIY_MODULE_ICON       = "🏠";
+    window.DIGIY_INDEX_URL         = "./index.html";
+    window.DIGIY_SLUG_PREFIX       = "loc";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root {
-      --bg:    #020617;
-      --bg2:   #0b1020;
-      --card:  rgba(255,255,255,.035);
-      --line:  rgba(148,163,184,.20);
-      --ink:   #f9fafb;
-      --muted: #94a3b8;
-      --gold:  #facc15;
-      --green: #22c55e;
-      --red:   #ef4444;
-      --r:     22px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 16px;
-      padding-top: calc(16px + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(ellipse 800px 500px at 15% -5%, rgba(250,204,21,.13), transparent 55%),
-        radial-gradient(ellipse 700px 400px at 88% 5%,  rgba(34,197,94,.10),  transparent 55%),
-        linear-gradient(180deg, var(--bg2), var(--bg));
-    }
-
-    /* ── Card ── */
-    .card {
-      width: min(420px, 100%);
-      background: rgba(255,255,255,.03);
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      padding: 28px 24px 24px;
-      box-shadow: 0 28px 70px rgba(0,0,0,.55);
-    }
-
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .ico {
-      font-size: 36px;
-      line-height: 1;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(250,204,21,.30);
-      background: rgba(250,204,21,.08);
-      color: #fde68a;
-      font-size: 11px;
-      font-weight: 950;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .title {
-      font-size: 1.25rem;
-      font-weight: 1100;
-      line-height: 1.2;
-    }
-
-    .sub {
-      margin-top: 5px;
-      color: var(--muted);
-      font-size: .82rem;
-      font-weight: 800;
-    }
-
-    /* ── Separator ── */
-    .sep {
-      height: 1px;
-      background: var(--line);
-      margin: 20px 0;
-    }
-
-    /* ── Fields ── */
-    .field {
-      margin-bottom: 14px;
-    }
-
-    .label {
-      display: block;
-      font-size: .78rem;
-      font-weight: 950;
-      color: var(--muted);
-      margin-bottom: 6px;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    .input {
-      width: 100%;
-      padding: 14px 15px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.22);
-      color: var(--ink);
-      font-size: 1rem;
-      font-weight: 900;
-      font-family: inherit;
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
-      -webkit-appearance: none;
-    }
-
-    .input::placeholder { color: rgba(148,163,184,.55); }
-
-    .input:focus {
-      border-color: rgba(250,204,21,.50);
-      box-shadow: 0 0 0 3px rgba(250,204,21,.09);
-    }
-
-    /* ── PIN dots + clavier ── */
-    .pin-dots {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      margin: 6px 0 16px;
-    }
-
-    .dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid rgba(148,163,184,.35);
-      background: transparent;
-      transition: background .12s, border-color .12s, transform .10s;
-    }
-
-    .dot.filled {
-      background: var(--gold);
-      border-color: var(--gold);
-      transform: scale(1.1);
-    }
-
-    .keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 9px;
-      margin-bottom: 14px;
-    }
-
-    .key {
-      appearance: none;
-      border: 1px solid rgba(148,163,184,.18);
-      border-radius: 14px;
-      background: rgba(255,255,255,.04);
-      color: var(--ink);
-      font-size: 1.3rem;
-      font-weight: 1000;
-      font-family: inherit;
-      min-height: 58px;
-      cursor: pointer;
-      transition: background .12s, transform .08s, border-color .12s;
-      touch-action: manipulation;
-      user-select: none;
-    }
-
-    .key:hover  { background: rgba(255,255,255,.08); border-color: rgba(250,204,21,.25); }
-    .key:active { transform: scale(.94); background: rgba(250,204,21,.12); }
-
-    .key.zero   { grid-column: 2; }
-    .key.del    { font-size: 1rem; color: var(--muted); }
-    .key.del:hover { color: var(--red); border-color: rgba(239,68,68,.30); }
-
-    /* ── Submit ── */
-    .btn {
-      width: 100%;
-      min-height: 52px;
-      border-radius: 16px;
-      border: none;
-      background: linear-gradient(135deg, rgba(250,204,21,.22), rgba(34,197,94,.18));
-      border: 1px solid rgba(250,204,21,.35);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 1100;
-      font-family: inherit;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: opacity .15s, transform .10s, background .15s;
-      touch-action: manipulation;
-    }
-
-    .btn:hover:not(:disabled)  { background: linear-gradient(135deg, rgba(250,204,21,.32), rgba(34,197,94,.26)); }
-    .btn:active:not(:disabled) { transform: scale(.98); }
-    .btn:disabled { opacity: .45; cursor: not-allowed; }
-
-    /* ── Status ── */
-    .status {
-      margin-top: 14px;
-      min-height: 36px;
-      padding: 9px 13px;
-      border-radius: 12px;
-      font-size: .84rem;
-      font-weight: 900;
-      text-align: center;
-      display: none;
-      white-space: pre-wrap;
-    }
-
-    .status.err  { display: block; background: rgba(239,68,68,.10); border: 1px solid rgba(239,68,68,.30); color: #fca5a5; }
-    .status.ok   { display: block; background: rgba(34,197,94,.10);  border: 1px solid rgba(34,197,94,.30);  color: #86efac; }
-    .status.spin { display: block; background: rgba(148,163,184,.07); border: 1px solid var(--line); color: var(--muted); }
-
-    /* ── Footer note ── */
-    .note {
-      margin-top: 18px;
-      text-align: center;
-      color: rgba(148,163,184,.65);
-      font-size: .76rem;
-      font-weight: 800;
-      line-height: 1.5;
-    }
-
-    /* ── Spinner ── */
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,.25);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
+    :root{--bg:#020617;--bg2:#0b1020;--line:rgba(148,163,184,.20);--ink:#f9fafb;--muted:#94a3b8;--gold:#facc15;--green:#22c55e;--red:#ef4444}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100dvh;display:grid;place-items:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:radial-gradient(ellipse 800px 500px at 15% -5%,rgba(250,204,21,.13),transparent 55%),radial-gradient(ellipse 700px 400px at 88% 5%,rgba(34,197,94,.10),transparent 55%),linear-gradient(180deg,var(--bg2),var(--bg))}
+    .card{width:min(420px,100%);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:28px;padding:28px 24px 24px;box-shadow:0 28px 70px rgba(0,0,0,.55)}
+    .header{text-align:center;margin-bottom:22px}
+    .ico{font-size:36px;line-height:1;display:block;margin-bottom:10px}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid rgba(250,204,21,.30);background:rgba(250,204,21,.08);color:#fde68a;font-size:11px;font-weight:950;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+    .title{font-size:1.25rem;font-weight:1100;line-height:1.2}
+    .steps{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 22px}
+    .step{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .step-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:transparent;display:grid;place-items:center;font-size:13px;font-weight:1000;color:var(--muted);transition:all .25s}
+    .step-dot.active{border-color:var(--gold);background:rgba(250,204,21,.12);color:var(--gold)}
+    .step-dot.done{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green)}
+    .step-lbl{font-size:10px;font-weight:900;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+    .step-lbl.active{color:var(--gold)}
+    .step-connector{width:32px;height:2px;background:var(--line);border-radius:2px;margin-bottom:14px;transition:background .3s}
+    .step-connector.done{background:var(--green)}
+    .panel{display:none}
+    .panel.active{display:block}
+    .label{display:block;font-size:.78rem;font-weight:950;color:var(--muted);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+    .phone-wrap{position:relative}
+    .phone-flag{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none}
+    .input{width:100%;padding:14px 15px 14px 42px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--ink);font-size:1.05rem;font-weight:900;font-family:inherit;outline:none;-webkit-appearance:none;transition:border-color .15s,box-shadow .15s}
+    .input::placeholder{color:rgba(148,163,184,.45)}
+    .input:focus{border-color:rgba(250,204,21,.50);box-shadow:0 0 0 3px rgba(250,204,21,.09)}
+    .input.err-field{border-color:rgba(239,68,68,.50)!important}
+    .phone-recap{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-radius:12px;border:1px solid rgba(34,197,94,.25);background:rgba(34,197,94,.06);margin-bottom:18px}
+    .phone-recap-num{font-size:.9rem;font-weight:950;color:#86efac}
+    .phone-recap-btn{font-size:.75rem;font-weight:950;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit;padding:0;text-decoration:underline;text-underline-offset:2px}
+    .phone-recap-btn:hover{color:var(--ink)}
+    .pin-dots{display:flex;justify-content:center;gap:16px;margin:8px 0 20px}
+    .dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(148,163,184,.30);background:transparent;transition:background .12s,border-color .12s,transform .10s}
+    .dot.filled{background:var(--gold);border-color:var(--gold);transform:scale(1.12)}
+    .dot.err{border-color:var(--red)!important;background:rgba(239,68,68,.2)!important}
+    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+    .key{appearance:none;border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(255,255,255,.04);color:var(--ink);font-size:1.3rem;font-weight:1000;font-family:inherit;min-height:58px;cursor:pointer;transition:background .12s,transform .08s,border-color .12s;touch-action:manipulation;user-select:none}
+    .key:hover{background:rgba(255,255,255,.08);border-color:rgba(250,204,21,.25)}
+    .key:active{transform:scale(.94);background:rgba(250,204,21,.12)}
+    .key.zero{grid-column:2}
+    .key.del{font-size:1rem;color:var(--muted)}
+    .key.del:hover{color:var(--red);border-color:rgba(239,68,68,.30)}
+    .btn{width:100%;min-height:52px;border-radius:16px;border:1px solid rgba(250,204,21,.35);background:linear-gradient(135deg,rgba(250,204,21,.22),rgba(34,197,94,.18));color:#fff;font-size:1rem;font-weight:1100;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .10s,background .15s;touch-action:manipulation}
+    .btn:hover:not(:disabled){background:linear-gradient(135deg,rgba(250,204,21,.32),rgba(34,197,94,.26))}
+    .btn:active:not(:disabled){transform:scale(.98)}
+    .btn:disabled{opacity:.40;cursor:not-allowed}
+    .status{margin-top:12px;min-height:0;padding:0;border-radius:12px;font-size:.84rem;font-weight:900;line-height:1.5;display:none;white-space:pre-wrap}
+    .status.show{display:block;padding:10px 13px;margin-top:12px}
+    .status.err{background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.30);color:#fca5a5}
+    .status.ok{background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.30);color:#86efac}
+    .status.spin{background:rgba(148,163,184,.07);border:1px solid var(--line);color:var(--muted)}
+    .note{margin-top:18px;text-align:center;color:rgba(148,163,184,.55);font-size:.74rem;font-weight:800;line-height:1.55}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+    .shake{animation:shake .35s ease}
   </style>
 </head>
 <body>
+<div class="card">
 
-  <div class="card">
-
-    <div class="header">
-      <span class="ico" id="moduleIcon">🏠</span>
-      <div class="badge">🔑 Accès DIGIY</div>
-      <div class="title" id="moduleLabel">Je loue</div>
-      <div class="sub">Entre ton numéro et ton code secret</div>
-    </div>
-
-    <div class="sep"></div>
-
-    <!-- Téléphone -->
-    <div class="field">
-      <label class="label" for="phoneInput">📱 Ton numéro</label>
-      <input
-        id="phoneInput"
-        class="input"
-        type="tel"
-        inputmode="numeric"
-        placeholder="221 77 XXX XX XX"
-        autocomplete="tel"
-        maxlength="15"
-      />
-    </div>
-
-    <!-- PIN -->
-    <div class="field">
-      <label class="label">🔢 Ton code secret (4 chiffres)</label>
-      <div class="pin-dots">
-        <div class="dot" id="d0"></div>
-        <div class="dot" id="d1"></div>
-        <div class="dot" id="d2"></div>
-        <div class="dot" id="d3"></div>
-      </div>
-      <div class="keypad" id="keypad">
-        <button class="key" data-v="1" type="button">1</button>
-        <button class="key" data-v="2" type="button">2</button>
-        <button class="key" data-v="3" type="button">3</button>
-        <button class="key" data-v="4" type="button">4</button>
-        <button class="key" data-v="5" type="button">5</button>
-        <button class="key" data-v="6" type="button">6</button>
-        <button class="key" data-v="7" type="button">7</button>
-        <button class="key" data-v="8" type="button">8</button>
-        <button class="key" data-v="9" type="button">9</button>
-        <button class="key zero" data-v="0" type="button">0</button>
-        <button class="key del"  data-v="⌫" type="button">⌫</button>
-      </div>
-    </div>
-
-    <button class="btn" id="btnEnter" type="button" disabled>
-      Entrer →
-    </button>
-
-    <div class="status" id="status"></div>
-
-    <div class="note">
-      Ton numéro et ton code ne sont jamais partagés.<br>
-      DIGIY · 0% commission · 100% indépendance
-    </div>
-
+  <div class="header">
+    <span class="ico" id="moduleIcon">🏠</span>
+    <div class="badge">🔑 Accès DIGIY</div>
+    <div class="title" id="moduleLabel">Je loue</div>
   </div>
 
-  <script>
-  (function () {
-    "use strict";
+  <div class="steps">
+    <div class="step">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-lbl active" id="lbl1">Numéro</div>
+    </div>
+    <div class="step-connector" id="conn"></div>
+    <div class="step">
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-lbl" id="lbl2">Code</div>
+    </div>
+  </div>
 
-    /* ── Config ── */
-    const MODULE       = (window.DIGIY_MODULE       || "LOC").toUpperCase();
-    const MODULE_LABEL = window.DIGIY_MODULE_LABEL  || MODULE;
-    const MODULE_ICON  = window.DIGIY_MODULE_ICON   || "∞";
-    const INDEX_URL    = window.DIGIY_INDEX_URL      || "./index.html";
-    const SLUG_PREFIX  = (window.DIGIY_SLUG_PREFIX  || MODULE.toLowerCase()).replace(/_/g, "-");
+  <!-- ETAPE 1 -->
+  <div class="panel active" id="step1">
+    <label class="label" for="phoneInput">📱 Ton numéro de téléphone</label>
+    <div class="phone-wrap">
+      <span class="phone-flag">🇸🇳</span>
+      <input id="phoneInput" class="input" type="tel" inputmode="numeric"
+             placeholder="221 77 XXX XX XX" autocomplete="tel" maxlength="15"/>
+    </div>
+    <div class="status" id="status1"></div>
+    <button class="btn" id="btnContinue" type="button" style="margin-top:16px" disabled>Continuer →</button>
+  </div>
 
-    const MAX_AGE_MS   = 8 * 60 * 60 * 1000; // 8h
+  <!-- ETAPE 2 -->
+  <div class="panel" id="step2">
+    <div class="phone-recap">
+      <span class="phone-recap-num" id="phoneDisplay"></span>
+      <button class="phone-recap-btn" id="btnBack" type="button">Modifier</button>
+    </div>
+    <label class="label">🔢 Ton code secret (4 chiffres)</label>
+    <div class="pin-dots" id="pinDots">
+      <div class="dot" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+    </div>
+    <div class="keypad" id="keypad">
+      <button class="key" data-v="1" type="button">1</button>
+      <button class="key" data-v="2" type="button">2</button>
+      <button class="key" data-v="3" type="button">3</button>
+      <button class="key" data-v="4" type="button">4</button>
+      <button class="key" data-v="5" type="button">5</button>
+      <button class="key" data-v="6" type="button">6</button>
+      <button class="key" data-v="7" type="button">7</button>
+      <button class="key" data-v="8" type="button">8</button>
+      <button class="key" data-v="9" type="button">9</button>
+      <button class="key zero" data-v="0" type="button">0</button>
+      <button class="key del" data-v="DEL" type="button">⌫</button>
+    </div>
+    <button class="btn" id="btnEnter" type="button" disabled>Entrer →</button>
+    <div class="status" id="status2"></div>
+  </div>
 
-    /* Clés session — dérivées du module, compatibles guard.js */
-    const mod = MODULE.toLowerCase();
-    const SESSION_KEYS = [
-      `digiy_${mod}_session`,
-      `digiy_${mod}_guard_session`,
-      `digiy_guard_${mod}_session`
-    ];
+  <div class="note">Ton numéro et ton code ne sont jamais partagés.<br>DIGIY · 0% commission · 100% indépendance ∞</div>
+</div>
 
-    /* Clés phone/slug compatibles guard.js + hub.js */
-    const PHONE_KEYS = [
-      `digiy_${mod}_phone`,
-      `digiy_${mod}_last_phone`,
-      "DIGIY_LOC_HUB_PHONE",
-      "digiy_phone"
-    ];
+<script>
+(function(){
+"use strict";
+const MODULE=((window.DIGIY_MODULE)||"LOC").toUpperCase();
+const MODULE_LABEL=window.DIGIY_MODULE_LABEL||MODULE;
+const MODULE_ICON=window.DIGIY_MODULE_ICON||"∞";
+const INDEX_URL=window.DIGIY_INDEX_URL||"./index.html";
+const SLUG_PREFIX=(window.DIGIY_SLUG_PREFIX||MODULE.toLowerCase()).replace(/_/g,"-");
+const MAX_AGE=8*60*60*1000;
+const mod=MODULE.toLowerCase();
+const SKEYS=[`digiy_${mod}_session`,`digiy_${mod}_guard_session`,`digiy_guard_${mod}_session`];
+const PKEYS=[`digiy_${mod}_phone`,`digiy_${mod}_last_phone`,"DIGIY_LOC_HUB_PHONE","digiy_phone"];
+const SLKEYS=[`digiy_${mod}_last_slug`,`digiy_${mod}_slug`,"digiy_last_slug"];
 
-    const SLUG_KEYS = [
-      `digiy_${mod}_last_slug`,
-      `digiy_${mod}_slug`,
-      "digiy_last_slug",
-      `digiy_${mod.replace(/-/g,"_")}_slug`
-    ];
+const $=id=>document.getElementById(id);
+$("moduleLabel").textContent=MODULE_LABEL;
+$("moduleIcon").textContent=MODULE_ICON;
+document.title=`Accès ${MODULE_LABEL} • DIGIY`;
 
-    /* ── DOM ── */
-    const $ = id => document.getElementById(id);
-    $("moduleLabel").textContent = MODULE_LABEL;
-    $("moduleIcon").textContent  = MODULE_ICON;
-    document.title = `Accès ${MODULE_LABEL} • DIGIY`;
+let pin="",confirmedPhone="";
 
-    const phoneEl  = $("phoneInput");
-    const btnEnter = $("btnEnter");
-    const statusEl = $("status");
+function norm(p){return String(p||"").replace(/\D/g,"")}
+function fmt(d){if(d.length===12&&d.startsWith("221"))return`${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5,8)} ${d.slice(8,10)} ${d.slice(10)}`;return d}
+function slug(p){return SLUG_PREFIX&&p?`${SLUG_PREFIX}-${p}`:""}
+function qp(n){try{return new URL(location.href).searchParams.get(n)||""}catch(_){return""}}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(_){}}
+function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||"";sessionStorage.setItem(k,v)}catch(_){}}
 
-    let pin = "";
+function showSt(id,msg,cls){const e=$(id);e.className="status show "+cls;e.textContent=msg}
+function clearSt(id){const e=$(id);e.className="status";e.textContent=""}
+function shake(el){el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");setTimeout(()=>el.classList.remove("shake"),400)}
 
-    /* ── Helpers ── */
-    function normPhone(p) {
-      const s = String(p || "").replace(/[^\d]/g, "");
-      return s; // digits only — format DB : 221XXXXXXXXX
+// prefill phone
+(function(){
+  const u=norm(qp("phone"));if(u){$("phoneInput").value=u;return}
+  for(const k of[...PKEYS,"DIGIY_HUB_PHONE"]){const v=norm(ls(k));if(v){$("phoneInput").value=v;return}}
+})();
+
+function getSb(){
+  if(window._dsb)return window._dsb;
+  const url=window.DIGIY_SUPABASE_URL||"";
+  const key=window.DIGIY_SUPABASE_ANON_KEY||window.DIGIY_SUPABASE_ANON||"";
+  if(!url||!key)throw new Error("Supabase non configuré");
+  if(!window.supabase?.createClient)throw new Error("Librairie Supabase absente");
+  window._dsb=window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  return window._dsb;
+}
+
+function writeSession(phone,sl,token){
+  const now=Date.now();
+  const sess=JSON.stringify({slug:sl,phone,module:MODULE,validated_at:now,expires_at:now+MAX_AGE,session_token:token||"",access:true,access_ok:true});
+  SKEYS.forEach(k=>{ls(k,sess);ss(k,sess)});
+  PKEYS.forEach(k=>{ls(k,phone);ss(k,phone)});
+  if(sl){
+    SLKEYS.forEach(k=>ls(k,sl));
+    try{const m=JSON.parse(ls("digiy_module_slugs")||"{}")||{};m[MODULE]=sl;ls("digiy_module_slugs",JSON.stringify(m))}catch(_){}
+    ls("digiy_slug",sl);
+  }
+}
+
+function redirect(sl){
+  try{const u=new URL(INDEX_URL,location.href);if(sl)u.searchParams.set("slug",sl);u.searchParams.delete("phone");location.replace(u.toString())}
+  catch(_){location.replace(INDEX_URL)}
+}
+
+// ETAPE 1
+const phoneEl=$("phoneInput");
+const btnContinue=$("btnContinue");
+function updateContinueBtn(){btnContinue.disabled=norm(phoneEl.value).length<9}
+phoneEl.addEventListener("input",()=>{clearSt("status1");phoneEl.classList.remove("err-field");updateContinueBtn()});
+phoneEl.addEventListener("keydown",e=>{if(e.key==="Enter"&&!btnContinue.disabled)goStep2()});
+updateContinueBtn();
+
+async function goStep2(){
+  const raw=norm(phoneEl.value);
+  if(raw.length<9){
+    phoneEl.classList.add("err-field");
+    showSt("status1","❌ Numéro trop court.\nFormat attendu : 221 77 XXX XX XX","err");
+    shake(phoneEl);return;
+  }
+  btnContinue.disabled=true;
+  showSt("status1","⏳ Vérification du numéro…","spin");
+  try{
+    const sb=getSb();
+    const{data}=await sb.from("go_pins").select("phone").eq("phone",raw).eq("module",MODULE).limit(1);
+    if(Array.isArray(data)&&data.length===0){
+      phoneEl.classList.add("err-field");
+      showSt("status1","❌ Numéro non reconnu pour "+MODULE_LABEL+".\nVérifie ton numéro ou contacte DIGIY.","err");
+      shake(phoneEl);btnContinue.disabled=false;return;
     }
+  }catch(_){/* RLS ou erreur réseau : on laisse passer, le RPC tranchera */}
+  clearSt("status1");
+  confirmedPhone=raw;
+  showStep2();
+}
+btnContinue.addEventListener("click",goStep2);
 
-    function buildSlug(phoneDigits) {
-      if (!phoneDigits || !SLUG_PREFIX) return "";
-      return `${SLUG_PREFIX}-${phoneDigits}`;
+// ETAPE 2
+function showStep2(){
+  $("step1").classList.remove("active");$("step2").classList.add("active");
+  $("dot1").className="step-dot done";$("dot1").textContent="✓";$("lbl1").className="step-lbl";
+  $("dot2").className="step-dot active";$("lbl2").className="step-lbl active";
+  $("conn").classList.add("done");
+  $("phoneDisplay").textContent=fmt(confirmedPhone);
+  pin="";updateDots();updateEnterBtn();
+}
+function goStep1(){
+  $("step2").classList.remove("active");$("step1").classList.add("active");
+  $("dot1").className="step-dot active";$("dot1").textContent="1";$("lbl1").className="step-lbl active";
+  $("dot2").className="step-dot";$("lbl2").className="step-lbl";
+  $("conn").classList.remove("done");
+  pin="";clearSt("status2");btnContinue.disabled=false;updateDots();updateEnterBtn();
+}
+$("btnBack").addEventListener("click",goStep1);
+
+function updateDots(){
+  for(let i=0;i<4;i++){const d=$("d"+i);d.classList.toggle("filled",i<pin.length);d.classList.remove("err")}
+}
+function updateEnterBtn(){$("btnEnter").disabled=pin.length!==4}
+
+$("keypad").addEventListener("click",e=>{
+  const key=e.target.closest("[data-v]");if(!key)return;
+  const v=key.dataset.v;
+  if(v==="DEL"){pin=pin.slice(0,-1)}
+  else if(pin.length<4){pin+=v;if(pin.length===4)setTimeout(doLogin,120)}
+  updateDots();updateEnterBtn();clearSt("status2");
+});
+
+document.addEventListener("keydown",e=>{
+  if(document.activeElement===phoneEl)return;
+  if(!$("step2").classList.contains("active"))return;
+  if(/^[0-9]$/.test(e.key)&&pin.length<4){pin+=e.key;updateDots();updateEnterBtn();if(pin.length===4)setTimeout(doLogin,120)}
+  else if(e.key==="Backspace"){pin=pin.slice(0,-1);updateDots();updateEnterBtn()}
+});
+
+$("btnEnter").addEventListener("click",doLogin);
+
+async function doLogin(){
+  if(pin.length!==4)return;
+  $("btnEnter").disabled=true;
+  showSt("status2","⏳ Vérification du code…","spin");
+  try{
+    const sb=getSb();
+    const{data,error}=await sb.rpc("digiy_verify_pin",{p_phone:confirmedPhone,p_module:MODULE,p_pin:pin});
+    if(error)throw new Error(error.message||"Erreur serveur");
+    const ok=data===true||data?.ok===true||data?.access===true||data?.status==="ok";
+    if(!ok){
+      pin="";updateDots();updateEnterBtn();
+      for(let i=0;i<4;i++)$("d"+i).classList.add("err");
+      shake($("pinDots"));
+      showSt("status2","❌ Code incorrect.\nVérifie tes 4 chiffres et réessaie.","err");
+      return;
     }
-
-    function getUrlParam(name) {
-      try { return new URL(location.href).searchParams.get(name) || ""; }
-      catch (_) { return ""; }
-    }
-
-    function ls(key, val) {
-      try {
-        if (val === undefined) return localStorage.getItem(key) || "";
-        localStorage.setItem(key, val);
-      } catch (_) {}
-    }
-
-    function ss(key, val) {
-      try {
-        if (val === undefined) return sessionStorage.getItem(key) || "";
-        sessionStorage.setItem(key, val);
-      } catch (_) {}
-    }
-
-    function show(msg, cls) {
-      statusEl.className = "status " + cls;
-      statusEl.textContent = msg;
-    }
-
-    function showSpin(msg) { show(msg, "spin"); }
-    function showErr(msg)  { show(msg, "err"); }
-    function showOk(msg)   { show(msg, "ok"); }
-    function clearStatus() { statusEl.className = "status"; }
-
-    /* ── Pré-remplissage phone ── */
-    (function prefillPhone() {
-      const fromUrl = normPhone(getUrlParam("phone"));
-      if (fromUrl) { phoneEl.value = fromUrl; return; }
-
-      // Chercher dans localStorage
-      for (const key of [...PHONE_KEYS, "DIGIY_HUB_PHONE"]) {
-        const v = normPhone(ls(key));
-        if (v) { phoneEl.value = v; return; }
-      }
-    })();
-
-    /* ── PIN keypad ── */
-    function updateDots() {
-      for (let i = 0; i < 4; i++) {
-        $("d" + i).classList.toggle("filled", i < pin.length);
-      }
-    }
-
-    function updateBtn() {
-      const phone = normPhone(phoneEl.value);
-      btnEnter.disabled = !(phone.length >= 9 && pin.length === 4);
-    }
-
-    $("keypad").addEventListener("click", e => {
-      const key = e.target.closest("[data-v]");
-      if (!key) return;
-      const v = key.dataset.v;
-      if (v === "⌫") {
-        pin = pin.slice(0, -1);
-      } else if (pin.length < 4) {
-        pin += v;
-      }
-      updateDots();
-      updateBtn();
-      clearStatus();
-    });
-
-    phoneEl.addEventListener("input", () => {
-      updateBtn();
-      clearStatus();
-    });
-
-    /* Clavier physique pour le PIN */
-    document.addEventListener("keydown", e => {
-      if (document.activeElement === phoneEl) return;
-      if (/^[0-9]$/.test(e.key) && pin.length < 4) {
-        pin += e.key;
-        updateDots();
-        updateBtn();
-      } else if (e.key === "Backspace") {
-        pin = pin.slice(0, -1);
-        updateDots();
-        updateBtn();
-      } else if (e.key === "Enter") {
-        if (!btnEnter.disabled) doLogin();
-      }
-    });
-
-    /* ── Supabase ── */
-    function getSb() {
-      if (window._digiy_sb) return window._digiy_sb;
-      const url = window.DIGIY_SUPABASE_URL || "";
-      const key = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON || "";
-      if (!url || !key) throw new Error("Supabase non configuré");
-      if (!window.supabase?.createClient) throw new Error("Librairie Supabase absente");
-      window._digiy_sb = window.supabase.createClient(url, key, {
-        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-      });
-      return window._digiy_sb;
-    }
-
-    /* ── Écriture session ── */
-    function writeSession(phone, slug, token) {
-      const now  = Date.now();
-      const sess = JSON.stringify({
-        slug,
-        phone,
-        module: MODULE,
-        validated_at: now,
-        expires_at:   now + MAX_AGE_MS,
-        session_token: token || "",
-        access:    true,
-        access_ok: true
-      });
-
-      SESSION_KEYS.forEach(k => {
-        ls(k, sess);
-        ss(k, sess);
-      });
-
-      /* Phone pour guard.js ALT_PHONE_KEYS + hub.js */
-      PHONE_KEYS.forEach(k => {
-        ss(k, phone);
-        ls(k, phone); // hub.js lit depuis localStorage
-      });
-
-      /* Slug pour guard.js ALT_SLUG_KEYS */
-      if (slug) {
-        SLUG_KEYS.forEach(k => ls(k, slug));
-
-        /* Module slug map pour hub.js */
-        try {
-          const map = JSON.parse(ls("digiy_module_slugs") || "{}") || {};
-          map[MODULE] = slug;
-          ls("digiy_module_slugs", JSON.stringify(map));
-        } catch (_) {}
-      }
-
-      /* Slug global digiy_slug pour hub.js getGenericSlug */
-      if (slug) ls("digiy_slug", slug);
-    }
-
-    /* ── Redirection ── */
-    function redirect(slug) {
-      try {
-        const u = new URL(INDEX_URL, location.href);
-        if (slug) u.searchParams.set("slug", slug);
-        u.searchParams.delete("phone");
-        location.replace(u.toString());
-      } catch (_) {
-        location.replace(INDEX_URL);
-      }
-    }
-
-    /* ── Login ── */
-    async function doLogin() {
-      const rawPhone = normPhone(phoneEl.value);
-      const rawPin   = pin;
-
-      if (rawPhone.length < 9) { showErr("Numéro incomplet."); return; }
-      if (rawPin.length !== 4) { showErr("Code à 4 chiffres requis."); return; }
-
-      btnEnter.disabled = true;
-      showSpin("⏳ Vérification en cours…");
-
-      try {
-        const sb = getSb();
-
-        const { data, error } = await sb.rpc("digiy_verify_pin", {
-          p_phone:  rawPhone,
-          p_module: MODULE,
-          p_pin:    rawPin
-        });
-
-        if (error) throw new Error(error.message || "Erreur serveur");
-
-        const ok =
-          data === true ||
-          data?.ok === true ||
-          data?.access === true ||
-          data?.status === "ok";
-
-        if (!ok) {
-          pin = "";
-          updateDots();
-          updateBtn();
-          showErr("❌ Numéro ou code incorrect.\nVérifie et réessaie.");
-          return;
-        }
-
-        /* Slug retourné par le RPC ou construit depuis le phone */
-        const rpcSlug  = data?.slug || data?.identifiant || "";
-        const finalSlug = rpcSlug || buildSlug(rawPhone);
-
-        writeSession(rawPhone, finalSlug, data?.session_token || "");
-
-        showOk("✅ Accès ouvert. Redirection…");
-
-        setTimeout(() => redirect(finalSlug), 700);
-
-      } catch (err) {
-        pin = "";
-        updateDots();
-        updateBtn();
-        btnEnter.disabled = false;
-        showErr("❌ " + (err?.message || "Erreur inattendue."));
-      }
-    }
-
-    btnEnter.addEventListener("click", doLogin);
-
-  })();
-  </script>
+    const rpcSlug=data?.slug||data?.identifiant||"";
+    const finalSlug=rpcSlug||slug(confirmedPhone);
+    writeSession(confirmedPhone,finalSlug,data?.session_token||"");
+    showSt("status2","✅ Accès ouvert. Redirection…","ok");
+    setTimeout(()=>redirect(finalSlug),700);
+  }catch(err){
+    pin="";updateDots();updateEnterBtn();
+    $("btnEnter").disabled=false;
+    showSt("status2","❌ Erreur : "+(err?.message||"inattendue."),"err");
+  }
+}
+})();
+</script>
 </body>
 </html>
+
 
 
