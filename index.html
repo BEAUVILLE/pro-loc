@@ -16,7 +16,7 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-20260328-10"></script>
+  <script src="./guard.js?v=loc-20260518-1"></script>
   <script src="./loc-security-mask.js?v=loc-mask-20260510"></script>
 
   <style>
@@ -542,13 +542,15 @@
 
           if(phone){
             try{ sessionStorage.setItem("DIGIY_LOC_HUB_PHONE", phone); }catch(_){}
+            try{ localStorage.setItem("DIGIY_LOC_HUB_PHONE", phone); }catch(_){}
             window.DIGIY_LOC_HUB_PHONE = phone;
             return phone;
           }
 
           const saved = normPhone(
             (window.DIGIY_LOC_HUB_PHONE || "") ||
-            (sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "")
+            (sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "") ||
+            (localStorage.getItem("DIGIY_LOC_HUB_PHONE") || "")
           );
 
           if(saved) window.DIGIY_LOC_HUB_PHONE = saved;
@@ -557,7 +559,8 @@
           try{
             const saved = normPhone(
               (window.DIGIY_LOC_HUB_PHONE || "") ||
-              (sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "")
+              (sessionStorage.getItem("DIGIY_LOC_HUB_PHONE") || "") ||
+              (localStorage.getItem("DIGIY_LOC_HUB_PHONE") || "")
             );
             if(saved) window.DIGIY_LOC_HUB_PHONE = saved;
             return saved;
@@ -620,6 +623,7 @@
         try{
           localStorage.removeItem("digiy_loc_slug");
           localStorage.removeItem("digiy_last_slug");
+          localStorage.removeItem("DIGIY_LOC_HUB_PHONE");
           sessionStorage.removeItem("DIGIY_LOC_HUB_PHONE");
         }catch(_){}
       }
@@ -638,7 +642,7 @@
         if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
           return { preview:true, access_ok:false, slug:"", phone:"", reason:"guard_absent" };
         }
-        return await window.DIGIY_GUARD.ready({ redirect:false, timeout:8000 });
+        return await window.DIGIY_GUARD.ready({ redirect:false, timeout:12000 });
       }
 
       function getSb(){
@@ -797,8 +801,6 @@
             ? "👁️ Lieu reconnu mais accès non actif.\n➡️ Passe par ton code pour ouvrir les portes privées."
             : reason === "guard_absent"
             ? "👁️ Accès à ouvrir.\n➡️ Clique sur 🔑 Entrer avec mon code pour ouvrir ton espace."
-            : reason === "guard_absent"
-            ? "👁️ Accès à ouvrir.\n➡️ Clique sur 🔑 Entrer avec mon code pour ouvrir le PIN."
             : "👁️ Aperçu.\n➡️ Les portes privées restent fermées tant que l’accès n’est pas confirmé.",
           "warn"
         );
@@ -912,13 +914,13 @@
         }
 
         if(!initialSlug){
-          // DIGIY terrain : pas de slug ne doit jamais bloquer la porte PIN.
-          // On affiche un aperçu, mais on continue pour laisser guard.js/pin.html jouer leur rôle.
+          // DIGIY terrain : sans slug, la porte PIN reste ouverte. Pas besoin de guard.
           setPreviewUi("slug_missing");
           setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
           $("vSess").textContent = "À ouvrir par code";
           $("btnLogout").style.display = "none";
           sbState();
+          return;
         }
 
         if(!window.DIGIY_GUARD){
