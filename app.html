@@ -559,6 +559,22 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
   .bottomInner{gap:7px;}
 }
 
+
+/* DIGIY PATCH PYTHON — porte PIN app */
+#goPinHeader{
+  border-color:rgba(250,204,21,.36);
+  background:rgba(250,204,21,.13);
+  color:#fde68a;
+}
+#goPinHero{
+  grid-column:1/-1;
+  border-color:rgba(250,204,21,.42);
+  background:linear-gradient(135deg,#facc15,#22c55e);
+  color:#04160e;
+}
+@media(max-width:560px){
+  #goPinHeader{width:100%;min-height:54px;font-size:1.04rem;}
+}
 </style>
 </head>
 
@@ -581,6 +597,7 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       <span class="pill" id="pillPhone">👤 Compte sécurisé</span>
       <span class="pill" id="pillSlug">🏷️ Espace logement</span>
       <span class="pill warn" id="pillState">Vérification…</span>
+      <a class="btn gold small" id="goPinHeader" href="./pin.html?v=reset">🔑 Entrer avec mon code</a>
     </div>
 
     <div class="note" id="noteMain"></div>
@@ -636,6 +653,7 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       </div>
 
       <div class="actionRow">
+        <a class="btn gold full" id="goPinHero" href="./pin.html?v=reset">🔑 Entrer avec mon code</a>
         <a class="btn primary full" id="goPlanningTop" href="./planning.html">📅 Disponibilités</a>
         <a class="btn blue full" id="goReservationsTop" href="./reservations.html">📋 Réservations</a>
       </div>
@@ -1016,7 +1034,9 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       goWave:"./pin-wave.html",
       goQr:"./qr.html",
       goNotes:"./reservations-pulse.html",
-      goPin:"./pin.html"
+      goPin:"./pin.html",
+      goPinHeader:"./pin.html?v=reset",
+      goPinHero:"./pin.html?v=reset"
     };
 
     Object.entries(links).forEach(([id,path])=>{
@@ -1364,12 +1384,12 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       if(!State.slug){
         State.rows = [];
         render();
-        showNote("Identifiant introuvable. Reviens par ton code d’accès.", "bad");
+        showNote("Identifiant introuvable. Clique sur 🔑 Entrer avec mon code pour ouvrir le PIN.", "bad");
         return;
       }
 
       if(!State.access){
-        showNote("Lecture seule. Passe par ton code pour ouvrir l’accès complet.", "warn");
+        showNote("Lecture seule. Clique sur 🔑 Entrer avec mon code pour ouvrir l’accès complet.", "warn");
       }else{
         showNote("Chargement des mouvements du jour…", "warn");
       }
@@ -1389,7 +1409,7 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       console.error(e);
       State.rows = [];
       render();
-      showNote("Impossible de charger l’accueil. Reviens par ton code d’accès ou recharge la page.", "bad");
+      showNote("Impossible de charger l’accueil. Clique sur 🔑 Entrer avec mon code ou recharge la page.", "bad");
     }finally{
       if(btn) btn.disabled = false;
     }
@@ -1426,6 +1446,14 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
