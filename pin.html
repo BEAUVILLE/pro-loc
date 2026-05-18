@@ -8,8 +8,8 @@
 
   <!-- CONFIG — changer ces 5 lignes par module -->
   <script>
-    window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_URL      = "VOTRE_URL_SUPABASE";
+    window.DIGIY_SUPABASE_ANON_KEY = "VOTRE_CLE_ANON";
     window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE            = "LOC";
     window.DIGIY_MODULE_LABEL      = "Je loue";
@@ -175,11 +175,7 @@ function showSt(id,msg,cls){const e=$(id);e.className="status show "+cls;e.textC
 function clearSt(id){const e=$(id);e.className="status";e.textContent=""}
 function shake(el){el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");setTimeout(()=>el.classList.remove("shake"),400)}
 
-// prefill phone
-(function(){
-  const u=norm(qp("phone"));if(u){$("phoneInput").value=u;return}
-  for(const k of[...PKEYS,"DIGIY_HUB_PHONE"]){const v=norm(ls(k));if(v){$("phoneInput").value=v;return}}
-})();
+// prefill : géré par le module au déploiement via ?phone= dans l'URL
 
 function getSb(){
   if(window._dsb)return window._dsb;
@@ -311,6 +307,7 @@ async function doLogin(){
 </script>
 </body>
 </html>
+
 
 
 
