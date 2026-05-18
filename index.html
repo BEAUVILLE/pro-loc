@@ -428,7 +428,7 @@
       <div class="card">
         <h2>Mes gestes utiles</h2>
         <div class="nav">
-          <a class="btn" data-go="__back__" href="#">⬅️ Retour</a>
+          <a class="btn gold" data-go="pin.html" href="./pin.html">🔑 Entrer avec mon code</a>
           <a class="btn" data-go="today.html" href="#">📅 Aujourd’hui</a>
           <a class="btn primary" data-go="app.html" href="#">🏠 Gérer mes logements</a>
           <a class="btn" data-go="reservations-pulse.html" href="#">📲 Demandes reçues</a>
@@ -465,14 +465,14 @@
         <div class="sep"></div>
 
         <div class="sub" style="margin:0">
-          Si une porte reste fermée, l’ouverture est peut-être encore en cours.
-          Clique ↻ Recharger ou repasse par ton code.
+          Si une porte reste fermée, clique sur 🔑 Entrer avec mon code. Le bouton ↻ Recharger sert seulement à relancer la page.
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    /* DIGIY PATCH PYTHON — PRO LOC index PIN direct */
     (() => {
       "use strict";
 
@@ -678,7 +678,6 @@
 
       function disablePrivateDoors(){
         const allowed = new Set([
-          "__back__",
           "pin.html",
           "go-pin-public.html"
         ]);
@@ -758,7 +757,6 @@
             if(!targetRaw) return;
 
             if(targetRaw === "__back__"){
-              if(history.length > 1) return history.back();
               const t = withSlug("pin.html");
               if(window.DIGIY_GUARD?.go) return window.DIGIY_GUARD.go(t, "replace");
               return location.replace(t);
@@ -1031,3 +1029,4 @@
   </script>
 </body>
 </html>
+
