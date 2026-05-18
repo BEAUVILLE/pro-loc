@@ -473,6 +473,8 @@
 
   <script>
     /* DIGIY PATCH PYTHON — PRO LOC index PIN direct */
+    /* DIGIY PYTHON FINAL INDEX LOC — guard absent safe */
+    /* DIGIY PATCH PYTHON — guard absent safe */
     (() => {
       "use strict";
 
@@ -634,7 +636,7 @@
 
       async function waitGuardReady(){
         if(!window.DIGIY_GUARD || typeof window.DIGIY_GUARD.ready !== "function"){
-          throw new Error("guard_absent");
+          return { preview:true, access_ok:false, slug:"", phone:"", reason:"guard_absent" };
         }
         return await window.DIGIY_GUARD.ready({ redirect:false, timeout:8000 });
       }
@@ -793,6 +795,10 @@
             ? "👁️ Aucun lieu détecté.\n➡️ Ouvre cette page depuis ton lien d’entrée ou repasse par ton accès."
             : reason === "has_access_false"
             ? "👁️ Lieu reconnu mais accès non actif.\n➡️ Passe par ton code pour ouvrir les portes privées."
+            : reason === "guard_absent"
+            ? "👁️ Accès à ouvrir.\n➡️ Clique sur 🔑 Entrer avec mon code pour ouvrir ton espace."
+            : reason === "guard_absent"
+            ? "👁️ Accès à ouvrir.\n➡️ Clique sur 🔑 Entrer avec mon code pour ouvrir le PIN."
             : "👁️ Aperçu.\n➡️ Les portes privées restent fermées tant que l’accès n’est pas confirmé.",
           "warn"
         );
@@ -906,16 +912,24 @@
         }
 
         if(!initialSlug){
+          // DIGIY terrain : pas de slug ne doit jamais bloquer la porte PIN.
+          // On affiche un aperçu, mais on continue pour laisser guard.js/pin.html jouer leur rôle.
           setPreviewUi("slug_missing");
           setPills({ phone: hubPhone, slug: "", ok: false, preview: true });
-          $("vSess").textContent = "—";
+          $("vSess").textContent = "À ouvrir par code";
           $("btnLogout").style.display = "none";
           sbState();
-          return;
         }
 
         if(!window.DIGIY_GUARD){
-          throw new Error("guard_absent");
+          // DIGIY terrain : si guard.js n'est pas encore chargé ou absent,
+          // on ne casse pas la page. On garde le hall lisible et la porte PIN ouverte.
+          setPreviewUi("guard_absent");
+          setPills({ phone: hubPhone, slug: initialSlug || "", ok: false, preview: true });
+          $("vSess").textContent = "À ouvrir par code";
+          $("btnLogout").style.display = "none";
+          sbState();
+          return;
         }
 
         await waitGuardReady();
@@ -1029,5 +1043,6 @@
   </script>
 </body>
 </html>
+
 
 
