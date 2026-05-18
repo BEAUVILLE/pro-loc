@@ -483,11 +483,9 @@
 
       function normPhone(p){
         if(!p) return "";
-        let s = String(p).trim().replace(/\s+/g,"").replace(/[^\d+]/g,"");
-        if (s.startsWith("00221")) s = "+221" + s.slice(5);
-        if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-        if (!s.startsWith("+221") && /^\d{9}$/.test(s)) s = "+221" + s;
-        return s;
+        let s = String(p).trim().replace(/[^\d]/g,"");
+        if (s.startsWith("00221")) s = s.slice(2); // 00221... → 221...
+        return s; // format DB : "221771342889" sans +
       }
 
       function isSensitiveSlug(slug){
