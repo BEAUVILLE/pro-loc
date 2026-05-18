@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>Je loue • Accueil</title>
+<title>Je loue • Gérer mes logements</title>
 <!-- DIGIY LOC APP — CLARTE VOCALE FINAL -->
+<!-- DIGIY LOC APP — GERER MES LOGEMENTS -->
 <meta name="theme-color" content="#061b14"/>
-<meta name="description" content="Je loue by DIGIY — accueil propriétaire LOC, gestes utiles, réservations, disponibilités et paiements directs."/>
+<meta name="description" content="Je loue by DIGIY — gérer mes logements, réservations, disponibilités, arrivées, départs et paiements utiles."/>
 
 <script>
   window.DIGIY_MODULE = "LOC";
@@ -743,8 +744,8 @@ body{
       <div class="brand">
         <div class="logo">🏠</div>
         <div>
-          <h1>Je loue</h1>
-          <div class="sub">Accueil propriétaire · les gestes utiles devant toi</div>
+          <h1>Gérer mes logements</h1>
+          <div class="sub">Gestion active · réservations, dates et actions devant toi</div>
         </div>
       </div>
       <button class="btn small" id="btnRefresh" type="button" aria-label="Recharger l’accueil">↻</button>
@@ -773,8 +774,8 @@ body{
     <section class="hero">
       <div class="heroTop">
         <div>
-          <div class="heroTitle">Aujourd’hui dans mes logements</div>
-          <div class="heroText" id="heroText">Arrivées, départs, demandes et paiements utiles. Tout ce qui demande ton attention est devant toi.</div>
+          <div class="heroTitle">Gérer mes logements aujourd’hui</div>
+          <div class="heroText" id="heroText">Arrivées, départs, demandes, disponibilités et paiements utiles. La page de travail LOC est devant toi.</div>
         </div>
         <div class="todayBadge">
           <strong id="todayDay">—</strong>
@@ -906,7 +907,7 @@ body{
 
 <nav class="bottomNav" aria-label="Navigation LOC">
   <div class="bottomInner">
-    <a class="navBtn active" id="navHome" href="./app.html"><span class="ico">🏠</span><span>Accueil</span></a>
+    <a class="navBtn active" id="navHome" href="./app.html"><span class="ico">🏠</span><span>Gérer</span></a>
     <a class="navBtn" id="navReservations" href="./reservations.html"><span class="ico">📋</span><span>Réserv.</span></a>
     <a class="navBtn" id="navPlanning" href="./planning.html"><span class="ico">📅</span><span>Dispos</span></a>
     <a class="navBtn" id="navNotes" href="./notes.html"><span class="ico">📝</span><span>Notes</span></a>
@@ -1761,7 +1762,7 @@ body{
       announceUsefulAlerts(State.rows);
 
       if(State.access){
-        showNote("Accueil chargé. Les arrivées, départs et paiements à traiter sont devant.", "ok");
+        showNote("Gestion chargée. Les arrivées, départs et paiements à traiter sont devant.", "ok");
       }
 
       // Vérif PAY async après session
@@ -1809,6 +1810,22 @@ body{
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
