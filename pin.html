@@ -8,8 +8,8 @@
 
   <!-- CONFIG — changer ces 5 lignes par module -->
   <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_URL      = "VOTRE_URL_SUPABASE";
+    window.DIGIY_SUPABASE_ANON_KEY = "VOTRE_CLE_ANON";
     window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE            = "LOC";
     window.DIGIY_MODULE_LABEL      = "Je loue";
@@ -220,16 +220,6 @@ async function goStep2(){
     shake(phoneEl);return;
   }
   btnContinue.disabled=true;
-  showSt("status1","⏳ Vérification du numéro…","spin");
-  try{
-    const sb=getSb();
-    const{data}=await sb.from("go_pins").select("phone").eq("phone",raw).eq("module",MODULE).limit(1);
-    if(Array.isArray(data)&&data.length===0){
-      phoneEl.classList.add("err-field");
-      showSt("status1","❌ Numéro non reconnu pour "+MODULE_LABEL+".\nVérifie ton numéro ou contacte DIGIY.","err");
-      shake(phoneEl);btnContinue.disabled=false;return;
-    }
-  }catch(_){/* RLS ou erreur réseau : on laisse passer, le RPC tranchera */}
   clearSt("status1");
   confirmedPhone=raw;
   showStep2();
@@ -286,10 +276,16 @@ async function doLogin(){
     if(error)throw new Error(error.message||"Erreur serveur");
     const ok=data===true||data?.ok===true||data?.access===true||data?.status==="ok";
     if(!ok){
+      const reason=data?.reason||data?.error||"";
+      const phoneErr=reason.includes("phone")||reason.includes("user")||reason.includes("not_found")||reason.includes("introuvable");
       pin="";updateDots();updateEnterBtn();
       for(let i=0;i<4;i++)$("d"+i).classList.add("err");
       shake($("pinDots"));
-      showSt("status2","❌ Code incorrect.\nVérifie tes 4 chiffres et réessaie.","err");
+      if(phoneErr){
+        showSt("status2","❌ Numéro non reconnu.\nVérifie ton numéro et reviens à l'étape 1.","err");
+      } else {
+        showSt("status2","❌ Code incorrect.\nVérifie tes 4 chiffres et réessaie.","err");
+      }
       return;
     }
     const rpcSlug=data?.slug||data?.identifiant||"";
