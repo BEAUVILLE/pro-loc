@@ -274,23 +274,19 @@ async function doLogin(){
     const sb=getSb();
     const{data,error}=await sb.rpc("digiy_verify_pin",{p_phone:confirmedPhone,p_module:MODULE,p_pin:pin});
     if(error)throw new Error(error.message||"Erreur serveur");
-    const ok=data===true||data?.ok===true||data?.access===true||data?.status==="ok";
+    /* Le RPC retourne un tableau → on prend la première ligne */
+    const row=Array.isArray(data)?data[0]:data;
+    const ok=row===true||row?.ok===true||row?.access===true||row?.status==="ok";
     if(!ok){
-      const reason=data?.reason||data?.error||"";
-      const phoneErr=reason.includes("phone")||reason.includes("user")||reason.includes("not_found")||reason.includes("introuvable");
       pin="";updateDots();updateEnterBtn();
       for(let i=0;i<4;i++)$("d"+i).classList.add("err");
       shake($("pinDots"));
-      if(phoneErr){
-        showSt("status2","❌ Numéro non reconnu.\nVérifie ton numéro et reviens à l'étape 1.","err");
-      } else {
-        showSt("status2","❌ Code incorrect.\nVérifie tes 4 chiffres et réessaie.","err");
-      }
+      showSt("status2","❌ Code incorrect.\nVérifie tes 4 chiffres et réessaie.","err");
       return;
     }
-    const rpcSlug=data?.slug||data?.identifiant||"";
+    const rpcSlug=row?.slug||row?.identifiant||"";
     const finalSlug=rpcSlug||slug(confirmedPhone);
-    writeSession(confirmedPhone,finalSlug,data?.session_token||"");
+    writeSession(confirmedPhone,finalSlug,row?.session_token||"");
     showSt("status2","✅ Accès ouvert. Redirection…","ok");
     setTimeout(()=>redirect(finalSlug),700);
   }catch(err){
@@ -303,6 +299,7 @@ async function doLogin(){
 </script>
 </body>
 </html>
+
 
 
 
