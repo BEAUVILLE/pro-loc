@@ -12,7 +12,7 @@
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
-    window.DIGIY_RETURN_DEFAULT = "app.html";
+    window.DIGIY_RETURN_DEFAULT = "index.html";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -394,11 +394,11 @@
 
         <div class="actions">
           <a id="returnBtn" class="btn btn-secondary" href="./app.html">🏠 Ma gestion</a>
-          <button id="resetBtn" class="btn btn-secondary" type="button" style="display:none">♻️ Réinitialiser mon accès</button>
-          <a id="payBtn" class="btn btn-green" href="https://commencer-a-payer.digiylyfe.com/">💰 Activer un nouvel accès</a>
+          <a id="payBtn" class="btn btn-green" href="https://commencer-a-payer.digiylyfe.com/">💳 Mon accès</a>
           <a id="publicCardBtn" class="btn btn-secondary" href="./fiche.html">🌍 Fiche publique</a>
           <a class="btn btn-secondary" href="./index.html">🏘️ Galerie publique</a>
           <a class="btn btn-secondary" href="./fiche-abo.html">📝 Pré-fiche</a>
+          <button id="resetBtn" class="btn btn-secondary" type="button" style="display:none">♻️ Réinitialiser mon accès</button>
         </div>
       </form>
 
@@ -427,13 +427,14 @@
   </div>
 
   <script>
+    /* DIGIY PATCH PYTHON — PIN valide => index.html, reset mobile réel */
     (function(){
       "use strict";
 
       const SUPABASE_URL = window.DIGIY_SUPABASE_URL;
       const SUPABASE_KEY = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON;
       const MODULE = "LOC";
-      const DEFAULT_RETURN = "app.html";
+      const DEFAULT_RETURN = "index.html";
       const SESSION_HOURS = 8;
 
       const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -450,24 +451,25 @@
         returnBtn: $("returnBtn"),
         publicCardBtn: $("publicCardBtn"),
         payBtn: $("payBtn"),
-        resetBtn: $("resetBtn"),
         statusBox: $("statusBox"),
         statusTitle: $("statusTitle"),
         statusBody: $("statusBody"),
         metaReturn: $("metaReturn"),
         metaSession: $("metaSession"),
-        screenState: $("screenState")
+        screenState: $("screenState"),
+        resetBtn: $("resetBtn")
       };
 
       const SENSITIVE_PARAMS = [
         "phone","tel","owner_phone","p_phone","whatsapp","client_phone","wave_phone","pin","pin4","token","session","access_token"
       ];
 
+      const hiddenContext = {
+        slug: "",
+        phone: ""
+      };
+
       const RESET_KEYS = [
-        "digiy_loc_return_target",
-        "digiy_return_target",
-        "DIGIY_RETURN_TARGET",
-        "return_target",
         "digiy_loc_session",
         "digiy_loc_guard_session",
         "digiy_guard_loc_session",
@@ -479,18 +481,21 @@
         "DIGIY_LOC_HUB_PHONE",
         "DIGIY_LOC_PHONE",
         "DIGIY_PHONE",
-        "digiy_loc_last_slug",
-        "digiy_loc_slug",
-        "digiy_last_slug",
-        "DIGIY_LOC_SLUG",
-        "DIGIY_SLUG",
+        "digiy_loc_return_target",
+        "digiy_return_target",
+        "DIGIY_RETURN_TARGET",
+        "return_target",
         "digiy_loc_last_module"
       ];
 
-      const hiddenContext = {
-        slug: "",
-        phone: ""
-      };
+      function isResetMode(){
+        try{
+          const p = new URLSearchParams(window.location.search);
+          return String(p.get("v") || "").toLowerCase() === "reset";
+        }catch(_){
+          return false;
+        }
+      }
 
       function clean(v){ return String(v || "").trim(); }
 
@@ -620,7 +625,6 @@
         try{
           const url = new URL(raw, window.location.href);
           if(url.origin !== window.location.origin) return fallback;
-          if(/\/pin\.html$/i.test(url.pathname)) return fallback;
           scrubUrlObject(url);
           return url.pathname + url.search + url.hash;
         }catch(_){
@@ -672,7 +676,6 @@
           "digiy_loc_guard_session",
           "digiy_guard_loc_session",
           "DIGIY_LOC_SESSION",
-          "DIGIY_LOC_SESSION_V2",
           "digiy_session_loc"
         ];
 
@@ -730,7 +733,6 @@
         setBoth("digiy_guard_loc_session", json);
         setBoth("DIGIY_LOC_SESSION", json);
         setBoth("DIGIY_LOC_SESSION_V2", json);
-        setBoth("digiy_session_loc", json);
 
         if(session.slug){
           setBoth("digiy_loc_last_slug", session.slug);
@@ -740,41 +742,44 @@
         }
 
         if(session.phone){
-          setBoth("DIGIY_LOC_HUB_PHONE", session.phone);
-          setBoth("digiy_loc_phone", session.phone);
-          setBoth("digiy_loc_last_phone", session.phone);
-          setBoth("DIGIY_LOC_PHONE", session.phone);
-          setBoth("DIGIY_PHONE", session.phone);
+          setSessionOnly("DIGIY_LOC_HUB_PHONE", session.phone);
+          setSessionOnly("digiy_loc_phone", session.phone);
+          setSessionOnly("digiy_loc_last_phone", session.phone);
+          setSessionOnly("DIGIY_LOC_PHONE", session.phone);
+          setSessionOnly("DIGIY_PHONE", session.phone);
         }
 
         setBoth("digiy_loc_last_module", MODULE);
       }
 
       function clearBrokenSession(keepSlug){
-        const safeKeepSlug = normSlug(keepSlug || hiddenContext.slug || "");
+        const safeSlug = normSlug(keepSlug || hiddenContext.slug || getStorage("digiy_loc_last_slug") || getStorage("digiy_loc_slug") || "");
         RESET_KEYS.forEach(removeBoth);
 
-        if(safeKeepSlug){
-          setBoth("digiy_loc_last_slug", safeKeepSlug);
-          setBoth("digiy_loc_slug", safeKeepSlug);
-          setBoth("DIGIY_LOC_SLUG", safeKeepSlug);
-          setBoth("DIGIY_SLUG", safeKeepSlug);
-          hiddenContext.slug = safeKeepSlug;
+        if(safeSlug){
+          setBoth("digiy_loc_last_slug", safeSlug);
+          setBoth("digiy_loc_slug", safeSlug);
+          setBoth("DIGIY_LOC_SLUG", safeSlug);
+          setBoth("DIGIY_SLUG", safeSlug);
         }
       }
 
-      function isResetMode(){
-        const p = qs();
-        return p.get("v") === "reset" || p.get("reset") === "1";
-      }
-
-      function setResetVisible(show){
+      function showResetIfNeeded(){
         if(!els.resetBtn) return;
-        els.resetBtn.style.display = show ? "inline-flex" : "none";
+        const hasContext = !!(hiddenContext.slug || hiddenContext.phone || readExistingSession());
+        els.resetBtn.style.display = (isResetMode() || !hasContext) ? "inline-flex" : "none";
       }
 
-      function buildResetPinUrl(){
-        return "./pin.html?v=reset";
+      function handleReset(){
+        const keepSlug = hiddenContext.slug || getStorage("digiy_loc_last_slug") || getStorage("digiy_loc_slug") || "";
+        clearBrokenSession(keepSlug);
+        const url = new URL("./pin.html", window.location.href);
+        url.searchParams.set("v", "reset");
+        const cleanSlug = normSlug(keepSlug);
+        if(cleanSlug && !isSensitiveSlug(cleanSlug)){
+          url.searchParams.set("slug", cleanSlug);
+        }
+        window.location.href = url.pathname + url.search;
       }
 
       function updateMetaSession(text){
@@ -801,44 +806,24 @@
         }
       }
 
-      function phoneVariants(phone){
-        const p = normPhone(phone);
-        if(!p) return [];
-        const out = [p];
-
-        if(p.startsWith("221")){
-          out.push("+" + p);
-          out.push(p.slice(3));
-        }else if(p.length === 9){
-          out.push("221" + p);
-          out.push("+221" + p);
-        }
-
-        return Array.from(new Set(out.filter(Boolean)));
-      }
-
       async function resolveSlugByPhone(phone){
-        const variants = phoneVariants(phone);
-        if(!variants.length) return "";
+        const wantedPhone = normPhone(phone);
+        if(!wantedPhone) return "";
 
-        for(const wantedPhone of variants){
-          try{
-            const { data, error } = await supabaseClient
-              .from("digiy_subscriptions_public")
-              .select("phone,slug,module")
-              .eq("phone", wantedPhone)
-              .eq("module", MODULE)
-              .maybeSingle();
+        try{
+          const { data, error } = await supabaseClient
+            .from("digiy_subscriptions_public")
+            .select("phone,slug,module")
+            .eq("phone", wantedPhone)
+            .eq("module", MODULE)
+            .maybeSingle();
 
-            if(error) throw error;
-            const slug = normSlug(data && data.slug);
-            if(slug) return slug;
-          }catch(err){
-            console.warn("[LOC PIN] resolveSlugByPhone", err);
-          }
+          if(error) throw error;
+          return normSlug(data && data.slug);
+        }catch(err){
+          console.warn("[LOC PIN] resolveSlugByPhone", err);
+          return "";
         }
-
-        return "";
       }
 
       function normalizeRpcResult(data, fallbackPhone){
@@ -894,18 +879,12 @@
         cleanVisibleUrl();
 
         els.identifier.value = "";
-        els.returnBtn.href = buildPrivateUrl(getReturnTarget());
+        els.returnBtn.href = buildPrivateUrl("./index.html");
         els.publicCardBtn.href = buildPublicUrl("fiche.html", hiddenContext.slug);
         els.payBtn.href = buildPayUrl();
         els.metaReturn.textContent = "Espace propriétaire";
 
-        const hasContext = !!(hiddenContext.slug || hiddenContext.phone || (rememberedSession && rememberedSession.phone));
-        setResetVisible(isResetMode() || !hasContext);
-
-        if(isResetMode()){
-          updateMetaSession("Accès réinitialisé");
-          setStatus("info", "Accès réinitialisé", "Entre ton téléphone ou ton identifiant, puis ton code.");
-        }else if(rememberedSession && rememberedSession.phone){
+        if(rememberedSession && rememberedSession.phone){
           updateMetaSession("Session déjà ouverte sur cet appareil");
           setStatus("ok", "Session déjà présente", "Ton espace est reconnu. Tu peux ouvrir ton espace propriétaire.");
         }else if(hiddenContext.slug || hiddenContext.phone){
@@ -915,6 +894,8 @@
           updateMetaSession("Aucune session ouverte");
           setStatus("info", "Prêt", "Entre ton identifiant ou ton téléphone, puis ton code.");
         }
+
+        showResetIfNeeded();
       }
 
       function pushSignal(label){
@@ -935,8 +916,7 @@
 
       async function handleSubmit(event){
         event.preventDefault();
-        const keepSlugBeforeReset = hiddenContext.slug || getStorage("digiy_loc_last_slug") || getStorage("digiy_loc_slug") || "";
-        clearBrokenSession(keepSlugBeforeReset);
+        clearBrokenSession(hiddenContext.slug);
         setBusy(true);
 
         try{
@@ -992,7 +972,7 @@
           }
 
           const finalPhone = normPhone(result.phone || phone);
-          const finalSlug = slug || await resolveSlugByPhone(finalPhone) || (finalPhone ? "loc-" + finalPhone : "");
+          const finalSlug = slug || await resolveSlugByPhone(finalPhone) || ("loc-" + finalPhone);
           const label = clean(result.label || "Accès Je loue");
 
           writeSession({
@@ -1007,13 +987,13 @@
           els.identifier.value = "";
           els.pin.value = "";
           updateMetaSession("Session sécurisée ouverte");
-          els.returnBtn.href = buildPrivateUrl("./app.html");
+          els.returnBtn.href = buildPrivateUrl("./index.html");
           els.publicCardBtn.href = buildPublicUrl("fiche.html", finalSlug);
 
           pushSignal("Accès propriétaire ouvert");
           setStatus("ok", "Accès validé", "Code accepté. Ton espace logement est ouvert.");
 
-          window.location.href = buildPrivateUrl("./app.html");
+          window.location.href = buildPrivateUrl("./index.html");
         }catch(err){
           console.error("[DIGIY LOC PIN] erreur", err);
           setStatus(
@@ -1029,16 +1009,7 @@
 
       function bind(){
         els.form.addEventListener("submit", handleSubmit);
-
-        if(els.resetBtn){
-          els.resetBtn.addEventListener("click", function(){
-            const keepSlug = hiddenContext.slug || getStorage("digiy_loc_last_slug") || getStorage("digiy_loc_slug") || "";
-            clearBrokenSession(keepSlug);
-            setStatus("info", "Accès réinitialisé", "Les anciennes traces locales sont nettoyées. Entre ton téléphone ou ton identifiant, puis ton code.");
-            updateMetaSession("Accès réinitialisé");
-            window.location.href = buildResetPinUrl();
-          });
-        }
+        if(els.resetBtn) els.resetBtn.addEventListener("click", handleReset);
       }
 
       hydrateFromContext();
@@ -1047,4 +1018,5 @@
   </script>
 </body>
 </html>
+
 
