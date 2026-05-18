@@ -324,7 +324,7 @@
 
     SESSION_KEYS.forEach((key) => {
       writeSessionStorage(key, raw);
-      removeLocalStorage(key);
+      writeLocalStorage(key, raw); // mobile : sessionStorage seul meurt en arrière-plan
     });
 
     if (clean.slug) writeSlugContext(clean.slug);
@@ -974,7 +974,7 @@
   window.DIGIY_GUARD = {
     MODULE_NAME,
     MAX_AGE_MS,
-    VERSION: "loc-guard-security-v3-20260510",
+    VERSION: "loc-guard-security-v3-20260518",
     state,
 
     boot,
@@ -1029,3 +1029,4 @@
 
 cleanVisibleUrl();
 })();
+
