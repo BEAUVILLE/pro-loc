@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Je loue • Accueil</title>
+<!-- DIGIY LOC APP — CLARTE VOCALE FINAL -->
 <meta name="theme-color" content="#061b14"/>
 <meta name="description" content="Je loue by DIGIY — accueil propriétaire LOC, gestes utiles, réservations, disponibilités et paiements directs."/>
 
@@ -575,6 +576,162 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
 @media(max-width:560px){
   #goPinHeader{width:100%;min-height:54px;font-size:1.04rem;}
 }
+
+/* =========================================================
+   DIGIY PATCH — CLARTÉ TERRAIN + ALERTES VOCALES LOC V1
+   Fond plus clair, lecture mobile plus douce, boutons visibles.
+   ========================================================= */
+:root{
+  --bg:#f4efe2;
+  --bg2:#fff9e8;
+  --card:rgba(255,255,255,.78);
+  --line:rgba(6,53,31,.16);
+  --ink:#0d2a1f;
+  --muted:rgba(13,42,31,.72);
+  --shadow:0 16px 36px rgba(6,53,31,.13);
+}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(900px 500px at 12% -8%, rgba(250,204,21,.34), transparent 58%),
+    radial-gradient(760px 420px at 95% 0%, rgba(34,197,94,.20), transparent 60%),
+    linear-gradient(180deg,#fff9e8,#f4efe2 58%,#eef7ea);
+}
+.top,.hero,.section,.chefBox,.morePanel .section{
+  background:rgba(255,255,255,.78);
+  border-color:rgba(6,53,31,.15);
+  box-shadow:var(--shadow);
+}
+.hero{
+  background:
+    radial-gradient(620px 260px at 8% 0%, rgba(250,204,21,.22), transparent 66%),
+    radial-gradient(620px 260px at 96% 8%, rgba(34,197,94,.13), transparent 66%),
+    rgba(255,255,255,.82);
+}
+.chefBox{
+  background:
+    radial-gradient(520px 220px at 0% 0%, rgba(250,204,21,.20), transparent 65%),
+    rgba(255,255,255,.82);
+}
+.doctrineBox{
+  background:rgba(220,252,231,.70);
+  border-color:rgba(34,197,94,.24);
+}
+.doctrineLead{color:#166534;}
+.doctrineText,.sub,.heroText,.sectionSub,.itemMeta,.empty,.note,.chefSub,.chefItemMeta{
+  color:rgba(13,42,31,.74);
+}
+.heroTitle,.sectionTitle,.itemTitle,.chefTitle,h1{color:#07351f;}
+.pill,.badge{
+  background:rgba(255,255,255,.62);
+  color:rgba(13,42,31,.74);
+  border-color:rgba(6,53,31,.14);
+}
+.pill.ok,.badge.ok{background:rgba(34,197,94,.12);color:#166534;}
+.pill.warn,.badge.warn{background:rgba(250,204,21,.20);color:#7a5200;}
+.pill.bad,.badge.bad{background:rgba(239,68,68,.10);color:#991b1b;}
+.btn{
+  color:#0d2a1f;
+  background:rgba(255,255,255,.66);
+  border-color:rgba(6,53,31,.15);
+  box-shadow:0 8px 18px rgba(6,53,31,.07);
+}
+.btn.primary{background:linear-gradient(180deg,#22c55e,#16a34a);color:#04160e;}
+.btn.gold{background:rgba(250,204,21,.24);border-color:rgba(212,160,23,.34);color:#6f4b00;}
+.btn.blue{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.32);color:#075985;}
+.alertCard,.item,.chefItem{
+  background:rgba(255,255,255,.70);
+  border-color:rgba(6,53,31,.13);
+}
+.alertLabel{color:rgba(13,42,31,.68);}
+.alertCard.hot{background:rgba(250,204,21,.17);}
+.alertCard.ok{background:rgba(34,197,94,.12);}
+.alertCard.warn{background:rgba(245,158,11,.15);}
+.alertCard.blue{background:rgba(56,189,248,.13);}
+.empty{
+  background:rgba(255,255,255,.55);
+  border-color:rgba(6,53,31,.18);
+}
+.note.ok{background:rgba(34,197,94,.13);color:#166534;}
+.note.warn{background:rgba(250,204,21,.20);color:#7a5200;}
+.note.bad{background:rgba(239,68,68,.10);color:#991b1b;}
+.todayBadge{background:rgba(250,204,21,.22);border-color:rgba(212,160,23,.28);}
+.todayBadge span{color:#7a5200;}
+.payUpsellCard{
+  background:
+    radial-gradient(circle at right top,rgba(250,204,21,.24),transparent 34%),
+    linear-gradient(160deg,rgba(255,255,255,.88),rgba(255,248,223,.88));
+}
+.payUpsellTitle{color:#07351f;}
+.payUpsellLead{color:rgba(13,42,31,.72);}
+.payUpsellBadge,.payUpsellPrice{color:#6f4b00;}
+.bottomNav{
+  background:rgba(6,53,31,.92);
+  border-top-color:rgba(255,255,255,.16);
+}
+.navBtn:not(.active){
+  color:rgba(236,255,245,.86);
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.10);
+}
+.navBtn.active{
+  color:#04160e;
+  background:linear-gradient(180deg,#facc15,#22c55e);
+}
+.voiceBox{
+  margin-top:12px;
+  padding:13px;
+  border-radius:20px;
+  border:1px solid rgba(212,160,23,.28);
+  background:
+    radial-gradient(420px 160px at 0% 0%, rgba(250,204,21,.22), transparent 70%),
+    rgba(255,255,255,.72);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.voiceText{
+  min-width:220px;
+  flex:1 1 260px;
+}
+.voiceTitle{
+  font-weight:1100;
+  color:#07351f;
+  font-size:1.04rem;
+}
+.voiceSub{
+  margin-top:2px;
+  color:rgba(13,42,31,.72);
+  font-weight:850;
+  font-size:.96rem;
+  line-height:1.35;
+}
+#btnVoiceAlerts{
+  min-width:220px;
+  background:linear-gradient(135deg,#facc15,#22c55e);
+  color:#04160e;
+  border-color:rgba(212,160,23,.34);
+}
+#voiceStatus{
+  margin-top:8px;
+  display:inline-flex;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.58);
+  border:1px solid rgba(6,53,31,.12);
+  color:rgba(13,42,31,.72);
+  font-size:.88rem;
+  font-weight:950;
+}
+@media(max-width:560px){
+  .voiceBox{padding:12px;}
+  #btnVoiceAlerts{width:100%;min-height:58px;font-size:1.02rem;}
+  .voiceTitle{font-size:1.02rem;}
+  .voiceSub{font-size:.95rem;}
+}
+
 </style>
 </head>
 
@@ -601,6 +758,15 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
     </div>
 
     <div class="note" id="noteMain"></div>
+
+    <div class="voiceBox" id="voiceBox" aria-label="Alertes vocales DIGIY LOC">
+      <div class="voiceText">
+        <div class="voiceTitle">🔔 Alertes vocales DIGIY</div>
+        <div class="voiceSub">DIGIY parle peu, mais il parle au bon moment : réservation, arrivée, paiement ou demande à traiter.</div>
+        <span id="voiceStatus">Voix non activée</span>
+      </div>
+      <button class="btn" id="btnVoiceAlerts" type="button">🔔 Activer les alertes vocales</button>
+    </div>
   </header>
 
   <main>
@@ -758,7 +924,7 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
 
   const SESSION_KEYS = [
     "digiy_loc_session","digiy_loc_guard_session","digiy_guard_loc_session",
-    "DIGIY_LOC_SESSION","digiy_session_loc","DIGIY_SESSION_LOC",
+    "DIGIY_LOC_SESSION","DIGIY_LOC_SESSION_V2","digiy_session_loc","DIGIY_SESSION_LOC",
     "digiy_guard_session_loc","digiy_guard_session_LOC","digiy_guard_session",
     "DIGIY_SESSION","digiy_session"
   ];
@@ -773,6 +939,12 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
     rows:[],
     today:""
   };
+
+  const VOICE_ENABLED_KEY = "DIGIY_LOC_VOICE_ALERTS";
+  const VOICE_SEEN_KEY = "DIGIY_LOC_VOICE_SEEN_KEYS";
+  let voiceEnabled = false;
+  let voiceUnlocked = false;
+  let lastVoiceSnapshot = null;
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -1322,6 +1494,195 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
     }
   }
 
+
+  // ── Alertes vocales DIGIY LOC V1 ──────────────────────────────
+  function readSeenVoiceKeys(){
+    try{
+      const raw = localStorage.getItem(VOICE_SEEN_KEY) || "[]";
+      const arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    }catch{
+      return new Set();
+    }
+  }
+
+  function writeSeenVoiceKeys(set){
+    try{
+      localStorage.setItem(VOICE_SEEN_KEY, JSON.stringify(Array.from(set).slice(-80)));
+    }catch{}
+  }
+
+  function setVoiceStatus(text){
+    const el = $("voiceStatus");
+    if(el) el.textContent = text;
+  }
+
+  function refreshVoiceButton(){
+    const btn = $("btnVoiceAlerts");
+    if(!btn) return;
+    if(voiceEnabled){
+      btn.textContent = "🔔 Alertes vocales activées";
+      btn.setAttribute("aria-pressed","true");
+      setVoiceStatus("Voix activée pendant cette session");
+    }else{
+      btn.textContent = "🔔 Activer les alertes vocales";
+      btn.setAttribute("aria-pressed","false");
+      setVoiceStatus("Voix non activée");
+    }
+  }
+
+  function pickVoice(){
+    if(!("speechSynthesis" in window)) return null;
+    const voices = speechSynthesis.getVoices() || [];
+    return (
+      voices.find(v => /fr[-_]?FR/i.test(v.lang) && /thomas|paul|daniel|homme|male/i.test(v.name)) ||
+      voices.find(v => /^fr/i.test(v.lang)) ||
+      voices[0] ||
+      null
+    );
+  }
+
+  function speakDigiy(message){
+    if(!voiceEnabled || !voiceUnlocked) return;
+    if(!message || !("speechSynthesis" in window)) return;
+
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(message);
+      const voice = pickVoice();
+      if(voice) u.voice = voice;
+      u.lang = voice?.lang || "fr-FR";
+      u.rate = 0.88;
+      u.pitch = 1.02;
+      u.volume = 1;
+      u.onstart = () => setVoiceStatus("DIGIY parle…");
+      u.onend = () => setVoiceStatus("Alertes vocales activées");
+      u.onerror = () => setVoiceStatus("Voix interrompue");
+      speechSynthesis.speak(u);
+    }catch(err){
+      console.warn("[LOC VOICE]", err);
+    }
+  }
+
+  function unlockVoice(){
+    if(!("speechSynthesis" in window)){
+      setVoiceStatus("Voix non disponible sur ce navigateur");
+      return;
+    }
+
+    voiceEnabled = !voiceEnabled;
+    try{ localStorage.setItem(VOICE_ENABLED_KEY, voiceEnabled ? "1" : "0"); }catch{}
+
+    if(voiceEnabled){
+      voiceUnlocked = true;
+      refreshVoiceButton();
+      const u = new SpeechSynthesisUtterance("Alertes vocales DIGIY activées. Je parlerai seulement quand une action importante arrive.");
+      const voice = pickVoice();
+      if(voice) u.voice = voice;
+      u.lang = voice?.lang || "fr-FR";
+      u.rate = 0.88;
+      u.pitch = 1.02;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    }else{
+      try{ speechSynthesis.cancel(); }catch{}
+      voiceUnlocked = false;
+      refreshVoiceButton();
+    }
+  }
+
+  function rowVoiceKey(r){
+    return [
+      r.id || "",
+      r.ref || "",
+      r.client || "",
+      r.checkin || "",
+      r.checkout || "",
+      r.status || "",
+      r.pay || ""
+    ].join("|").toLowerCase();
+  }
+
+  function buildVoiceSnapshot(rows){
+    const today = State.today || todayYmd();
+    const tomorrowDate = new Date(today + "T00:00:00");
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrow = tomorrowDate.toISOString().slice(0,10);
+
+    const clean = (rows || []).filter(r => !isCancelled(r));
+    return {
+      total: clean.length,
+      pending: clean.filter(isPending).length,
+      due: clean.filter(r => !isPaid(r)).length,
+      arrivalsToday: clean.filter(r => r.checkin === today).length,
+      arrivalsTomorrow: clean.filter(r => r.checkin === tomorrow).length
+    };
+  }
+
+  function announceUsefulAlerts(rows){
+    if(!voiceEnabled || !voiceUnlocked || !State.access) return;
+
+    const clean = (rows || []).filter(r => !isCancelled(r));
+    const snapshot = buildVoiceSnapshot(clean);
+
+    if(!lastVoiceSnapshot){
+      lastVoiceSnapshot = snapshot;
+      const seen = readSeenVoiceKeys();
+      clean.forEach(r => {
+        const key = rowVoiceKey(r);
+        if(key) seen.add(key);
+      });
+      writeSeenVoiceKeys(seen);
+      return;
+    }
+
+    const seen = readSeenVoiceKeys();
+    const newRows = clean.filter(r => {
+      const key = rowVoiceKey(r);
+      return key && !seen.has(key);
+    });
+
+    clean.forEach(r => {
+      const key = rowVoiceKey(r);
+      if(key) seen.add(key);
+    });
+    writeSeenVoiceKeys(seen);
+
+    let message = "";
+
+    if(newRows.length > 0 && snapshot.total > lastVoiceSnapshot.total){
+      const r = newRows[0];
+      message = `Nouvelle réservation reçue. Client ${r.client || "à vérifier"}. Arrivée ${fmtDate(r.checkin)}.`;
+    }else if(snapshot.pending > lastVoiceSnapshot.pending){
+      message = `${snapshot.pending} demande${snapshot.pending > 1 ? "s" : ""} à confirmer. Ouvre les réservations.`;
+    }else if(snapshot.due > lastVoiceSnapshot.due){
+      message = `${snapshot.due} paiement${snapshot.due > 1 ? "s" : ""} à encaisser ou vérifier.`;
+    }else if(snapshot.arrivalsToday > lastVoiceSnapshot.arrivalsToday){
+      message = "Arrivée prévue aujourd’hui. Vérifie l’accueil et les consignes.";
+    }else if(snapshot.arrivalsTomorrow > lastVoiceSnapshot.arrivalsTomorrow){
+      message = "Arrivée prévue demain. Prépare le logement et le message client.";
+    }
+
+    lastVoiceSnapshot = snapshot;
+
+    if(message) speakDigiy(message);
+  }
+
+  function initVoiceAlerts(){
+    try{ voiceEnabled = localStorage.getItem(VOICE_ENABLED_KEY) === "1"; }catch{ voiceEnabled = false; }
+    // Mobile : la voix doit être déverrouillée par un clic humain dans la session.
+    voiceUnlocked = false;
+    refreshVoiceButton();
+
+    const btn = $("btnVoiceAlerts");
+    if(btn) btn.addEventListener("click", unlockVoice);
+
+    if("speechSynthesis" in window){
+      speechSynthesis.onvoiceschanged = () => pickVoice();
+    }
+  }
+
+
   // ── PAY upsell ──────────────────────────────────────────────
   const PAY_COCKPIT_URL = "https://pay.digiylyfe.com/cockpit.html";
 
@@ -1397,6 +1758,7 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
       const raw = await loadReservations();
       State.rows = raw.map(normalizeRow);
       render();
+      announceUsefulAlerts(State.rows);
 
       if(State.access){
         showNote("Accueil chargé. Les arrivées, départs et paiements à traiter sont devant.", "ok");
@@ -1441,11 +1803,28 @@ body, .sub, .heroText, .sectionSub, .itemMeta, .empty, .note, .doctrineText{
   syncLinks();
   renderTopDate();
   renderStatus();
+  initVoiceAlerts();
   reload();
 })();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
