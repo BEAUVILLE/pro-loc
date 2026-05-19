@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue • Tarifs</title>
   <meta name="theme-color" content="#061b14"/>
-  <meta name="description" content="DIGIY LOC — tarifs propriétaires : prix nuit, semaine, mois, ménage et caution, en lecture senior."/>
+  <meta name="description" content="DIGIY LOC — tarifs propriétaires : prix nuit, semaine, mois, ménage et caution, en lecture claire, sans exemple personnel dans le moule."/>
+  <meta name="digiy-build" content="loc-tarifs-moule-safe-no-slug-20260519"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -341,8 +342,8 @@
   </section>
 
   <nav class="nav" aria-label="Navigation rapide">
+    <a id="navHub" href="./hub.html">🧭 HUB</a>
     <a id="navPlanning" href="./planning.html">📅 Disponibilités</a>
-    <a id="navReservations" href="./reservations.html">📋 Réservations</a>
     <a id="navTarifs" class="on" href="./tarifs.html">🏷️ Tarifs</a>
   </nav>
 
@@ -355,17 +356,17 @@
 
       <div class="field">
         <label for="pNight">Prix par nuit</label>
-        <input id="pNight" type="number" inputmode="numeric" min="0" placeholder="Ex : 30000">
+        <input id="pNight" type="number" inputmode="numeric" min="0" placeholder="Prix par nuit">
       </div>
 
       <div class="field">
         <label for="pWeek">Prix par semaine</label>
-        <input id="pWeek" type="number" inputmode="numeric" min="0" placeholder="Ex : 175000">
+        <input id="pWeek" type="number" inputmode="numeric" min="0" placeholder="Prix par semaine">
       </div>
 
       <div class="field">
         <label for="pMonth">Prix par mois</label>
-        <input id="pMonth" type="number" inputmode="numeric" min="0" placeholder="Ex : 550000">
+        <input id="pMonth" type="number" inputmode="numeric" min="0" placeholder="Prix par mois">
       </div>
 
       <div class="sep"></div>
@@ -374,12 +375,12 @@
 
       <div class="field">
         <label for="pClean">Frais ménage</label>
-        <input id="pClean" type="number" inputmode="numeric" min="0" placeholder="Ex : 10000">
+        <input id="pClean" type="number" inputmode="numeric" min="0" placeholder="Frais ménage">
       </div>
 
       <div class="field">
         <label for="pDeposit">Caution</label>
-        <input id="pDeposit" type="number" inputmode="numeric" min="0" placeholder="Ex : 50000">
+        <input id="pDeposit" type="number" inputmode="numeric" min="0" placeholder="Montant caution">
       </div>
 
       <div class="actions">
@@ -433,11 +434,11 @@
 
 <nav class="bottomNav" aria-label="Navigation LOC">
   <div class="bottomInner">
-    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
-    <a class="navItem" id="navResa" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
-    <a class="navItem" id="navDispo" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navHubBottom" href="./hub.html"><strong>🧭</strong><span>HUB</span></a>
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Travail</span></a>
+    <a class="navItem" id="navResa" href="./reservations.html"><strong>📋</strong><span>Demandes</span></a>
     <a class="navItem active" id="navPrice" href="./tarifs.html"><strong>🏷️</strong><span>Tarifs</span></a>
-    <a class="navItem" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+    <a class="navItem" id="navSession" href="./session.html"><strong>🛡️</strong><span>Session</span></a>
   </div>
 </nav>
 
@@ -492,14 +493,9 @@
     try{
       const u = new URL(location.href);
       let changed = false;
-      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>{
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone","business_phone","loc_phone","loc_tel","owner_id","slug","module","return","redirect","redirect_url","url","from","v","pin","pin4","token","session_token"].forEach(k=>{
         if(u.searchParams.has(k)){ u.searchParams.delete(k); changed = true; }
       });
-      const slug = cleanSlug(u.searchParams.get("slug") || "");
-      if(slug && isSensitiveSlug(slug)){
-        u.searchParams.delete("slug");
-        changed = true;
-      }
       if(changed) history.replaceState({}, "", u.pathname + u.search + u.hash);
     }catch(_){}
   }
@@ -545,17 +541,16 @@
   }
 
   function withContext(path){
-    const slug = State.slug || getSlug();
+    /*
+      Moule-safe : on ne transporte plus slug, téléphone ou identifiant dans l’URL.
+      Le guard/session garde le contexte côté navigateur ; les liens restent propres.
+    */
     try{
       const u = new URL(path, location.href);
-      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone"].forEach(k=>u.searchParams.delete(k));
-      if(slug && canExposeSlug(slug)) u.searchParams.set("slug", slug);
+      ["phone","tel","owner_phone","p_phone","whatsapp","client_phone","business_phone","loc_phone","loc_tel","owner_id","slug","module","return","redirect","redirect_url","url","from","v","pin","pin4","token","session_token"].forEach(k=>u.searchParams.delete(k));
       return u.origin === location.origin ? u.pathname + u.search + u.hash : u.toString();
     }catch{
-      if(slug && canExposeSlug(slug)){
-        return path + (path.includes("?") ? "&" : "?") + "slug=" + encodeURIComponent(slug);
-      }
-      return path;
+      return String(path || "./hub.html").split("?")[0];
     }
   }
 
@@ -681,15 +676,16 @@
     }
 
     [
+      ["navHub","./hub.html"],
       ["navPlanning","./planning.html"],
       ["navReservations","./reservations.html"],
       ["navTarifs","./tarifs.html"],
       ["btnPlanning","./planning.html"],
+      ["navHubBottom","./hub.html"],
       ["navHome","./app.html"],
       ["navResa","./reservations.html"],
-      ["navDispo","./planning.html"],
       ["navPrice","./tarifs.html"],
-      ["navPlus","./manage-links.html"]
+      ["navSession","./session.html"]
     ].forEach(([id,path])=>{
       const el = $(id);
       if(el) el.href = withContext(path);
@@ -735,3 +731,4 @@
 <script src="./loc-security-mask.js"></script>
 </body>
 </html>
+
