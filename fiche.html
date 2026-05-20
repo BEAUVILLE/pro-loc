@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="robots" content="noindex,nofollow"/>
   <meta name="description" content="Je loue — Ma fiche logement — fiche pro DIGIY avec QR intégré."/>
-  <meta name="digiy-build" content="loc-fiche-qr-grand-gras-20260519"/>
+  <meta name="digiy-build" content="loc-fiche-mode-clic-reponses-suggerees-20260520"/>
 
   <script>
     window.DIGIY_MODULE = "LOC";
@@ -419,6 +419,108 @@
       word-break:break-all;
     }
 
+
+
+    .suggestBox{
+      margin:12px 0 14px;
+      padding:14px;
+      border-radius:22px;
+      border:1px solid rgba(196,151,63,.28);
+      background:
+        radial-gradient(420px 160px at 100% 0%,rgba(196,151,63,.17),transparent 58%),
+        rgba(0,0,0,.13);
+    }
+
+    .suggestHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .suggestTitle{
+      font-size:22px;
+      font-weight:1000;
+      letter-spacing:-.03em;
+      line-height:1.1;
+    }
+
+    .suggestSub{
+      color:var(--muted);
+      font-size:14px;
+      font-weight:900;
+      line-height:1.4;
+      margin-top:3px;
+    }
+
+    .suggestPill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:#fff0a8;
+      color:#3a2a05;
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.07em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .chipGrid,.noteTools,.inlineTools{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .chipGrid{margin:8px 0 10px}
+    .chipGrid.compact{margin:0}
+    .chipGrid.mini{margin-top:8px}
+    .noteTools{margin-top:9px}
+    .inlineTools{margin-top:8px}
+
+    .chip,.miniBtn{
+      border:1px solid rgba(255,255,255,.13);
+      background:rgba(255,255,255,.08);
+      color:#fff8dc;
+      min-height:42px;
+      border-radius:999px;
+      padding:9px 12px;
+      font-size:13px;
+      font-weight:1000;
+      line-height:1.15;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+    }
+
+    .chip.wide{
+      border-radius:17px;
+      min-height:48px;
+      text-align:left;
+      justify-content:flex-start;
+      flex:1 1 170px;
+    }
+
+    .chip.isActive{
+      background:linear-gradient(135deg,var(--green),var(--gold2));
+      border-color:transparent;
+      color:#13200d;
+    }
+
+    .miniBtn{
+      min-height:38px;
+      font-size:12px;
+      background:rgba(56,189,248,.12);
+      color:#d9f4ff;
+      border-color:rgba(56,189,248,.22);
+    }
+
     .status{
       padding:13px 14px;
       border-radius:18px;
@@ -478,6 +580,7 @@
       .grid{grid-template-columns:1fr}
       .brand img{width:88px;height:88px}
       .actions .btn{width:100%}
+      .chip.wide{flex-basis:100%}
     }
 
     @media(max-width:520px){
@@ -494,7 +597,7 @@
   <header class="topHeader">
     <a class="hdrBack" href="./hub.html">← HUB</a>
     <div class="hdrTitle">LOC · FICHE</div>
-    <div class="hdrPill" id="savePill">fiche locale</div>
+    <div class="hdrPill" id="savePill">mode clic</div>
   </header>
 
   <main class="wrap">
@@ -504,7 +607,7 @@
         <div>
           <div class="kicker">🏠 JE LOUE</div>
           <h1>Ma fiche logement.</h1>
-          <div class="lead">Une fiche claire pour présenter le logement : nom, zone, capacité, contact, lien public et QR. Le client scanne, voit le logement et contacte directement.</div>
+          <div class="lead">Une fiche claire, mais surtout facile : le pro clique sur des réponses suggérées, DIGIY prépare le texte, puis le terrain ajuste avec sa vérité. Le client scanne, voit le logement et contacte directement.</div>
         </div>
       </div>
     </section>
@@ -512,26 +615,88 @@
     <section class="grid">
       <article class="panel">
         <div class="cardBody">
-          <h2 class="sectionTitle">Identité</h2>
-          <p class="sectionSub">Le pro complète les repères simples. DIGIY met en forme la fiche et le QR.</p>
+          <h2 class="sectionTitle">Remplir en cliquant</h2>
+          <p class="sectionSub">Moins d’écriture, plus de choix. Les champs restent libres, mais le pro peut partir de réponses prêtes.</p>
+
+          <div class="suggestBox" aria-label="Réponses suggérées rapides">
+            <div class="suggestHead">
+              <div>
+                <div class="suggestTitle">⚡ Réponses suggérées</div>
+                <div class="suggestSub">Choisis d’abord. DIGIY écrit proprement. Tu ajustes après.</div>
+              </div>
+              <span class="suggestPill">moins d’écrit</span>
+            </div>
+            <div class="chipGrid compact">
+              <button class="chip" type="button" data-fill="activity" data-value="Villa">Villa</button>
+              <button class="chip" type="button" data-fill="activity" data-value="Appartement">Appartement</button>
+              <button class="chip" type="button" data-fill="activity" data-value="Studio">Studio</button>
+              <button class="chip" type="button" data-fill="activity" data-value="Chambre">Chambre</button>
+              <button class="chip" type="button" data-fill="activity" data-value="Résidence">Résidence</button>
+              <button class="chip" type="button" data-fill="activity" data-value="Case / logement local">Case locale</button>
+            </div>
+          </div>
 
           <label for="proName">Nom logement</label>
           <input id="proName" placeholder="Ex : Villa Saly Soleil"/>
           <label for="activity">Type de logement</label>
           <input id="activity" placeholder="Ex : Chambre, appartement, villa, studio"/>
+          <div class="chipGrid mini" aria-label="Choix type de logement">
+            <button class="chip" type="button" data-fill="activity" data-value="Villa">Villa</button>
+            <button class="chip" type="button" data-fill="activity" data-value="Appartement">Appartement</button>
+            <button class="chip" type="button" data-fill="activity" data-value="Studio">Studio</button>
+            <button class="chip" type="button" data-fill="activity" data-value="Chambre">Chambre</button>
+          </div>
           <label for="zone">Ville / quartier</label>
           <input id="zone" placeholder="Ex : Saly Niakh-Niakhal"/>
+          <div class="chipGrid mini" aria-label="Choix zone">
+            <button class="chip" type="button" data-fill="zone" data-value="Saly">Saly</button>
+            <button class="chip" type="button" data-fill="zone" data-value="Ngaparou">Ngaparou</button>
+            <button class="chip" type="button" data-fill="zone" data-value="Somone">Somone</button>
+            <button class="chip" type="button" data-fill="zone" data-value="Mbour">Mbour</button>
+            <button class="chip" type="button" data-fill="zone" data-value="Dakar">Dakar</button>
+            <button class="chip" type="button" data-fill="zone" data-value="Rufisque">Rufisque</button>
+          </div>
           <label for="vehicle">Capacité / info utile</label>
           <input id="vehicle" placeholder="Ex : 2 chambres · piscine · proche plage"/>
+          <div class="chipGrid mini" aria-label="Choix capacité et équipements">
+            <button class="chip" type="button" data-add="vehicle" data-value="1 chambre">1 chambre</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="2 chambres">2 chambres</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="3 chambres">3 chambres</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="piscine">Piscine</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="proche plage">Proche plage</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="Wi-Fi">Wi-Fi</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="climatisation">Clim</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="cuisine équipée">Cuisine</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="parking">Parking</button>
+            <button class="chip" type="button" data-add="vehicle" data-value="gardien">Gardien</button>
+          </div>
           <label for="contact">WhatsApp / téléphone</label>
           <input id="contact" placeholder="+221..."/>
+          <div class="inlineTools">
+            <button class="miniBtn" type="button" data-paste="contact">📋 Coller le numéro</button>
+          </div>
           <label for="publicUrl">Lien public de la fiche</label>
           <input id="publicUrl" placeholder="https://..."/>
+          <div class="inlineTools">
+            <button class="miniBtn" type="button" data-paste="publicUrl">📋 Coller le lien</button>
+            <button class="miniBtn" type="button" id="usePageBtn">🔗 Utiliser cette page</button>
+          </div>
           <label for="photoUrl">Photo logement URL</label>
           <input id="photoUrl" placeholder="https://..."/>
+          <div class="inlineTools">
+            <button class="miniBtn" type="button" data-paste="photoUrl">📋 Coller la photo</button>
+          </div>
 
           <label for="note">Présentation courte</label>
           <textarea id="note" placeholder="Ex : Logement calme, propre, proche des commodités, réservation directe par WhatsApp."></textarea>
+          <div class="noteTools" aria-label="Présentations suggérées">
+            <button class="chip wide" type="button" id="composeNoteBtn">✨ Créer avec mes choix</button>
+            <button class="chip wide" type="button" data-note="Logement calme, propre et bien situé, idéal pour un séjour simple et agréable. Réservation directe par WhatsApp.">Calme & propre</button>
+            <button class="chip wide" type="button" data-note="Logement adapté aux familles, avec les repères essentiels pour séjourner tranquillement et contacter directement le propriétaire.">Famille</button>
+            <button class="chip wide" type="button" data-note="Logement pratique pour un court séjour, proche des commodités, avec contact direct pour vérifier la disponibilité.">Court séjour</button>
+            <button class="chip wide" type="button" data-note="Logement confortable pour plusieurs jours, avec informations claires, contact direct et réservation sans détour.">Long séjour</button>
+            <button class="chip wide" type="button" data-note="Logement avec bon confort, accès simple, accueil direct et informations utiles pour réserver rapidement.">Confort direct</button>
+          </div>
 
           <div class="actions">
             <button class="btn primary" id="saveBtn" type="button">💾 Enregistrer</button>
@@ -658,6 +823,55 @@
         setTimeout(() => box.style.display = "none", 2800);
       }
 
+      function setField(id, value, message){
+        const el = $(id);
+        if(!el) return;
+        el.value = value || "";
+        render();
+        if(message) showStatus(message);
+      }
+
+      function addValue(id, value){
+        const el = $(id);
+        if(!el || !value) return;
+        const raw = el.value.trim();
+        const parts = raw ? raw.split("·").map(v => v.trim()).filter(Boolean) : [];
+        const exists = parts.some(v => v.toLowerCase() === value.toLowerCase());
+        if(!exists) parts.push(value);
+        el.value = parts.join(" · ");
+        render();
+      }
+
+      function composeNote(){
+        const d = formData();
+        const type = d.activity || "Logement";
+        const zone = d.zone ? " à " + d.zone : "";
+        const extra = d.vehicle ? " avec " + d.vehicle : "";
+        return type + zone + extra + ". Présentation claire, contact direct par WhatsApp et réservation sans détour.";
+      }
+
+      async function pasteInto(id){
+        try{
+          const txt = await navigator.clipboard.readText();
+          if(!txt){ showStatus("Presse-papiers vide."); return; }
+          setField(id, txt.trim(), "Collé dans la fiche.");
+        }catch(_){
+          showStatus("Collage non autorisé par le navigateur. Colle manuellement dans le champ.");
+        }
+      }
+
+      function syncChips(data){
+        document.querySelectorAll("[data-fill],[data-add]").forEach(btn => {
+          const target = btn.dataset.fill || btn.dataset.add;
+          const value = btn.dataset.value || "";
+          const current = String((data && data[target]) || "").toLowerCase();
+          const active = btn.dataset.fill
+            ? current === value.toLowerCase()
+            : current.split("·").map(v => v.trim()).includes(value.toLowerCase());
+          btn.classList.toggle("isActive", !!active);
+        });
+      }
+
       function renderQr(value){
         const publicUrl = String(value || "").trim();
         const box = $("qrPreview");
@@ -697,6 +911,7 @@
         contact.style.opacity = d.contact ? "1" : ".55";
 
         renderQr(d.publicUrl);
+        syncChips(d);
       }
 
       function save(){
@@ -724,6 +939,44 @@
         showStatus("Fiche locale vidée.");
       }
 
+
+
+      document.querySelectorAll("[data-fill]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          setField(btn.dataset.fill, btn.dataset.value || "", "Réponse ajoutée à la fiche.");
+        });
+      });
+
+      document.querySelectorAll("[data-add]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          addValue(btn.dataset.add, btn.dataset.value || "");
+          showStatus("Détail ajouté.");
+        });
+      });
+
+      document.querySelectorAll("[data-note]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          setField("note", btn.dataset.note || "", "Présentation suggérée posée.");
+        });
+      });
+
+      document.querySelectorAll("[data-paste]").forEach(btn => {
+        btn.addEventListener("click", () => pasteInto(btn.dataset.paste));
+      });
+
+      $("composeNoteBtn").addEventListener("click", () => {
+        setField("note", composeNote(), "Présentation créée avec les choix.");
+      });
+
+      $("usePageBtn").addEventListener("click", () => {
+        try{
+          const clean = location.origin + location.pathname;
+          setField("publicUrl", clean, "Lien de cette page posé.");
+        }catch(_){
+          setField("publicUrl", location.href.split("?")[0], "Lien de cette page posé.");
+        }
+      });
+
       cleanUrl();
       $("saveBtn").addEventListener("click", save);
       $("previewBtn").addEventListener("click", () => render());
@@ -748,3 +1001,4 @@
   </script>
 </body>
 </html>
+
