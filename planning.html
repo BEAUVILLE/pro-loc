@@ -632,6 +632,16 @@
     night: 0
   };
 
+  /*
+    MÉMOIRE TERRAIN :
+    Le planning ne doit pas seulement changer à l’écran.
+    Il garde aussi une copie locale par logement.
+    Si Supabase refuse ou répond lentement, le pro ne perd pas son geste
+    en changeant de page.
+  */
+  const PLANNING_CACHE_PREFIX = "DIGIY_LOC_PLANNING_CACHE_V1";
+  const LOC_SIGNALS_KEY = "DIGIY_LOC_PRO_SIGNALS";
+
   const SENSITIVE_KEYS = [
     "phone","tel","owner_phone","p_phone","whatsapp","client_phone","guest_phone",
     "pin","pin4","token","session_token","return","redirect","from"
@@ -1102,6 +1112,105 @@
     };
   }
 
+  function planningCacheKey(){
+    const slug = Room.slug || getAccessSlug() || "unknown";
+    return `${PLANNING_CACHE_PREFIX}:${slug}`;
+  }
+
+  function readPlanningCache(){
+    try{
+      const raw = localStorage.getItem(planningCacheKey()) || "{}";
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    }catch(_){
+      return {};
+    }
+  }
+
+  function writePlanningCache(cache){
+    try{
+      localStorage.setItem(planningCacheKey(), JSON.stringify(cache || {}));
+    }catch(e){
+      console.warn("[LOC planning] mémoire locale impossible:", e?.message || e);
+    }
+  }
+
+  function rememberPlanningDay(day){
+    if(!day || !day.date) return;
+
+    const cache = readPlanningCache();
+
+    cache[day.date] = {
+      date: day.date,
+      closed: !!day.closed,
+      booked: !!day.booked,
+      price: Number(day.price || 0) || 0,
+      note: String(day.note || ""),
+      updated_at: new Date().toISOString()
+    };
+
+    writePlanningCache(cache);
+  }
+
+  function applyPlanningCacheToMonth(){
+    const cache = readPlanningCache();
+    const { start, end } = monthRange();
+
+    Object.values(cache).forEach(day => {
+      if(!day || !day.date) return;
+      if(day.date < start || day.date > end) return;
+
+      const existing = Data.daily[day.date] || {
+        date: day.date,
+        price: LocalTariffs.night,
+        booked:false,
+        closed:false,
+        note:""
+      };
+
+      Data.daily[day.date] = {
+        ...existing,
+        closed: !!day.closed,
+        booked: !!day.booked,
+        price: Number(day.price || existing.price || 0) || 0,
+        note: day.note || existing.note || ""
+      };
+    });
+  }
+
+  function readLocSignals(){
+    try{
+      const raw = localStorage.getItem(LOC_SIGNALS_KEY) || "[]";
+      const rows = JSON.parse(raw);
+      return Array.isArray(rows) ? rows : [];
+    }catch(_){
+      return [];
+    }
+  }
+
+  function pushLocSignal(signal){
+    try{
+      const rows = readLocSignals();
+
+      const item = {
+        id: signal.id || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        module:"LOC",
+        source:"planning",
+        type: signal.type || "planning",
+        label: signal.label || "Planning mis à jour",
+        message: signal.message || signal.label || "Planning mis à jour",
+        href:"./planning.html",
+        slug: Room.slug || "",
+        created_at: new Date().toISOString()
+      };
+
+      rows.push(item);
+      localStorage.setItem(LOC_SIGNALS_KEY, JSON.stringify(rows.slice(-80)));
+    }catch(e){
+      console.warn("[LOC planning] signal local impossible:", e?.message || e);
+    }
+  }
+
   function getSb(){
     if(sb?.rpc) return sb;
 
@@ -1306,11 +1415,21 @@
           Data.daily[day.date] = day;
         });
 
+      /*
+        La mémoire locale est appliquée après Supabase.
+        Elle gagne en priorité, car elle représente le dernier geste terrain
+        si la sauvegarde distante n’a pas encore répondu correctement.
+      */
+      applyPlanningCacheToMonth();
+
       renderCalendar();
+
+      const cacheCount = Object.keys(readPlanningCache()).length;
+
       setNotice(
         accessOpen
-          ? "Calendrier chargé. Touche une date pour agir."
-          : "Calendrier chargé en lecture seule. Repasse par ton code PIN pour modifier.",
+          ? `Calendrier chargé. Touche une date pour agir. Mémoire locale : ${cacheCount} date(s).`
+          : `Calendrier chargé en lecture seule. Mémoire locale : ${cacheCount} date(s). Repasse par ton code PIN pour modifier.`,
         accessOpen ? "ok" : "warn"
       );
     }catch(e){
@@ -1467,8 +1586,41 @@
     if(!State.selected.length) return;
 
     const dates = [...State.selected];
+    let dbSaved = false;
+    let dbError = "";
+
     setNotice("Enregistrement en cours…", "warn");
 
+    /*
+      1) D’abord on écrit dans la mémoire locale.
+      Comme ça, même si la page change, le geste reste visible au retour.
+    */
+    dates.forEach(date => {
+      const old = Data.daily[date] || {
+        date,
+        price: LocalTariffs.night,
+        booked:false,
+        closed:false,
+        note:""
+      };
+
+      const next = {
+        ...old,
+        date,
+        closed: closed === null ? old.closed : !!closed,
+        booked: old.booked,
+        price: price !== null ? Number(price) : old.price,
+        note: old.note || ""
+      };
+
+      Data.daily[date] = next;
+      rememberPlanningDay(next);
+    });
+
+    /*
+      2) Puis on tente Supabase.
+      Si Supabase échoue, on ne ment plus : on dit "mémoire locale".
+    */
     try{
       const payload = dates.map(date => ({
         slug: Room.slug,
@@ -1492,7 +1644,7 @@
         price
       };
 
-      const ok = await rpcTry(
+      const rpcResult = await rpcTry(
         [
           "digiy_loc_set_availability",
           "digiy_loc_save_availability",
@@ -1502,7 +1654,13 @@
         args
       );
 
-      if(!ok){
+      if(rpcResult){
+        dbSaved = true;
+      }
+
+      if(!dbSaved){
+        let okCount = 0;
+
         for(const item of payload){
           const row = {
             slug: Room.slug,
@@ -1518,37 +1676,51 @@
           }
 
           try{
-            await getSb()
+            const { error } = await getSb()
               .from("digiy_loc_availability")
               .upsert(row, { onConflict:"slug,date" });
+
+            if(error) throw error;
+            okCount += 1;
           }catch(e){
-            console.warn("[LOC planning] upsert ignored:", e?.message || e);
+            dbError = e?.message || String(e || "Erreur Supabase");
+            console.warn("[LOC planning] upsert impossible:", dbError);
           }
         }
+
+        dbSaved = okCount === dates.length;
       }
-
-      dates.forEach(date => {
-        const old = Data.daily[date] || {
-          date,
-          price: LocalTariffs.night,
-          booked: false,
-          closed: false
-        };
-
-        Data.daily[date] = {
-          ...old,
-          closed: closed === null ? old.closed : !!closed,
-          booked: old.booked,
-          price: price !== null ? Number(price) : old.price
-        };
-      });
-
-      State.selected = [];
-      renderCalendar();
-      setNotice("C’est enregistré. Le calendrier est à jour.", "ok");
     }catch(e){
-      console.error(e);
-      setNotice("Impossible d’enregistrer pour le moment. Réessaie ou recharge la page.", "bad");
+      dbError = e?.message || String(e || "Erreur Supabase");
+      console.warn("[LOC planning] sauvegarde distante impossible:", dbError);
+    }
+
+    State.selected = [];
+    renderCalendar();
+
+    const actionLabel =
+      closed === true
+        ? `Fermeture enregistrée : ${dates.length} date(s)`
+        : closed === false
+          ? `Ouverture enregistrée : ${dates.length} date(s)`
+          : `Prix enregistré : ${dates.length} date(s)`;
+
+    pushLocSignal({
+      type:"planning",
+      label: actionLabel,
+      message: dbSaved
+        ? `${actionLabel}. Sauvegarde distante OK.`
+        : `${actionLabel}. Mémoire locale OK, Supabase à vérifier.`
+    });
+
+    if(dbSaved){
+      setNotice("C’est enregistré. Mémoire locale + Supabase sont à jour.", "ok");
+    }else{
+      setNotice(
+        "Mémoire locale OK : tes dates restent visibles en revenant sur la page.\nSupabase n’a pas confirmé la sauvegarde distante. Vérifie la table/RPC si le moteur public ne suit pas encore.\n" +
+        (dbError ? "Détail : " + dbError : ""),
+        "warn"
+      );
     }
   }
 
@@ -1685,6 +1857,7 @@
 </script>
 </body>
 </html>
+
 
 
 
