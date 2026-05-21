@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="description" content="DIGIY LOC PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni slug."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-session-container-driver-20260519"/>
+  <meta name="digiy-build" content="loc-rail-doctrine-ecriture-20260521"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -19,6 +19,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=loc-session-container-driver-20260519"></script>
+  <script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521"></script>
+  <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521"></script>
   <script src="./loc-security-mask.js?v=loc-mask-session-20260519" defer></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -440,6 +442,31 @@
       html{scroll-behavior:auto}
       .action{transition:none}
     }
+  
+    .digiyWriteDoctrine{
+      margin:12px 0;
+      padding:14px 16px;
+      border-radius:22px;
+      border:1px solid rgba(250,204,21,.30);
+      background:
+        radial-gradient(520px 180px at 100% 0%,rgba(250,204,21,.13),transparent 62%),
+        rgba(255,255,255,.055);
+      color:#fde68a;
+      box-shadow:0 14px 34px rgba(0,0,0,.16);
+      font-size:1rem;
+      font-weight:1000;
+      line-height:1.45;
+    }
+    .digiyWriteDoctrine strong{color:#fff7cc}
+    .digiyWriteDoctrine span{
+      display:block;
+      margin-top:5px;
+      color:rgba(244,255,247,.84);
+      font-size:.92rem;
+      font-weight:950;
+      line-height:1.45;
+    }
+
   </style>
 </head>
 
@@ -790,3 +817,4 @@
   </script>
 </body>
 </html>
+
