@@ -1,12 +1,14 @@
 /* ============================================================
-   DIGIYLYFE · LOC · ABOS ACCESS BRIDGE
+   DIGIYLYFE · ABOS ACCESS BRIDGE · SAFE / LIGHT
    À poser dans : assets/js/digiy-abos-access.js
 
-   Rôle :
-   - Vérifier si un téléphone a accès à LOC via le rail central :
-     public.digiy_has_module_access_from_abos(phone, 'LOC')
-   - LOC est déjà actif 90 jours dans la base.
-   - Ne remplace pas guard.js : se charge AVANT guard.js.
+   Doctrine :
+   - Ne bloque jamais l'affichage d'une page.
+   - Ne charge pas Supabase JS obligatoirement.
+   - Appelle le RPC ABOS par fetch direct avec timeout court.
+   - Cache court pour éviter de refaire le même contrôle sans arrêt.
+   - Ne met jamais le téléphone dans une URL de redirection.
+   - Le guard décide la navigation ; ce bridge ne tient pas la page en otage.
    ============================================================ */
 
 (function () {
@@ -17,9 +19,12 @@
 
   const STORAGE_PREFIX = "DIGIY_ABOS_ACCESS";
   const DEFAULT_TTL_MS = 10 * 60 * 1000;
+  const DEFAULT_TIMEOUT_MS = 1800;
 
   function cleanPhone(value) {
-    return String(value || "").replace(/\D/g, "");
+    const d = String(value || "").replace(/\D/g, "");
+    if (d.length === 9) return "221" + d;
+    return d;
   }
 
   function upperModule(value) {
@@ -34,11 +39,35 @@
     }
   }
 
+  function safeJson(raw) {
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
   function readStorage(keys) {
     for (const key of keys) {
       try {
-        const v = localStorage.getItem(key) || sessionStorage.getItem(key);
-        if (v) return v;
+        const s = sessionStorage.getItem(key);
+        if (s) return s;
+
+        const l = localStorage.getItem(key);
+        if (l) {
+          const obj = safeJson(l);
+          if (obj && typeof obj === "object") {
+            return (
+              obj.phone ||
+              obj.p_phone ||
+              obj.owner_phone ||
+              obj.tel ||
+              obj.user_phone ||
+              ""
+            );
+          }
+          return l;
+        }
       } catch (_) {}
     }
     return "";
@@ -53,12 +82,21 @@
           "DIGIY_PHONE",
           "DIGIY_LAST_PHONE",
           "DIGIY_SESSION_PHONE",
+
           "DIGIY_LOC_PHONE",
           "DIGIY_LOC_SESSION_PHONE",
           "DIGIY_LOC_LAST_PHONE",
           "DIGIY_LOC_PRO_PHONE",
+          "DIGIY_LOC_SESSION",
+          "DIGIY_SESSION_LOC",
+
           "DIGIY_DRIVER_PHONE",
-          "DIGIY_PAY_PHONE"
+          "DIGIY_PAY_PHONE",
+          "DIGIY_MARKET_PHONE",
+          "DIGIY_RESA_PHONE",
+          "DIGIY_BUILD_PHONE",
+          "DIGIY_JOBS_PHONE",
+          "DIGIY_EXPLORE_PHONE"
         ])
     );
   }
@@ -81,12 +119,15 @@
 
   function getCached(phone, module, ttlMs) {
     try {
-      const raw = localStorage.getItem(cacheKey(phone, module));
+      const raw =
+        sessionStorage.getItem(cacheKey(phone, module)) ||
+        localStorage.getItem(cacheKey(phone, module));
+
       if (!raw) return null;
 
       const parsed = JSON.parse(raw);
       if (!parsed || !parsed.saved_at) return null;
-      if (Date.now() - parsed.saved_at > ttlMs) return null;
+      if (Date.now() - Number(parsed.saved_at) > ttlMs) return null;
 
       return parsed;
     } catch (_) {
@@ -96,13 +137,13 @@
 
   function setCached(phone, module, payload) {
     try {
-      localStorage.setItem(
-        cacheKey(phone, module),
-        JSON.stringify({
-          ...payload,
-          saved_at: Date.now()
-        })
-      );
+      const body = JSON.stringify({
+        ...payload,
+        saved_at: Date.now()
+      });
+
+      sessionStorage.setItem(cacheKey(phone, module), body);
+      localStorage.setItem(cacheKey(phone, module), body);
     } catch (_) {}
   }
 
@@ -112,28 +153,143 @@
     if (!p) return;
 
     try {
-      localStorage.setItem("DIGIY_LAST_PHONE", p);
-      localStorage.setItem(`DIGIY_${m}_PHONE`, p);
+      sessionStorage.setItem("DIGIY_LAST_PHONE", p);
+      sessionStorage.setItem(`DIGIY_${m}_PHONE`, p);
 
       if (m === "LOC") {
-        localStorage.setItem("DIGIY_LOC_PHONE", p);
-        localStorage.setItem("DIGIY_LOC_LAST_PHONE", p);
+        sessionStorage.setItem("DIGIY_LOC_PHONE", p);
+        sessionStorage.setItem("DIGIY_LOC_LAST_PHONE", p);
       }
     } catch (_) {}
   }
 
-  function ensureSupabase(url, key) {
-    if (!window.supabase || !window.supabase.createClient) {
-      throw new Error("SUPABASE_JS_NOT_LOADED");
+  function normalizeAccess(data) {
+    const row = Array.isArray(data) ? data[0] : data;
+
+    if (row === true) {
+      return { has_access: true, row: { has_access: true } };
     }
 
-    return window.supabase.createClient(url, key, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
+    if (row === false || row == null) {
+      return { has_access: false, row: row || null };
+    }
+
+    if (typeof row === "string") {
+      const v = row.trim().toLowerCase();
+      return {
+        has_access: ["true", "t", "1", "ok", "yes"].includes(v),
+        row: { raw: row }
+      };
+    }
+
+    if (typeof row === "number") {
+      return {
+        has_access: row > 0,
+        row: { raw: row }
+      };
+    }
+
+    if (typeof row === "object") {
+      const hasAccess = !!(
+        row.has_access === true ||
+        row.access === true ||
+        row.access_ok === true ||
+        row.allowed === true ||
+        row.active === true ||
+        row.ok === true
+      );
+
+      return { has_access: hasAccess, row };
+    }
+
+    return { has_access: false, row: null };
+  }
+
+  function withTimeout(ms) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      try {
+        controller.abort();
+      } catch (_) {}
+    }, ms);
+
+    return {
+      signal: controller.signal,
+      done: function () {
+        clearTimeout(timer);
       }
-    });
+    };
+  }
+
+  async function rpcAccessFetch(url, key, phone, module, timeoutMs) {
+    const t = withTimeout(timeoutMs);
+
+    try {
+      const endpoint =
+        `${url.replace(/\/+$/, "")}/rest/v1/rpc/digiy_has_module_access_from_abos`;
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        signal: t.signal,
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          p_phone: phone,
+          p_module: module
+        })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        return {
+          ok: false,
+          has_access: false,
+          error: (data && (data.message || data.error)) || `HTTP_${res.status}`,
+          phone,
+          module
+        };
+      }
+
+      const normalized = normalizeAccess(data);
+
+      return {
+        ok: true,
+        has_access: normalized.has_access,
+        phone,
+        module,
+        plan: normalized.row
+          ? normalized.row.plan || normalized.row.plan_code || null
+          : null,
+        fiche_title: normalized.row
+          ? normalized.row.fiche_title || normalized.row.title || null
+          : null,
+        expires_at: normalized.row
+          ? normalized.row.expires_at || normalized.row.valid_until || null
+          : null,
+        module_rights: normalized.row
+          ? normalized.row.module_rights || normalized.row.rights || []
+          : [],
+        raw: normalized.row || data
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        has_access: false,
+        error:
+          e && e.name === "AbortError"
+            ? "ABOS_TIMEOUT"
+            : (e && e.message) || "ABOS_FETCH_ERROR",
+        phone,
+        module
+      };
+    } finally {
+      t.done();
+    }
   }
 
   async function checkAccess(options) {
@@ -141,6 +297,7 @@
     const module = guessModule(opts);
     const phone = cleanPhone(opts.phone || guessPhone());
     const ttlMs = Number(opts.ttlMs || DEFAULT_TTL_MS);
+    const timeoutMs = Number(opts.timeoutMs || DEFAULT_TIMEOUT_MS);
 
     if (!module) {
       return {
@@ -161,9 +318,14 @@
 
     savePhone(phone, module);
 
-    if (opts.useCache !== false) {
-      const cached = getCached(phone, module, ttlMs);
-      if (cached) return { ...cached, from_cache: true };
+    const cached =
+      opts.useCache !== false ? getCached(phone, module, ttlMs) : null;
+
+    if (cached) {
+      return {
+        ...cached,
+        from_cache: true
+      };
     }
 
     const url =
@@ -178,45 +340,25 @@
       window.DIGIY_SUPABASE_ANON ||
       DEFAULT_SUPABASE_KEY;
 
-    const sb = ensureSupabase(url, key);
+    const result = await rpcAccessFetch(url, key, phone, module, timeoutMs);
 
-    const { data, error } = await sb.rpc("digiy_has_module_access_from_abos", {
-      p_phone: phone,
-      p_module: module
-    });
-
-    if (error) {
+    if (result.ok) {
+      setCached(phone, module, result);
+    } else if (cached) {
       return {
-        ok: false,
-        has_access: false,
-        error: error.message || "SUPABASE_RPC_ERROR",
-        phone,
-        module
+        ...cached,
+        from_cache: true,
+        stale_after_error: result.error || true
       };
     }
 
-    const row = Array.isArray(data) ? data[0] : data;
-    const hasAccess = !!(row && row.has_access === true);
-
-    const payload = {
-      ok: true,
-      has_access: hasAccess,
-      phone,
-      module,
-      plan: row ? row.plan : null,
-      fiche_title: row ? row.fiche_title : null,
-      expires_at: row ? row.expires_at : null,
-      module_rights: row ? row.module_rights : []
-    };
-
-    setCached(phone, module, payload);
-    return payload;
+    return result;
   }
 
   function buildDeniedUrl(options) {
     const opts = options || {};
     const module = guessModule(opts);
-    const phone = cleanPhone(opts.phone || guessPhone());
+
     const base =
       opts.payUrl ||
       opts.deniedUrl ||
@@ -225,10 +367,11 @@
 
     try {
       const url = new URL(base, window.location.href);
-      if (phone) url.searchParams.set("phone", phone);
+
       if (module) url.searchParams.set("module", module);
       url.searchParams.set("reason", opts.reason || "abos_required");
-      return url.toString();
+
+      return url.pathname + url.search + url.hash;
     } catch (_) {
       return base;
     }
@@ -248,7 +391,13 @@
       return result;
     }
 
-    if (opts.redirect !== false) {
+    /*
+      IMPORTANT :
+      Par défaut on ne redirige plus.
+      Le guard principal décide.
+      Pour forcer une redirection : protect({ redirect:true })
+    */
+    if (opts.redirect === true) {
       window.location.href = buildDeniedUrl({
         ...opts,
         reason: result.error || "abos_required"
@@ -259,29 +408,58 @@
   }
 
   function renderAccessBadge(target, result) {
-    const el = typeof target === "string" ? document.querySelector(target) : target;
+    const el =
+      typeof target === "string" ? document.querySelector(target) : target;
+
     if (!el || !result) return;
+
+    const module = upperModule(result.module || window.DIGIY_MODULE || "LOC");
 
     if (result.has_access) {
       el.innerHTML = `
-        <strong>✅ Accès LOC actif</strong><br>
-        ${result.fiche_title || "LOC · Location"}<br>
+        <strong>✅ Accès ${module} actif</strong><br>
+        ${result.fiche_title || module + " · DIGIY"}<br>
         <small>Expire : ${result.expires_at || "date suivie par DIGIY"}</small>
       `;
     } else {
       el.innerHTML = `
-        <strong>🔒 Accès LOC à vérifier</strong><br>
-        <small>PAY garde la preuve, ADMIN valide, puis LOC s’ouvre.</small>
+        <strong>🔒 Accès ${module} à vérifier</strong><br>
+        <small>PAY garde la preuve, ADMIN valide, puis ${module} s’ouvre.</small>
       `;
     }
   }
 
+  function clearCache(module, phone) {
+    const m = upperModule(module || window.DIGIY_MODULE || "");
+    const p = cleanPhone(phone || guessPhone());
+
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (!key.startsWith(STORAGE_PREFIX + ":")) return;
+        if (m && !key.includes(":" + m + ":")) return;
+        if (p && !key.endsWith(":" + p)) return;
+        localStorage.removeItem(key);
+      });
+    } catch (_) {}
+
+    try {
+      Object.keys(sessionStorage).forEach((key) => {
+        if (!key.startsWith(STORAGE_PREFIX + ":")) return;
+        if (m && !key.includes(":" + m + ":")) return;
+        if (p && !key.endsWith(":" + p)) return;
+        sessionStorage.removeItem(key);
+      });
+    } catch (_) {}
+  }
+
   window.DIGIY_ABOS_ACCESS = {
+    version: "digiy-abos-access-safe-light-20260522",
     checkAccess,
     protect,
     renderAccessBadge,
     guessPhone,
     cleanPhone,
-    upperModule
+    upperModule,
+    clearCache
   };
 })();
