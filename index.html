@@ -5,232 +5,44 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue — Entrée LOC</title>
   <meta name="theme-color" content="#1e7a46"/>
-  <meta name="description" content="DIGIY LOC PRO — porte courte vers le HUB logement, sans guard sur l’index."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-index-porte-hub-clean-20260522"/>
-
-  <!-- index.html est seulement une porte courte.
-       Ne pas charger guard.js ici.
-       Le guard protège hub.html, app.html, planning.html, etc. -->
-
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
-
+  <meta name="digiy-build" content="loc-index-zero-moteur-20260522"/>
   <style>
-    :root{
-      --bg:#1e7a46; --bg2:#155a34; --bg3:#0e4226; --gold:#c4973f; --text:#f0fff5;
-      --muted:rgba(240,255,245,.78); --shadow:0 18px 46px rgba(0,0,0,.24);
-      --r:26px; --max:760px;
-    }
     *{box-sizing:border-box}
-    html,body{visibility:visible!important;opacity:1!important}
     body{
-      margin:0; min-height:100dvh; display:grid; place-items:center; padding:16px; color:var(--text);
-      font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif; font-size:19px; font-weight:950;
-      background:
-        radial-gradient(600px 390px at 16% 0%,rgba(74,222,128,.18),transparent 58%),
-        radial-gradient(420px 280px at 92% 8%,rgba(196,151,63,.15),transparent 52%),
-        linear-gradient(180deg,var(--bg) 0%,var(--bg2) 60%,var(--bg3) 100%);
+      margin:0;min-height:100vh;display:grid;place-items:center;padding:18px;
+      font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+      color:#f0fff5;background:linear-gradient(180deg,#1e7a46,#0e4226);
+      font-weight:900;
     }
-    a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;cursor:pointer}
-    .door{
-      width:min(var(--max),100%); border:1px solid rgba(255,255,255,.18); border-radius:var(--r);
-      background:radial-gradient(500px 220px at 100% 0%,rgba(196,151,63,.12),transparent 70%),rgba(8,50,24,.78);
-      box-shadow:var(--shadow); padding:22px; display:grid; gap:16px;
-      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    main{width:min(720px,100%);display:grid;gap:16px;padding:22px;border-radius:26px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.18)}
+    h1{margin:0;font-size:clamp(36px,9vw,58px);line-height:.95;letter-spacing:-.05em}
+    p{margin:0;color:rgba(240,255,245,.82);font-size:17px;line-height:1.4}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    a{
+      min-height:66px;border-radius:18px;display:flex;align-items:center;justify-content:center;text-align:center;
+      padding:14px;color:inherit;text-decoration:none;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
+      font-size:18px;font-weight:1000;
     }
-    .brand{display:flex;align-items:center;gap:13px}
-    .badge{
-      width:58px;height:58px;border-radius:20px;display:grid;place-items:center;
-      background:rgba(196,151,63,.16);border:1px solid rgba(196,151,63,.32);font-size:30px;flex:0 0 auto;
-    }
-    .kicker{color:#fff0a8;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:1000}
-    .brandTitle{color:#fff;font-size:18px;font-weight:1000;margin-top:2px}
-    h1{margin:0;color:#fff;font-size:clamp(36px,9vw,62px);line-height:.96;letter-spacing:-.055em;font-weight:1000}
-    h1 span{color:#fff0a8}
-    .lead{margin:0;color:var(--muted);font-size:17px;font-weight:1000;line-height:1.42}
-    .status{
-      min-height:54px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;
-      border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(240,255,245,.92);
-      font-size:15px;font-weight:1000;line-height:1.35;
-    }
-    .dot{width:13px;height:13px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 6px rgba(245,158,11,.12);flex:0 0 auto}
-    .status.ok .dot{background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12)}
-    .status.bad .dot{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.12)}
-    .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .btn{
-      min-height:60px;border-radius:18px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);
-      display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 14px;color:var(--text);
-      font-size:17px;font-weight:1000;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.13);
-    }
-    .btn.primary{color:#052215;border-color:rgba(34,197,94,.38);background:linear-gradient(135deg,#22c55e,#bbf7d0)}
-    .btn.gold{color:#241a0d;border-color:rgba(196,151,63,.38);background:linear-gradient(135deg,#c4973f,#fff0a8)}
-    .btn.ghost{color:rgba(240,255,245,.88);background:rgba(255,255,255,.06)}
-    .rule{padding:12px 14px;border-radius:18px;border:1px dashed rgba(255,255,255,.22);background:rgba(0,0,0,.14);color:rgba(240,255,245,.86);font-size:14px;font-weight:1000;line-height:1.4}
-    .rule b{color:#fff0a8}
-    @media(max-width:540px){body{padding:10px}.door{padding:18px;border-radius:24px}.actions{grid-template-columns:1fr}.btn{font-size:18px}.lead{font-size:16px}.rule{font-size:13px}}
+    a.main{background:linear-gradient(135deg,#22c55e,#bbf7d0);color:#052215}
+    a.gold{background:linear-gradient(135deg,#c4973f,#fff0a8);color:#241a0d}
+    .note{font-size:14px;color:#fff0a8;border:1px dashed rgba(255,255,255,.28);padding:12px;border-radius:16px}
+    @media(max-width:520px){.grid{grid-template-columns:1fr}main{padding:18px}a{font-size:18px}}
   </style>
 </head>
-
 <body>
-  <main class="door" aria-label="Entrée LOC">
-    <div class="brand">
-      <div class="badge">🏠</div>
-      <div>
-        <div class="kicker">DIGIY PRO · LOC</div>
-        <div class="brandTitle">Porte d’entrée</div>
-      </div>
+  <main>
+    <div>🏠 DIGIY PRO · LOC</div>
+    <h1>Entrée courte.<br>Sans moteur.</h1>
+    <p>Cette porte ne lance aucun script. Elle ouvre simplement le HUB ou l’accès PIN.</p>
+    <div class="grid">
+      <a class="main" href="./hub.html">🧭 Ouvrir le HUB</a>
+      <a class="gold" href="./pin.html">🔐 Mon accès</a>
+      <a href="./app.html">🏠 Travail</a>
+      <a href="./planning.html">🗓️ Dates</a>
     </div>
-
-    <h1>Entrée courte.<br><span>Direction HUB.</span></h1>
-
-    <p class="lead">
-      Cette page ne porte pas tout le module.
-      Elle ouvre le HUB logement ; le travail reste dans app.html, planning.html et les pages protégées.
-    </p>
-
-    <div class="status" id="statusBox">
-      <span class="dot"></span>
-      <span id="statusText">Recherche du HUB logement…</span>
-    </div>
-
-    <div class="actions">
-      <button class="btn primary" id="btnHub" type="button">🧭 Ouvrir le HUB</button>
-      <a class="btn gold" id="btnPin" href="./pin.html">🔐 Mon accès</a>
-      <a class="btn ghost" id="btnApp" href="./app.html">🏠 Travail</a>
-      <a class="btn ghost" id="btnPlanning" href="./planning.html">🗓️ Dates</a>
-    </div>
-
-    <div class="rule">
-      Ordre propre : <b>index.html</b> est une porte courte. Le <b>guard.js</b> protège les pages internes, pas cette porte.
-    </div>
+    <div class="note">Si cette page mouline encore, ce n’est plus le code LOC : c’est le cache, le mauvais fichier servi, ou GitHub Pages qui sert l’ancienne version.</div>
   </main>
-
-  <script>
-    (() => {
-      "use strict";
-
-      const ROUTES = { hub:"./hub.html", pin:"./pin.html", app:"./app.html", planning:"./planning.html" };
-      const SENSITIVE_KEYS = [
-        "phone","tel","p_phone","owner_phone","owner_id","slug",
-        "loc_phone","loc_tel","business_phone","whatsapp",
-        "pin","pin4","token","session_token",
-        "module","return","redirect","redirect_url","url","from","v"
-      ];
-
-      const $ = (id) => document.getElementById(id);
-      let hubAvailable = false;
-
-      function cleanVisibleUrl(){
-        try{
-          const url = new URL(location.href);
-          let changed = false;
-          SENSITIVE_KEYS.forEach((key) => {
-            if(url.searchParams.has(key)){
-              url.searchParams.delete(key);
-              changed = true;
-            }
-          });
-          if(changed) history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-        }catch(_){}
-      }
-
-      function cleanInternalPath(path, fallback){
-        const target = String(path || fallback || "./hub.html").trim();
-        try{
-          const url = new URL(target, location.href);
-          if(url.origin !== location.origin) return target;
-          SENSITIVE_KEYS.forEach((key) => url.searchParams.delete(key));
-          const file = url.pathname.split("/").pop() || "index.html";
-          return "./" + file + (url.search || "") + (url.hash || "");
-        }catch(_){
-          return fallback || target;
-        }
-      }
-
-      function cleanInternalLinks(){
-        try{
-          document.querySelectorAll("a[href]").forEach((link) => {
-            const href = link.getAttribute("href") || "";
-            if(!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
-            link.setAttribute("href", cleanInternalPath(href, href));
-          });
-        }catch(_){}
-      }
-
-      function setStatus(text, kind){
-        const box = $("statusBox");
-        const el = $("statusText");
-        if(el) el.textContent = text;
-        if(box) box.className = kind ? "status " + kind : "status";
-      }
-
-      function safeGo(path){
-        location.href = cleanInternalPath(path, "./hub.html");
-      }
-
-      async function fetchOk(path){
-        const url = cleanInternalPath(path, path) + "?check=" + Date.now();
-        try{
-          const head = await fetch(url, { method:"HEAD", cache:"no-store" });
-          if(head && head.ok) return true;
-        }catch(_){}
-        try{
-          const get = await fetch(url, { method:"GET", cache:"no-store" });
-          if(get && get.ok) return true;
-        }catch(_){}
-        return false;
-      }
-
-      async function boot(){
-        cleanVisibleUrl();
-        cleanInternalLinks();
-
-        hubAvailable = await fetchOk(ROUTES.hub);
-
-        if(hubAvailable){
-          setStatus("HUB logement trouvé. Ouverture propre…", "ok");
-          window.setTimeout(() => safeGo(ROUTES.hub), 450);
-          return;
-        }
-
-        setStatus("HUB logement introuvable : hub.html n’est pas encore posé. Aucun 404 forcé.", "bad");
-      }
-
-      $("btnHub")?.addEventListener("click", () => {
-        if(hubAvailable){
-          safeGo(ROUTES.hub);
-          return;
-        }
-        setStatus("Impossible d’ouvrir : pose d’abord le fichier hub.html dans le dépôt.", "bad");
-      });
-
-      $("btnPin")?.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        safeGo(ROUTES.pin);
-      });
-
-      $("btnApp")?.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        safeGo(ROUTES.app);
-      });
-
-      $("btnPlanning")?.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        safeGo(ROUTES.planning);
-      });
-
-      setTimeout(() => {
-        try{
-          document.documentElement.style.visibility = "";
-          document.body.style.visibility = "";
-        }catch(_){}
-      }, 700);
-
-      boot();
-    })();
-  </script>
 </body>
 </html>
 
