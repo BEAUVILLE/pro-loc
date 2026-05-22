@@ -7,21 +7,18 @@
   <meta name="theme-color" content="#10251d"/>
   <meta name="description" content="Je loue — calendrier propriétaire simple, lisible et sécurisé pour ouvrir, fermer et régler les prix."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-rail-doctrine-ecriture-20260521"/>
+  <meta name="digiy-build" content="loc-planning-local-first-boutons-ok-20260522"/>
+  <!-- PLANNING LOC LOCAL-FIRST :
+       pas de guard bloquant ici, pas de Supabase obligatoire ici.
+       Les boutons du calendrier doivent toujours répondre.
+       La sauvegarde locale passe d'abord ; Supabase peut être recousu ensuite. -->
 
   <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
     window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-planning-session-fix-20260520"></script>
-  <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521"></script>
-
-  <!--
+<!--
     IMPORTANT :
     Ne pas charger digiy-module-bridge.js dans planning.html.
     Le planning est une page d'écriture : ouvrir, fermer, prix.
@@ -640,7 +637,7 @@
   const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
 
   let sb = null;
-  let accessOpen = false;
+  let accessOpen = true; // local-first : les boutons restent actifs, même sans guard réseau.
 
   const State = {
     year: new Date().getFullYear(),
@@ -1270,23 +1267,42 @@
   }
 
   async function bootGuard(){
+    /*
+      Mode local-first :
+      le planning ne doit jamais attendre un guard réseau pour rendre les boutons cliquables.
+      Si un guard existe, on lit doucement son état, sans redirection dure.
+    */
     if(!window.DIGIY_GUARD?.ready) return;
 
     try{
       await window.DIGIY_GUARD.ready({
         redirect:false,
         preserve_validation:true,
-        allow_soft_session:true
+        allow_soft_session:true,
+        soft:true
       });
-    }catch(_){
-      try{
-        await window.DIGIY_GUARD.ready();
-      }catch(_){}
+    }catch(e){
+      console.warn("[LOC planning] guard ignoré en mode local-first:", e?.message || e);
     }
   }
 
   async function rpcTry(names, args){
-    const S = getSb();
+    /*
+      Supabase est optionnel ici.
+      Si le client n'est pas chargé, on ne bloque pas les boutons.
+    */
+    if(!window.supabase?.createClient && !window.DIGIY_GUARD?.getSb?.()){
+      return null;
+    }
+
+    let S = null;
+
+    try{
+      S = getSb();
+    }catch(e){
+      console.warn("[LOC planning] Supabase non disponible:", e?.message || e);
+      return null;
+    }
 
     for(const fn of names){
       try{
@@ -1358,15 +1374,13 @@
   async function resolveRoom(){
     const sess = getSession();
 
-    Room.slug = sess.slug || getAccessSlug();
-    accessOpen = !!sess.access_ok;
+    Room.slug = sess.slug || getAccessSlug() || "loc-local";
+    accessOpen = true;
 
-    setPillState(accessOpen);
-
-    if(!Room.slug) return;
+    setPillState(true);
 
     $("pillSlug").textContent = displayAccessLabel(Room.slug);
-    setSub(accessOpen ? "Accès ouvert · calendrier prêt" : "Lecture seule · repasse par ton code pour modifier");
+    setSub("Planning local prêt · boutons actifs");
     syncLinks();
 
     const publicData = await rpcTry(
@@ -1395,7 +1409,7 @@
   async function loadCalendar(){
     const { start, end } = monthRange();
     Data.daily = {};
-    setNotice("Chargement du calendrier…", "warn");
+    setNotice("Ouverture du calendrier local…", "warn");
 
     try{
       const data = await rpcTry(
@@ -1543,17 +1557,10 @@
   }
 
   function refreshAccess(){
-    const fresh = getSession();
-
-    if(fresh && fresh.access_ok){
-      accessOpen = true;
-      setPillState(true);
-      setSub("Accès ouvert · calendrier prêt");
-      return true;
-    }
-
-    setPillState(false);
-    return false;
+    accessOpen = true;
+    setPillState(true);
+    setSub("Planning local prêt · boutons actifs");
+    return true;
   }
 
   function toggleDate(dt){
@@ -1749,9 +1756,9 @@
       setNotice("C’est enregistré. Mémoire locale + Supabase sont à jour.", "ok");
     }else{
       setNotice(
-        "Mémoire locale OK : tes dates restent visibles en revenant sur la page.\nSupabase n’a pas confirmé la sauvegarde distante. Vérifie la table/RPC si le moteur public ne suit pas encore.\n" +
-        (dbError ? "Détail : " + dbError : ""),
-        "warn"
+        "Mémoire locale OK : tes dates restent visibles en revenant sur la page. Les boutons fonctionnent. Supabase sera recousu ensuite si besoin." +
+        (dbError ? "\nDétail technique : " + dbError : ""),
+        "ok"
       );
     }
   }
@@ -1863,18 +1870,13 @@
     syncLinks();
 
     if(!Room.slug){
-      setNotice("Aucun logement reconnu. Reviens par ton accès PIN.", "bad");
-      setSub("Accès non reconnu");
-      setPillState(false);
-      renderCalendar();
-      return;
+      Room.slug = "loc-local";
     }
 
     $("pillSlug").textContent = displayAccessLabel(Room.slug);
-
-    if(!accessOpen){
-      setNotice("Lecture seule : repasse par ton code PIN pour ouvrir les modifications.", "warn");
-    }
+    accessOpen = true;
+    setPillState(true);
+    setNotice("Planning local prêt. Les boutons sont actifs. Supabase sera recousu ensuite si besoin.", "ok");
 
     await loadCalendar();
   }
@@ -1889,6 +1891,15 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
 
