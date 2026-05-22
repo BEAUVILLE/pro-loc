@@ -2,56 +2,53 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
-  <script>
-  // DIGIY anti-gel temporaire : ne jamais laisser une page blanche
-  window.DIGIY_GUARD_SOFT_MODE = true;
-  window.DIGIY_NO_HARD_REDIRECT = true;
-
-  setTimeout(function () {
-    try {
-      document.documentElement.style.visibility = "";
-      document.documentElement.style.opacity = "1";
-      if (document.body) {
-        document.body.style.visibility = "";
-        document.body.style.opacity = "1";
-      }
-    } catch (_) {}
-  }, 900);
-</script>
-<style>
-  html, body {
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-</style>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue — HUB LOC</title>
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="description" content="DIGIY LOC PRO — HUB mobile terrain en pavés : logements, réservations, planning, tarifs, QR, liens, accès et paiements."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-rail-doctrine-ecriture-20260521"/>
+  <meta name="digiy-build" content="loc-hub-clean-scripts-20260522"/>
 
   <script>
-    <script>
-  window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-  window.DIGIY_SUPABASE_KEY = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_KEY = window.DIGIY_SUPABASE_ANON_KEY;
 
-  window.DIGIY_MODULE = "LOC";
-  window.DIGIY_LOGIN_URL = "./pin.html";
-</script>
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./assets/js/digiy-abos-access.js?v=abos-20260522"></script>
+    // Anti-gel doux : le HUB reste visible pendant que le guard vérifie la session.
+    window.DIGIY_GUARD_SOFT_MODE = true;
+    window.DIGIY_NO_HARD_REDIRECT = true;
 
-<script src="./guard.js?v=anti-gel-20260522"></script>
-<script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521"></script>
-<script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521"></script>
-<script src="./oreille-metier-loc.js?v=loc-rail-doctrine-ecriture-20260521"></script>
-<script src="./loc-security-mask.js?v=loc-mask-hub-20260519" defer></script>
-  
-  <link rel="preload" as="image" href="https://digiylyfe.net/wp-content/uploads/2026/05/metier-pro-1.png"/>
+    setTimeout(function () {
+      try {
+        document.documentElement.style.visibility = "";
+        document.documentElement.style.opacity = "1";
+        if (document.body) {
+          document.body.style.visibility = "";
+          document.body.style.opacity = "1";
+        }
+      } catch (_) {}
+    }, 900);
+  </script>
+
+  <style>
+    html, body {
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./assets/js/digiy-abos-access.js?v=abos-20260522"></script>
+  <script src="./guard.js?v=loc-guard-abos-central-v1-20260522"></script>
+  <script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
+  <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
+  <script src="./oreille-metier-loc.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
+  <script src="./loc-security-mask.js?v=loc-mask-hub-20260519" defer></script>
+<link rel="preload" as="image" href="https://digiylyfe.net/wp-content/uploads/2026/05/metier-pro-1.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
@@ -926,6 +923,13 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
