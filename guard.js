@@ -1,7 +1,14 @@
+// guard.js — DIGIY LOC PRO
+// Doctrine : PIN une seule fois -> session locale fraîche 8h -> navigation interne directe
+// Rail ABOS : accès central via digiy_has_module_access_from_abos(phone, "LOC")
+// Secours transition : ancien digiy_has_access si ABOS ne répond pas encore
+// Sécurité : pas de phone dans les URLs, pas de slug sensible exposé
+
 (function () {
   "use strict";
 
   const MODULE_NAME = "LOC";
+  const MODULE_LOWER = "loc";
   const SESSION_KEY = "digiy_loc_session";
 
   const SESSION_KEYS = [
@@ -58,11 +65,23 @@
   let supabaseClient = null;
 
   function normalizeSlug(value) {
-    return String(value || "").trim().toLowerCase();
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-_]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
   }
 
   function normalizePhone(value) {
-    return String(value || "").replace(/[^\d]/g, "");
+    const digits = String(value || "").replace(/[^\d]/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("221") && digits.length === 12) return digits;
+    if (digits.length === 9) return "221" + digits;
+    return digits;
   }
 
   function maskPhone(phone) {
@@ -95,6 +114,10 @@
 
   function now() {
     return Date.now();
+  }
+
+  function nowIso() {
+    return new Date().toISOString();
   }
 
   function parseTime(value) {
@@ -131,13 +154,13 @@
     const url =
       window.DIGIY_SUPABASE_URL ||
       window.SUPABASE_URL ||
-      "";
+      "https://wesqmwjjtsefyjnluosj.supabase.co";
 
     const key =
       window.DIGIY_SUPABASE_ANON_KEY ||
       window.DIGIY_SUPABASE_ANON ||
       window.SUPABASE_ANON_KEY ||
-      "";
+      "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
 
     if (!url || !key) {
       throw new Error("Supabase non configuré");
@@ -241,6 +264,7 @@
     });
 
     writeSessionStorage("DIGIY_LOC_PHONE_MASK", maskPhone(cleanPhone));
+    window.DIGIY_LOC_HUB_PHONE = cleanPhone;
   }
 
   function removeLegacySensitiveLocal() {
@@ -324,7 +348,7 @@
 
     SESSION_KEYS.forEach((key) => {
       writeSessionStorage(key, raw);
-      writeLocalStorage(key, raw); // mobile : sessionStorage seul meurt en arrière-plan
+      writeLocalStorage(key, raw);
     });
 
     if (clean.slug) writeSlugContext(clean.slug);
@@ -448,6 +472,10 @@
       base.searchParams.delete("slug");
     }
 
+    if (base.origin === window.location.origin) {
+      return base.pathname + base.search + base.hash;
+    }
+
     return base.toString();
   }
 
@@ -499,6 +527,73 @@
     else window.location.assign(finalUrl);
   }
 
+  function boolFromRpcData(data) {
+    const raw = Array.isArray(data) ? data[0] : data;
+
+    if (raw === true) return true;
+    if (raw === 1) return true;
+
+    if (typeof raw === "string") {
+      const txt = raw.trim().toLowerCase();
+
+      if (txt === "true" || txt === "t" || txt === "1" || txt === "yes" || txt === "ok") {
+        return true;
+      }
+
+      if (txt.startsWith("(")) {
+        const first = txt.replace(/^\(/, "").split(",")[0];
+        const token = String(first || "").trim().replace(/^"|"$/g, "").toLowerCase();
+        if (token === "t" || token === "true" || token === "1") return true;
+      }
+
+      return false;
+    }
+
+    if (raw && typeof raw === "object") {
+      if (raw.ok === true) return true;
+      if (raw.access === true) return true;
+      if (raw.access_ok === true) return true;
+      if (raw.has_access === true) return true;
+      if (raw.allowed === true) return true;
+      if (raw.active === true) return true;
+      if (raw.is_active === true) return true;
+      if (raw.subscribed === true) return true;
+      if (raw.valid === true) return true;
+
+      const vals = Object.values(raw);
+      if (vals.some((v) => v === true || v === 1 || v === "t" || v === "true")) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async function tryRpcBoolean(name, payloads) {
+    const sb = createSupabase();
+
+    for (const payload of payloads) {
+      try {
+        const { data, error } = await sb.rpc(name, payload);
+        if (error) continue;
+
+        if (boolFromRpcData(data)) {
+          return {
+            ok: true,
+            data,
+            payload
+          };
+        }
+      } catch (_) {}
+    }
+
+    return {
+      ok: false,
+      data: null,
+      payload: null
+    };
+  }
+
   async function resolvePhoneBySlug(slug) {
     const cleanSlug = normalizeSlug(slug);
     if (!cleanSlug) return "";
@@ -507,7 +602,7 @@
 
     const tries = [
       { slug: cleanSlug, module: MODULE_NAME },
-      { slug: cleanSlug, module: MODULE_NAME.toLowerCase() },
+      { slug: cleanSlug, module: MODULE_LOWER },
       { slug: cleanSlug }
     ];
 
@@ -528,6 +623,36 @@
     }
 
     return "";
+  }
+
+  async function checkAccessFromAbos(phone) {
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone) return false;
+
+    const payloads = [
+      { p_phone: cleanPhone, p_module: MODULE_NAME },
+      { phone: cleanPhone, module: MODULE_NAME },
+      { p_phone: cleanPhone, p_module: MODULE_LOWER },
+      { phone: cleanPhone, module: MODULE_LOWER }
+    ];
+
+    const res = await tryRpcBoolean("digiy_has_module_access_from_abos", payloads);
+    return !!res.ok;
+  }
+
+  async function checkAccessLegacy(phone) {
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone) return false;
+
+    const payloads = [
+      { p_phone: cleanPhone, p_module: MODULE_NAME },
+      { phone: cleanPhone, module: MODULE_NAME },
+      { p_phone: cleanPhone, p_module: MODULE_LOWER },
+      { phone: cleanPhone, module: MODULE_LOWER }
+    ];
+
+    const res = await tryRpcBoolean("digiy_has_access", payloads);
+    return !!res.ok;
   }
 
   async function checkAccess(slug, phone) {
@@ -551,27 +676,32 @@
       };
     }
 
-    const sb = createSupabase();
-
     try {
-      const { data, error } = await sb.rpc("digiy_has_access", {
-        p_phone: cleanPhone,
-        p_module: MODULE_NAME
-      });
+      const abosOk = await checkAccessFromAbos(cleanPhone);
 
-      if (error) {
+      if (abosOk) {
         return {
-          ok: false,
-          reason: "rpc_error",
-          details: error.message || "rpc_error",
+          ok: true,
+          reason: "abos_ok",
+          slug: cleanSlug,
+          phone: cleanPhone
+        };
+      }
+
+      const legacyOk = await checkAccessLegacy(cleanPhone);
+
+      if (legacyOk) {
+        return {
+          ok: true,
+          reason: "legacy_ok",
           slug: cleanSlug,
           phone: cleanPhone
         };
       }
 
       return {
-        ok: !!data,
-        reason: data ? "ok" : "inactive_subscription",
+        ok: false,
+        reason: "inactive_subscription",
         slug: cleanSlug,
         phone: cleanPhone
       };
@@ -597,7 +727,8 @@
           phone: normalizePhone(data.phone || data.p_phone || fallbackPhone || ""),
           module: String(data.module || data.p_module || MODULE_NAME).toUpperCase(),
           owner_id: data.owner_id || null,
-          session_token: String(data.session_token || "")
+          session_token: String(data.session_token || ""),
+          slug: normalizeSlug(data.slug || data.owner_slug || "")
         };
       }
 
@@ -615,7 +746,8 @@
             module: String(vals[1] || MODULE_NAME).toUpperCase(),
             phone: normalizePhone(vals[2] || fallbackPhone || ""),
             owner_id: vals[4] || null,
-            session_token: ""
+            session_token: "",
+            slug: ""
           };
         }
       }
@@ -636,7 +768,8 @@
               module: String(m[2] || "").trim().replace(/^"|"$/g, "") || MODULE_NAME,
               phone: normalizePhone(String(m[3] || "").trim().replace(/^"|"$/g, "") || fallbackPhone || ""),
               owner_id: null,
-              session_token: ""
+              session_token: "",
+              slug: ""
             };
           }
         }
@@ -648,7 +781,7 @@
 
   async function loginWithPin(slug, pin, phone) {
     const cleanSlug = normalizeSlug(slug);
-    const cleanPin = String(pin || "").trim();
+    const cleanPin = String(pin || "").trim().replace(/\s+/g, "");
     let cleanPhone = normalizePhone(phone);
 
     if (!cleanPin) {
@@ -659,12 +792,34 @@
       cleanPhone = await resolvePhoneBySlug(cleanSlug);
     }
 
+    if (!cleanPhone && !cleanSlug) {
+      return {
+        ok: false,
+        reason: "missing_context"
+      };
+    }
+
     const sb = createSupabase();
 
-    function finalizeSuccess(finalSlug, finalPhone, extra) {
+    async function finalizeSuccess(finalSlug, finalPhone, extra) {
+      const resolvedSlug = normalizeSlug(finalSlug || cleanSlug || getStoredSlug() || "");
+      const resolvedPhone = normalizePhone(finalPhone || cleanPhone || "");
+
+      const accessCheck = await checkAccess(resolvedSlug, resolvedPhone);
+
+      if (!accessCheck.ok) {
+        return {
+          ok: false,
+          reason: "access_inactive",
+          details: accessCheck.reason || "",
+          slug: resolvedSlug,
+          phone: resolvedPhone
+        };
+      }
+
       const payload = {
-        slug: normalizeSlug(finalSlug),
-        phone: normalizePhone(finalPhone),
+        slug: resolvedSlug,
+        phone: resolvedPhone,
         validated_at: now(),
         expires_at: now() + MAX_AGE_MS,
         session_token: String((extra && extra.session_token) || ""),
@@ -700,10 +855,34 @@
           p_pin: cleanPin
         });
 
-        if (!error && data && data.ok === true) {
-          const finalSlug = cleanSlug || normalizeSlug(data.slug) || getStoredSlug();
-          const finalPhone = cleanPhone || normalizePhone(data.phone);
-          return finalizeSuccess(finalSlug, finalPhone, data);
+        if (!error) {
+          const parsed = parseVerifyAccessPinPayload(data, cleanPhone);
+
+          if (parsed && parsed.ok) {
+            const finalSlug =
+              cleanSlug ||
+              normalizeSlug(parsed.slug || "") ||
+              getStoredSlug();
+
+            const finalPhone =
+              cleanPhone ||
+              normalizePhone(parsed.phone || "");
+
+            return finalizeSuccess(finalSlug, finalPhone, parsed);
+          }
+
+          if (data && data.ok === true) {
+            const finalSlug =
+              cleanSlug ||
+              normalizeSlug(data.slug || "") ||
+              getStoredSlug();
+
+            const finalPhone =
+              cleanPhone ||
+              normalizePhone(data.phone || "");
+
+            return finalizeSuccess(finalSlug, finalPhone, data);
+          }
         }
       } catch (_) {}
     }
@@ -720,6 +899,7 @@
 
           if (parsed && parsed.ok) {
             let finalPhone = normalizePhone(parsed.phone || cleanPhone);
+
             if (!finalPhone) {
               finalPhone = await resolvePhoneBySlug(cleanSlug);
             }
@@ -880,7 +1060,7 @@
 
         const txt = el.textContent || "";
 
-        let cleaned = txt
+        const cleaned = txt
           .replace(/(?:\+?221)?\d{9,}/g, "Compte reconnu")
           .replace(/loc-\d{7,}/gi, "Espace sécurisé")
           .replace(/digiy_loc_session/gi, "Session active")
@@ -973,8 +1153,9 @@
 
   window.DIGIY_GUARD = {
     MODULE_NAME,
+    MODULE_CODE: MODULE_NAME,
     MAX_AGE_MS,
-    VERSION: "loc-guard-security-v3-20260518",
+    VERSION: "loc-guard-abos-central-v1-20260522",
     state,
 
     boot,
@@ -983,6 +1164,8 @@
     requireAccess,
     loginWithPin,
     checkAccess,
+    checkAccessFromAbos,
+    checkAccessLegacy,
     resolvePhoneBySlug,
 
     getSb() {
@@ -1027,6 +1210,6 @@
     }
   };
 
-cleanVisibleUrl();
+  cleanVisibleUrl();
+  startSecureFacadeWatcher();
 })();
-
