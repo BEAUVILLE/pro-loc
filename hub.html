@@ -1,3 +1,745 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Je loue — HUB LOC</title>
+  <meta name="theme-color" content="#1e7a46"/>
+  <meta name="description" content="DIGIY LOC PRO — HUB mobile terrain léger : boutons directs vers logements, réservations, planning, tarifs, QR, session et paiement."/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <meta name="digiy-build" content="loc-hub-boutons-purs-sans-js-20260522"/>
+
+  <!-- HUB LOC ULTRA LIGHT :
+       zéro guard ici, zéro Supabase ici, zéro oreille ici, zéro mask ici.
+       Le HUB doit afficher vite et les boutons doivent être de vrais liens.
+       Les pages internes restent protégées par leur propre guard si besoin. -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
+
+  <style>
+:root{
+      --bg:#1e7a46;
+      --bg2:#155a34;
+      --bg3:#0e4226;
+      --bar:rgba(8,50,24,.96);
+      --gold:#c4973f;
+      --green:#22c55e;
+      --blue:#8b8cff;
+      --line:rgba(255,255,255,.18);
+      --text:#f0fff5;
+      --muted:rgba(240,255,245,.76);
+      --shadow:0 16px 40px rgba(0,0,0,.22);
+      --r:18px;
+      --max:960px;
+      --hdrH:52px;
+      --barH:78px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+    body{
+      margin:0;
+      min-height:100dvh;
+      color:var(--text);
+      font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;
+      font-size:19px;
+      font-weight:950;
+      background:
+        radial-gradient(600px 390px at 16% 0%,rgba(74,222,128,.18),transparent 58%),
+        radial-gradient(420px 280px at 92% 8%,rgba(196,151,63,.15),transparent 52%),
+        linear-gradient(180deg,var(--bg) 0%,var(--bg2) 60%,var(--bg3) 100%);
+      padding:
+        calc(var(--hdrH) + 14px)
+        12px
+        calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
+    }
+
+    a{color:inherit;text-decoration:none}
+    button{font:inherit;color:inherit;cursor:pointer}
+
+    .topHeader{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      height:var(--hdrH);
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:0 14px;
+      background:var(--bar);
+      border-bottom:1px solid rgba(196,151,63,.26);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+
+    .hdrBack{
+      min-height:36px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(240,255,245,.72);
+      font-size:14px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .hdrTitle{
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--gold);
+      white-space:nowrap;
+    }
+
+    .hdrPill{
+      min-height:32px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
+      max-width:38vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .hdrPill.ok{
+      color:#bbf7d0;
+      border-color:rgba(34,197,94,.38);
+      background:rgba(34,197,94,.12);
+    }
+
+    .hdrPill.warn{
+      color:#fde68a;
+      border-color:rgba(245,158,11,.38);
+      background:rgba(245,158,11,.12);
+    }
+
+    .hdrPill.bad{
+      color:#fecaca;
+      border-color:rgba(251,113,133,.38);
+      background:rgba(251,113,133,.10);
+    }
+
+    .wrap{
+      width:min(var(--max),100%);
+      margin:0 auto;
+      display:grid;
+      gap:16px;
+    }
+
+    .hubHead{
+      padding:2px 2px 4px;
+    }
+
+    .eyebrow{
+      color:#fff0a8;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+      margin-bottom:8px;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(34px,8.5vw,54px);
+      font-weight:1000;
+      line-height:.94;
+      letter-spacing:-.05em;
+    }
+
+    .hubSub{
+      color:var(--muted);
+      font-size:17px;
+      font-weight:1000;
+      line-height:1.38;
+      max-width:760px;
+    }
+
+    .rule{
+      margin-top:10px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.22);
+      background:rgba(5,31,17,.32);
+      color:rgba(240,255,245,.90);
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.35;
+    }
+
+    .rule b{color:#fff0a8}
+
+    .group{
+      display:grid;
+      gap:8px;
+    }
+
+    .groupLabel{
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:rgba(240,255,245,.50);
+      padding:0 2px;
+    }
+
+    .tileGrid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:9px;
+    }
+
+    .tile{
+      min-height:136px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px;
+      border-radius:var(--r);
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.09);
+      box-shadow:var(--shadow);
+      transition:transform .12s ease,background .12s ease,border-color .12s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    .tile:hover{
+      transform:translateY(-1px);
+      background:rgba(255,255,255,.14);
+      border-color:rgba(255,255,255,.25);
+    }
+
+    .tile:active{transform:none}
+
+    .tileTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+    }
+
+    .tileIcon{
+      width:48px;
+      height:48px;
+      border-radius:15px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:25px;
+      flex:0 0 auto;
+    }
+
+    .tileTag{
+      min-height:27px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:#fff0a8;
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .tile b{
+      display:block;
+      font-size:20px;
+      font-weight:1000;
+      line-height:1.06;
+      letter-spacing:-.025em;
+      color:#fff;
+    }
+
+    .tile span{
+      display:block;
+      margin-top:5px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.28;
+    }
+
+    .tile.primary{
+      border-color:rgba(34,197,94,.38);
+      background:rgba(34,197,94,.14);
+    }
+
+    .tile.primary .tileIcon{
+      background:rgba(34,197,94,.16);
+      border-color:rgba(34,197,94,.28);
+    }
+
+    .tile.gold{
+      border-color:rgba(196,151,63,.42);
+      background:rgba(196,151,63,.12);
+    }
+
+    .tile.gold .tileIcon,
+    .tile.pay .tileIcon{
+      background:rgba(196,151,63,.15);
+      border-color:rgba(196,151,63,.30);
+    }
+
+    .tile.blue{
+      border-color:rgba(139,140,255,.32);
+      background:rgba(139,140,255,.12);
+    }
+
+    .tile.pay{
+      border-color:rgba(196,151,63,.48);
+      background:linear-gradient(180deg,rgba(196,151,63,.18),rgba(255,255,255,.08));
+    }
+
+    .tile.pay .tileTag{
+      color:var(--gold);
+      border-color:rgba(196,151,63,.35);
+      background:rgba(196,151,63,.12);
+    }
+
+    .tileLogoImg{
+      width:96px;
+      height:96px;
+      object-fit:contain;
+      border-radius:24px;
+      background:#fff;
+      padding:8px;
+      box-shadow:0 12px 26px rgba(0,0,0,.24);
+      border:1px solid rgba(196,151,63,.34);
+      flex:0 0 auto;
+    }
+
+    .blasonTile{
+      min-height:168px!important;
+      border-color:rgba(196,151,63,.62)!important;
+      background:linear-gradient(180deg,rgba(255,240,168,.30),rgba(255,255,255,.15))!important;
+    }
+
+    .blasonTile b{color:#fffdf3!important}
+    .blasonTile span{color:rgba(255,248,220,.94)!important}
+    .blasonTile .tileTag{
+      color:#3a2a05!important;
+      border-color:rgba(196,151,63,.40)!important;
+      background:#fff0a8!important;
+    }
+
+    .metierTileClair{
+      border-color:rgba(255,240,168,.48)!important;
+      background:linear-gradient(180deg,rgba(255,240,168,.22),rgba(255,255,255,.14))!important;
+    }
+
+    .metierTileClair b{color:#fffdf3!important}
+    .metierTileClair span{color:rgba(255,248,220,.92)!important}
+    .metierTileClair .tileIcon{
+      background:#fff7d6!important;
+      color:#171717!important;
+      border-color:rgba(196,151,63,.38)!important;
+      box-shadow:0 10px 22px rgba(0,0,0,.14);
+    }
+
+    .bottomBar{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      height:var(--barH);
+      z-index:100;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:rgba(6,38,18,.97);
+      border-top:1px solid rgba(196,151,63,.18);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+
+    .bottomInner{
+      width:min(100%,760px);
+      height:100%;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+    }
+
+    .bottomInner a{
+      min-height:58px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      align-content:center;
+      gap:3px;
+      color:rgba(240,255,245,.56);
+      font-size:11px;
+      font-weight:1000;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.04);
+    }
+
+    .bottomInner a.active{
+      color:#052215;
+      background:linear-gradient(135deg,#22c55e,#fff0a8);
+      border-color:rgba(34,197,94,.32);
+    }
+
+    .bottomInner .bi{
+      font-size:19px;
+      line-height:1;
+    }
+
+    @media(max-width:860px){
+      .tileGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media(max-width:520px){
+      body{
+        padding:
+          calc(var(--hdrH) + 12px)
+          10px
+          calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);
+        font-size:19px;
+      }
+
+      .topHeader{padding:0 10px;gap:7px}
+      .hdrBack{font-size:13px}
+      .hdrTitle{font-size:11px;letter-spacing:.12em}
+      .hdrPill{font-size:11px;padding:6px 8px;max-width:34vw}
+
+      h1{font-size:34px}
+      .hubSub{font-size:16px}
+
+      .tile{
+        min-height:132px;
+        padding:13px;
+      }
+
+      .tileIcon{
+        width:46px;
+        height:46px;
+        font-size:24px;
+      }
+
+      .tileLogoImg{width:92px;height:92px;border-radius:22px}
+
+      .tile b{
+        font-size:19px;
+        line-height:1.05;
+      }
+
+      .tile span{
+        font-size:13.5px;
+        line-height:1.25;
+      }
+
+      .tileTag{
+        font-size:9px;
+        padding:4px 7px;
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      .tile{transition:none}
+    }
+  
+    .digiyWriteDoctrine{
+      margin:12px 0;
+      padding:14px 16px;
+      border-radius:22px;
+      border:1px solid rgba(250,204,21,.30);
+      background:
+        radial-gradient(520px 180px at 100% 0%,rgba(250,204,21,.13),transparent 62%),
+        rgba(255,255,255,.055);
+      color:#fde68a;
+      box-shadow:0 14px 34px rgba(0,0,0,.16);
+      font-size:1rem;
+      font-weight:1000;
+      line-height:1.45;
+    }
+    .digiyWriteDoctrine strong{color:#fff7cc}
+    .digiyWriteDoctrine span{
+      display:block;
+      margin-top:5px;
+      color:rgba(244,255,247,.84);
+      font-size:.92rem;
+      font-weight:950;
+      line-height:1.45;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topHeader">
+    <a class="hdrBack" id="hdrBack" href="./app.html">← Travail</a>
+    <div class="hdrTitle">HUB LOC</div>
+    <div class="hdrPill ok" id="sessionPill">porte rapide</div>
+  </header>
+
+  <main class="wrap">
+    <section class="hubHead">
+      <div class="eyebrow">🏠 JE LOUE</div>
+      <h1>Toutes tes portes.</h1>
+      <div class="hubSub" id="hubSub">
+        Chaque pavé ouvre directement une page : gérer, réserver, planifier, publier, partager, payer.
+      </div>
+
+    <section class="digiyWriteDoctrine" aria-label="Doctrine d’écriture LOC">
+      ✍️ <strong>Doctrine d’écriture LOC</strong>
+      <span>Le propriétaire clique plus qu’il n’écrit. DIGIY prépare les mots de location : arrivée, départ, prix, message, note. Le terrain corrige, confirme et garde sa vérité.</span>
+    </section>
+
+      <div class="rule">
+        <b>Index</b> = porte courte. <b>HUB</b> = boutons directs. <b>Guard</b> = sur les pages internes. Pas d’attente réseau sur cette page.
+      </div>
+    </section>
+
+    <section class="group" aria-label="Travail LOC">
+      <div class="groupLabel">Travail quotidien</div>
+      <div class="tileGrid">
+        <a class="tile gold blasonTile" href="https://digiylyfe.com/" aria-label="DIGIYLYFE Métiers pro">
+          <div class="tileTop">
+            <img
+              class="tileLogoImg"
+              src="https://digiylyfe.net/wp-content/uploads/2026/05/metier-pro-1.png"
+              alt="DIGIYLYFE — Métiers pro"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="tileTag">DIGIY</div>
+          </div>
+          <div>
+            <b>Métiers pro</b>
+            <span>Le blason commun des portes métier.</span>
+          </div>
+        </a>
+
+        <a class="tile primary metierTileClair" id="goApp" href="./app.html">
+          <div class="tileTop">
+            <div class="tileIcon">🏠</div>
+            <div class="tileTag">Travail</div>
+          </div>
+          <div>
+            <b>Gérer mes logements</b>
+            <span>Arrivées, départs, demandes, actions.</span>
+          </div>
+        </a>
+
+        <a class="tile gold" id="goToday" href="./today.html">
+          <div class="tileTop">
+            <div class="tileIcon">📅</div>
+            <div class="tileTag">Jour</div>
+          </div>
+          <div>
+            <b>Aujourd’hui</b>
+            <span>Ce qui demande attention maintenant.</span>
+          </div>
+        </a>
+
+        <a class="tile blue" id="goReservations" href="./reservations.html">
+          <div class="tileTop">
+            <div class="tileIcon">📋</div>
+            <div class="tileTag">Demandes</div>
+          </div>
+          <div>
+            <b>Réservations</b>
+            <span>Clients, demandes, suivi et statut.</span>
+          </div>
+        </a>
+
+        <a class="tile" id="goPlanning" href="./planning.html">
+          <div class="tileTop">
+            <div class="tileIcon">🗓️</div>
+            <div class="tileTag">Dates</div>
+          </div>
+          <div>
+            <b>Disponibilités</b>
+            <span>Bloquer, ouvrir, vérifier les dates.</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group" aria-label="Annonce logement">
+      <div class="groupLabel">Annonce · visibilité</div>
+      <div class="tileGrid">
+        <a class="tile" id="goListing" href="./listing.html">
+          <div class="tileTop">
+            <div class="tileIcon">📖</div>
+            <div class="tileTag">Lecture</div>
+          </div>
+          <div>
+            <b>Lecture du jour</b>
+            <span>Arrivées, départs, partage rapide.</span>
+          </div>
+        </a>
+
+        <a class="tile" id="goGenerator" href="./generator.html">
+          <div class="tileTop">
+            <div class="tileIcon">🏡</div>
+            <div class="tileTag">Fiche</div>
+          </div>
+          <div>
+            <b>Préparer une fiche</b>
+            <span>Choix guidés pour présenter le logement.</span>
+          </div>
+        </a>
+
+        <a class="tile" id="goPhotos" href="./photos.html">
+          <div class="tileTop">
+            <div class="tileIcon">🖼️</div>
+            <div class="tileTag">Photos</div>
+          </div>
+          <div>
+            <b>Photos</b>
+            <span>Liens photo, images légères, vitrine propre.</span>
+          </div>
+        </a>
+
+        <a class="tile gold" id="goTarifs" href="./tarifs.html">
+          <div class="tileTop">
+            <div class="tileIcon">💰</div>
+            <div class="tileTag">Prix</div>
+          </div>
+          <div>
+            <b>Tarifs</b>
+            <span>Nuit, semaine, mois, caution.</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group" aria-label="Partage et paiement LOC">
+      <div class="groupLabel">Partager · payer</div>
+      <div class="tileGrid">
+        <a class="tile" id="goQr" href="./qr.html">
+          <div class="tileTop">
+            <div class="tileIcon">🔳</div>
+            <div class="tileTag">QR</div>
+          </div>
+          <div>
+            <b>Mon QR</b>
+            <span>Partager la bonne porte logement.</span>
+          </div>
+        </a>
+
+        <a class="tile blue" id="goLinks" href="./manage-links.html">
+          <div class="tileTop">
+            <div class="tileIcon">🔗</div>
+            <div class="tileTag">Liens</div>
+          </div>
+          <div>
+            <b>Mes liens utiles</b>
+            <span>Regrouper les chemins importants.</span>
+          </div>
+        </a>
+
+        <a class="tile pay" id="goPay" href="https://pro-pay.digiylyfe.com/admin.html">
+          <div class="tileTop">
+            <div class="tileIcon">💰</div>
+            <div class="tileTag">PAY</div>
+          </div>
+          <div>
+            <b>Mon argent</b>
+            <span>Acomptes, soldes, dépenses, traces.</span>
+          </div>
+        </a>
+
+        <a class="tile gold" id="goWave" href="./pin-wave.html">
+          <div class="tileTop">
+            <div class="tileIcon">🌊</div>
+            <div class="tileTag">Wave</div>
+          </div>
+          <div>
+            <b>Code Wave</b>
+            <span>Preuves et déclarations de paiement.</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group" aria-label="Accès et aide LOC">
+      <div class="groupLabel">Accès · session</div>
+      <div class="tileGrid">
+        <a class="tile" id="goPin" href="./pin.html">
+          <div class="tileTop">
+            <div class="tileIcon">🔐</div>
+            <div class="tileTag">PIN</div>
+          </div>
+          <div>
+            <b>Mon accès</b>
+            <span>Ouvrir ou renouveler la session.</span>
+          </div>
+        </a>
+
+        <a class="tile" id="goPublic" href="./go-pin-public.html">
+          <div class="tileTop">
+            <div class="tileIcon">👁️</div>
+            <div class="tileTag">Public</div>
+          </div>
+          <div>
+            <b>Fiche publique</b>
+            <span>Voir ce que le client peut ouvrir.</span>
+          </div>
+        </a>
+
+        <a class="tile" id="goNotes" href="./notes.html">
+          <div class="tileTop">
+            <div class="tileIcon">📝</div>
+            <div class="tileTag">Notes</div>
+          </div>
+          <div>
+            <b>Notes rapides</b>
+            <span>Trace simple, demande, rappel utile.</span>
+          </div>
+        </a>
+
+        <a class="tile blue" id="goSession" href="./session.html">
+          <div class="tileTop">
+            <div class="tileIcon">🛡️</div>
+            <div class="tileTag">Session</div>
+          </div>
+          <div>
+            <b>Ma session</b>
+            <span>État d’accès, nettoyage local.</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomBar" aria-label="Navigation rapide LOC">
+    <div class="bottomInner">
+      <a class="active" href="./hub.html"><span class="bi">🧭</span><span>HUB</span></a>
+      <a href="./app.html"><span class="bi">🏠</span><span>Travail</span></a>
+      <a href="./reservations.html"><span class="bi">📋</span><span>Demandes</span></a>
+      <a href="./planning.html"><span class="bi">🗓️</span><span>Dates</span></a>
+      <a href="./session.html"><span class="bi">🛡️</span><span>Session</span></a>
+    </div>
+  </nav>
+
+</body>
+</html>
 
 
 
