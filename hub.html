@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="description" content="DIGIY LOC PRO — HUB mobile terrain en pavés : logements, réservations, planning, tarifs, QR, liens, accès et paiements."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-hub-clean-scripts-20260522"/>
+  <meta name="digiy-build" content="loc-hub-light-fast-20260522"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -18,20 +18,9 @@
     window.DIGIY_MODULE = "LOC";
     window.DIGIY_LOGIN_URL = "./pin.html";
 
-    // Anti-gel doux : le HUB reste visible pendant que le guard vérifie la session.
+    // HUB léger : on affiche d'abord, on vérifie ensuite.
     window.DIGIY_GUARD_SOFT_MODE = true;
     window.DIGIY_NO_HARD_REDIRECT = true;
-
-    setTimeout(function () {
-      try {
-        document.documentElement.style.visibility = "";
-        document.documentElement.style.opacity = "1";
-        if (document.body) {
-          document.body.style.visibility = "";
-          document.body.style.opacity = "1";
-        }
-      } catch (_) {}
-    }, 900);
   </script>
 
   <style>
@@ -41,14 +30,13 @@
     }
   </style>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./assets/js/digiy-abos-access.js?v=abos-20260522"></script>
-  <script src="./guard.js?v=loc-guard-abos-central-v1-20260522"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./assets/js/digiy-abos-access.js?v=abos-20260522" defer></script>
+  <script src="./guard.js?v=loc-guard-abos-central-v1-20260522-light" defer></script>
   <script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
   <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
-  <script src="./oreille-metier-loc.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
-  <script src="./loc-security-mask.js?v=loc-mask-hub-20260519" defer></script>
-<link rel="preload" as="image" href="https://digiylyfe.net/wp-content/uploads/2026/05/metier-pro-1.png"/>
+
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
@@ -918,11 +906,45 @@
         cleanInternalLinks();
       }
 
-      boot();
+      function startWhenReady(){
+        boot();
+      }
+
+      if(document.readyState === "loading"){
+        document.addEventListener("DOMContentLoaded", startWhenReady, { once:true });
+      }else{
+        startWhenReady();
+      }
+
+      // Oreille métier chargée après le premier affichage, pour ne plus figer le HUB.
+      function loadOreilleLater(){
+        try{
+          if(document.querySelector('script[data-digiy-oreille-loc="1"]')) return;
+          const s = document.createElement("script");
+          s.src = "./oreille-metier-loc.js?v=loc-oreille-lazy-20260522";
+          s.defer = true;
+          s.dataset.digiyOreilleLoc = "1";
+          document.body.appendChild(s);
+        }catch(e){
+          console.warn("[LOC HUB] oreille lazy", e);
+        }
+      }
+
+      if("requestIdleCallback" in window){
+        requestIdleCallback(loadOreilleLater, { timeout:3000 });
+      }else{
+        setTimeout(loadOreilleLater, 1800);
+      }
     })();
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
