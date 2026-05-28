@@ -13,11 +13,18 @@
 <body>
 <main class="card">
   <div class="k">🏠 LOC → PAY</div>
-  <h1>Acompte réel.</h1>
-  <p>LOC garde la réservation, les dates et le logement. PAY reçoit seulement l’argent final : acompte, solde, dépense ou reste à recevoir.</p>
+  <h1>Argent final.</h1>
+  <p>LOC garde la réservation, les dates et le logement. PAY reçoit seulement l’argent final : acompte, solde, dépense logement ou reste à recevoir.</p>
 
-  <label for="amount">Montant reçu</label>
-  <input id="amount" inputmode="numeric" autocomplete="off" placeholder="20000">
+  <label for="type">Type argent</label>
+  <select id="type">
+    <option value="income">Acompte / recette logement</option>
+    <option value="expense">Dépense logement</option>
+    <option value="receivable">Reste à recevoir</option>
+  </select>
+
+  <label for="amount">Montant</label>
+  <input id="amount" inputmode="numeric" autocomplete="off" placeholder="20000" value="20000">
 
   <label for="mode">Mode</label>
   <select id="mode">
@@ -34,7 +41,7 @@
   <input id="route" autocomplete="off" placeholder="Villa Saly · 12 juin → 15 juin" value="Séjour LOC">
 
   <label for="phrase">Phrase PAY</label>
-  <textarea id="phrase">acompte location LOC 20000 Wave</textarea>
+  <textarea id="phrase">acompte logement LOC 20000 Wave</textarea>
 
   <div class="grid">
     <button class="btn gold" id="copy" type="button">📋 Copier phrase PAY</button>
@@ -42,7 +49,7 @@
   </div>
 
   <a class="btn" href="./action.html">← Retour DIGIY GO LOC</a>
-  <div class="status" id="status">Pont prêt. Le clic “Envoyer vers PAY” ouvre PAY avec un brouillon métier à vérifier.</div>
+  <div class="status" id="status">Pont prêt. Le clic “Envoyer vers PAY” ouvre PAY avec un brouillon LOC à vérifier.</div>
   <div class="small">Validation humaine obligatoire dans PAY. LOC ne confirme pas seul la réservation, le prix, la disponibilité ni le paiement.</div>
 </main>
 <script>
@@ -50,81 +57,150 @@
   "use strict";
 
   var PAY_BRIDGE_URL = "https://pro-pay.digiylyfe.com/module-bridge.html";
+  var KEYS = [
+    "DIGIY_LOC_PAY_BRIDGE",
+    "DIGIY_PAY_PENDING_MOVEMENT",
+    "DIGIY_LOC_LATEST_ACTION",
+    "DIGIY_LOC_GO_LATEST",
+    "DIGIY_LOC_ACTION_LATEST",
+    "DIGIY_LOC_LAST_DRAFT"
+  ];
 
   function $(id){ return document.getElementById(id); }
   function clean(n){ return String(n || "").replace(/[^0-9]/g, "") || "0"; }
+  function norm(v){ return String(v || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
   function setStatus(msg){ var s = $("status"); if(s) s.textContent = msg; }
-
-  function safeRead(key, fallback){
-    try{ var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(e){ return fallback; }
-  }
+  function readJSON(key){ try{ var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
 
   function latestLocDraft(){
-    return safeRead("DIGIY_LOC_GO_LATEST", null)
-        || safeRead("DIGIY_LOC_ACTION_LATEST", null)
-        || safeRead("DIGIY_LOC_LAST_DRAFT", null)
-        || null;
+    for(var i=0;i<KEYS.length;i++){
+      var val = readJSON(KEYS[i]);
+      if(val) return {data:val,key:KEYS[i]};
+    }
+    return null;
+  }
+
+  function detectType(text, d){
+    var t = norm((text || "") + " " + ((d && (d.payType || d.type || d.category || d.route || d.target)) || ""));
+    if(/depense|menage|nettoyage|sortie|charge|achat/.test(t) || /مصروف|تنظيف/.test(String(text || ""))) return "expense";
+    if(/reste|doit|dette|a recevoir|credit/.test(t) || /دين|مستحق/.test(String(text || ""))) return "receivable";
+    return "income";
+  }
+
+  function detectMode(text, d){
+    if(d && (d.channel || d.mode || d.canal)) return d.channel || d.mode || d.canal;
+    var t = norm(text);
+    if(t.indexOf("wave") >= 0 || t.indexOf("ouev") >= 0 || t.indexOf("ouve") >= 0) return "Wave";
+    if(t.indexOf("orange") >= 0) return "Orange Money";
+    if(t.indexOf("carte") >= 0) return "Carte";
+    if(t.indexOf("cash") >= 0 || t.indexOf("espece") >= 0 || t.indexOf("liquide") >= 0) return "Cash";
+    return "Wave";
+  }
+
+  function detectCategory(type, text, d){
+    if(d && d.category) return d.category;
+    var t = norm(text);
+    if(type === "expense"){
+      if(t.indexOf("menage") >= 0 || t.indexOf("nettoyage") >= 0) return "Ménage LOC";
+      return "Dépense logement";
+    }
+    if(type === "receivable") return "Reste à recevoir LOC";
+    return "Acompte LOC";
+  }
+
+  function extractAmount(text, d){
+    if(d && Number(d.amount) > 0) return String(Math.round(Number(d.amount)));
+    if(d && Number(d.acompte) > 0) return String(Math.round(Number(d.acompte)));
+    if(d && Number(d.montant) > 0) return String(Math.round(Number(d.montant)));
+    var m = String(text || "").match(/(\d[\d\s.,]*)\s*(?:f|fcfa|xof)?/i);
+    return m ? clean(m[1]) : "20000";
+  }
+
+  function labelForType(type){
+    if(type === "expense") return "Dépense logement";
+    if(type === "receivable") return "Reste à recevoir LOC";
+    return "Acompte LOC";
   }
 
   function load(){
-    var d = latestLocDraft();
-    if(!d) return;
-    if(d.acompte || d.amount || d.montant) $("amount").value = clean(d.acompte || d.amount || d.montant);
-    if(d.mode || d.channel || d.canal) $("mode").value = d.mode || d.channel || d.canal;
-    if(d.client || d.clientName || d.nom) $("client").value = d.client || d.clientName || d.nom;
-    var route = [d.logement || d.property || d.lieu, d.dates || d.date || d.periode].filter(Boolean).join(" · ");
-    if(route) $("route").value = route;
+    var found = latestLocDraft();
+    if(!found) { refresh(); return; }
+    var d = found.data;
+    var rawText = d.text || d.note || d.rawText || d.commandText || d.phrase || "";
+    var type = detectType(rawText, d);
+    $("type").value = type;
+    $("amount").value = extractAmount(rawText, d);
+    $("mode").value = detectMode(rawText, d);
+    $("client").value = d.who || d.client || d.clientName || d.nom || "Client LOC";
+    var route = d.logement || d.property || d.lieu || d.routeLabel || d.dates || d.periode || d.category || "Séjour LOC";
+    if(d.dates && route.indexOf(d.dates) < 0) route = route + " · " + d.dates;
+    $("route").value = String(route).replace(/\s*dans PAY\s*$/i, "");
+    $("phrase").value = rawText || buildPhrase();
+    setStatus("Brouillon reçu depuis " + found.key + ". Vérifie puis envoie vers PAY.");
+    refresh();
   }
 
-  function refresh(){
+  function buildPhrase(){
+    var type = $("type").value || "income";
     var amount = clean($("amount").value || "20000");
     var mode = $("mode").value || "Cash";
     var route = $("route").value || "Séjour LOC";
     var client = $("client").value || "Client LOC";
-    $("phrase").value = "acompte location LOC " + amount + " " + mode + " — " + route + " — " + client;
+    var start = type === "expense" ? "dépense logement LOC" : type === "receivable" ? "reste à recevoir LOC" : "acompte logement LOC";
+    return start + " " + amount + " " + mode + " — " + route + " — " + client;
+  }
+
+  function refresh(){
+    $("amount").value = clean($("amount").value || "0");
+    $("phrase").value = buildPhrase();
   }
 
   function buildPayUrl(){
     refresh();
+    var type = $("type").value || "income";
     var amount = clean($("amount").value);
     var mode = $("mode").value || "Cash";
     var route = $("route").value || "Séjour LOC";
     var client = $("client").value || "Client LOC";
-    var note = $("phrase").value || "acompte location LOC " + amount + " " + mode;
+    var note = $("phrase").value || buildPhrase();
     var params = new URLSearchParams();
     params.set("from", "LOC");
-    params.set("type", "income");
+    params.set("type", type);
     params.set("amount", amount);
     params.set("channel", mode);
     params.set("who", client);
-    params.set("category", "Acompte LOC");
-    params.set("note", note);
+    params.set("category", detectCategory(type, note, {category:labelForType(type)}));
+    params.set("note", note + " · " + route);
     params.set("proofRef", "LOC-PAY-" + Date.now());
     return PAY_BRIDGE_URL + "?" + params.toString();
   }
 
   function saveHandoff(){
+    var type = $("type").value || "income";
     var handoff = {
       source:"LOC",
       module:"PAY",
-      type:"income",
-      typeLabel:"Recette",
+      type:type,
+      typeLabel:type === "expense" ? "Dépense" : type === "receivable" ? "À recevoir" : "Recette",
       amount:Number(clean($("amount").value)),
       currency:"XOF",
       channel:$("mode").value || "Cash",
       who:$("client").value || "Client LOC",
-      category:"Acompte LOC",
+      category:labelForType(type),
       note:$("phrase").value,
       status:"draft",
       requiresHumanValidation:true,
       createdAt:new Date().toISOString(),
-      safety:{moduleKeepsBusiness:true,payKeepsFinalMoney:true,noAutoPayment:true,noAutoConfirmation:true,humanValidationRequired:true}
+      safety:{moduleKeepsBusiness:true,payKeepsFinalMoney:true,noAutoPayment:true,noAutoConfirmation:true,noAutoBooking:true,humanValidationRequired:true}
     };
-    try{ localStorage.setItem("DIGIY_LOC_PAY_HANDOFF", JSON.stringify(handoff)); }catch(e){}
+    try{
+      localStorage.setItem("DIGIY_LOC_PAY_HANDOFF", JSON.stringify(handoff));
+      localStorage.setItem("DIGIY_PAY_PENDING_MOVEMENT", JSON.stringify(handoff));
+    }catch(e){}
     return handoff;
   }
 
-  ["amount","mode","client","route"].forEach(function(id){
+  ["type","amount","mode","client","route"].forEach(function(id){
     var el = $(id);
     if(el) el.addEventListener("input", refresh);
     if(el) el.addEventListener("change", refresh);
@@ -149,7 +225,6 @@
   };
 
   load();
-  refresh();
 })();
 </script>
 </body>
