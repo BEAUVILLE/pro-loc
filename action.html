@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>DIGIY GO LOC — ACTION concentrée</title>
 <meta name="theme-color" content="#0b1d12"/>
+<meta name="digiy-build" content="loc-action-desktop-2-colonnes-20260528"/>
 <style>
 :root{
   --ink:#f8fafc;
@@ -370,7 +371,19 @@ textarea{
   line-height:1.42;
   font-weight:850;
 }
-@media(max-width:860px){
+@media(min-width:721px){
+  .locAction{
+    grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr)!important;
+    align-items:start;
+  }
+  .locLeft{grid-column:1}
+  .locRight{grid-column:2}
+  .actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .validation{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .models{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:720px){
   body{padding:10px}
   .locAction{grid-template-columns:1fr;padding:12px;border-radius:24px}
   .actions{grid-template-columns:1fr 1fr}
