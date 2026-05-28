@@ -42,7 +42,7 @@
       <button class="vbtn pay" id="pay">💳 PAY</button>
     </div>
 
-    <div class="state" id="state">PAY est actif. Clique PAY pour envoyer le brouillon vers la transition.</div>
+    <div class="state" id="state">PAY est actif. Clique PAY pour envoyer le brouillon LOC vers la transition.</div>
     <div class="chips"><span>pavés courts</span><span>validation humaine</span><span>LOC garde le logement</span><span>PAY garde l’argent</span></div>
   </section>
 </main>
@@ -57,7 +57,7 @@
   function label(tp){return tp==='expense'?'Dépense':tp==='receivable'?'À recevoir':'Recette'}
   function cat(tp,v){const t=norm(v);if(tp==='expense')return t.includes('menage')?'Ménage LOC':'Dépense logement';if(tp==='receivable')return'Reste à recevoir LOC';return'Acompte LOC'}
   function set(msg){state.textContent=msg}
-  function payload(r){const text=txt.value.trim(), tp=type(text);return{source:'LOC_ACTION',module:'LOC',target:r==='PAY'?'PAY':r==='PLANNING'?'LOC_PLANNING':'LOC_NOTE',route:r,text,note:text,amount:amount(text),currency:amount(text)?'XOF':'',channel:channel(text),payType:tp,type:tp,typeLabel:label(tp),category:cat(tp,text),who:'Client LOC',status:'draft_validated_by_host',requiresHumanValidation:true,createdAt:new Date().toISOString(),safety:{noAutoBooking:true,noAutoPayment:true,noAutoConfirmation:true,humanValidationRequired:true}}}
+  function payload(r){const text=txt.value.trim(), tp=type(text);return{source:'LOC',module:'LOC',target:r==='PAY'?'PAY':r==='PLANNING'?'LOC_PLANNING':'LOC_NOTE',route:r,text,note:text,amount:amount(text),currency:amount(text)?'XOF':'',channel:channel(text),payType:tp,type:tp,typeLabel:label(tp),category:cat(tp,text),who:'Client LOC',status:'draft_validated_by_host',requiresHumanValidation:true,proofRef:'LOC-PAY-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),createdAt:new Date().toISOString(),safety:{noAutoBooking:true,noAutoPayment:true,noAutoConfirmation:true,humanValidationRequired:true}}}
   function save(key,obj,limit){try{const list=JSON.parse(localStorage.getItem(key)||'[]');list.unshift(obj);localStorage.setItem(key,JSON.stringify(list.slice(0,limit||80)))}catch(e){}}
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{txt.value=b.dataset.t||'';route=b.dataset.route||'LOC';set(route==='PAY'?'PAY prêt. Clique PAY.':route==='PLANNING'?'Planning prêt.':'Note prête.')});
   document.getElementById('prepare').onclick=()=>{const t=norm(txt.value);route=/acompte|solde|recette|depense|menage|reste|recevoir|wave|cash|orange|carte|\d/.test(t)?'PAY':/bloquer|date|planning|reserve|reserv/.test(t)?'PLANNING':'LOC';set(route==='PAY'?'PAY prêt. Clique PAY.':route==='PLANNING'?'Planning prêt.':'Note prête.')};
@@ -65,10 +65,11 @@
   document.getElementById('clear').onclick=()=>{txt.value='';set('Effacé.')};
   document.getElementById('note').onclick=()=>{const p=payload('LOC');save('DIGIY_LOC_ACTION_NOTES',p);localStorage.setItem('DIGIY_LOC_PENDING_NOTE',JSON.stringify(p));set('Note LOC gardée.')};
   document.getElementById('planning').onclick=()=>{const p=payload('PLANNING');save('DIGIY_LOC_ACTION_PLANNING',p);localStorage.setItem('DIGIY_LOC_PENDING_PLANNING',JSON.stringify(p));set('Planning LOC gardé.')};
-  document.getElementById('pay').onclick=()=>{const p=payload('PAY');localStorage.setItem('DIGIY_PAY_PENDING_MOVEMENT',JSON.stringify(p));localStorage.setItem('DIGIY_LOC_PAY_BRIDGE',JSON.stringify(p));localStorage.setItem('DIGIY_LOC_LATEST_ACTION',JSON.stringify(p));set('Ouverture PAY…');location.href='./pay-transition.html#from=loc-action'};
+  document.getElementById('pay').onclick=()=>{const p=payload('PAY');localStorage.setItem('DIGIY_PAY_PENDING_MOVEMENT',JSON.stringify(p));localStorage.setItem('DIGIY_LOC_PAY_BRIDGE',JSON.stringify(p));localStorage.setItem('DIGIY_LOC_LATEST_ACTION',JSON.stringify(p));set('Ouverture PAY…');location.href='./pay-transition.html?from=LOC#from=loc-action'};
   function speech(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('listen').textContent='🎙️ Micro non dispo';return}rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.onstart=()=>set('J’écoute...');rec.onend=()=>set('Prêt.');rec.onerror=()=>set('Micro fragile.');rec.onresult=e=>{let v='';for(let i=e.resultIndex;i<e.results.length;i++)v+=e.results[i][0].transcript;txt.value=v.trim();document.getElementById('prepare').click()}}
   speech();document.getElementById('listen').onclick=()=>{if(!rec){set('Micro non disponible.');return}try{rec.start()}catch(e){set('Micro déjà lancé.')}};
 })();
 </script>
 </body>
 </html>
+
