@@ -200,8 +200,11 @@ function writeSession(phone,sl,token){
 }
 
 function redirect(sl){
-  try{const u=new URL(INDEX_URL,location.href);if(sl)u.searchParams.set("slug",sl);u.searchParams.delete("phone");location.replace(u.toString())}
-  catch(_){location.replace(INDEX_URL)}
+  /* patch audit 20260530 : ne jamais mettre slug (= téléphone) dans l'URL.
+     La session est déjà écrite dans localStorage/sessionStorage par writeSession().
+     On redirige vers hub.html sans aucun paramètre sensible. */
+  try{ location.replace("./hub.html"); }
+  catch(_){ location.replace("./hub.html"); }
 }
 
 // ETAPE 1
@@ -299,6 +302,12 @@ async function doLogin(){
 </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
