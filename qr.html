@@ -13,7 +13,6 @@
 
 <script>
   window.DIGIY_MODULE = "LOC";
-  window.DIGIY_ABOS_MODULE = "LOC";
   window.DIGIY_LOGIN_URL = "./pin.html";
   window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
   window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
@@ -21,9 +20,7 @@
 </script>
 
 <script src="./qrcode.min.js?v=digiy-local-1"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./guard.js?v=loc-guard-normal-20260530"></script>
-
+<!-- QR public client : pas de guard, pas de PIN, pas d’ABOS sur la page visible client. -->
 <style>
 :root{
   --bg:#061b14;
@@ -1031,4 +1028,5 @@ h1{
 <script src="./loc-security-mask.js"></script>
 </body>
 </html>
+
 
