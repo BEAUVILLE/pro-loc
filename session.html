@@ -1,83 +1,26 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue — Ma session LOC</title>
-  <meta name="theme-color" content="#1e7a46"/>
-  <meta name="robots" content="noindex,nofollow"/>
-  <meta name="description" content="DIGIY LOC PRO — état de session, accès protégé, nettoyage local et porte vers Oreille LOC."/>
-  <meta name="digiy-build" content="loc-session-porte-oreille-20260524"/>
+from pathlib import Path
+import re
 
-  <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_MODULE = "LOC";
-    window.DIGIY_LOGIN_URL = "./pin.html";
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-session-porte-oreille-20260524"></script>
-  <script src="./assets/js/digiy-module-bridge.js?v=loc-session-porte-oreille-20260524"></script>
-  <script src="./assets/js/digiy-loc-memory.js?v=loc-session-porte-oreille-20260524"></script>
-  <script src="./loc-security-mask.js?v=loc-session-porte-oreille-20260524" defer></script>
+src = Path("/mnt/data/session (22).html")
+text = src.read_text(encoding="utf-8", errors="replace")
 
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100dvh;padding:66px 12px 92px;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#f0fff5;background:radial-gradient(620px 380px at 16% 0%,rgba(74,222,128,.18),transparent 58%),linear-gradient(180deg,#1e7a46,#155a34 60%,#0e4226);font-weight:950}
-    a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}.top{position:fixed;top:0;left:0;right:0;height:52px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;background:rgba(6,38,18,.96);border-bottom:1px solid rgba(196,151,63,.26);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.top a{font-size:14px;color:rgba(240,255,245,.76);font-weight:1000}.title{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#fff0a8;font-weight:1000}.pill{border:1px solid rgba(245,158,11,.38);background:rgba(245,158,11,.12);color:#fde68a;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:1000}.pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12);color:#bbf7d0}
-    main{width:min(960px,100%);margin:0 auto;display:grid;gap:16px}.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#fff0a8;font-weight:1000}h1{margin:0;font-size:clamp(34px,8.5vw,54px);line-height:.94;letter-spacing:-.05em}.sub{color:rgba(240,255,245,.78);font-size:17px;line-height:1.38}.rule{padding:13px 14px;border-radius:20px;border:1px dashed rgba(255,255,255,.22);background:rgba(5,31,17,.34);font-size:14px;line-height:1.38;color:rgba(240,255,245,.90)}.rule b{color:#fff0a8}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.card,.action{min-height:132px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.09);box-shadow:0 16px 40px rgba(0,0,0,.20)}.ico{font-size:30px}.tag{display:inline-flex;width:max-content;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff0a8;font-size:10px;letter-spacing:.08em;text-transform:uppercase}.card b,.action b{display:block;font-size:20px;line-height:1.06;color:#fff}.card span,.action span{display:block;margin-top:5px;color:rgba(240,255,245,.76);font-size:14px;line-height:1.28}.ok{border-color:rgba(34,197,94,.38)!important;background:rgba(34,197,94,.14)!important}.gold{border-color:rgba(196,151,63,.42)!important;background:rgba(196,151,63,.13)!important}.voice{border-color:rgba(250,204,21,.48)!important;background:linear-gradient(135deg,rgba(250,204,21,.22),rgba(34,197,94,.13))!important}.danger{width:100%;min-height:60px;border-radius:18px;border:1px solid rgba(251,113,133,.34);background:rgba(251,113,133,.10);color:#fecaca;font-weight:1000}.notice{padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:rgba(240,255,245,.78);font-size:15px;line-height:1.45}.notice b{color:#fff}.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(6,38,18,.97);border-top:1px solid rgba(196,151,63,.18)}.bottomInner{width:min(760px,100%);margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.bottom a{min-height:58px;border-radius:16px;display:grid;place-items:center;align-content:center;gap:2px;color:rgba(240,255,245,.62);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:11px;text-align:center;font-weight:1000}.bottom a.active{color:#062612;background:linear-gradient(135deg,#22c55e,#fff0a8)}.bi{font-size:20px;line-height:1}
-    @media(max-width:860px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){body{padding-left:10px;padding-right:10px}.grid{gap:8px}.card,.action{min-height:128px;padding:13px}.card b,.action b{font-size:18px}.card span,.action span{font-size:13px}.title{font-size:11px}.pill{font-size:11px;padding:6px 8px}}
-  </style>
-</head>
-<body>
-  <header class="top"><a href="./hub.html">← HUB</a><div class="title">Ma session</div><div class="pill" id="sessionPill">session…</div></header>
+# Add DIGIY_ABOS_MODULE after DIGIY_MODULE if missing
+if "DIGIY_ABOS_MODULE" not in text:
+    text = text.replace(
+        'window.DIGIY_MODULE = "LOC";',
+        'window.DIGIY_MODULE = "LOC";\n    window.DIGIY_ABOS_MODULE = "LOC";'
+    )
 
-  <main>
-    <section><div class="eyebrow">🏠 Je loue</div><h1>Session LOC.</h1><p class="sub" id="sessionSub">Ici on contrôle l’accès logement sans afficher de téléphone, sans exposer de slug, sans casser les données de location.</p><div class="rule">Règle moule : <b>on nettoie l’accès</b>, mais <b>on ne supprime pas les réservations</b>, <b>ni les notes</b>, <b>ni les disponibilités</b>.</div></section>
+# Replace any guard.js script version with the normal guard cache-bust
+text = re.sub(
+    r'<script\s+src="\./guard\.js\?v=[^"]*"></script>',
+    '<script src="./guard.js?v=loc-guard-normal-20260530"></script>',
+    text
+)
 
-    <section class="grid" aria-label="État de session LOC">
-      <article class="card" id="statusCard"><div><div class="ico">🔐</div><div class="tag" id="statusTag">Contrôle</div></div><div><b id="statusTitle">Vérification</b><span id="statusText">Lecture de l’état de session…</span></div></article>
-      <article class="card"><div><div class="ico">🏠</div><div class="tag">Module</div></div><div><b>LOC</b><span>Logement protégé par PIN.</span></div></article>
-      <article class="card"><div><div class="ico">🛡️</div><div class="tag">Privé</div></div><div><b>Identité masquée</b><span>Aucun téléphone ni slug affiché ici.</span></div></article>
-      <article class="card gold"><div><div class="ico">🧭</div><div class="tag">Suite</div></div><div><b id="nextTitle">Retour HUB</b><span id="nextText">Ouvre les pavés LOC pour agir vite.</span></div></article>
-    </section>
+out = Path("/mnt/data/session-loc-guard-normal-20260530.html")
+out.write_text(text, encoding="utf-8")
 
-    <section class="grid" aria-label="Actions de session LOC">
-      <a class="action ok" href="./hub.html"><div><div class="ico">🧭</div><div class="tag">HUB</div></div><div><b>HUB LOC</b><span>Pavés métier, moins de scroll.</span></div></a>
-      <a class="action voice" href="./oreille.html"><div><div class="ico">🎙️</div><div class="tag">Oreille</div></div><div><b>Oreille LOC</b><span>Parler, formuler, valider.</span></div></a>
-      <a class="action gold" href="./app.html"><div><div class="ico">🏠</div><div class="tag">Travail</div></div><div><b>Gérer</b><span>Arrivées, départs, demandes.</span></div></a>
-      <a class="action" href="./pin.html"><div><div class="ico">🔑</div><div class="tag">PIN</div></div><div><b>Mon accès</b><span>Ouvrir ou renouveler la session.</span></div></a>
-      <a class="action" href="./planning.html"><div><div class="ico">🗓️</div><div class="tag">Dates</div></div><div><b>Disponibilités</b><span>Bloquer, ouvrir, vérifier.</span></div></a>
-    </section>
+print(f"Fichier corrigé créé : {out}")
+print(f"Taille : {out.stat().st_size} octets")
 
-    <button class="danger" id="btnClearAccess" type="button">🧹 Nettoyer l’accès local LOC sur ce téléphone</button>
-    <div class="notice" id="notice"><b>Important :</b> ce nettoyage retire seulement les traces d’accès LOC du navigateur. Il ne touche pas aux réservations, aux notes, aux tarifs, aux disponibilités ou aux fiches.</div>
-  </main>
-
-  <nav class="bottom" aria-label="Navigation rapide LOC"><div class="bottomInner"><a href="./hub.html"><span class="bi">🧭</span><span>HUB</span></a><a href="./app.html"><span class="bi">🏠</span><span>Travail</span></a><a href="./oreille.html"><span class="bi">🎙️</span><span>Oreille</span></a><a href="./planning.html"><span class="bi">🗓️</span><span>Dates</span></a><a class="active" href="./session.html"><span class="bi">🛡️</span><span>Session</span></a></div></nav>
-
-  <script>
-    (() => {
-      "use strict";
-      const MODULE = "LOC";
-      const SENSITIVE_KEYS = ["phone","tel","p_phone","owner_phone","owner_id","slug","loc_phone","loc_tel","business_phone","whatsapp","pin","pin4","token","session_token","module","return","redirect","redirect_url","url","from","v"];
-      const LOC_ACCESS_KEYS = ["digiy_loc_slug","digiy_loc_last_slug","digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_SESSION","DIGIY_LOC_PIN_SESSION","DIGIY_SESSION_LOC","digiy_loc_session","digiy_loc_access","loc_session","loc_access","loc_phone","loc_slug"];
-      const GLOBAL_ACCESS_KEYS = ["DIGIY_ACCESS","DIGIY_PIN_SESSION","DIGIY_SESSION"];
-      const $ = id => document.getElementById(id);
-      function safeJsonParse(v){try{return typeof v === "string" ? JSON.parse(v) : v;}catch(_){return null;}}
-      function cleanVisibleUrl(){try{const url=new URL(location.href);let changed=false;SENSITIVE_KEYS.forEach(k=>{if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;}});if(changed) history.replaceState({},document.title,url.pathname+url.search+url.hash);}catch(_){}}
-      function cleanInternalLinks(){try{document.querySelectorAll("a[href]").forEach(link=>{const href=link.getAttribute("href")||"";if(!href||href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:"))return;const url=new URL(href,location.href);if(url.origin!==location.origin)return;SENSITIVE_KEYS.forEach(k=>url.searchParams.delete(k));const file=url.pathname.split("/").pop()||"index.html";link.setAttribute("href","./"+file+(url.search||"")+(url.hash||""));});}catch(_){}}
-      async function waitGuard(){try{const guard=window.DIGIY_GUARD;if(!guard)return {};if(typeof guard.ready==="function"){const out=guard.ready({redirect:false,preserve_validation:true});if(out&&typeof out.then==="function") await out;}else if(guard.ready&&typeof guard.ready.then==="function"){await guard.ready;}if(typeof guard.getSession==="function")return guard.getSession()||guard.state||{};return guard.state||{};}catch(e){console.warn("[LOC SESSION] guard",e);return {};}}
-      function setPill(text,ok){const el=$("sessionPill");if(!el)return;el.textContent=text;el.className="pill"+(ok?" ok":"");}
-      function setStatus(state){const moduleName=String(state?.module||state?.module_code||MODULE).toUpperCase();const ok=!!(state&&(state.access_ok||state.access||state.pin_session_ok)&&["LOC","LOC_PRO","LOCATION","JE_LOUE"].includes(moduleName));const card=$("statusCard"),tag=$("statusTag"),title=$("statusTitle"),text=$("statusText"),sub=$("sessionSub"),nextTitle=$("nextTitle"),nextText=$("nextText");if(ok){setPill(state.pin_session_ok?"session ouverte":"accès ouvert",true);if(card)card.className="card ok";if(tag)tag.textContent="Ouvert";if(title)title.textContent="Accès confirmé";if(text)text.textContent="La session LOC est active sur ce navigateur.";if(sub)sub.textContent="Accès reconnu. Tu peux revenir au HUB, au travail, à l’Oreille ou aux disponibilités.";if(nextTitle)nextTitle.textContent="Tu peux gérer";if(nextText)nextText.textContent="Retour HUB, Oreille ou travail selon le geste.";return;}setPill("accès à vérifier",false);if(card)card.className="card";if(tag)tag.textContent="PIN";if(title)title.textContent="Session à ouvrir";if(text)text.textContent="Passe par Mon accès pour ouvrir LOC proprement.";if(sub)sub.textContent="Aucun téléphone affiché ici. Le PIN ouvre l’accès sans polluer le moule.";if(nextTitle)nextTitle.textContent="Retour PIN";if(nextText)nextText.textContent="Ouvre la session avant de piloter LOC.";}
-      function removeKeyFromStores(key){[sessionStorage,localStorage].forEach(store=>{try{store.removeItem(key);}catch(_){}});}
-      function removeGlobalAccessIfLoc(key){[sessionStorage,localStorage].forEach(store=>{try{const raw=store.getItem(key);if(!raw)return;const obj=safeJsonParse(raw);const moduleName=String(obj?.module||obj?.module_code||"").toUpperCase();if(["LOC","LOC_PRO","LOCATION","JE_LOUE"].includes(moduleName))store.removeItem(key);}catch(_){}});}
-      function clearAccessOnly(){LOC_ACCESS_KEYS.forEach(removeKeyFromStores);GLOBAL_ACCESS_KEYS.forEach(removeGlobalAccessIfLoc);const notice=$("notice");if(notice)notice.innerHTML="<b>Nettoyage fait :</b> accès local LOC retiré de ce navigateur. Les réservations, notes, tarifs, disponibilités et fiches restent en place.";setPill("accès nettoyé",false);setStatus({});}
-      async function boot(){cleanVisibleUrl();cleanInternalLinks();const state=await waitGuard();setStatus(state||{});cleanVisibleUrl();cleanInternalLinks();}
-      $("btnClearAccess")?.addEventListener("click",clearAccessOnly);
-      boot();
-    })();
-  </script>
-</body>
-</html>
