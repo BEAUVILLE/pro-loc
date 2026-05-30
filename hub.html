@@ -72,8 +72,9 @@
     <section class="group"><div class="label">Partager · payer</div><div class="grid">
       <a class="tile" href="./qr.html"><div class="icon">🔳</div><div><b>Mon QR</b><span>Partager la porte.</span></div></a>
       <a class="tile" href="./manage-links.html"><div class="icon">🔗</div><div><b>Mes liens utiles</b><span>Chemins importants.</span></div></a>
-      <a class="tile gold" href="./pay-transition.html"><div class="icon">💳</div><div><b>Acompte vers PAY</b><span>Argent réel seulement.</span></div></a>
-      <a class="tile gold" href="https://pro-pay.digiylyfe.com/admin.html"><div class="icon">💰</div><div><b>Mon argent</b><span>Acomptes et traces.</span></div></a>
+      <!-- patch audit 20260530 : pay-transition est un couloir interne LOC→PAY, pas une porte HUB.
+           On pointe directement vers la porte PAY finale. Passer par action.html ou oreille.html pour préparer un brouillon avant PAY. -->
+      <a class="tile gold" href="https://pro-pay.digiylyfe.com/admin.html"><div class="icon">💳</div><div><b>Mon argent</b><span>Acomptes, soldes, traces PAY.</span></div></a>
       <a class="tile" href="./pin-wave.html"><div class="icon">🌊</div><div><b>Code Wave</b><span>Preuves paiement.</span></div></a>
     </div></section>
 
