@@ -1,4 +1,4 @@
-<!doctype html>
+tml><!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
@@ -14,9 +14,17 @@
        La sauvegarde locale passe d'abord ; Supabase peut être recousu ensuite. -->
 
   <script>
-    window.DIGIY_MODULE = "LOC";
-    window.DIGIY_LOGIN_URL = "./pin.html";
+    window.DIGIY_MODULE            = "LOC";
+    window.DIGIY_ABOS_MODULE       = "LOC";
+    window.DIGIY_MODULE_LABEL      = "Je loue";
+    window.DIGIY_LOGIN_URL         = "./pin.html";
+    /* patch audit 20260530 : clés Supabase manquantes — ajoutées pour que
+       le sync cloud du planning soit possible (était silencieusement cassé) */
+    window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!--
     IMPORTANT :
@@ -542,6 +550,10 @@
 </head>
 
 <body>
+  <!-- patch audit 20260530 : bannière mode local — visible si Supabase indisponible -->
+  <div id="planningLocalBanner" hidden style="position:sticky;top:0;z-index:99;padding:10px 14px;background:#d97706;color:#fff;font-size:13px;font-weight:1000;text-align:center;line-height:1.35;">
+    ⚠️ Mode local uniquement — Supabase non disponible. Les disponibilités sont sauvegardées sur cet appareil mais pas synchronisées en ligne.
+  </div>
   <div class="wrap">
     <header class="top">
       <div class="topRow">
@@ -1290,8 +1302,16 @@
     /*
       Supabase est optionnel ici.
       Si le client n'est pas chargé, on ne bloque pas les boutons.
+      patch audit 20260530 : on signale visuellement le mode local.
     */
     if(!window.supabase?.createClient && !window.DIGIY_GUARD?.getSb?.()){
+      /* Supabase CDN absent — signaler mode local si pas déjà fait */
+      if(!window._PLANNING_LOCAL_WARNED){
+        window._PLANNING_LOCAL_WARNED = true;
+        const banner = document.getElementById('planningLocalBanner');
+        if(banner) banner.hidden = false;
+        console.info("[LOC planning] Mode local uniquement — Supabase non disponible.");
+      }
       return null;
     }
 
@@ -1891,6 +1911,24 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
