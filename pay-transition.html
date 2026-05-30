@@ -48,7 +48,8 @@
     <button class="btn go" id="openPay" type="button">💳 Envoyer vers PAY</button>
   </div>
 
-  <a class="btn" href="./action.html">← Retour DIGIY GO LOC</a>
+  <!-- patch audit 20260530 : retour intelligent selon la provenance -->
+  <a class="btn" id="btnRetour" href="./hub.html">← Retour</a>
   <div class="status" id="status">Pont prêt. Le clic “Envoyer vers PAY” ouvre PAY avec un brouillon LOC à vérifier.</div>
   <div class="small">Validation humaine obligatoire dans PAY. LOC ne confirme pas seul la réservation, le prix, la disponibilité ni le paiement.</div>
 </main>
@@ -223,6 +224,42 @@
     setStatus("Ouverture de PAY avec brouillon LOC…");
     window.location.href = url;
   };
+
+  /* patch audit 20260530 — retour intelligent selon provenance */
+  (function setupRetour(){
+    var btn = document.getElementById('btnRetour');
+    if(!btn) return;
+    var ref = document.referrer || '';
+    var fromAction = ref.indexOf('action.html') >= 0 || location.hash.indexOf('loc-action') >= 0;
+    btn.setAttribute('href', fromAction ? './action.html' : './hub.html');
+    btn.textContent = fromAction ? '← Retour DIGIY GO LOC' : '← Retour HUB';
+  })();
+
+  /* patch audit 20260530 — bloquer envoi si aucun brouillon LOC réel et montant par défaut */
+  (function guardSend(){
+    var sendBtn = document.getElementById('openPay');
+    if(!sendBtn) return;
+    var hasDraft = latestLocDraft() !== null;
+    if(!hasDraft){
+      setStatus('Aucun brouillon LOC reçu. Remplis les champs et vérifie le montant avant d\'envoyer vers PAY.');
+    }
+    sendBtn.addEventListener('click', function(e){
+      var amount = Number((document.getElementById('amount')||{}).value || 0);
+      if(!amount || amount <= 0){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setStatus('⚠️ Montant absent ou nul. Saisis un montant réel avant d\'envoyer vers PAY.');
+        return false;
+      }
+      var client = ((document.getElementById('client')||{}).value || '').trim();
+      if(!client || client === 'Client LOC'){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setStatus('⚠️ Client non identifié. Précise le nom du client avant d\'envoyer vers PAY.');
+        return false;
+      }
+    }, true);
+  })();
 
   load();
 })();
