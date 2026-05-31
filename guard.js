@@ -711,3 +711,4 @@
   console.info("[DIGIY LOC] guard PIN 8h + ABOS actif", "loc-guard-pin8h-abos-20260530");
 })();
 
+
