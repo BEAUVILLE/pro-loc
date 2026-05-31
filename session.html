@@ -3,27 +3,28 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue — Ma session</title>
+  <title>MON COMMERCE — Ma session</title>
   <meta name="theme-color" content="#1e7a46"/>
-  <meta name="description" content="LOC PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni identifiant."/>
+  <meta name="description" content="MON COMMERCE PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni identifiant."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-session-adn-20260531"/>
+  <meta name="digiy-build" content="pos-session-digiy-go-20260527"/>
 
   <script>
-    window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_SUPABASE_KEY      = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_MODULE            = "LOC";
-    window.DIGIY_ABOS_MODULE       = "LOC";
-    window.DIGIY_MODULE_LABEL      = "Je loue";
-    window.DIGIY_LOGIN_URL         = "./pin.html";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_KEY = window.DIGIY_SUPABASE_ANON_KEY;
+
+    window.DIGIY_MODULE = "POS";
+    window.DIGIY_ABOS_MODULE = "POS";
+    window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-guard-20260531"></script>
-  <script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
-  <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
+  <script src="./assets/js/digiy-abos-access.js?v=abos-20260522"></script>
+  <script src="./guard.js?v=pos-session-digiy-go-20260527"></script>
+  <script src="./assets/js/digiy-module-bridge.js?v=bridge-20260521" defer></script>
+  <script src="./assets/js/digiy-pos-memory.js?v=pos-memory-20260521" defer></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -31,85 +32,349 @@
 
   <style>
     :root{
-      --bg:#1e7a46;--bg2:#155a34;--bg3:#0e4226;
-      --bar:rgba(6,38,18,.96);
-      --gold:#c4973f;--gold2:#facc15;--green:#22c55e;--blue:#8b8cff;--red:#fb7185;
-      --line:rgba(255,255,255,.18);--text:#f0fff5;--muted:rgba(240,255,245,.76);
-      --soft:rgba(240,255,245,.58);--shadow:0 16px 40px rgba(0,0,0,.22);
-      --r:18px;--max:960px;--hdrH:52px;--barH:78px;
+      --bg:#1e7a46;
+      --bg2:#155a34;
+      --bg3:#0e4226;
+      --bar:rgba(8,50,24,.96);
+      --gold:#c4973f;
+      --gold2:#facc15;
+      --green:#22c55e;
+      --blue:#8b8cff;
+      --red:#fb7185;
+      --line:rgba(255,255,255,.18);
+      --text:#f0fff5;
+      --muted:rgba(240,255,245,.76);
+      --soft:rgba(240,255,245,.58);
+      --shadow:0 16px 40px rgba(0,0,0,.22);
+      --r:18px;
+      --max:960px;
+      --hdrH:52px;
+      --barH:78px;
     }
+
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+    html{
+      scroll-behavior:smooth;
+      -webkit-text-size-adjust:100%;
+      text-size-adjust:100%;
+    }
+
     body{
-      margin:0;min-height:100dvh;color:var(--text);
+      margin:0;
+      min-height:100dvh;
+      color:var(--text);
       font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;
-      font-size:19px;font-weight:950;
+      font-size:19px;
+      font-weight:950;
       background:
         radial-gradient(600px 390px at 16% 0%,rgba(74,222,128,.18),transparent 58%),
         radial-gradient(420px 280px at 92% 8%,rgba(196,151,63,.15),transparent 52%),
         linear-gradient(180deg,var(--bg) 0%,var(--bg2) 60%,var(--bg3) 100%);
-      padding:calc(var(--hdrH) + 14px) 12px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
+      padding:
+        calc(var(--hdrH) + 14px)
+        12px
+        calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
     }
+
     a{color:inherit;text-decoration:none}
     button{font:inherit;color:inherit;cursor:pointer}
 
     .topHeader{
-      position:fixed;top:0;left:0;right:0;height:var(--hdrH);z-index:100;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:0 14px;background:var(--bar);
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      height:var(--hdrH);
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:0 14px;
+      background:var(--bar);
       border-bottom:1px solid rgba(196,151,63,.26);
-      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
     }
-    .hdrBack{min-height:36px;display:inline-flex;align-items:center;color:rgba(240,255,245,.72);font-size:14px;font-weight:1000;white-space:nowrap}
-    .hdrTitle{font-size:12px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
-    .hdrPill{min-height:32px;display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--muted);font-size:12px;font-weight:1000;white-space:nowrap;max-width:38vw;overflow:hidden;text-overflow:ellipsis}
+
+    .hdrBack{
+      min-height:36px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(240,255,245,.72);
+      font-size:14px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .hdrTitle{
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--gold);
+      white-space:nowrap;
+    }
+
+    .hdrPill{
+      min-height:32px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
+      max-width:38vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
     .hdrPill.ok{color:#bbf7d0;border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12)}
     .hdrPill.warn{color:#fde68a;border-color:rgba(245,158,11,.38);background:rgba(245,158,11,.12)}
     .hdrPill.bad{color:#fecaca;border-color:rgba(251,113,133,.38);background:rgba(251,113,133,.10)}
 
-    .wrap{width:min(var(--max),100%);margin:0 auto;display:grid;gap:16px}
-    .head,.notice{padding:2px 2px 4px}
-    .eyebrow{color:#fff0a8;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:1000;margin-bottom:8px}
-    h1{margin:0 0 8px;font-size:clamp(34px,8.5vw,54px);font-weight:1000;line-height:.94;letter-spacing:-.05em}
-    .sub{color:var(--muted);font-size:17px;font-weight:1000;line-height:1.38;max-width:760px}
-    .rule{margin-top:10px;padding:12px 14px;border-radius:18px;border:1px dashed rgba(255,255,255,.22);background:rgba(5,31,17,.32);color:rgba(240,255,245,.90);font-size:14px;font-weight:1000;line-height:1.35}
+    .wrap{
+      width:min(var(--max),100%);
+      margin:0 auto;
+      display:grid;
+      gap:16px;
+    }
+
+    .head,.notice{
+      padding:2px 2px 4px;
+    }
+
+    .eyebrow{
+      color:#fff0a8;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+      margin-bottom:8px;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(34px,8.5vw,54px);
+      font-weight:1000;
+      line-height:.94;
+      letter-spacing:-.05em;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:17px;
+      font-weight:1000;
+      line-height:1.38;
+      max-width:760px;
+    }
+
+    .rule{
+      margin-top:10px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.22);
+      background:rgba(5,31,17,.32);
+      color:rgba(240,255,245,.90);
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.35;
+    }
+
     .rule b{color:#fff0a8}
 
-    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
-    .card,.action{min-height:136px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:14px;border-radius:var(--r);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.09);box-shadow:var(--shadow);-webkit-tap-highlight-color:transparent}
-    .cardTop,.actionTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-    .ico{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-size:25px;flex:0 0 auto}
-    .tag{min-height:27px;display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff0a8;font-size:10px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-    .card b,.action b{display:block;font-size:20px;font-weight:1000;line-height:1.06;letter-spacing:-.025em;color:#fff}
-    .card span,.action span{display:block;margin-top:5px;color:var(--muted);font-size:14px;font-weight:1000;line-height:1.28}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:9px;
+    }
+
+    .card,.action{
+      min-height:136px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px;
+      border-radius:var(--r);
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.09);
+      box-shadow:var(--shadow);
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    .cardTop,.actionTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+    }
+
+    .ico{
+      width:48px;
+      height:48px;
+      border-radius:15px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:25px;
+      flex:0 0 auto;
+    }
+
+    .tag{
+      min-height:27px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:#fff0a8;
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .card b,.action b{
+      display:block;
+      font-size:20px;
+      font-weight:1000;
+      line-height:1.06;
+      letter-spacing:-.025em;
+      color:#fff;
+    }
+
+    .card span,.action span{
+      display:block;
+      margin-top:5px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.28;
+    }
+
     .ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.14)}
     .warn{border-color:rgba(245,158,11,.38);background:rgba(245,158,11,.12)}
     .gold{border-color:rgba(196,151,63,.42);background:rgba(196,151,63,.12)}
     .blue{border-color:rgba(139,140,255,.32);background:rgba(139,140,255,.12)}
 
-    .dangerBtn{width:100%;min-height:60px;border-radius:18px;border:1px solid rgba(251,113,133,.34);background:rgba(251,113,133,.10);color:#fecaca;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:1000;box-shadow:var(--shadow)}
-    .notice{padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:var(--muted);font-size:15px;font-weight:1000;line-height:1.45}
+    .dangerBtn{
+      width:100%;
+      min-height:60px;
+      border-radius:18px;
+      border:1px solid rgba(251,113,133,.34);
+      background:rgba(251,113,133,.10);
+      color:#fecaca;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      font-size:16px;
+      font-weight:1000;
+      box-shadow:var(--shadow);
+    }
+
+    .notice{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:15px;
+      font-weight:1000;
+      line-height:1.45;
+    }
+
     .notice b{color:#fff}
 
-    .bottomBar{position:fixed;left:0;right:0;bottom:0;height:var(--barH);z-index:100;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(6,38,18,.97);border-top:1px solid rgba(196,151,63,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-    .bottomInner{width:min(100%,760px);height:100%;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-    .bottomInner a{min-height:58px;border-radius:16px;display:grid;place-items:center;align-content:center;gap:3px;color:rgba(240,255,245,.56);font-size:11px;font-weight:1000;text-align:center;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.04)}
-    .bottomInner a.active{color:#052215;background:linear-gradient(135deg,#22c55e,#fff0a8);border-color:rgba(34,197,94,.32)}
+    .bottomBar{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      height:var(--barH);
+      z-index:100;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:rgba(6,38,18,.97);
+      border-top:1px solid rgba(196,151,63,.18);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+
+    .bottomInner{
+      width:min(100%,760px);
+      height:100%;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+    }
+
+    .bottomInner a{
+      min-height:58px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      align-content:center;
+      gap:3px;
+      color:rgba(240,255,245,.56);
+      font-size:11px;
+      font-weight:1000;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.04);
+    }
+
+    .bottomInner a.active{
+      color:#052215;
+      background:linear-gradient(135deg,#22c55e,#fff0a8);
+      border-color:rgba(34,197,94,.32);
+    }
+
     .bottomInner .bi{font-size:19px;line-height:1}
 
-    @media(max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:860px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
     @media(max-width:520px){
-      body{padding:calc(var(--hdrH) + 12px) 10px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);font-size:19px}
+      body{
+        padding:
+          calc(var(--hdrH) + 12px)
+          10px
+          calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);
+        font-size:19px;
+      }
+
       .topHeader{padding:0 10px;gap:7px}
-      .hdrBack{font-size:13px}.hdrTitle{font-size:11px;letter-spacing:.12em}
+      .hdrBack{font-size:13px}
+      .hdrTitle{font-size:11px;letter-spacing:.12em}
       .hdrPill{font-size:11px;padding:6px 8px;max-width:34vw}
-      h1{font-size:34px}.sub{font-size:16px}.grid{gap:8px}
+      h1{font-size:34px}
+      .sub{font-size:16px}
+      .grid{gap:8px}
       .card,.action{min-height:132px;padding:13px}
       .ico{width:46px;height:46px;font-size:24px}
-      .card b,.action b{font-size:19px}.card span,.action span{font-size:13.5px}
-      .tag{font-size:9px;padding:4px 7px}.dangerBtn{font-size:15px}
+      .card b,.action b{font-size:19px}
+      .card span,.action span{font-size:13.5px}
+      .tag{font-size:9px;padding:4px 7px}
+      .dangerBtn{font-size:15px}
     }
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+    }
   </style>
 </head>
 
@@ -122,19 +387,19 @@
 
   <main class="wrap">
     <section class="head">
-      <div class="eyebrow">🏠 Je loue — LOC</div>
+      <div class="eyebrow">🛒 MON COMMERCE</div>
       <h1>Ma session.</h1>
       <div class="sub" id="sessionSub">
-        Ici on contrôle l'accès logement sans afficher le téléphone, sans exposer l'identifiant,
-        sans toucher aux réservations, aux disponibilités ni aux tarifs.
+        Ici on contrôle l’accès commerce sans afficher le téléphone, sans exposer l’identifiant,
+        sans toucher aux articles, au stock, à la caisse ni aux notes.
       </div>
       <div class="rule">
-        Règle LOC : <b>on nettoie seulement l'accès local</b>. On ne supprime ni les réservations,
-        ni les disponibilités, ni les tarifs, ni la fiche logement sur Supabase.
+        Règle POS : <b>on nettoie seulement l’accès local</b>. On ne supprime ni les ventes, ni les articles,
+        ni les notes, ni la fiche commerce.
       </div>
     </section>
 
-    <section class="grid" aria-label="État de session LOC">
+    <section class="grid" aria-label="État de session POS">
       <article class="card warn" id="statusCard">
         <div class="cardTop">
           <div class="ico">🔐</div>
@@ -142,18 +407,18 @@
         </div>
         <div>
           <b id="statusTitle">Vérification</b>
-          <span id="statusText">Lecture de l'état de session…</span>
+          <span id="statusText">Lecture de l’état de session…</span>
         </div>
       </article>
 
       <article class="card blue">
         <div class="cardTop">
-          <div class="ico">🏠</div>
+          <div class="ico">🧾</div>
           <div class="tag">Module</div>
         </div>
         <div>
-          <b>LOC</b>
-          <span>Logements, réservations, disponibilités, tarifs, QR et fiche.</span>
+          <b>POS</b>
+          <span>Caisse, ventes, articles, stock, QR et fiche commerce.</span>
         </div>
       </article>
 
@@ -175,55 +440,103 @@
         </div>
         <div>
           <b>HUB propre</b>
-          <span>Les pages internes reviennent au HUB, pas à l'ancien accueil.</span>
+          <span>Les pages internes reviennent au HUB, pas à l’ancien accueil.</span>
         </div>
       </article>
     </section>
 
-    <section class="grid" aria-label="Actions LOC">
-      <a class="action ok" href="./hub.html">
-        <div class="actionTop"><div class="ico">🧭</div><div class="tag">HUB</div></div>
-        <div><b>Mes portes</b><span>Retourner aux gestes du logement.</span></div>
+    <section class="grid" aria-label="Actions de session POS">
+      <a class="action ok" id="goHub" href="./hub.html">
+        <div class="actionTop">
+          <div class="ico">🧭</div>
+          <div class="tag">HUB</div>
+        </div>
+        <div>
+          <b>Mes portes</b>
+          <span>Retourner aux gestes du commerce.</span>
+        </div>
       </a>
 
-      <a class="action" href="./app.html">
-        <div class="actionTop"><div class="ico">🏠</div><div class="tag">Travail</div></div>
-        <div><b>Gérer mes logements</b><span>Travail du jour.</span></div>
+      <a class="action" id="goCaisse" href="./caisse.html">
+        <div class="actionTop">
+          <div class="ico">💰</div>
+          <div class="tag">Caisse</div>
+        </div>
+        <div>
+          <b>Ma caisse</b>
+          <span>Vendre, additionner, confirmer.</span>
+        </div>
       </a>
 
-      <a class="action gold" href="./action.html">
-        <div class="actionTop"><div class="ico">🎙️</div><div class="tag">GO</div></div>
-        <div><b>DIGIY GO LOC</b><span>Dicter demande, dates, acompte.</span></div>
+      <a class="action gold" id="goOreille" href="./action.html">
+        <div class="actionTop">
+          <div class="ico">🎙️</div>
+          <div class="tag">GO</div>
+        </div>
+        <div>
+          <b>DIGIY GO POS</b>
+          <span>Dicter vente, produit, quantité, prix.</span>
+        </div>
       </a>
 
-      <a class="action" href="./planning.html">
-        <div class="actionTop"><div class="ico">🗓️</div><div class="tag">Dates</div></div>
-        <div><b>Disponibilités</b><span>Bloquer ou ouvrir les créneaux.</span></div>
+      <a class="action gold" id="goArticles" href="./admin.html#articleList">
+        <div class="actionTop">
+          <div class="ico">📦</div>
+          <div class="tag">Articles</div>
+        </div>
+        <div>
+          <b>Marchandises</b>
+          <span>Articles, prix, stock, catégories.</span>
+        </div>
       </a>
 
-      <a class="action" href="./listing.html">
-        <div class="actionTop"><div class="ico">📖</div><div class="tag">Journal</div></div>
-        <div><b>Lecture du jour</b><span>Arrivées et départs.</span></div>
+      <a class="action blue" id="goFiche" href="./profile.html">
+        <div class="actionTop">
+          <div class="ico">🏪</div>
+          <div class="tag">Fiche</div>
+        </div>
+        <div>
+          <b>Coordonnées pro</b>
+          <span>Nom, activité, infos visibles.</span>
+        </div>
       </a>
 
-      <a class="action" href="./generator.html">
-        <div class="actionTop"><div class="ico">🏡</div><div class="tag">Fiche</div></div>
-        <div><b>Préparer une fiche</b><span>Présenter le logement.</span></div>
+      <a class="action" id="goQr" href="./qr.html">
+        <div class="actionTop">
+          <div class="ico">🔳</div>
+          <div class="tag">QR</div>
+        </div>
+        <div>
+          <b>Mon QR</b>
+          <span>Partager la porte boutique.</span>
+        </div>
       </a>
 
-      <a class="action gold" href="https://pro-pay.digiylyfe.com/admin.html">
-        <div class="actionTop"><div class="ico">💰</div><div class="tag">PAY</div></div>
-        <div><b>Mon argent</b><span>Acomptes, soldes, mouvements LOC.</span></div>
+      <a class="action gold" id="goPay" href="https://pro-pay.digiylyfe.com/admin.html">
+        <div class="actionTop">
+          <div class="ico">💰</div>
+          <div class="tag">PAY</div>
+        </div>
+        <div>
+          <b>Mon argent</b>
+          <span>Suivre ventes, dettes et mouvements.</span>
+        </div>
       </a>
 
-      <a class="action" href="./pin.html">
-        <div class="actionTop"><div class="ico">🔑</div><div class="tag">PIN</div></div>
-        <div><b>Rouvrir</b><span>Repasser par l'accès logement.</span></div>
+      <a class="action" id="goPin" href="./pin.html">
+        <div class="actionTop">
+          <div class="ico">🔑</div>
+          <div class="tag">PIN</div>
+        </div>
+        <div>
+          <b>Rouvrir</b>
+          <span>Repasser par l’accès commerce.</span>
+        </div>
       </a>
     </section>
 
     <button class="dangerBtn" id="btnClearSession" type="button">
-      🧹 Nettoyer seulement l'accès local
+      🧹 Nettoyer seulement l’accès local
     </button>
 
     <section class="notice" id="noticeBox">
@@ -231,12 +544,12 @@
     </section>
   </main>
 
-  <nav class="bottomBar" aria-label="Navigation LOC">
+  <nav class="bottomBar" aria-label="Navigation POS">
     <div class="bottomInner">
       <a href="./hub.html"><span class="bi">🧭</span><span>HUB</span></a>
-      <a href="./app.html"><span class="bi">🏠</span><span>Travail</span></a>
+      <a href="./caisse.html"><span class="bi">💰</span><span>Caisse</span></a>
+      <a href="./admin.html#articleList"><span class="bi">📦</span><span>Articles</span></a>
       <a href="./action.html"><span class="bi">🎙️</span><span>GO</span></a>
-      <a href="./planning.html"><span class="bi">🗓️</span><span>Dates</span></a>
       <a class="active" href="./session.html"><span class="bi">🔐</span><span>Session</span></a>
     </div>
   </nav>
@@ -254,30 +567,38 @@
       ];
 
       const SESSION_KEYS = [
-        "DIGIY_LOC_PRO_SESSION_V1",
-        "DIGIY_LOC_SESSION",
-        "DIGIY_LOC_PIN_SESSION",
-        "DIGIY_SESSION_LOC",
+        "DIGIY_POS_PIN_SESSION",
+        "DIGIY_POS_SESSION",
+        "DIGIY_SESSION_POS",
         "DIGIY_PIN_SESSION",
         "DIGIY_ACCESS",
-        "digiy_loc_session",
-        "digiy_loc_pin_access",
+        "digiy_pos_session",
+        "digiy_pos_pin_access",
         "digiy_access",
         "digiy_session"
       ];
 
       const SAFE_ACCESS_KEYS = [
-        "digiy_loc_slug",
-        "digiy_loc_last_slug",
-        "loc_slug",
-        "digiy_loc_phone",
-        "digiy_loc_last_phone",
+        "digiy_pos_slug",
+        "digiy_pos_last_slug",
+        "pos_slug",
+        "commerce_slug",
+        "mon_commerce_slug",
+        "digiy_last_slug",
+        "digiy_pos_phone",
+        "digiy_pos_last_phone",
+        "pos_phone",
+        "commerce_phone",
         "digiy_phone",
         "digiy_last_phone"
       ];
 
       function read(key){
-        try{ return sessionStorage.getItem(key) || localStorage.getItem(key) || ""; }catch(_){ return ""; }
+        try{
+          return sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+        }catch(_){
+          return "";
+        }
       }
 
       function removeKey(key){
@@ -289,10 +610,17 @@
         try{
           const url = new URL(location.href);
           let changed = false;
+
           SENSITIVE_KEYS.forEach((key) => {
-            if(url.searchParams.has(key)){ url.searchParams.delete(key); changed = true; }
+            if(url.searchParams.has(key)){
+              url.searchParams.delete(key);
+              changed = true;
+            }
           });
-          if(changed) history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+
+          if(changed){
+            history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+          }
         }catch(_){}
       }
 
@@ -300,16 +628,21 @@
         try{
           const guard = window.DIGIY_GUARD;
           if(!guard) return {};
+
           if(typeof guard.ready === "function"){
             const out = guard.ready({ redirect:false, preserve_validation:true });
             if(out && typeof out.then === "function") await out;
           }else if(guard.ready && typeof guard.ready.then === "function"){
             await guard.ready;
           }
-          if(typeof guard.getSession === "function") return guard.getSession() || guard.state || {};
+
+          if(typeof guard.getSession === "function"){
+            return guard.getSession() || guard.state || {};
+          }
+
           return guard.state || {};
         }catch(e){
-          console.warn("[LOC SESSION] guard", e);
+          console.warn("[POS SESSION] guard", e);
           return {};
         }
       }
@@ -317,54 +650,81 @@
       function hasLocalSession(){
         if(window.DIGIY_MODULE_BRIDGE && typeof window.DIGIY_MODULE_BRIDGE.readSession === "function"){
           try{
-            const s = window.DIGIY_MODULE_BRIDGE.readSession() || {};
-            if(s.slug || s.phone || s.access || s.ok || s.verified) return true;
+            const bridgeSession = window.DIGIY_MODULE_BRIDGE.readSession() || {};
+            if(
+              bridgeSession.slug ||
+              bridgeSession.phone ||
+              bridgeSession.access ||
+              bridgeSession.ok ||
+              bridgeSession.verified
+            ){
+              return true;
+            }
           }catch(_){}
         }
+
         return SESSION_KEYS.some((key) => !!read(key)) ||
                SAFE_ACCESS_KEYS.some((key) => !!read(key));
       }
 
       function hasGuardSession(state){
-        return !!(state && (state.access_ok || state.access || state.pin_session_ok || state.ok || state.verified));
+        return !!(
+          state &&
+          (state.access_ok || state.access || state.pin_session_ok || state.ok || state.verified)
+        );
       }
 
       function memoryStatusText(){
-        const memory = window.DIGIY_LOC_MEMORY || window.DIGIY_LOC_STORE || window.DIGIY_LOC_LOCAL;
+        const memory = window.DIGIY_POS_MEMORY || window.DIGIY_POS_STORE || window.DIGIY_POS_LOCAL;
         if(memory && typeof memory.snapshot === "function"){
           try{
             const snap = memory.snapshot() || {};
-            if(snap.updated_at || snap.items || snap.reservations || snap.count) return "Mémoire LOC locale prête.";
+            if(snap.updated_at || snap.items || snap.sales || snap.count){
+              return "Mémoire POS locale prête.";
+            }
           }catch(_){}
         }
+
         return "Mémoire locale disponible.";
       }
 
       function paint(ok){
         const pill = $("sessionPill");
-        if(pill){ pill.textContent = ok ? "ouverte" : "à ouvrir"; pill.className = ok ? "hdrPill ok" : "hdrPill warn"; }
+        if(pill){
+          pill.textContent = ok ? "ouverte" : "à ouvrir";
+          pill.className = ok ? "hdrPill ok" : "hdrPill warn";
+        }
 
-        const statusCard  = $("statusCard");
-        const statusTag   = $("statusTag");
+        const statusCard = $("statusCard");
+        const statusTag = $("statusTag");
         const statusTitle = $("statusTitle");
-        const statusText  = $("statusText");
-        const memoryText  = $("memoryText");
-        const noticeBox   = $("noticeBox");
-        const sessionSub  = $("sessionSub");
+        const statusText = $("statusText");
+        const memoryText = $("memoryText");
+        const noticeBox = $("noticeBox");
+        const sessionSub = $("sessionSub");
 
-        if(statusCard)  statusCard.className = ok ? "card ok" : "card warn";
-        if(statusTag)   statusTag.textContent = ok ? "OK" : "PIN";
+        if(statusCard) statusCard.className = ok ? "card ok" : "card warn";
+        if(statusTag) statusTag.textContent = ok ? "OK" : "PIN";
         if(statusTitle) statusTitle.textContent = ok ? "Accès reconnu" : "Accès à ouvrir";
-        if(statusText)  statusText.textContent = ok
-          ? "La session LOC est gardée côté téléphone."
-          : "Aucune session LOC active détectée.";
-        if(memoryText)  memoryText.textContent = memoryStatusText();
-        if(sessionSub)  sessionSub.textContent = ok
-          ? "Accès logement reconnu. Les identifiants restent dans le coffre local, pas dans l'écran."
-          : "Accès à ouvrir. Le PIN protège le logement, les réservations, les tarifs et la fiche.";
-        if(noticeBox)   noticeBox.innerHTML = ok
-          ? "✅ Accès LOC reconnu. Tu peux retourner au travail, aux disponibilités ou ouvrir DIGIY GO LOC."
-          : "⚠️ Session fermée. Rouvre par le PIN logement pour charger la vraie gestion.";
+        if(statusText){
+          statusText.textContent = ok
+            ? "La session POS est gardée côté téléphone."
+            : "Aucune session POS active détectée.";
+        }
+
+        if(memoryText) memoryText.textContent = memoryStatusText();
+
+        if(sessionSub){
+          sessionSub.textContent = ok
+            ? "Accès commerce reconnu. Les identifiants restent dans le coffre local, pas dans l’écran."
+            : "Accès à ouvrir. Le PIN protège le commerce, la caisse, les articles et la fiche.";
+        }
+
+        if(noticeBox){
+          noticeBox.innerHTML = ok
+            ? "✅ Accès POS reconnu. Tu peux retourner à la caisse, aux articles ou ouvrir DIGIY GO POS."
+            : "⚠️ Session fermée. Rouvre par le PIN commerce pour charger la vraie gestion.";
+        }
       }
 
       async function refresh(){
@@ -376,11 +736,16 @@
       }
 
       function clearAccessOnly(){
+        const ok = confirm("Nettoyer seulement l’accès local POS ? Les ventes, articles, notes et fiche ne seront pas supprimés.");
+        if(!ok) return;
+
         SESSION_KEYS.concat(SAFE_ACCESS_KEYS).forEach(removeKey);
-        try{ window.DIGIY_MODULE_BRIDGE?.cleanUrl?.(); }catch(_){}
+
+        try{
+          window.DIGIY_MODULE_BRIDGE?.cleanUrl?.();
+        }catch(_){}
+
         refresh();
-        const noticeBox = $("noticeBox");
-        if(noticeBox) noticeBox.innerHTML = "✅ Accès local LOC nettoyé. Repasse par le PIN pour te réidentifier.";
       }
 
       $("btnClearSession")?.addEventListener("click", clearAccessOnly);
@@ -396,4 +761,8 @@
   </script>
 </body>
 </html>
+
+
+
+
 
