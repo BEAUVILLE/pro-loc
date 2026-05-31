@@ -1,26 +1,117 @@
-from pathlib import Path
-import re
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Je loue — Session LOC</title>
+  <meta name="theme-color" content="#1e7a46"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <meta name="digiy-build" content="loc-session-guard-20260531"/>
+  <!-- CONFIG — Je loue / LOC -->
+  <script>
+    window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE            = "LOC";
+    window.DIGIY_ABOS_MODULE       = "LOC";
+    window.DIGIY_MODULE_LABEL      = "Je loue";
+    window.DIGIY_LOGIN_URL         = "./pin.html";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=loc-guard-20260531"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#f0fff5;background:linear-gradient(180deg,#1e7a46,#155a34 58%,#0e4226);padding:14px 12px 86px;font-weight:900}
+    a{color:inherit;text-decoration:none}
+    header{position:sticky;top:0;z-index:2;margin:-14px -12px 16px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#062612;border-bottom:1px solid rgba(196,151,63,.28)}
+    header a{color:rgba(240,255,245,.8);font-size:14px;font-weight:1000}
+    main{width:min(760px,100%);margin:0 auto;display:grid;gap:14px}
+    h1{margin:0;font-size:clamp(30px,7vw,46px);line-height:.96;letter-spacing:-.05em}
+    .label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#fff0a8}
+    .card{border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(255,255,255,.08);padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+    .card p{margin:0 0 12px;color:rgba(240,255,245,.82);font-size:15px;line-height:1.45;font-weight:900}
+    .info{border:1px dashed rgba(255,255,255,.22);border-radius:16px;background:rgba(0,0,0,.16);padding:12px;font-size:13px;line-height:1.55;color:#dfffe9;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+    .grid{display:grid;gap:9px;margin-top:12px}
+    .btn{min-height:52px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.09);color:#f0fff5;font:inherit;font-weight:1000;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;text-align:center;padding:10px}
+    .btn.danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.32);color:#fecaca}
+    .btn.gold{background:rgba(196,151,63,.18);border-color:rgba(196,151,63,.42);color:#fff0a8}
+    .status{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(250,204,21,.28);background:rgba(0,0,0,.18);font-size:13px;color:#fff0a8;line-height:1.35;min-height:20px}
+    nav{position:fixed;left:0;right:0;bottom:0;background:#062612;border-top:1px solid rgba(196,151,63,.25);padding:8px 10px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    nav a{min-height:56px;border-radius:15px;text-decoration:none;color:rgba(240,255,245,.72);display:grid;place-items:center;text-align:center;background:rgba(255,255,255,.06);font-size:11px}
+    nav a strong{font-size:18px;display:block}
+    nav a.active{background:rgba(196,151,63,.22);color:#fff0a8}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="./hub.html">← HUB</a>
+    <div>Session LOC</div>
+    <a href="./pin.html">🔐 PIN</a>
+  </header>
 
-src = Path("/mnt/data/session (22).html")
-text = src.read_text(encoding="utf-8", errors="replace")
+  <main>
+    <section>
+      <div class="label">🛡️ Ma session</div>
+      <h1>Coffre local LOC.</h1>
+    </section>
 
-# Add DIGIY_ABOS_MODULE after DIGIY_MODULE if missing
-if "DIGIY_ABOS_MODULE" not in text:
-    text = text.replace(
-        'window.DIGIY_MODULE = "LOC";',
-        'window.DIGIY_MODULE = "LOC";\n    window.DIGIY_ABOS_MODULE = "LOC";'
-    )
+    <section class="card">
+      <p>État de ta session LOC sur cet appareil. Aucune donnée sensible n'est affichée ici.</p>
+      <div class="info" id="sessionInfo">Lecture de la session…</div>
+      <div class="status" id="status">Chargement…</div>
+    </section>
 
-# Replace any guard.js script version with the normal guard cache-bust
-text = re.sub(
-    r'<script\s+src="\./guard\.js\?v=[^"]*"></script>',
-    '<script src="./guard.js?v=loc-guard-normal-20260530"></script>',
-    text
-)
+    <section class="card">
+      <p>Actions de nettoyage local sur cet appareil uniquement.</p>
+      <div class="grid">
+        <button class="btn gold" id="btnRefresh" type="button">🔄 Actualiser l'état</button>
+        <button class="btn danger" id="btnClearSession" type="button">🧹 Nettoyer la session LOC</button>
+        <button class="btn danger" id="btnClearAll" type="button">🧨 Tout nettoyer (session + brouillons)</button>
+        <a class="btn" href="./hub.html">🧭 Retour HUB</a>
+      </div>
+    </section>
+  </main>
 
-out = Path("/mnt/data/session-loc-guard-normal-20260530.html")
-out.write_text(text, encoding="utf-8")
+  <nav>
+    <a href="./hub.html"><strong>🧭</strong>HUB</a>
+    <a href="./action.html"><strong>🎙️</strong>GO</a>
+    <a href="./app.html"><strong>🏠</strong>Travail</a>
+    <a href="./planning.html"><strong>🗓️</strong>Dates</a>
+    <a class="active" href="./session.html"><strong>🛡️</strong>Session</a>
+  </nav>
 
-print(f"Fichier corrigé créé : {out}")
-print(f"Taille : {out.stat().st_size} octets")
+  <script>
+    (function(){
+      "use strict";
+      var SESSION_KEYS=["DIGIY_LOC_PRO_SESSION_V1","DIGIY_LOC_SESSION","DIGIY_LOC_PIN_SESSION","DIGIY_SESSION_LOC","digiy_loc_session","digiy_loc_slug","digiy_loc_last_slug"];
+      var DRAFT_KEYS=["DIGIY_LOC_PAY_BRIDGE","DIGIY_PAY_PENDING_MOVEMENT","DIGIY_LOC_LATEST_ACTION","DIGIY_LOC_GO_LATEST","DIGIY_LOC_ACTION_LATEST","DIGIY_LOC_LAST_DRAFT","DIGIY_LOC_PENDING_NOTE","DIGIY_LOC_PENDING_PLANNING","DIGIY_LOC_ACTION_NOTES","DIGIY_LOC_ACTION_PLANNING","DIGIY_LOC_PAY_HANDOFF"];
+      function $(id){return document.getElementById(id)}
+      function setStatus(msg){var s=$("status");if(s)s.textContent=msg}
+      function readSession(){
+        for(var i=0;i<SESSION_KEYS.length;i++){
+          try{var raw=localStorage.getItem(SESSION_KEYS[i])||sessionStorage.getItem(SESSION_KEYS[i]);if(raw){var s=JSON.parse(raw);if(s&&!s.stop_moteur)return s}}catch(_){}
+        }
+        return null;
+      }
+      function displaySession(){
+        var info=$("sessionInfo"), session=readSession();
+        if(!session){if(info)info.textContent="Aucune session LOC active sur cet appareil.";setStatus("Pas de session — passe par le PIN pour t'identifier.");return}
+        var lines=["module    : "+(session.module||"LOC"),"rôle      : "+(session.role||"owner"),"accès     : "+(session.access_ok?"✅ validé":"⚠️ à vérifier"),"expire    : "+(session.expires_at?new Date(session.expires_at).toLocaleString("fr-FR"):"—")];
+        if(info)info.textContent=lines.join("\n");
+        setStatus("Session LOC active sur cet appareil.");
+      }
+      function clearSession(){
+        SESSION_KEYS.forEach(function(k){try{localStorage.removeItem(k)}catch(_){}try{sessionStorage.removeItem(k)}catch(_){}});
+        try{sessionStorage.removeItem("digiy_loc_phone")}catch(_){}
+        try{delete window.DIGIY_LOC_SESSION}catch(_){}
+      }
+      function clearDrafts(){DRAFT_KEYS.forEach(function(k){try{localStorage.removeItem(k)}catch(_){}})}
+      $("btnRefresh").addEventListener("click",function(){displaySession();setStatus("État actualisé.")});
+      $("btnClearSession").addEventListener("click",function(){clearSession();displaySession();setStatus("✅ Session LOC nettoyée. Passe par le PIN pour te réidentifier.")});
+      $("btnClearAll").addEventListener("click",function(){clearSession();clearDrafts();displaySession();setStatus("✅ Session + brouillons nettoyés sur cet appareil.")});
+      try{var g=window.DIGIY_GUARD;if(g&&g.ready&&typeof g.ready.then==="function"){g.ready.then(function(){displaySession()}).catch(function(){displaySession()})}else{displaySession()}}catch(_){displaySession()}
+    })();
+  </script>
+</body>
+</html>
 
