@@ -3,253 +3,724 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue — Session LOC</title>
-  <meta name="theme-color" content="#1e7a46"/>
+  <title>DIGIY LOC — Ma session</title>
+  <meta name="theme-color" content="#1f6f46"/>
+  <meta name="description" content="DIGIY LOC PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni identifiant."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-session-guard-20260531"/>
-  <!-- CONFIG — Je loue / LOC -->
+  <meta name="digiy-build" content="loc-session-clean-adn-20260531"/>
+
   <script>
-    window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_MODULE            = "LOC";
-    window.DIGIY_ABOS_MODULE       = "LOC";
-    window.DIGIY_MODULE_LABEL      = "Je loue";
-    window.DIGIY_LOGIN_URL         = "./pin.html";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_KEY = window.DIGIY_SUPABASE_ANON_KEY;
+
+    window.DIGIY_MODULE = "LOC";
+    window.DIGIY_ABOS_MODULE = "LOC";
+    window.DIGIY_LOGIN_URL = "./pin.html";
   </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-guard-20260531"></script>
+  <script src="./assets/js/digiy-abos-access.js?v=abos-20260522"></script>
+  <script src="./guard.js?v=loc-session-clean-adn-20260531"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
+
   <style>
+    :root{
+      --bg:#1f6f46;
+      --bg2:#164c32;
+      --bg3:#0d2f21;
+      --bar:rgba(8,42,28,.96);
+      --gold:#d6a84f;
+      --gold2:#fde68a;
+      --green:#22c55e;
+      --red:#fb7185;
+      --blue:#8b8cff;
+      --line:rgba(255,255,255,.16);
+      --text:#f3fff8;
+      --muted:rgba(243,255,248,.76);
+      --soft:rgba(243,255,248,.58);
+      --shadow:0 16px 40px rgba(0,0,0,.22);
+      --r:19px;
+      --max:880px;
+      --hdrH:52px;
+      --barH:76px;
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#f0fff5;background:linear-gradient(180deg,#1e7a46,#155a34 58%,#0e4226);padding:14px 12px 86px;font-weight:900}
+
+    html{
+      scroll-behavior:smooth;
+      -webkit-text-size-adjust:100%;
+      text-size-adjust:100%;
+    }
+
+    body{
+      margin:0;
+      min-height:100dvh;
+      color:var(--text);
+      font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;
+      font-size:19px;
+      font-weight:900;
+      background:
+        radial-gradient(620px 390px at 10% 0%,rgba(34,197,94,.18),transparent 58%),
+        radial-gradient(440px 300px at 92% 8%,rgba(214,168,79,.16),transparent 52%),
+        linear-gradient(180deg,var(--bg) 0%,var(--bg2) 60%,var(--bg3) 100%);
+      padding:
+        calc(var(--hdrH) + 14px)
+        12px
+        calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
+    }
+
     a{color:inherit;text-decoration:none}
-    header{position:sticky;top:0;z-index:2;margin:-14px -12px 16px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#062612;border-bottom:1px solid rgba(196,151,63,.28)}
-    header a{color:rgba(240,255,245,.8);font-size:14px;font-weight:1000}
-    main{width:min(760px,100%);margin:0 auto;display:grid;gap:14px}
-    h1{margin:0;font-size:clamp(30px,7vw,46px);line-height:.96;letter-spacing:-.05em}
-    .label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#fff0a8;margin-bottom:6px}
-    .card{border:1px solid rgba(255,255,255,.16);border-radius:22px;background:rgba(255,255,255,.08);padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
-    .card p{margin:0 0 10px;color:rgba(240,255,245,.82);font-size:15px;line-height:1.45;font-weight:900}
-    .info{border:1px dashed rgba(255,255,255,.22);border-radius:16px;background:rgba(0,0,0,.16);padding:12px;font-size:13px;line-height:1.65;color:#dfffe9;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;white-space:pre-wrap;word-break:break-all;min-height:80px}
-    .status{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(250,204,21,.28);background:rgba(0,0,0,.18);font-size:13px;color:#fff0a8;line-height:1.35;min-height:20px}
-    .status.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
-    .status.bad{border-color:rgba(251,113,133,.32);background:rgba(251,113,133,.10);color:#fecaca}
-    .grid{display:grid;gap:9px;margin-top:12px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
-    .btn{min-height:52px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.09);color:#f0fff5;font:inherit;font-weight:1000;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;text-align:center;padding:10px;gap:8px}
-    .btn.danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.32);color:#fecaca}
-    .btn.gold{background:rgba(196,151,63,.18);border-color:rgba(196,151,63,.42);color:#fff0a8}
-    .btn.green{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.35);color:#bbf7d0}
-    .rule{border:1px dashed rgba(255,255,255,.18);border-radius:16px;padding:12px;background:rgba(5,31,17,.34);color:rgba(240,255,245,.84);font-size:13px;line-height:1.45;font-weight:900}
+    button{font:inherit;color:inherit;cursor:pointer}
+
+    .topHeader{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      height:var(--hdrH);
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:0 14px;
+      background:var(--bar);
+      border-bottom:1px solid rgba(214,168,79,.26);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+
+    .hdrBack{
+      min-height:36px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(243,255,248,.72);
+      font-size:14px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .hdrTitle{
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--gold);
+      white-space:nowrap;
+    }
+
+    .hdrPill{
+      min-height:32px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
+      max-width:38vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .hdrPill.ok{
+      color:#bbf7d0;
+      border-color:rgba(34,197,94,.38);
+      background:rgba(34,197,94,.12);
+    }
+
+    .hdrPill.warn{
+      color:#fde68a;
+      border-color:rgba(245,158,11,.38);
+      background:rgba(245,158,11,.12);
+    }
+
+    .wrap{
+      width:min(var(--max),100%);
+      margin:0 auto;
+      display:grid;
+      gap:16px;
+    }
+
+    .head{
+      padding:2px 2px 4px;
+    }
+
+    .eyebrow{
+      color:#fff0a8;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:1000;
+      margin-bottom:8px;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(34px,8.5vw,54px);
+      font-weight:1000;
+      line-height:.94;
+      letter-spacing:-.05em;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:17px;
+      font-weight:1000;
+      line-height:1.38;
+      max-width:760px;
+    }
+
+    .rule{
+      margin-top:10px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.22);
+      background:rgba(5,31,17,.32);
+      color:rgba(243,255,248,.90);
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.35;
+    }
+
     .rule b{color:#fff0a8}
-    nav{position:fixed;left:0;right:0;bottom:0;background:#062612;border-top:1px solid rgba(196,151,63,.25);padding:8px 10px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-    nav a{min-height:56px;border-radius:15px;text-decoration:none;color:rgba(240,255,245,.72);display:grid;place-items:center;text-align:center;background:rgba(255,255,255,.06);font-size:11px;font-weight:1000}
-    nav a strong{font-size:18px;display:block}
-    nav a.active{background:rgba(196,151,63,.22);color:#fff0a8}
-    @media(max-width:520px){.grid2{grid-template-columns:1fr}.btn{font-size:13px}}
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:9px;
+    }
+
+    .card,.action{
+      min-height:134px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px;
+      border-radius:var(--r);
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.09);
+      box-shadow:var(--shadow);
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    .cardTop,.actionTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+    }
+
+    .ico{
+      width:48px;
+      height:48px;
+      border-radius:15px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:25px;
+      flex:0 0 auto;
+    }
+
+    .tag{
+      min-height:27px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:#fff0a8;
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .card b,.action b{
+      display:block;
+      font-size:20px;
+      font-weight:1000;
+      line-height:1.06;
+      letter-spacing:-.025em;
+      color:#fff;
+    }
+
+    .card span,.action span{
+      display:block;
+      margin-top:5px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.28;
+    }
+
+    .ok{
+      border-color:rgba(34,197,94,.38);
+      background:rgba(34,197,94,.14);
+    }
+
+    .warn{
+      border-color:rgba(245,158,11,.38);
+      background:rgba(245,158,11,.12);
+    }
+
+    .gold{
+      border-color:rgba(214,168,79,.42);
+      background:rgba(214,168,79,.12);
+    }
+
+    .blue{
+      border-color:rgba(139,140,255,.32);
+      background:rgba(139,140,255,.12);
+    }
+
+    .dangerBtn{
+      width:100%;
+      min-height:60px;
+      border-radius:18px;
+      border:1px solid rgba(251,113,133,.34);
+      background:rgba(251,113,133,.10);
+      color:#fecaca;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      font-size:16px;
+      font-weight:1000;
+      box-shadow:var(--shadow);
+    }
+
+    .notice{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:15px;
+      font-weight:1000;
+      line-height:1.45;
+    }
+
+    .notice b{color:#fff}
+
+    .bottomBar{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      height:var(--barH);
+      z-index:100;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:rgba(6,38,24,.97);
+      border-top:1px solid rgba(214,168,79,.18);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+
+    .bottomInner{
+      width:min(100%,620px);
+      height:100%;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+    }
+
+    .bottomInner a{
+      min-height:58px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      align-content:center;
+      gap:3px;
+      color:rgba(243,255,248,.58);
+      font-size:11px;
+      font-weight:1000;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.04);
+    }
+
+    .bottomInner a.active{
+      color:#052215;
+      background:linear-gradient(135deg,#22c55e,#fff0a8);
+      border-color:rgba(34,197,94,.32);
+    }
+
+    .bottomInner .bi{
+      font-size:19px;
+      line-height:1;
+    }
+
+    @media(max-width:520px){
+      body{
+        padding:
+          calc(var(--hdrH) + 12px)
+          10px
+          calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);
+        font-size:19px;
+      }
+
+      .topHeader{padding:0 10px;gap:7px}
+      .hdrBack{font-size:13px}
+      .hdrTitle{font-size:11px;letter-spacing:.12em}
+      .hdrPill{font-size:11px;padding:6px 8px;max-width:34vw}
+      h1{font-size:34px}
+      .sub{font-size:16px}
+      .grid{gap:8px}
+      .card,.action{min-height:128px;padding:13px}
+      .ico{width:46px;height:46px;font-size:24px}
+      .card b,.action b{font-size:19px}
+      .card span,.action span{font-size:13.5px}
+      .tag{font-size:9px;padding:4px 7px}
+      .dangerBtn{font-size:15px}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+    }
   </style>
 </head>
+
 <body>
-  <header>
-    <a href="./hub.html">← HUB</a>
-    <div>Session LOC</div>
-    <a href="./pin.html">🔐 PIN</a>
+  <header class="topHeader">
+    <a class="hdrBack" href="./hub.html">← HUB</a>
+    <div class="hdrTitle">Ma session</div>
+    <div class="hdrPill warn" id="sessionPill">session…</div>
   </header>
 
-  <main>
-    <section>
-      <div class="label">🛡️ Ma session</div>
-      <h1>Coffre local LOC.</h1>
-    </section>
-
-    <section class="card">
-      <div class="label">État session sur cet appareil</div>
-      <div class="info" id="sessionInfo">Lecture…</div>
-      <div class="status" id="status">Chargement de la session…</div>
-    </section>
-
-    <section class="card">
-      <div class="label">Brouillons en attente</div>
-      <div class="info" id="draftInfo">Lecture…</div>
-    </section>
-
-    <section class="card">
-      <div class="label">Actions de nettoyage</div>
-      <p>Ces boutons effacent uniquement le cache local sur cet appareil. Le logement, les réservations et les données Supabase restent intacts.</p>
-      <div class="grid2">
-        <button class="btn gold" id="btnRefresh" type="button">🔄 Actualiser</button>
-        <button class="btn green" id="btnPin" onclick="location.href='./pin.html'">🔐 Mon accès PIN</button>
-        <button class="btn danger" id="btnClearSession" type="button">🧹 Nettoyer session LOC</button>
-        <button class="btn danger" id="btnClearAll" type="button">🧨 Tout nettoyer</button>
+  <main class="wrap">
+    <section class="head">
+      <div class="eyebrow">🏠 DIGIY LOC</div>
+      <h1>Ma session.</h1>
+      <div class="sub" id="sessionSub">
+        Ici on contrôle l’accès LOC sans afficher le téléphone, sans exposer l’identifiant,
+        sans toucher aux logements, aux tarifs, aux réservations ni au planning.
       </div>
-      <div class="grid" style="margin-top:9px">
-        <a class="btn" href="./hub.html">🧭 Retour HUB</a>
+      <div class="rule">
+        Règle LOC : <b>on nettoie seulement l’accès local</b>. On ne supprime ni fiche,
+        ni logement, ni tarif, ni réservation, ni planning.
       </div>
     </section>
 
-    <div class="rule">
-      <b>Règle DIGIY :</b> nettoyer la session locale ne supprime pas les données du logement sur Supabase. Les réservations, les disponibilités et les tarifs restent en place. Seul le cache de cet appareil est effacé.
-    </div>
+    <section class="grid" aria-label="État de session LOC">
+      <article class="card warn" id="statusCard">
+        <div class="cardTop">
+          <div class="ico">🔐</div>
+          <div class="tag" id="statusTag">Contrôle</div>
+        </div>
+        <div>
+          <b id="statusTitle">Vérification</b>
+          <span id="statusText">Lecture de l’état de session…</span>
+        </div>
+      </article>
+
+      <article class="card blue">
+        <div class="cardTop">
+          <div class="ico">🏠</div>
+          <div class="tag">Module</div>
+        </div>
+        <div>
+          <b>LOC</b>
+          <span>Logements, disponibilité, tarifs, réservations et fiche publique.</span>
+        </div>
+      </article>
+
+      <article class="card gold">
+        <div class="cardTop">
+          <div class="ico">🧠</div>
+          <div class="tag">Local</div>
+        </div>
+        <div>
+          <b>Mémoire téléphone</b>
+          <span>Les repères d’accès restent côté appareil.</span>
+        </div>
+      </article>
+
+      <article class="card ok">
+        <div class="cardTop">
+          <div class="ico">🧭</div>
+          <div class="tag">Retour</div>
+        </div>
+        <div>
+          <b>HUB propre</b>
+          <span>La gestion LOC repart du HUB, pas d’une page perdue.</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid" aria-label="Actions de session LOC">
+      <a class="action ok" href="./hub.html">
+        <div class="actionTop">
+          <div class="ico">🧭</div>
+          <div class="tag">HUB</div>
+        </div>
+        <div>
+          <b>Retour HUB</b>
+          <span>Revenir aux portes principales LOC.</span>
+        </div>
+      </a>
+
+      <a class="action gold" href="./oreille.html">
+        <div class="actionTop">
+          <div class="ico">🎙️</div>
+          <div class="tag">Oreille</div>
+        </div>
+        <div>
+          <b>Oreille LOC</b>
+          <span>Préparer une demande, une note ou une réservation.</span>
+        </div>
+      </a>
+
+      <a class="action blue" href="./pin.html">
+        <div class="actionTop">
+          <div class="ico">🔑</div>
+          <div class="tag">PIN</div>
+        </div>
+        <div>
+          <b>Rouvrir l’accès</b>
+          <span>Repasser par le PIN LOC.</span>
+        </div>
+      </a>
+
+      <button class="action warn" id="btnClearSession" type="button">
+        <div class="actionTop">
+          <div class="ico">🧹</div>
+          <div class="tag">Nettoyer</div>
+        </div>
+        <div>
+          <b>Accès local</b>
+          <span>Fermer la session sans toucher aux données métier.</span>
+        </div>
+      </button>
+    </section>
+
+    <section class="notice" id="noticeBox">
+      Lecture en cours…
+    </section>
   </main>
 
-  <nav>
-    <a href="./hub.html"><strong>🧭</strong>HUB</a>
-    <a href="./action.html"><strong>🎙️</strong>GO</a>
-    <a href="./app.html"><strong>🏠</strong>Travail</a>
-    <a href="./planning.html"><strong>🗓️</strong>Dates</a>
-    <a class="active" href="./session.html"><strong>🛡️</strong>Session</a>
+  <nav class="bottomBar" aria-label="Navigation session LOC">
+    <div class="bottomInner">
+      <a href="./hub.html"><span class="bi">🧭</span><span>HUB</span></a>
+      <a href="./pin.html"><span class="bi">🔑</span><span>PIN</span></a>
+      <a href="./oreille.html"><span class="bi">🎙️</span><span>Oreille</span></a>
+      <a class="active" href="./session.html"><span class="bi">🔐</span><span>Session</span></a>
+    </div>
   </nav>
 
   <script>
     (function(){
       "use strict";
 
-      var SESSION_KEYS = [
-        "DIGIY_LOC_PRO_SESSION_V1",
-        "DIGIY_LOC_SESSION",
+      const $ = (id) => document.getElementById(id);
+
+      const SENSITIVE_KEYS = [
+        "phone",
+        "tel",
+        "p_phone",
+        "owner_phone",
+        "subscription_phone",
+        "checkout_phone",
+        "pin",
+        "pin4",
+        "token",
+        "session_token",
+        "slug",
+        "module",
+        "return",
+        "redirect",
+        "redirect_url",
+        "url",
+        "from",
+        "v"
+      ];
+
+      const SESSION_KEYS = [
         "DIGIY_LOC_PIN_SESSION",
+        "DIGIY_LOC_SESSION",
         "DIGIY_SESSION_LOC",
+        "DIGIY_PIN_SESSION",
+        "DIGIY_ACCESS",
         "digiy_loc_session",
+        "digiy_loc_pin_access",
+        "digiy_access",
+        "digiy_session"
+      ];
+
+      const ACCESS_REPERE_KEYS = [
         "digiy_loc_slug",
-        "digiy_loc_last_slug"
+        "digiy_loc_last_slug",
+        "loc_slug",
+        "lodging_slug",
+        "hebergement_slug",
+        "digiy_last_slug",
+        "digiy_loc_phone",
+        "digiy_loc_last_phone",
+        "loc_phone",
+        "lodging_phone",
+        "hebergement_phone",
+        "digiy_phone",
+        "digiy_last_phone"
       ];
 
-      var DRAFT_KEYS = [
-        "DIGIY_LOC_PAY_BRIDGE",
-        "DIGIY_PAY_PENDING_MOVEMENT",
-        "DIGIY_LOC_LATEST_ACTION",
-        "DIGIY_LOC_GO_LATEST",
-        "DIGIY_LOC_ACTION_LATEST",
-        "DIGIY_LOC_LAST_DRAFT",
-        "DIGIY_LOC_PENDING_NOTE",
-        "DIGIY_LOC_PENDING_PLANNING",
-        "DIGIY_LOC_ACTION_NOTES",
-        "DIGIY_LOC_ACTION_PLANNING",
-        "DIGIY_LOC_PAY_HANDOFF"
-      ];
-
-      function $(id){ return document.getElementById(id); }
-
-      function setStatus(msg, tone){
-        var s = $("status");
-        if(!s) return;
-        s.textContent = msg;
-        s.className = "status" + (tone ? " " + tone : "");
+      function read(key){
+        try{
+          return sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+        }catch(_){
+          return "";
+        }
       }
 
-      function readSession(){
-        for(var i = 0; i < SESSION_KEYS.length; i++){
-          try{
-            var raw = localStorage.getItem(SESSION_KEYS[i]) || sessionStorage.getItem(SESSION_KEYS[i]);
-            if(raw){
-              var s = JSON.parse(raw);
-              if(s && !s.stop_moteur) return s;
+      function removeKey(key){
+        try{ sessionStorage.removeItem(key); }catch(_){}
+        try{ localStorage.removeItem(key); }catch(_){}
+      }
+
+      function cleanVisibleUrl(){
+        try{
+          const url = new URL(location.href);
+          let changed = false;
+
+          SENSITIVE_KEYS.forEach((key) => {
+            if(url.searchParams.has(key)){
+              url.searchParams.delete(key);
+              changed = true;
             }
-          }catch(_){}
-        }
-        return null;
+          });
+
+          if(changed){
+            history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+          }
+        }catch(_){}
       }
 
-      function displaySession(){
-        var info = $("sessionInfo");
-        var session = readSession();
+      async function waitGuard(){
+        try{
+          const guard = window.DIGIY_GUARD;
+          if(!guard) return {};
 
-        if(!session){
-          if(info) info.textContent = "Aucune session LOC active sur cet appareil.";
-          setStatus("Pas de session — passe par le PIN pour t'identifier.", "bad");
-          return;
-        }
+          if(typeof guard.ready === "function"){
+            const out = guard.ready({ redirect:false, preserve_validation:true });
+            if(out && typeof out.then === "function") await out;
+          }else if(guard.ready && typeof guard.ready.then === "function"){
+            await guard.ready;
+          }
 
-        var exp = session.expires_at ? new Date(session.expires_at) : null;
-        var expStr = exp ? exp.toLocaleString("fr-FR") : "—";
-        var isExpired = exp && exp < new Date();
+          if(typeof guard.getSession === "function"){
+            return guard.getSession() || guard.state || {};
+          }
 
-        var lines = [
-          "module    : " + (session.module || "LOC"),
-          "rôle      : " + (session.role || "owner"),
-          "accès     : " + (session.access_ok ? "✅ validé" : "⚠️ à vérifier"),
-          "expire    : " + expStr + (isExpired ? " ⚠️ EXPIRÉE" : ""),
-        ];
-
-        if(info) info.textContent = lines.join("\n");
-
-        if(isExpired){
-          setStatus("⚠️ Session expirée — repasse par le PIN.", "bad");
-        } else {
-          setStatus("✅ Session LOC active sur cet appareil.", "ok");
+          return guard.state || {};
+        }catch(e){
+          console.warn("[LOC SESSION] guard", e);
+          return {};
         }
       }
 
-      function displayDrafts(){
-        var info = $("draftInfo");
-        if(!info) return;
-
-        var found = [];
-        DRAFT_KEYS.forEach(function(k){
-          try{
-            var raw = localStorage.getItem(k);
-            if(raw){
-              var d = JSON.parse(raw);
-              if(d) found.push(k + " · " + (d.note || d.text || d.phrase || "brouillon présent").slice(0,60));
-            }
-          }catch(_){}
-        });
-
-        info.textContent = found.length
-          ? found.join("\n")
-          : "Aucun brouillon en attente sur cet appareil.";
+      function hasGuardSession(state){
+        return !!(
+          state &&
+          (
+            state.access_ok ||
+            state.access ||
+            state.pin_session_ok ||
+            state.loc_session_ok ||
+            state.ok ||
+            state.verified
+          )
+        );
       }
 
-      function clearSession(){
-        SESSION_KEYS.forEach(function(k){
-          try{ localStorage.removeItem(k); }catch(_){}
-          try{ sessionStorage.removeItem(k); }catch(_){}
-        });
-        try{ sessionStorage.removeItem("digiy_loc_phone"); }catch(_){}
-        try{ delete window.DIGIY_LOC_SESSION; }catch(_){}
+      function hasLocalSession(){
+        return SESSION_KEYS.some((key) => !!read(key));
       }
 
-      function clearDrafts(){
-        DRAFT_KEYS.forEach(function(k){
-          try{ localStorage.removeItem(k); }catch(_){}
-        });
-      }
-
-      function refresh(){
-        displaySession();
-        displayDrafts();
-      }
-
-      $("btnRefresh").addEventListener("click", function(){
-        refresh();
-        setStatus("✅ État actualisé.", "ok");
-      });
-
-      $("btnClearSession").addEventListener("click", function(){
-        clearSession();
-        refresh();
-        setStatus("✅ Session LOC nettoyée. Passe par le PIN pour te réidentifier.", "ok");
-      });
-
-      $("btnClearAll").addEventListener("click", function(){
-        clearSession();
-        clearDrafts();
-        refresh();
-        setStatus("✅ Session + brouillons nettoyés sur cet appareil.", "ok");
-      });
-
-      // Attendre le guard puis afficher
-      try{
-        var g = window.DIGIY_GUARD;
-        if(g && g.ready && typeof g.ready.then === "function"){
-          g.ready.then(function(){ refresh(); }).catch(function(){ refresh(); });
-        } else {
-          refresh();
+      function paint(ok){
+        const pill = $("sessionPill");
+        if(pill){
+          pill.textContent = ok ? "ouverte" : "à ouvrir";
+          pill.className = ok ? "hdrPill ok" : "hdrPill warn";
         }
-      }catch(_){
+
+        const statusCard = $("statusCard");
+        const statusTag = $("statusTag");
+        const statusTitle = $("statusTitle");
+        const statusText = $("statusText");
+        const noticeBox = $("noticeBox");
+        const sessionSub = $("sessionSub");
+
+        if(statusCard) statusCard.className = ok ? "card ok" : "card warn";
+        if(statusTag) statusTag.textContent = ok ? "OK" : "PIN";
+        if(statusTitle) statusTitle.textContent = ok ? "Accès reconnu" : "Accès à ouvrir";
+
+        if(statusText){
+          statusText.textContent = ok
+            ? "La session LOC est gardée côté téléphone."
+            : "Aucune session LOC active détectée.";
+        }
+
+        if(sessionSub){
+          sessionSub.textContent = ok
+            ? "Accès LOC reconnu. Les identifiants restent dans le coffre local, pas dans l’écran."
+            : "Accès à ouvrir. Le PIN protège les logements, les réservations, les tarifs et le planning.";
+        }
+
+        if(noticeBox){
+          noticeBox.innerHTML = ok
+            ? "✅ Accès LOC reconnu. Tu peux retourner au HUB ou ouvrir Oreille LOC."
+            : "⚠️ Session fermée. Rouvre par le PIN LOC pour charger la vraie gestion.";
+        }
+      }
+
+      async function refresh(){
+        cleanVisibleUrl();
+
+        const state = await waitGuard();
+        const ok = hasGuardSession(state) || hasLocalSession();
+
+        paint(ok);
+        cleanVisibleUrl();
+      }
+
+      function clearAccessOnly(){
+        const ok = confirm("Nettoyer seulement l’accès local LOC ? Les logements, tarifs, réservations, planning et fiche ne seront pas supprimés.");
+        if(!ok) return;
+
+        SESSION_KEYS.concat(ACCESS_REPERE_KEYS).forEach(removeKey);
+
+        try{
+          window.DIGIY_MODULE_BRIDGE?.cleanUrl?.();
+        }catch(_){}
+
         refresh();
       }
 
+      $("btnClearSession")?.addEventListener("click", clearAccessOnly);
+
+      if(document.readyState === "loading"){
+        document.addEventListener("DOMContentLoaded", refresh);
+      }else{
+        refresh();
+      }
+
+      setTimeout(refresh, 500);
     })();
   </script>
 </body>
