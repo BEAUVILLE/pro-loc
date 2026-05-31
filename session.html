@@ -3,26 +3,27 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>DIGIY LOC — Ma session</title>
-  <meta name="theme-color" content="#1f6f46"/>
-  <meta name="description" content="DIGIY LOC PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni identifiant."/>
+  <title>Je loue — Ma session</title>
+  <meta name="theme-color" content="#1e7a46"/>
+  <meta name="description" content="LOC PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni identifiant."/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="digiy-build" content="loc-session-clean-adn-20260531"/>
+  <meta name="digiy-build" content="loc-session-adn-20260531"/>
 
   <script>
-    window.DIGIY_SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON_KEY;
-    window.DIGIY_SUPABASE_KEY = window.DIGIY_SUPABASE_ANON_KEY;
-
-    window.DIGIY_MODULE = "LOC";
-    window.DIGIY_ABOS_MODULE = "LOC";
-    window.DIGIY_LOGIN_URL = "./pin.html";
+    window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_KEY      = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_MODULE            = "LOC";
+    window.DIGIY_ABOS_MODULE       = "LOC";
+    window.DIGIY_MODULE_LABEL      = "Je loue";
+    window.DIGIY_LOGIN_URL         = "./pin.html";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./assets/js/digiy-abos-access.js?v=abos-20260522"></script>
-  <script src="./guard.js?v=loc-session-clean-adn-20260531"></script>
+  <script src="./guard.js?v=loc-guard-20260531"></script>
+  <script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
+  <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521" defer></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -30,371 +31,85 @@
 
   <style>
     :root{
-      --bg:#1f6f46;
-      --bg2:#164c32;
-      --bg3:#0d2f21;
-      --bar:rgba(8,42,28,.96);
-      --gold:#d6a84f;
-      --gold2:#fde68a;
-      --green:#22c55e;
-      --red:#fb7185;
-      --blue:#8b8cff;
-      --line:rgba(255,255,255,.16);
-      --text:#f3fff8;
-      --muted:rgba(243,255,248,.76);
-      --soft:rgba(243,255,248,.58);
-      --shadow:0 16px 40px rgba(0,0,0,.22);
-      --r:19px;
-      --max:880px;
-      --hdrH:52px;
-      --barH:76px;
+      --bg:#1e7a46;--bg2:#155a34;--bg3:#0e4226;
+      --bar:rgba(6,38,18,.96);
+      --gold:#c4973f;--gold2:#facc15;--green:#22c55e;--blue:#8b8cff;--red:#fb7185;
+      --line:rgba(255,255,255,.18);--text:#f0fff5;--muted:rgba(240,255,245,.76);
+      --soft:rgba(240,255,245,.58);--shadow:0 16px 40px rgba(0,0,0,.22);
+      --r:18px;--max:960px;--hdrH:52px;--barH:78px;
     }
-
     *{box-sizing:border-box}
-
-    html{
-      scroll-behavior:smooth;
-      -webkit-text-size-adjust:100%;
-      text-size-adjust:100%;
-    }
-
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
     body{
-      margin:0;
-      min-height:100dvh;
-      color:var(--text);
+      margin:0;min-height:100dvh;color:var(--text);
       font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;
-      font-size:19px;
-      font-weight:900;
+      font-size:19px;font-weight:950;
       background:
-        radial-gradient(620px 390px at 10% 0%,rgba(34,197,94,.18),transparent 58%),
-        radial-gradient(440px 300px at 92% 8%,rgba(214,168,79,.16),transparent 52%),
+        radial-gradient(600px 390px at 16% 0%,rgba(74,222,128,.18),transparent 58%),
+        radial-gradient(420px 280px at 92% 8%,rgba(196,151,63,.15),transparent 52%),
         linear-gradient(180deg,var(--bg) 0%,var(--bg2) 60%,var(--bg3) 100%);
-      padding:
-        calc(var(--hdrH) + 14px)
-        12px
-        calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
+      padding:calc(var(--hdrH) + 14px) 12px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
     }
-
     a{color:inherit;text-decoration:none}
     button{font:inherit;color:inherit;cursor:pointer}
 
     .topHeader{
-      position:fixed;
-      top:0;
-      left:0;
-      right:0;
-      height:var(--hdrH);
-      z-index:100;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:0 14px;
-      background:var(--bar);
-      border-bottom:1px solid rgba(214,168,79,.26);
-      backdrop-filter:blur(18px);
-      -webkit-backdrop-filter:blur(18px);
+      position:fixed;top:0;left:0;right:0;height:var(--hdrH);z-index:100;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:0 14px;background:var(--bar);
+      border-bottom:1px solid rgba(196,151,63,.26);
+      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
     }
+    .hdrBack{min-height:36px;display:inline-flex;align-items:center;color:rgba(240,255,245,.72);font-size:14px;font-weight:1000;white-space:nowrap}
+    .hdrTitle{font-size:12px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+    .hdrPill{min-height:32px;display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--muted);font-size:12px;font-weight:1000;white-space:nowrap;max-width:38vw;overflow:hidden;text-overflow:ellipsis}
+    .hdrPill.ok{color:#bbf7d0;border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12)}
+    .hdrPill.warn{color:#fde68a;border-color:rgba(245,158,11,.38);background:rgba(245,158,11,.12)}
+    .hdrPill.bad{color:#fecaca;border-color:rgba(251,113,133,.38);background:rgba(251,113,133,.10)}
 
-    .hdrBack{
-      min-height:36px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      color:rgba(243,255,248,.72);
-      font-size:14px;
-      font-weight:1000;
-      white-space:nowrap;
-    }
-
-    .hdrTitle{
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      color:var(--gold);
-      white-space:nowrap;
-    }
-
-    .hdrPill{
-      min-height:32px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.08);
-      color:var(--muted);
-      font-size:12px;
-      font-weight:1000;
-      white-space:nowrap;
-      max-width:38vw;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .hdrPill.ok{
-      color:#bbf7d0;
-      border-color:rgba(34,197,94,.38);
-      background:rgba(34,197,94,.12);
-    }
-
-    .hdrPill.warn{
-      color:#fde68a;
-      border-color:rgba(245,158,11,.38);
-      background:rgba(245,158,11,.12);
-    }
-
-    .wrap{
-      width:min(var(--max),100%);
-      margin:0 auto;
-      display:grid;
-      gap:16px;
-    }
-
-    .head{
-      padding:2px 2px 4px;
-    }
-
-    .eyebrow{
-      color:#fff0a8;
-      font-size:12px;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      font-weight:1000;
-      margin-bottom:8px;
-    }
-
-    h1{
-      margin:0 0 8px;
-      font-size:clamp(34px,8.5vw,54px);
-      font-weight:1000;
-      line-height:.94;
-      letter-spacing:-.05em;
-    }
-
-    .sub{
-      color:var(--muted);
-      font-size:17px;
-      font-weight:1000;
-      line-height:1.38;
-      max-width:760px;
-    }
-
-    .rule{
-      margin-top:10px;
-      padding:12px 14px;
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.22);
-      background:rgba(5,31,17,.32);
-      color:rgba(243,255,248,.90);
-      font-size:14px;
-      font-weight:1000;
-      line-height:1.35;
-    }
-
+    .wrap{width:min(var(--max),100%);margin:0 auto;display:grid;gap:16px}
+    .head,.notice{padding:2px 2px 4px}
+    .eyebrow{color:#fff0a8;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:1000;margin-bottom:8px}
+    h1{margin:0 0 8px;font-size:clamp(34px,8.5vw,54px);font-weight:1000;line-height:.94;letter-spacing:-.05em}
+    .sub{color:var(--muted);font-size:17px;font-weight:1000;line-height:1.38;max-width:760px}
+    .rule{margin-top:10px;padding:12px 14px;border-radius:18px;border:1px dashed rgba(255,255,255,.22);background:rgba(5,31,17,.32);color:rgba(240,255,245,.90);font-size:14px;font-weight:1000;line-height:1.35}
     .rule b{color:#fff0a8}
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:9px;
-    }
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+    .card,.action{min-height:136px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:14px;border-radius:var(--r);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.09);box-shadow:var(--shadow);-webkit-tap-highlight-color:transparent}
+    .cardTop,.actionTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .ico{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-size:25px;flex:0 0 auto}
+    .tag{min-height:27px;display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff0a8;font-size:10px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+    .card b,.action b{display:block;font-size:20px;font-weight:1000;line-height:1.06;letter-spacing:-.025em;color:#fff}
+    .card span,.action span{display:block;margin-top:5px;color:var(--muted);font-size:14px;font-weight:1000;line-height:1.28}
+    .ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.14)}
+    .warn{border-color:rgba(245,158,11,.38);background:rgba(245,158,11,.12)}
+    .gold{border-color:rgba(196,151,63,.42);background:rgba(196,151,63,.12)}
+    .blue{border-color:rgba(139,140,255,.32);background:rgba(139,140,255,.12)}
 
-    .card,.action{
-      min-height:134px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px;
-      border-radius:var(--r);
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(255,255,255,.09);
-      box-shadow:var(--shadow);
-      -webkit-tap-highlight-color:transparent;
-    }
-
-    .cardTop,.actionTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:8px;
-    }
-
-    .ico{
-      width:48px;
-      height:48px;
-      border-radius:15px;
-      display:grid;
-      place-items:center;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-      font-size:25px;
-      flex:0 0 auto;
-    }
-
-    .tag{
-      min-height:27px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:5px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);
-      color:#fff0a8;
-      font-size:10px;
-      font-weight:1000;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
-
-    .card b,.action b{
-      display:block;
-      font-size:20px;
-      font-weight:1000;
-      line-height:1.06;
-      letter-spacing:-.025em;
-      color:#fff;
-    }
-
-    .card span,.action span{
-      display:block;
-      margin-top:5px;
-      color:var(--muted);
-      font-size:14px;
-      font-weight:1000;
-      line-height:1.28;
-    }
-
-    .ok{
-      border-color:rgba(34,197,94,.38);
-      background:rgba(34,197,94,.14);
-    }
-
-    .warn{
-      border-color:rgba(245,158,11,.38);
-      background:rgba(245,158,11,.12);
-    }
-
-    .gold{
-      border-color:rgba(214,168,79,.42);
-      background:rgba(214,168,79,.12);
-    }
-
-    .blue{
-      border-color:rgba(139,140,255,.32);
-      background:rgba(139,140,255,.12);
-    }
-
-    .dangerBtn{
-      width:100%;
-      min-height:60px;
-      border-radius:18px;
-      border:1px solid rgba(251,113,133,.34);
-      background:rgba(251,113,133,.10);
-      color:#fecaca;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      font-size:16px;
-      font-weight:1000;
-      box-shadow:var(--shadow);
-    }
-
-    .notice{
-      padding:14px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);
-      color:var(--muted);
-      font-size:15px;
-      font-weight:1000;
-      line-height:1.45;
-    }
-
+    .dangerBtn{width:100%;min-height:60px;border-radius:18px;border:1px solid rgba(251,113,133,.34);background:rgba(251,113,133,.10);color:#fecaca;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:1000;box-shadow:var(--shadow)}
+    .notice{padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:var(--muted);font-size:15px;font-weight:1000;line-height:1.45}
     .notice b{color:#fff}
 
-    .bottomBar{
-      position:fixed;
-      left:0;
-      right:0;
-      bottom:0;
-      height:var(--barH);
-      z-index:100;
-      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
-      background:rgba(6,38,24,.97);
-      border-top:1px solid rgba(214,168,79,.18);
-      backdrop-filter:blur(18px);
-      -webkit-backdrop-filter:blur(18px);
-    }
+    .bottomBar{position:fixed;left:0;right:0;bottom:0;height:var(--barH);z-index:100;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(6,38,18,.97);border-top:1px solid rgba(196,151,63,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    .bottomInner{width:min(100%,760px);height:100%;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .bottomInner a{min-height:58px;border-radius:16px;display:grid;place-items:center;align-content:center;gap:3px;color:rgba(240,255,245,.56);font-size:11px;font-weight:1000;text-align:center;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.04)}
+    .bottomInner a.active{color:#052215;background:linear-gradient(135deg,#22c55e,#fff0a8);border-color:rgba(34,197,94,.32)}
+    .bottomInner .bi{font-size:19px;line-height:1}
 
-    .bottomInner{
-      width:min(100%,620px);
-      height:100%;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:6px;
-    }
-
-    .bottomInner a{
-      min-height:58px;
-      border-radius:16px;
-      display:grid;
-      place-items:center;
-      align-content:center;
-      gap:3px;
-      color:rgba(243,255,248,.58);
-      font-size:11px;
-      font-weight:1000;
-      text-align:center;
-      border:1px solid rgba(255,255,255,.06);
-      background:rgba(255,255,255,.04);
-    }
-
-    .bottomInner a.active{
-      color:#052215;
-      background:linear-gradient(135deg,#22c55e,#fff0a8);
-      border-color:rgba(34,197,94,.32);
-    }
-
-    .bottomInner .bi{
-      font-size:19px;
-      line-height:1;
-    }
-
+    @media(max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:520px){
-      body{
-        padding:
-          calc(var(--hdrH) + 12px)
-          10px
-          calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);
-        font-size:19px;
-      }
-
+      body{padding:calc(var(--hdrH) + 12px) 10px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);font-size:19px}
       .topHeader{padding:0 10px;gap:7px}
-      .hdrBack{font-size:13px}
-      .hdrTitle{font-size:11px;letter-spacing:.12em}
+      .hdrBack{font-size:13px}.hdrTitle{font-size:11px;letter-spacing:.12em}
       .hdrPill{font-size:11px;padding:6px 8px;max-width:34vw}
-      h1{font-size:34px}
-      .sub{font-size:16px}
-      .grid{gap:8px}
-      .card,.action{min-height:128px;padding:13px}
+      h1{font-size:34px}.sub{font-size:16px}.grid{gap:8px}
+      .card,.action{min-height:132px;padding:13px}
       .ico{width:46px;height:46px;font-size:24px}
-      .card b,.action b{font-size:19px}
-      .card span,.action span{font-size:13.5px}
-      .tag{font-size:9px;padding:4px 7px}
-      .dangerBtn{font-size:15px}
+      .card b,.action b{font-size:19px}.card span,.action span{font-size:13.5px}
+      .tag{font-size:9px;padding:4px 7px}.dangerBtn{font-size:15px}
     }
-
-    @media(prefers-reduced-motion:reduce){
-      html{scroll-behavior:auto}
-    }
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 
@@ -407,15 +122,15 @@
 
   <main class="wrap">
     <section class="head">
-      <div class="eyebrow">🏠 DIGIY LOC</div>
+      <div class="eyebrow">🏠 Je loue — LOC</div>
       <h1>Ma session.</h1>
       <div class="sub" id="sessionSub">
-        Ici on contrôle l’accès LOC sans afficher le téléphone, sans exposer l’identifiant,
-        sans toucher aux logements, aux tarifs, aux réservations ni au planning.
+        Ici on contrôle l'accès logement sans afficher le téléphone, sans exposer l'identifiant,
+        sans toucher aux réservations, aux disponibilités ni aux tarifs.
       </div>
       <div class="rule">
-        Règle LOC : <b>on nettoie seulement l’accès local</b>. On ne supprime ni fiche,
-        ni logement, ni tarif, ni réservation, ni planning.
+        Règle LOC : <b>on nettoie seulement l'accès local</b>. On ne supprime ni les réservations,
+        ni les disponibilités, ni les tarifs, ni la fiche logement sur Supabase.
       </div>
     </section>
 
@@ -427,7 +142,7 @@
         </div>
         <div>
           <b id="statusTitle">Vérification</b>
-          <span id="statusText">Lecture de l’état de session…</span>
+          <span id="statusText">Lecture de l'état de session…</span>
         </div>
       </article>
 
@@ -438,7 +153,7 @@
         </div>
         <div>
           <b>LOC</b>
-          <span>Logements, disponibilité, tarifs, réservations et fiche publique.</span>
+          <span>Logements, réservations, disponibilités, tarifs, QR et fiche.</span>
         </div>
       </article>
 
@@ -449,7 +164,7 @@
         </div>
         <div>
           <b>Mémoire téléphone</b>
-          <span>Les repères d’accès restent côté appareil.</span>
+          <span id="memoryText">Les repères restent côté appareil.</span>
         </div>
       </article>
 
@@ -460,67 +175,68 @@
         </div>
         <div>
           <b>HUB propre</b>
-          <span>La gestion LOC repart du HUB, pas d’une page perdue.</span>
+          <span>Les pages internes reviennent au HUB, pas à l'ancien accueil.</span>
         </div>
       </article>
     </section>
 
-    <section class="grid" aria-label="Actions de session LOC">
+    <section class="grid" aria-label="Actions LOC">
       <a class="action ok" href="./hub.html">
-        <div class="actionTop">
-          <div class="ico">🧭</div>
-          <div class="tag">HUB</div>
-        </div>
-        <div>
-          <b>Retour HUB</b>
-          <span>Revenir aux portes principales LOC.</span>
-        </div>
+        <div class="actionTop"><div class="ico">🧭</div><div class="tag">HUB</div></div>
+        <div><b>Mes portes</b><span>Retourner aux gestes du logement.</span></div>
       </a>
 
-      <a class="action gold" href="./oreille.html">
-        <div class="actionTop">
-          <div class="ico">🎙️</div>
-          <div class="tag">Oreille</div>
-        </div>
-        <div>
-          <b>Oreille LOC</b>
-          <span>Préparer une demande, une note ou une réservation.</span>
-        </div>
+      <a class="action" href="./app.html">
+        <div class="actionTop"><div class="ico">🏠</div><div class="tag">Travail</div></div>
+        <div><b>Gérer mes logements</b><span>Travail du jour.</span></div>
       </a>
 
-      <a class="action blue" href="./pin.html">
-        <div class="actionTop">
-          <div class="ico">🔑</div>
-          <div class="tag">PIN</div>
-        </div>
-        <div>
-          <b>Rouvrir l’accès</b>
-          <span>Repasser par le PIN LOC.</span>
-        </div>
+      <a class="action gold" href="./action.html">
+        <div class="actionTop"><div class="ico">🎙️</div><div class="tag">GO</div></div>
+        <div><b>DIGIY GO LOC</b><span>Dicter demande, dates, acompte.</span></div>
       </a>
 
-      <button class="action warn" id="btnClearSession" type="button">
-        <div class="actionTop">
-          <div class="ico">🧹</div>
-          <div class="tag">Nettoyer</div>
-        </div>
-        <div>
-          <b>Accès local</b>
-          <span>Fermer la session sans toucher aux données métier.</span>
-        </div>
-      </button>
+      <a class="action" href="./planning.html">
+        <div class="actionTop"><div class="ico">🗓️</div><div class="tag">Dates</div></div>
+        <div><b>Disponibilités</b><span>Bloquer ou ouvrir les créneaux.</span></div>
+      </a>
+
+      <a class="action" href="./listing.html">
+        <div class="actionTop"><div class="ico">📖</div><div class="tag">Journal</div></div>
+        <div><b>Lecture du jour</b><span>Arrivées et départs.</span></div>
+      </a>
+
+      <a class="action" href="./generator.html">
+        <div class="actionTop"><div class="ico">🏡</div><div class="tag">Fiche</div></div>
+        <div><b>Préparer une fiche</b><span>Présenter le logement.</span></div>
+      </a>
+
+      <a class="action gold" href="https://pro-pay.digiylyfe.com/admin.html">
+        <div class="actionTop"><div class="ico">💰</div><div class="tag">PAY</div></div>
+        <div><b>Mon argent</b><span>Acomptes, soldes, mouvements LOC.</span></div>
+      </a>
+
+      <a class="action" href="./pin.html">
+        <div class="actionTop"><div class="ico">🔑</div><div class="tag">PIN</div></div>
+        <div><b>Rouvrir</b><span>Repasser par l'accès logement.</span></div>
+      </a>
     </section>
+
+    <button class="dangerBtn" id="btnClearSession" type="button">
+      🧹 Nettoyer seulement l'accès local
+    </button>
 
     <section class="notice" id="noticeBox">
       Lecture en cours…
     </section>
   </main>
 
-  <nav class="bottomBar" aria-label="Navigation session LOC">
+  <nav class="bottomBar" aria-label="Navigation LOC">
     <div class="bottomInner">
       <a href="./hub.html"><span class="bi">🧭</span><span>HUB</span></a>
-      <a href="./pin.html"><span class="bi">🔑</span><span>PIN</span></a>
-      <a href="./oreille.html"><span class="bi">🎙️</span><span>Oreille</span></a>
+      <a href="./app.html"><span class="bi">🏠</span><span>Travail</span></a>
+      <a href="./action.html"><span class="bi">🎙️</span><span>GO</span></a>
+      <a href="./planning.html"><span class="bi">🗓️</span><span>Dates</span></a>
       <a class="active" href="./session.html"><span class="bi">🔐</span><span>Session</span></a>
     </div>
   </nav>
@@ -532,29 +248,15 @@
       const $ = (id) => document.getElementById(id);
 
       const SENSITIVE_KEYS = [
-        "phone",
-        "tel",
-        "p_phone",
-        "owner_phone",
-        "subscription_phone",
-        "checkout_phone",
-        "pin",
-        "pin4",
-        "token",
-        "session_token",
-        "slug",
-        "module",
-        "return",
-        "redirect",
-        "redirect_url",
-        "url",
-        "from",
-        "v"
+        "phone","tel","p_phone","owner_phone","subscription_phone","checkout_phone",
+        "pin","pin4","token","session_token","slug","module","return","redirect",
+        "redirect_url","url","from","v"
       ];
 
       const SESSION_KEYS = [
-        "DIGIY_LOC_PIN_SESSION",
+        "DIGIY_LOC_PRO_SESSION_V1",
         "DIGIY_LOC_SESSION",
+        "DIGIY_LOC_PIN_SESSION",
         "DIGIY_SESSION_LOC",
         "DIGIY_PIN_SESSION",
         "DIGIY_ACCESS",
@@ -564,28 +266,18 @@
         "digiy_session"
       ];
 
-      const ACCESS_REPERE_KEYS = [
+      const SAFE_ACCESS_KEYS = [
         "digiy_loc_slug",
         "digiy_loc_last_slug",
         "loc_slug",
-        "lodging_slug",
-        "hebergement_slug",
-        "digiy_last_slug",
         "digiy_loc_phone",
         "digiy_loc_last_phone",
-        "loc_phone",
-        "lodging_phone",
-        "hebergement_phone",
         "digiy_phone",
         "digiy_last_phone"
       ];
 
       function read(key){
-        try{
-          return sessionStorage.getItem(key) || localStorage.getItem(key) || "";
-        }catch(_){
-          return "";
-        }
+        try{ return sessionStorage.getItem(key) || localStorage.getItem(key) || ""; }catch(_){ return ""; }
       }
 
       function removeKey(key){
@@ -597,17 +289,10 @@
         try{
           const url = new URL(location.href);
           let changed = false;
-
           SENSITIVE_KEYS.forEach((key) => {
-            if(url.searchParams.has(key)){
-              url.searchParams.delete(key);
-              changed = true;
-            }
+            if(url.searchParams.has(key)){ url.searchParams.delete(key); changed = true; }
           });
-
-          if(changed){
-            history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-          }
+          if(changed) history.replaceState({}, document.title, url.pathname + url.search + url.hash);
         }catch(_){}
       }
 
@@ -615,18 +300,13 @@
         try{
           const guard = window.DIGIY_GUARD;
           if(!guard) return {};
-
           if(typeof guard.ready === "function"){
             const out = guard.ready({ redirect:false, preserve_validation:true });
             if(out && typeof out.then === "function") await out;
           }else if(guard.ready && typeof guard.ready.then === "function"){
             await guard.ready;
           }
-
-          if(typeof guard.getSession === "function"){
-            return guard.getSession() || guard.state || {};
-          }
-
+          if(typeof guard.getSession === "function") return guard.getSession() || guard.state || {};
           return guard.state || {};
         }catch(e){
           console.warn("[LOC SESSION] guard", e);
@@ -634,82 +314,73 @@
         }
       }
 
-      function hasGuardSession(state){
-        return !!(
-          state &&
-          (
-            state.access_ok ||
-            state.access ||
-            state.pin_session_ok ||
-            state.loc_session_ok ||
-            state.ok ||
-            state.verified
-          )
-        );
+      function hasLocalSession(){
+        if(window.DIGIY_MODULE_BRIDGE && typeof window.DIGIY_MODULE_BRIDGE.readSession === "function"){
+          try{
+            const s = window.DIGIY_MODULE_BRIDGE.readSession() || {};
+            if(s.slug || s.phone || s.access || s.ok || s.verified) return true;
+          }catch(_){}
+        }
+        return SESSION_KEYS.some((key) => !!read(key)) ||
+               SAFE_ACCESS_KEYS.some((key) => !!read(key));
       }
 
-      function hasLocalSession(){
-        return SESSION_KEYS.some((key) => !!read(key));
+      function hasGuardSession(state){
+        return !!(state && (state.access_ok || state.access || state.pin_session_ok || state.ok || state.verified));
+      }
+
+      function memoryStatusText(){
+        const memory = window.DIGIY_LOC_MEMORY || window.DIGIY_LOC_STORE || window.DIGIY_LOC_LOCAL;
+        if(memory && typeof memory.snapshot === "function"){
+          try{
+            const snap = memory.snapshot() || {};
+            if(snap.updated_at || snap.items || snap.reservations || snap.count) return "Mémoire LOC locale prête.";
+          }catch(_){}
+        }
+        return "Mémoire locale disponible.";
       }
 
       function paint(ok){
         const pill = $("sessionPill");
-        if(pill){
-          pill.textContent = ok ? "ouverte" : "à ouvrir";
-          pill.className = ok ? "hdrPill ok" : "hdrPill warn";
-        }
+        if(pill){ pill.textContent = ok ? "ouverte" : "à ouvrir"; pill.className = ok ? "hdrPill ok" : "hdrPill warn"; }
 
-        const statusCard = $("statusCard");
-        const statusTag = $("statusTag");
+        const statusCard  = $("statusCard");
+        const statusTag   = $("statusTag");
         const statusTitle = $("statusTitle");
-        const statusText = $("statusText");
-        const noticeBox = $("noticeBox");
-        const sessionSub = $("sessionSub");
+        const statusText  = $("statusText");
+        const memoryText  = $("memoryText");
+        const noticeBox   = $("noticeBox");
+        const sessionSub  = $("sessionSub");
 
-        if(statusCard) statusCard.className = ok ? "card ok" : "card warn";
-        if(statusTag) statusTag.textContent = ok ? "OK" : "PIN";
+        if(statusCard)  statusCard.className = ok ? "card ok" : "card warn";
+        if(statusTag)   statusTag.textContent = ok ? "OK" : "PIN";
         if(statusTitle) statusTitle.textContent = ok ? "Accès reconnu" : "Accès à ouvrir";
-
-        if(statusText){
-          statusText.textContent = ok
-            ? "La session LOC est gardée côté téléphone."
-            : "Aucune session LOC active détectée.";
-        }
-
-        if(sessionSub){
-          sessionSub.textContent = ok
-            ? "Accès LOC reconnu. Les identifiants restent dans le coffre local, pas dans l’écran."
-            : "Accès à ouvrir. Le PIN protège les logements, les réservations, les tarifs et le planning.";
-        }
-
-        if(noticeBox){
-          noticeBox.innerHTML = ok
-            ? "✅ Accès LOC reconnu. Tu peux retourner au HUB ou ouvrir Oreille LOC."
-            : "⚠️ Session fermée. Rouvre par le PIN LOC pour charger la vraie gestion.";
-        }
+        if(statusText)  statusText.textContent = ok
+          ? "La session LOC est gardée côté téléphone."
+          : "Aucune session LOC active détectée.";
+        if(memoryText)  memoryText.textContent = memoryStatusText();
+        if(sessionSub)  sessionSub.textContent = ok
+          ? "Accès logement reconnu. Les identifiants restent dans le coffre local, pas dans l'écran."
+          : "Accès à ouvrir. Le PIN protège le logement, les réservations, les tarifs et la fiche.";
+        if(noticeBox)   noticeBox.innerHTML = ok
+          ? "✅ Accès LOC reconnu. Tu peux retourner au travail, aux disponibilités ou ouvrir DIGIY GO LOC."
+          : "⚠️ Session fermée. Rouvre par le PIN logement pour charger la vraie gestion.";
       }
 
       async function refresh(){
         cleanVisibleUrl();
-
         const state = await waitGuard();
         const ok = hasGuardSession(state) || hasLocalSession();
-
         paint(ok);
         cleanVisibleUrl();
       }
 
       function clearAccessOnly(){
-        const ok = confirm("Nettoyer seulement l’accès local LOC ? Les logements, tarifs, réservations, planning et fiche ne seront pas supprimés.");
-        if(!ok) return;
-
-        SESSION_KEYS.concat(ACCESS_REPERE_KEYS).forEach(removeKey);
-
-        try{
-          window.DIGIY_MODULE_BRIDGE?.cleanUrl?.();
-        }catch(_){}
-
+        SESSION_KEYS.concat(SAFE_ACCESS_KEYS).forEach(removeKey);
+        try{ window.DIGIY_MODULE_BRIDGE?.cleanUrl?.(); }catch(_){}
         refresh();
+        const noticeBox = $("noticeBox");
+        if(noticeBox) noticeBox.innerHTML = "✅ Accès local LOC nettoyé. Repasse par le PIN pour te réidentifier.";
       }
 
       $("btnClearSession")?.addEventListener("click", clearAccessOnly);
