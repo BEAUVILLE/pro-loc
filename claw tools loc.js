@@ -690,3 +690,4 @@
     "— tape CLAW_LOC.snapshot() pour l'état complet"
   );
 })();
+
