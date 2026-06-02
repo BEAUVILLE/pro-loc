@@ -96,7 +96,7 @@
     </div>
 
     <section class="hero">
-      <div class="eyebrow">Récepteur · filtreur visible · validation humaine</div>
+      <div class="eyebrow">Récepteur · fiche préparée · validation humaine</div>
       <h1>Action LOC</h1>
       <p class="lead">Moins d’écriture. Clic, voix, copier-coller. Même sans WhatsApp ou S M S, le pro garde la main.</p>
       <div class="pillrow" aria-label="Doctrine">
@@ -126,7 +126,7 @@
         <textarea id="rawText" placeholder="Ex : Awa · villa Saly · 12 juin → 15 juin · 4 personnes · acompte 20000 Wave"></textarea>
         <div class="voicebar">
           <button class="primary" id="btnVoice">🎙️ Parler</button>
-          <button class="gold" id="btnCompact">🧭 Compacter</button>
+          <button class="gold" id="btnCompact">✨ Préparer la fiche</button>
         </div>
         <div class="btns">
           <button class="gold" id="btnLoadIncoming">📥 Charger action</button>
@@ -134,7 +134,7 @@
           <button class="soft" id="btnCopyMsg">📋 Copier message</button>
           <button class="soft" id="btnCopyFiche">🧾 Copier fiche</button>
           <button class="dark" id="btnListenMsg">🎧 Écouter</button>
-          <button class="soft" id="btnSaveDraft">🗂️ Brouillon</button>
+          <button class="soft" id="btnSaveDraft">📝 Enregistrer brouillon</button>
           <button class="danger" id="btnClear">🧹 Nettoyer</button>
         </div>
         <div class="copyhint">Sans WhatsApp / S M S : copie la fiche ou le message, puis colle dans email, Messenger, Notes, formulaire, ordinateur ou autre canal.</div>
@@ -148,10 +148,10 @@
         <div class="fields" id="fields"></div>
         <div id="missingBox"></div>
         <div class="btns">
-          <button class="primary" id="btnValidateBooking">✅ Ranger comme réservation validée</button>
+          <button class="primary" id="btnValidateBooking">✅ Valider réservation</button>
           <button class="gold" id="btnPreparePay">💳 Préparer acompte PAY</button>
         </div>
-        <div class="message" id="clientMessage">Message client prêt après compactage.</div>
+        <div class="message" id="clientMessage">Message client prêt après préparation de la fiche.</div>
         <p class="mini">Le bouton PAY prépare seulement un brouillon d’encaissement. Le paiement réel doit être vérifié dans PAY avant d’être compté.</p>
       </div>
     </section>
@@ -165,7 +165,7 @@
       const $ = (id) => document.getElementById(id);
       const STORE_INCOMING = ['DIGIY_ACTION_LOC_DRAFT','DIGIY_ACTION_PAYLOAD','DIGIY_ACTION_INCOMING','DIGIY_OREILLE_LOC_DRAFT'];
       const PAY_DRAFT_KEY = 'DIGIY_PAY_INCOMING_DRAFT';
-      const ACTION_VERSION = 'action-loc-filtreur-20260602-v3-copie-universelle-compact';
+      const ACTION_VERSION = 'action-loc-filtreur-20260602-v4-preparer-fiche';
       const PRESETS = [
         {hot:true, title:'Nouvelle demande', hint:'client · logement · dates', text:'client Awa logement villa Saly arrivée 12 juin départ 15 juin 4 personnes'},
         {title:'Acompte Wave', hint:'montant · preuve à vérifier', text:'client Awa villa Saly acompte 20000 Wave preuve à vérifier'},
@@ -491,7 +491,7 @@
         const draft = buildDraft(raw);
         render(draft);
         try{ localStorage.setItem('DIGIY_ACTION_LOC_DRAFT', JSON.stringify(draft)); }catch(_){ }
-        setStatus('Paquet LOC compacté. Le propriétaire doit vérifier avant de ranger ou valider.');
+        setStatus('Fiche LOC préparée. Le propriétaire vérifie avant brouillon ou validation.');
         return draft;
       }
 
@@ -560,9 +560,9 @@
           if(!norm(txt)){ setStatus('Presse-papiers vide.'); return; }
           $('rawText').value = norm(txt);
           compactFromTextarea();
-          setStatus('Texte collé depuis ailleurs, puis compacté.');
+          setStatus('Texte collé depuis ailleurs, puis préparé.');
         }catch(_){
-          setStatus('Collage automatique bloqué ici. Colle manuellement dans la zone texte, puis clique Compacter.');
+          setStatus('Collage automatique bloqué ici. Colle manuellement dans la zone texte, puis clique Préparer la fiche.');
           $('rawText').focus();
         }
       }
@@ -668,7 +668,7 @@
       $('btnValidateBooking').addEventListener('click', validateBooking);
       $('btnPreparePay').addEventListener('click', preparePay);
       $('btnClear').addEventListener('click', () => {
-        $('rawText').value=''; currentDraft=null; render(buildDraft('')); $('clientMessage').textContent='Message client prêt après compactage.'; setStatus('Écran nettoyé.');
+        $('rawText').value=''; currentDraft=null; render(buildDraft('')); $('clientMessage').textContent='Message client prêt après préparation de la fiche.'; setStatus('Écran nettoyé.');
       });
 
       renderPresetStrip();
@@ -680,6 +680,7 @@
   </script>
 </body>
 </html>
+
 
 
 
