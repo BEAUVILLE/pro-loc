@@ -26,6 +26,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=loc-guard-20260531"></script>
+  <script src="./assets/js/digiy-loc-memory.js?v=loc-planning-memory-sync-20260602"></script>
 
 <!--
     IMPORTANT :
@@ -1220,6 +1221,134 @@
     });
   }
 
+  function readLocalJsonArray(key){
+    try{
+      const rows = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(rows) ? rows : [];
+    }catch(_){
+      return [];
+    }
+  }
+
+  function ymdLoose(value){
+    if(!value) return "";
+    const s = String(value).slice(0,10);
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const d = new Date(value);
+    if(Number.isNaN(d.getTime())) return "";
+    return ymd(d);
+  }
+
+  function rangeDays(start, end){
+    const a = ymdLoose(start);
+    const b = ymdLoose(end);
+    if(!a) return [];
+    if(!b || b <= a) return [a];
+
+    const days = [];
+    const d = new Date(a + "T00:00:00");
+    const stop = new Date(b + "T00:00:00");
+    let guard = 0;
+
+    while(d < stop && guard < 370){
+      days.push(ymd(d));
+      d.setDate(d.getDate() + 1);
+      guard++;
+    }
+
+    return days;
+  }
+
+  function applyActionAndMemoryToMonth(){
+    const { start, end } = monthRange();
+
+    function applyDay(day, meta){
+      if(!day || day < start || day > end) return;
+      const existing = Data.daily[day] || {
+        date: day,
+        price: LocalTariffs.night,
+        booked:false,
+        closed:false,
+        note:""
+      };
+
+      const isBooking = !!(meta && (
+        meta.booked ||
+        meta.type === "reservation" ||
+        String(meta.status || "").toLowerCase().includes("booking") ||
+        String(meta.status || "").toLowerCase().includes("reservation") ||
+        String(meta.source || "").toLowerCase().includes("reservation")
+      ));
+
+      Data.daily[day] = {
+        ...existing,
+        booked: isBooking ? true : !!existing.booked,
+        closed: isBooking ? !!existing.closed : (meta && meta.closed !== undefined ? !!meta.closed : !!existing.closed),
+        price: Number((meta && (meta.price || meta.price_night || meta.price_nuit)) || existing.price || LocalTariffs.night || 0) || 0,
+        note: (meta && (meta.note || meta.title || meta.client_name || meta.lodging)) || existing.note || (isBooking ? "Réservation validée" : "")
+      };
+    }
+
+    function applyBooking(row){
+      if(!row || typeof row !== "object") return;
+      const days = Array.isArray(row.blocked_days) && row.blocked_days.length
+        ? row.blocked_days.map(ymdLoose).filter(Boolean)
+        : rangeDays(row.arrival_ymd || row.arrival || row.checkin || row.start_date, row.departure_ymd || row.departure || row.checkout || row.end_date);
+
+      days.forEach(day => applyDay(day, {
+        booked:true,
+        type:"reservation",
+        status:row.status || "validated_by_owner",
+        title:(row.client_name || row.client || "Client") + " · " + (row.lodging || row.logement || row.room_name || "Logement"),
+        client_name:row.client_name || row.client || "",
+        lodging:row.lodging || row.logement || row.room_name || "",
+        price:row.price || row.amount || 0
+      }));
+    }
+
+    [
+      "DIGIY_LOC_PLANNING_V1",
+      "digiy_loc_planning",
+      "DIGIY_LOC_RESERVATIONS_V1",
+      "digiy_loc_reservations",
+      "DIGIY_LOC_MEMORY_V1_bookings",
+      "digiy_loc_bookings"
+    ].forEach(key => readLocalJsonArray(key).forEach(applyBooking));
+
+    try{
+      if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.listBookings === "function"){
+        (window.DIGIY_LOC_MEMORY.listBookings() || []).forEach(applyBooking);
+      }
+    }catch(_){}
+
+    function applyClosure(row){
+      if(!row || typeof row !== "object") return;
+      const day = ymdLoose(row.date || row.day);
+      if(!day) return;
+      const status = String(row.status || row.source || "").toLowerCase();
+      applyDay(day, {
+        booked: status.includes("booking") || status.includes("reservation"),
+        closed: !(status.includes("booking") || status.includes("reservation")),
+        status: row.status || "",
+        source: row.source || "",
+        note: row.client_name ? ("Réservation · " + row.client_name) : (row.note || "Date bloquée")
+      });
+    }
+
+    [
+      "DIGIY_LOC_MEMORY_V1_closures",
+      "digiy_loc_closures",
+      "digiy_loc_closed_days",
+      "loc_closed_days"
+    ].forEach(key => readLocalJsonArray(key).forEach(applyClosure));
+
+    try{
+      if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.listClosures === "function"){
+        (window.DIGIY_LOC_MEMORY.listClosures() || []).forEach(applyClosure);
+      }
+    }catch(_){}
+  }
+
   function readLocSignals(){
     try{
       const raw = localStorage.getItem(LOC_SIGNALS_KEY) || "[]";
@@ -1488,6 +1617,7 @@
         si la sauvegarde distante n’a pas encore répondu correctement.
       */
       applyPlanningCacheToMonth();
+      applyActionAndMemoryToMonth();
 
       renderCalendar();
 
@@ -1912,6 +2042,220 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
