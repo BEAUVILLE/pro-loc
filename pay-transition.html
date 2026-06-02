@@ -73,6 +73,7 @@
   var KEYS = [
     "DIGIY_LOC_PAY_BRIDGE",
     "DIGIY_PAY_PENDING_MOVEMENT",
+    "DIGIY_PAY_INCOMING_DRAFT",
     "DIGIY_LOC_LATEST_ACTION",
     "DIGIY_LOC_GO_LATEST",
     "DIGIY_LOC_ACTION_LATEST",
@@ -138,17 +139,58 @@
   function load(){
     var found = latestLocDraft();
     if(!found) { refresh(); return; }
-    var d = found.data;
-    var rawText = d.text || d.note || d.rawText || d.commandText || d.phrase || "";
+
+    var d = found.data || {};
+    var rawText = d.text || d.note || d.rawText || d.raw_text || d.commandText || d.phrase || d.original || "";
     var type = detectType(rawText, d);
+
     $("type").value = type;
     $("amount").value = extractAmount(rawText, d);
     $("mode").value = detectMode(rawText, d);
-    $("client").value = d.who || d.client || d.clientName || d.nom || "Client LOC";
-    var route = d.logement || d.property || d.lieu || d.routeLabel || d.dates || d.periode || d.category || "Séjour LOC";
-    if(d.dates && route.indexOf(d.dates) < 0) route = route + " · " + d.dates;
+
+    var client =
+      d.who ||
+      d.client ||
+      d.clientName ||
+      d.client_name ||
+      d.nom ||
+      (d.loc_draft && (d.loc_draft.client_name || d.loc_draft.client)) ||
+      "Client LOC";
+
+    $("client").value = client;
+
+    var lodging =
+      d.logement ||
+      d.lodging ||
+      d.room_name ||
+      d.property ||
+      d.lieu ||
+      (d.loc_draft && (d.loc_draft.lodging || d.loc_draft.logement || d.loc_draft.room_name)) ||
+      "";
+
+    var dates =
+      d.dates ||
+      d.periode ||
+      d.period ||
+      [d.arrival || d.arrival_ymd || d.checkin || (d.loc_draft && (d.loc_draft.arrival || d.loc_draft.arrival_ymd || d.loc_draft.checkin)) || "",
+       d.departure || d.departure_ymd || d.checkout || (d.loc_draft && (d.loc_draft.departure || d.loc_draft.departure_ymd || d.loc_draft.checkout)) || ""]
+        .filter(Boolean).join(" → ");
+
+    var route = d.routeLabel || d.reference || d.category || "Séjour LOC";
+
+    if(lodging) route = lodging;
+    if(dates && route.indexOf(dates) < 0) route = route + " · " + dates;
+
     $("route").value = String(route).replace(/\s*dans PAY\s*$/i, "");
-    $("phrase").value = rawText || buildPhrase();
+
+    if(rawText){
+      $("phrase").value = rawText;
+    }else{
+      var amount = extractAmount("", d);
+      var mode = detectMode("", d);
+      $("phrase").value = "acompte logement LOC " + amount + " " + mode;
+    }
+
     setStatus("Brouillon reçu depuis " + found.key + ". Vérifie puis envoie vers PAY.");
     refresh();
   }
@@ -190,24 +232,39 @@
 
   function saveHandoff(){
     var type = $("type").value || "income";
+    var route = $("route").value || "Séjour LOC";
+    var client = $("client").value || "Client LOC";
+    var amount = Number(clean($("amount").value));
+    var channel = $("mode").value || "Cash";
+    var note = $("phrase").value || buildPhrase();
+
     var handoff = {
       source:"LOC",
+      source_module:"LOC",
       module:"PAY",
       type:type,
       typeLabel:type === "expense" ? "Dépense" : type === "receivable" ? "À recevoir" : "Recette",
-      amount:Number(clean($("amount").value)),
+      amount:amount,
       currency:"XOF",
-      channel:$("mode").value || "Cash",
-      who:$("client").value || "Client LOC",
+      channel:channel,
+      mode:channel,
+      who:client,
+      client:client,
+      clientName:client,
       category:labelForType(type),
-      note:$("phrase").value,
+      logement:route,
+      routeLabel:route,
+      reference:"LOC · " + route,
+      note:note + " · " + route,
       status:"draft",
       requiresHumanValidation:true,
       createdAt:new Date().toISOString(),
       safety:{moduleKeepsBusiness:true,payKeepsFinalMoney:true,noAutoPayment:true,noAutoConfirmation:true,noAutoBooking:true,humanValidationRequired:true}
     };
+
     try{
       localStorage.setItem("DIGIY_LOC_PAY_HANDOFF", JSON.stringify(handoff));
+      localStorage.setItem("DIGIY_LOC_PAY_BRIDGE", JSON.stringify(handoff));
       localStorage.setItem("DIGIY_PAY_PENDING_MOVEMENT", JSON.stringify(handoff));
     }catch(e){}
     return handoff;
@@ -299,6 +356,10 @@
 </script>
 </body>
 </html>
+
+
+
+
 
 
 
