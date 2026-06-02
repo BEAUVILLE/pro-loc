@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Je loue • Aujourd’hui</title>
   <meta name="theme-color" content="#061b14"/>
-  <meta name="description" content="Je loue — lecture du jour propriétaire : arrivées, départs, paiements, messages et actions utiles."/>
+  <meta name="description" content="Je loue — lecture du jour propriétaire : arrivées, départs, recouches, blancs, paiements, messages et actions utiles."/>
 
   <script>
     window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -295,6 +295,28 @@
       font-weight:850;
     }
 
+    .houseLine{
+      margin-top:9px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .houseTask{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.20);
+      background:rgba(255,255,255,.035);
+      color:var(--muted);
+      font-size:.90rem;
+      font-weight:1000;
+      line-height:1.1;
+    }
+    .houseTask.strong{color:#fff7cc;border-color:rgba(250,204,21,.28);background:rgba(250,204,21,.08)}
+
     .badge{
       min-height:34px;
       display:inline-flex;
@@ -435,7 +457,7 @@
         <div class="logo">🏠</div>
         <div>
           <h1>Aujourd’hui</h1>
-          <div class="sub">La journée du propriétaire : arrivées, départs, paiements, messages.</div>
+          <div class="sub">La journée du propriétaire : arrivées, départs, recouches, blancs, paiements, messages.</div>
         </div>
       </div>
 
@@ -452,7 +474,7 @@
     <section class="hero">
       <div class="heroTitle">Ce qui demande attention</div>
       <div class="heroText" id="heroText">
-        DIGIY rassemble les mouvements du jour pour éviter au propriétaire de chercher partout.
+        DIGIY rassemble les mouvements du jour : arrivées, départs, recouches, blancs, paiements et messages.
       </div>
 
       <div class="kpis">
@@ -497,6 +519,19 @@
       <span>Le propriétaire clique plus qu’il n’écrit. DIGIY prépare les mots de location : arrivée, départ, prix, message, note. Le terrain corrige, confirme et garde sa vérité.</span>
     </section>
 
+
+    <section class="section" aria-label="Ménage du jour LOC">
+      <div class="sectionHead">
+        <div>
+          <div class="sectionTitle">🧹 Ménage du jour</div>
+          <div class="sectionSub">Par chambre ou logement : recouche, blanc, arrivée, départ. Lecture courte pour l’équipe terrain.</div>
+        </div>
+        <span class="badge warn" id="housekeepingCount">0 tâche</span>
+      </div>
+      <div class="sectionBody">
+        <div class="list" id="housekeepingList"></div>
+      </div>
+    </section>
 
     <section class="section">
       <div class="sectionHead">
@@ -829,12 +864,72 @@
     return null;
   }
 
+  function readLocalJson(key, fallback){
+    try{
+      const raw = sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+      if(!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed == null ? fallback : parsed;
+    }catch{ return fallback; }
+  }
+
+  function asArray(value){
+    if(Array.isArray(value)) return value;
+    if(value && typeof value === "object"){
+      if(Array.isArray(value.rows)) return value.rows;
+      if(Array.isArray(value.items)) return value.items;
+      if(Array.isArray(value.bookings)) return value.bookings;
+      return Object.values(value).filter(v => v && typeof v === "object");
+    }
+    return [];
+  }
+
+  function loadLocalReservations(){
+    const rows = [];
+
+    try{
+      if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.listBookings === "function"){
+        rows.push(...asArray(window.DIGIY_LOC_MEMORY.listBookings()).map(r => ({...r, _local_source:"DIGIY_LOC_MEMORY"})));
+      }
+    }catch(e){ console.warn("[today] memory bookings", e?.message || e); }
+
+    [
+      "DIGIY_LOC_MEMORY_V1_bookings",
+      "digiy_loc_bookings",
+      "DIGIY_LOC_RESERVATIONS_V1",
+      "digiy_loc_reservations",
+      "DIGIY_LOC_PLANNING_V1",
+      "digiy_loc_planning"
+    ].forEach(key => {
+      asArray(readLocalJson(key, [])).forEach(r => rows.push({...r, _local_source:key}));
+    });
+
+    return rows.filter(Boolean);
+  }
+
+  function rowSignature(r){
+    const n = normalizeRow(r);
+    return [n.id, n.room, n.client, n.checkin, n.checkout].join("|").toLowerCase();
+  }
+
+  function mergeReservations(remote, local){
+    const out = [];
+    const seen = new Set();
+    [...asArray(remote), ...asArray(local)].forEach(row => {
+      const sig = rowSignature(row);
+      if(seen.has(sig)) return;
+      seen.add(sig);
+      out.push(row);
+    });
+    return out;
+  }
+
   async function loadReservations(){
     const slug = State.slug;
-    if(!slug) return [];
+    if(!slug) return mergeReservations([], loadLocalReservations());
 
     const data = await rpcSafe("digiy_loc_reservations_by_slug", { p_slug: slug });
-    return Array.isArray(data) ? data : [];
+    return mergeReservations(Array.isArray(data) ? data : [], loadLocalReservations());
   }
 
   async function loadPayments(){
@@ -854,16 +949,29 @@
     return [];
   }
 
+  function moneyNumber(value){
+    if(typeof value === "number") return Number.isFinite(value) ? value : 0;
+    const raw = String(value || "").replace(/[^0-9.,-]/g, "").replace(/\s+/g, "");
+    if(!raw) return 0;
+    const normalized = raw.includes(",") && raw.lastIndexOf(",") > raw.lastIndexOf(".")
+      ? raw.replace(/\./g, "").replace(",", ".")
+      : raw.replace(/,/g, "");
+    const n = Number(normalized);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   function normalizeRow(r){
+    const draft = r?.loc_draft || r?.draft || r?.data || {};
     return {
-      id:String(r.id || r.reference || Math.random()).trim(),
-      room:String(r.room_name || r.unit_title || r.place_name || r.nom || "Logement"),
-      client:String(r.client_name || r.guest_name || r.name || "Client"),
-      checkin:String(r.checkin || r.check_in || r.start_date || r.date_arrivee || "").slice(0,10),
-      checkout:String(r.checkout || r.check_out || r.end_date || r.date_depart || "").slice(0,10),
-      amount:Number(r.amount_total || r.total_amount || r.amount || r.montant || 0) || 0,
-      status:String(r.status || "confirmed").toLowerCase(),
-      pay:String(r.payment_status || r.pay_status || "due").toLowerCase()
+      id:String(r.id || r.booking_id || r.reference || draft.id || Math.random()).trim(),
+      room:String(r.room_name || r.unit_title || r.place_name || r.nom || r.lodging || r.logement || r.housing || draft.lodging || draft.logement || draft.housing || "Logement"),
+      client:String(r.client_name || r.guest_name || r.name || r.client || draft.client_name || draft.client || "Client"),
+      checkin:String(r.checkin || r.check_in || r.start_date || r.date_arrivee || r.arrival || draft.arrival || draft.checkin || "").slice(0,10),
+      checkout:String(r.checkout || r.check_out || r.end_date || r.date_depart || r.departure || draft.departure || draft.checkout || "").slice(0,10),
+      amount:moneyNumber(r.amount_total || r.total_amount || r.amount || r.montant || r.price || r.deposit || draft.price || draft.deposit || 0),
+      status:String(r.status || r.booking_status || "confirmed").toLowerCase(),
+      pay:String(r.payment_status || r.pay_status || r.payment_mode || draft.payment_mode || "due").toLowerCase(),
+      source:String(r.source || r._local_source || "")
     };
   }
 
@@ -894,6 +1002,101 @@
         </div>
       </div>
     `;
+  }
+
+  function buildHousekeeping(rows, today){
+    const all = rows.map(normalizeRow).filter(r => !isCancelled(r));
+    const byRoom = new Map();
+
+    all.forEach(r => {
+      const roomKey = String(r.room || "Logement").toLowerCase();
+      if(!byRoom.has(roomKey)) byRoom.set(roomKey, { room:r.room || "Logement", arrivals:[], departures:[], stays:[] });
+      const bucket = byRoom.get(roomKey);
+      if(r.checkin === today) bucket.arrivals.push(r);
+      if(r.checkout === today) bucket.departures.push(r);
+      if(r.checkin && r.checkout && r.checkin < today && r.checkout > today) bucket.stays.push(r);
+    });
+
+    const tasks = [];
+    byRoom.forEach(bucket => {
+      if(bucket.departures.length && bucket.arrivals.length){
+        tasks.push({
+          room: bucket.room,
+          type:"blanc_arrivee",
+          label:"BLANC + ARRIVÉE",
+          icon:"🧼",
+          badge:"bad",
+          client:`Départ : ${bucket.departures.map(x=>x.client).join(", ")} · Arrivée : ${bucket.arrivals.map(x=>x.client).join(", ")}`,
+          task:"Tout refaire à blanc, puis préparer pour le prochain client.",
+          detail:"Départ et arrivée le même jour"
+        });
+        return;
+      }
+
+      bucket.departures.forEach(r => tasks.push({
+        room:r.room,
+        type:"blanc",
+        label:"BLANC",
+        icon:"🧼",
+        badge:"bad",
+        client:r.client,
+        task:"Départ aujourd’hui · ménage complet · remettre à zéro.",
+        detail:`Départ : ${fmtDate(r.checkout)}`
+      }));
+
+      bucket.arrivals.forEach(r => tasks.push({
+        room:r.room,
+        type:"arrivee",
+        label:"ARRIVÉE",
+        icon:"🧳",
+        badge:"warn",
+        client:r.client,
+        task:"Préparer le logement avant accueil.",
+        detail:`Arrivée : ${fmtDate(r.checkin)}`
+      }));
+
+      bucket.stays.forEach(r => tasks.push({
+        room:r.room,
+        type:"recouche",
+        label:"RECOUCHE",
+        icon:"🛏️",
+        badge:"ok",
+        client:r.client,
+        task:"Client reste · ménage léger · lit / serviettes / poubelle si besoin.",
+        detail:`Séjour : ${fmtDate(r.checkin)} → ${fmtDate(r.checkout)}`
+      }));
+    });
+
+    const order = { blanc_arrivee:0, blanc:1, arrivee:2, recouche:3 };
+    return tasks.sort((a,b)=>(order[a.type] ?? 9) - (order[b.type] ?? 9) || String(a.room).localeCompare(String(b.room)));
+  }
+
+  function housekeepingHtml(h){
+    return `
+      <div class="item">
+        <div class="itemTop">
+          <div>
+            <div class="itemTitle">${esc(h.icon)} ${esc(h.room)}</div>
+            <div class="itemMeta">${esc(h.client || "")}${h.detail ? "<br>" + esc(h.detail) : ""}</div>
+            <div class="houseLine">
+              <span class="houseTask strong">${esc(h.task)}</span>
+            </div>
+          </div>
+          <span class="badge ${esc(h.badge)}">${esc(h.label)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderHousekeeping(rows, today){
+    const tasks = buildHousekeeping(rows, today);
+    const count = $("housekeepingCount");
+    const list = $("housekeepingList");
+    if(count) count.textContent = `${tasks.length} tâche(s)`;
+    if(!list) return;
+    list.innerHTML = tasks.length
+      ? tasks.map(housekeepingHtml).join("")
+      : `<div class="empty">Aucune recouche ni blanc visible aujourd’hui. Quand les chambres ou logements ont des séjours actifs, les consignes ménage apparaissent ici.</div>`;
   }
 
   function renderSignals(){
@@ -942,6 +1145,8 @@
       departures = rows.filter(r=>r.checkout === today);
       occupied = rows.filter(r=>r.checkin && r.checkout && r.checkin <= today && r.checkout > today);
     }
+
+    renderHousekeeping(rows, today);
 
     const pending = rows.filter(isPending);
     const due = rows.filter(r=>!isPaid(r));
@@ -1051,6 +1256,22 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
