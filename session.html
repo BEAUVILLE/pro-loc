@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="description" content="LOC PRO — état de session, accès protégé et nettoyage local sans exposer téléphone ni identifiant."/>
  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet"/>
-  <meta name="digiy-build" content="loc-session-adn-20260531"/>
+  <meta name="digiy-build" content="loc-session-epuree-action-modes-20260602"/>
 
   <script>
     window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -126,7 +126,7 @@
       <h1>Ma session.</h1>
       <div class="sub" id="sessionSub">
         Ici on contrôle l'accès logement sans afficher le téléphone, sans exposer l'identifiant,
-        sans toucher aux réservations, aux disponibilités ni aux tarifs.
+        sans toucher aux réservations, aux disponibilités ni aux tarifs. Les gestes rapides ouvrent ACTION sans charger l’écran.
       </div>
       <div class="rule">
         Règle LOC : <b>on nettoie seulement l'accès local</b>. On ne supprime ni les réservations,
@@ -180,66 +180,51 @@
       </article>
     </section>
 
-    <section class="grid" aria-label="Actions LOC">
-      <a class="action ok" href="./hub.html">
-        <div class="actionTop"><div class="ico">🧭</div><div class="tag">HUB</div></div>
-        <div><b>Mes portes</b><span>Retourner aux gestes du logement.</span></div>
+    <section class="grid" aria-label="Actions rapides LOC">
+      <a class="action gold" href="./action.html?text=Nouvelle%20demande%20logement%20client%20telephone%20logement%20arrivee%20depart%20personnes">
+        <div class="actionTop"><div class="ico">✨</div><div class="tag">ACTION</div></div>
+        <div><b>Préparer demande</b><span>Client, logement, dates, personnes. DIGIY prépare la fiche.</span></div>
       </a>
 
-      <a class="action" href="./app.html">
-        <div class="actionTop"><div class="ico">🏠</div><div class="tag">Travail</div></div>
-        <div><b>Gérer mes logements</b><span>Travail du jour.</span></div>
+      <a class="action" href="./action.html?text=Verifier%20disponibilite%20logement%20du%20...%20au%20...%20statut%20ouvert%20ou%20bloque">
+        <div class="actionTop"><div class="ico">📅</div><div class="tag">DISPO</div></div>
+        <div><b>Préparer dispo</b><span>Vérifier une période avant de bloquer ou ouvrir.</span></div>
       </a>
 
-      <a class="action gold" href="./action.html">
-        <div class="actionTop"><div class="ico">🎙️</div><div class="tag">GO</div></div>
-        <div><b>DIGIY GO LOC</b><span>Dicter demande, dates, acompte.</span></div>
+      <a class="action" href="./action.html?text=Prix%20a%20proposer%20logement%20dates%20nuits%20tarif%20acompte%20solde">
+        <div class="actionTop"><div class="ico">🏷️</div><div class="tag">TARIF</div></div>
+        <div><b>Préparer tarif</b><span>Tarif proposé sans toucher au tarif officiel.</span></div>
       </a>
 
-      <a class="action" href="./planning.html">
-        <div class="actionTop"><div class="ico">🗓️</div><div class="tag">Dates</div></div>
-        <div><b>Disponibilités</b><span>Bloquer ou ouvrir les créneaux.</span></div>
-      </a>
-
-      <a class="action" href="./listing.html">
-        <div class="actionTop"><div class="ico">📖</div><div class="tag">Journal</div></div>
-        <div><b>Lecture du jour</b><span>Arrivées et départs.</span></div>
-      </a>
-
-      <a class="action" href="./oreille.html">
-        <div class="actionTop"><div class="ico">🎙️</div><div class="tag">Oreille</div></div>
-        <div><b>Oreille LOC</b><span>Parler, formuler, valider.</span></div>
-      </a>
-
-      <a class="action" href="./notes.html">
-        <div class="actionTop"><div class="ico">📝</div><div class="tag">Notes</div></div>
-        <div><b>Notes rapides</b><span>Rappels et traces terrain.</span></div>
-      </a>
-
-      <a class="action" href="./qr.html">
-        <div class="actionTop"><div class="ico">🔳</div><div class="tag">QR</div></div>
-        <div><b>Mon QR</b><span>Partager la porte logement.</span></div>
-      </a>
-
-      <a class="action" href="./generator.html">
-        <div class="actionTop"><div class="ico">🏡</div><div class="tag">Fiche</div></div>
-        <div><b>Préparer une fiche</b><span>Présenter le logement.</span></div>
-      </a>
-
-      <a class="action" href="./pay-transition.html">
+      <a class="action gold" href="./action.html?text=Acompte%20location%20LOC%20client%20logement%20montant%20mode%20paiement%20preuve%20a%20verifier">
         <div class="actionTop"><div class="ico">💳</div><div class="tag">PAY</div></div>
-        <div><b>Vers PAY</b><span>Acompte, solde, dépense logement.</span></div>
+        <div><b>Préparer acompte</b><span>Brouillon PAY seulement. Argent réel vérifié dans PAY.</span></div>
       </a>
 
-      <a class="action gold" href="https://pro-pay.digiylyfe.com/admin.html">
-        <div class="actionTop"><div class="ico">💰</div><div class="tag">Mon argent</div></div>
-        <div><b>MON ARGENT</b><span>Suivre mouvements et dettes LOC.</span></div>
+      <a class="action" href="./action.html?text=Arrivee%20ou%20depart%20client%20logement%20heure%20consignes%20caution%20etat%20a%20verifier">
+        <div class="actionTop"><div class="ico">🚪</div><div class="tag">SÉJOUR</div></div>
+        <div><b>Arrivée / départ</b><span>Préparer consignes, heure, solde, caution.</span></div>
       </a>
 
-      <a class="action" href="./pin.html">
-        <div class="actionTop"><div class="ico">🔑</div><div class="tag">PIN</div></div>
-        <div><b>Rouvrir</b><span>Repasser par l'accès logement.</span></div>
+      <a class="action ok" href="./planning.html">
+        <div class="actionTop"><div class="ico">🗓️</div><div class="tag">DATES</div></div>
+        <div><b>Voir planning</b><span>Contrôler les dates bloquées ou ouvertes.</span></div>
       </a>
+
+      <a class="action blue" href="./reservations.html">
+        <div class="actionTop"><div class="ico">📋</div><div class="tag">LISTE</div></div>
+        <div><b>Réservations</b><span>Retrouver les demandes et statuts.</span></div>
+      </a>
+
+      <a class="action" href="./tarifs.html">
+        <div class="actionTop"><div class="ico">💰</div><div class="tag">PRIX</div></div>
+        <div><b>Tarifs officiels</b><span>Modifier nuit, semaine, mois, caution.</span></div>
+      </a>
+    </section>
+
+    <section class="notice">
+      <b>Session reste le coffre.</b><br>
+      Les gestes rapides ouvrent DIGIY GO LOC avec une fiche pré-remplie. Le détail métier reste dans action, planning, réservations et tarifs.
     </section>
 
     <button class="dangerBtn" id="btnClearSession" type="button">
@@ -416,6 +401,12 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
