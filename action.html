@@ -162,6 +162,7 @@
         <div class="btns">
           <button class="primary" id="btnValidateBooking">✅ Valider réservation</button>
           <button class="gold" id="btnPreparePay">💳 Préparer acompte PAY</button>
+          <button class="soft" id="btnSaveTarif">🏷️ Enregistrer tarif</button>
         </div>
         <div class="message" id="clientMessage">Message client prêt après préparation de la fiche.</div>
         <p class="mini">Le bouton PAY prépare seulement un brouillon d’encaissement. Le paiement réel doit être vérifié dans PAY avant d’être compté.</p>
@@ -177,7 +178,7 @@
       const $ = (id) => document.getElementById(id);
       const STORE_INCOMING = ['DIGIY_ACTION_LOC_DRAFT','DIGIY_ACTION_PAYLOAD','DIGIY_ACTION_INCOMING','DIGIY_OREILLE_LOC_DRAFT'];
       const PAY_DRAFT_KEY = 'DIGIY_PAY_INCOMING_DRAFT';
-      const ACTION_VERSION = 'action-loc-filtreur-20260602-v5-exemples-avant-validation';
+      const ACTION_VERSION = 'action-loc-filtreur-20260602-v7-planning-tarifs-sync-local';
       const PRESETS = [
         {hot:true, title:'Nouvelle demande', hint:'client · logement · dates', text:'client Awa logement villa Saly arrivée 12 juin départ 15 juin 4 personnes'},
         {title:'Acompte Wave', hint:'montant · preuve à vérifier', text:'client Awa villa Saly acompte 20000 Wave preuve à vérifier'},
@@ -202,6 +203,159 @@
       function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
       function setStatus(msg){$('status').textContent = msg;}
       function todayIso(){return new Date().toISOString();}
+
+
+      function ymdFromDate(d){
+        if(!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      }
+
+      function toYmd(value){
+        const raw = lower(value);
+        if(!raw) return '';
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if(/après-demain|apres-demain/.test(raw)){ const d=new Date(today); d.setDate(d.getDate()+2); return ymdFromDate(d); }
+        if(/demain/.test(raw)){ const d=new Date(today); d.setDate(d.getDate()+1); return ymdFromDate(d); }
+        if(/aujourd/.test(raw)){ return ymdFromDate(today); }
+
+        let m = raw.match(/\b(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/);
+        if(m){ return ymdFromDate(new Date(Number(m[1]), Number(m[2])-1, Number(m[3]))); }
+
+        m = raw.match(/\b(\d{1,2})\s*[-\/.]\s*(\d{1,2})(?:\s*[-\/.]\s*(\d{2,4}))?\b/);
+        if(m){
+          let y = m[3] ? Number(m[3]) : today.getFullYear();
+          if(y < 100) y += 2000;
+          const d = new Date(y, Number(m[2])-1, Number(m[1]));
+          if(!m[3] && d < today) d.setFullYear(y+1);
+          return ymdFromDate(d);
+        }
+
+        const months = {
+          'janvier':1,'janv':1,'février':2,'fevrier':2,'fév':2,'fev':2,'mars':3,'avril':4,'avr':4,'mai':5,'juin':6,'juillet':7,'juil':7,'août':8,'aout':8,'septembre':9,'sept':9,'octobre':10,'oct':10,'novembre':11,'nov':11,'décembre':12,'decembre':12,'déc':12,'dec':12
+        };
+        const names = Object.keys(months).join('|');
+        m = raw.match(new RegExp('\\b(\\d{1,2})\\s+(' + names + ')(?:\\s+(20\\d{2}))?\\b','i'));
+        if(m){
+          const y = m[3] ? Number(m[3]) : today.getFullYear();
+          const d = new Date(y, months[m[2]], 0); // last day guard month normalization below
+          d.setDate(Number(m[1]));
+          d.setMonth(months[m[2]]-1);
+          if(!m[3] && d < today) d.setFullYear(y+1);
+          return ymdFromDate(d);
+        }
+        return '';
+      }
+
+      function stayDays(arrival, departure){
+        const start = toYmd(arrival);
+        const end = toYmd(departure);
+        if(!start) return [];
+        if(!end || end <= start) return [start];
+        const days = [];
+        let d = new Date(start + 'T00:00:00');
+        const stop = new Date(end + 'T00:00:00');
+        let guard = 0;
+        while(d < stop && guard < 370){
+          days.push(ymdFromDate(d));
+          d.setDate(d.getDate()+1);
+          guard++;
+        }
+        return days;
+      }
+
+      function writeArrayKey(key, item, max){
+        try{
+          const arr = JSON.parse(localStorage.getItem(key)||'[]');
+          const clean = Array.isArray(arr) ? arr.filter(x => String(x && (x.id || x.booking_id || x.planning_id)) !== String(item.id || item.booking_id || item.planning_id)) : [];
+          clean.unshift(item);
+          localStorage.setItem(key, JSON.stringify(clean.slice(0, max || 500)));
+        }catch(_){ }
+      }
+
+      function syncPlanningAfterValidation(booking){
+        const arrivalYmd = toYmd(booking.arrival);
+        const departureYmd = toYmd(booking.departure);
+        const days = stayDays(booking.arrival, booking.departure);
+        const planningItem = {
+          id:'loc_plan_' + Date.now(),
+          booking_id:booking.id,
+          module:'LOC',
+          type:'reservation',
+          status:'validated_by_owner',
+          title:(booking.client_name || 'Client') + ' · ' + (booking.lodging || 'Logement'),
+          client_name:booking.client_name || '',
+          client_phone:booking.client_phone || '',
+          lodging:booking.lodging || '',
+          arrival:booking.arrival || '',
+          departure:booking.departure || '',
+          arrival_ymd:arrivalYmd,
+          departure_ymd:departureYmd,
+          blocked_days:days,
+          created_at:todayIso(),
+          warning:'Planning local mis à jour après clic humain. Supabase doit synchroniser ensuite si le module distant est branché.'
+        };
+
+        writeArrayKey('DIGIY_LOC_PLANNING_V1', planningItem, 500);
+        writeArrayKey('digiy_loc_planning', planningItem, 500);
+        writeArrayKey('DIGIY_LOC_RESERVATIONS_V1', Object.assign({}, booking, {arrival_ymd:arrivalYmd, departure_ymd:departureYmd, blocked_days:days}), 500);
+        writeArrayKey('digiy_loc_reservations', Object.assign({}, booking, {arrival_ymd:arrivalYmd, departure_ymd:departureYmd, blocked_days:days}), 500);
+
+        if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.addClosure === 'function'){
+          days.forEach(function(day){
+            window.DIGIY_LOC_MEMORY.addClosure(day, {
+              source:'reservation',
+              booking_id:booking.id,
+              client_name:booking.client_name || '',
+              lodging:booking.lodging || '',
+              status:'blocked_by_validated_booking'
+            });
+          });
+        }
+
+        return {arrival_ymd:arrivalYmd, departure_ymd:departureYmd, blocked_days:days, planning_key:'DIGIY_LOC_PLANNING_V1'};
+      }
+
+
+      function saveTarifProposal(source){
+        const d = source || currentDraft || compactFromTextarea();
+        if(!d) return null;
+        const price = norm(d.price || '');
+        if(!price){ setStatus('Aucun tarif trouvé. Ajoute un prix ou tarif avant d’enregistrer.'); return null; }
+        const item = {
+          id:'loc_tarif_' + Date.now(),
+          module:'LOC',
+          type:'tarif_propose',
+          status:'to_verify_by_owner',
+          lodging:d.lodging || '',
+          price:price,
+          nights:d.nights || '',
+          arrival:d.arrival || '',
+          departure:d.departure || '',
+          client_name:d.client_name || '',
+          client_phone:d.client_phone || '',
+          original:d.original || '',
+          created_at:todayIso(),
+          warning:'Tarif enregistré localement comme proposition. Le propriétaire garde la main avant tarif officiel.'
+        };
+        writeArrayKey('DIGIY_LOC_TARIFS_V1', item, 500);
+        writeArrayKey('digiy_loc_tarifs', item, 500);
+        if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.prices === 'function' && typeof window.DIGIY_LOC_MEMORY.savePrices === 'function'){
+          try{
+            const rows = window.DIGIY_LOC_MEMORY.prices();
+            const arr = Array.isArray(rows) ? rows : [];
+            const clean = arr.filter(x => String(x && x.id) !== String(item.id));
+            clean.unshift(item);
+            window.DIGIY_LOC_MEMORY.savePrices(clean.slice(0,500));
+          }catch(_){ }
+        }
+        return item;
+      }
+
+      function saveTarifFromButton(){
+        const item = saveTarifProposal();
+        if(item){ setStatus('Tarif LOC enregistré localement comme proposition à vérifier.'); }
+      }
 
       const numberWords = {
         'zero':0,'zéro':0,'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,'dix':10,
@@ -649,6 +803,13 @@
           validated_at:todayIso(),
           warning:'Réservation rangée après clic humain du propriétaire. Paiement à vérifier séparément dans PAY.'
         });
+        const planningSync = syncPlanningAfterValidation(booking);
+        const tarifSync = booking.price ? saveTarifProposal(booking) : null;
+        booking.planning_sync = planningSync;
+        booking.tarif_sync = tarifSync ? {tarif_id:tarifSync.id, key:'DIGIY_LOC_TARIFS_V1'} : null;
+        booking.arrival_ymd = planningSync.arrival_ymd;
+        booking.departure_ymd = planningSync.departure_ymd;
+        booking.blocked_days = planningSync.blocked_days;
         if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.upsertBooking === 'function'){
           window.DIGIY_LOC_MEMORY.upsertBooking(booking);
         }else{
@@ -659,7 +820,8 @@
           }catch(_){ }
         }
         renderReceivedStrip();
-        setStatus('Réservation rangée après validation humaine. PAY reste séparé pour l’argent réel.');
+        const daysMsg = (booking.blocked_days && booking.blocked_days.length) ? (' Planning local mis à jour : ' + booking.blocked_days.length + ' date(s) bloquée(s).') : ' Planning local créé, mais les dates doivent être vérifiées car elles ne sont pas encore lisibles au format calendrier.';
+        setStatus('Réservation rangée après validation humaine. PAY reste séparé pour l’argent réel.' + daysMsg);
       }
 
       function preparePay(){
@@ -700,6 +862,7 @@
       $('btnSaveDraft').addEventListener('click', saveDraft);
       $('btnValidateBooking').addEventListener('click', validateBooking);
       $('btnPreparePay').addEventListener('click', preparePay);
+      $('btnSaveTarif').addEventListener('click', saveTarifFromButton);
       $('btnClear').addEventListener('click', () => {
         $('rawText').value=''; currentDraft=null; render(buildDraft('')); $('clientMessage').textContent='Message client prêt après préparation de la fiche.'; setStatus('Écran nettoyé.');
       });
@@ -708,7 +871,7 @@
       render(buildDraft(''));
       loadIncoming();
       renderReceivedStrip();
-      window.DIGIY_LOC_ACTION = {version:ACTION_VERSION, buildDraft, missingFields, render, compactFromTextarea, preparePay, validateBooking, ficheCourte, pasteClipboard};
+      window.DIGIY_LOC_ACTION = {version:ACTION_VERSION, buildDraft, missingFields, render, compactFromTextarea, preparePay, validateBooking, saveTarifProposal, ficheCourte, pasteClipboard};
     })();
   </script>
 </body>
