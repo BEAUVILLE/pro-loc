@@ -266,6 +266,24 @@
     .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
     .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 
+
+    .proposalBox{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+    .proposalItem{
+      border:1px solid rgba(250,204,21,.25);
+      background:rgba(250,204,21,.08);
+      border-radius:18px;
+      padding:13px 14px;
+      color:#fde68a;
+      font-weight:900;
+      line-height:1.42;
+      font-size:1rem;
+    }
+    .proposalItem b{color:#fff}
+
     .bottomNav{
       position:fixed;
       left:0;right:0;bottom:0;
@@ -428,6 +446,8 @@
         </div>
       </div>
 
+      <div class="proposalBox" id="proposalTariffs" aria-label="Tarifs proposés depuis DIGIY GO LOC"></div>
+
       <div class="note ok" style="display:block">
         Les prix restent légers : ils servent à la gestion et à la lecture. Les paiements restent directs au propriétaire.
       </div>
@@ -454,6 +474,16 @@
   const FIELDS = ["pNight","pWeek","pMonth","pClean","pDeposit"];
   const SIGNAL_KEY = "DIGIY_LOC_PRO_SIGNALS";
   const State = { slug:"", phone:"", access:false };
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      "\"":"&quot;",
+      "'":"&#039;"
+    }[m]));
+  }
 
   function storageGet(key){
     try{ const s=sessionStorage.getItem(key); if(s) return s; }catch{}
@@ -602,6 +632,67 @@
     }catch{ return false; }
   }
 
+  function readLocalJsonArray(key){
+    try{
+      const rows = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(rows) ? rows : [];
+    }catch(_){
+      return [];
+    }
+  }
+
+  function localTarifProposals(){
+    const rows = [];
+    [
+      "DIGIY_LOC_TARIFS_V1",
+      "digiy_loc_tarifs",
+      "DIGIY_LOC_MEMORY_V1_prices",
+      "digiy_loc_prices"
+    ].forEach(key => rows.push(...readLocalJsonArray(key)));
+
+    try{
+      if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.prices === "function"){
+        const prices = window.DIGIY_LOC_MEMORY.prices();
+        if(Array.isArray(prices)) rows.push(...prices);
+      }
+    }catch(_){}
+
+    const seen = new Set();
+    return rows.filter(row => {
+      if(!row || typeof row !== "object") return false;
+      if(String(row.type || "").includes("officiel")) return false;
+      const id = String(row.id || [
+        row.lodging || "",
+        row.price || row.tarif || "",
+        row.arrival || "",
+        row.departure || "",
+        row.client_name || ""
+      ].join("|"));
+      if(seen.has(id)) return false;
+      seen.add(id);
+      return row.price || row.tarif || row.amount || row.night;
+    }).slice(0,5);
+  }
+
+  function renderTarifProposals(){
+    const box = $("proposalTariffs");
+    if(!box) return;
+
+    const rows = localTarifProposals();
+    if(!rows.length){
+      box.innerHTML = '<div class="proposalItem"><b>Aucune proposition venue d’action.</b><br>Les tarifs officiels restent ceux enregistrés ici.</div>';
+      return;
+    }
+
+    box.innerHTML =
+      '<div class="proposalItem"><b>Propositions venues de DIGIY GO LOC</b><br>Lecture seulement : le propriétaire peut reprendre ces prix avant d’en faire un tarif officiel.</div>' +
+      rows.map(row => {
+        const price = fmtMoney(row.price || row.tarif || row.amount || row.night);
+        const title = [row.lodging || row.logement || "Logement", row.client_name ? ("client " + row.client_name) : "", row.arrival || "", row.departure ? "→ " + row.departure : ""].filter(Boolean).join(" · ");
+        return '<div class="proposalItem"><b>' + esc(price) + '</b><br>' + esc(title || "Proposition tarif") + '</div>';
+      }).join("");
+  }
+
   function pushSignal(label, detail, href){
     try{
       const raw = localStorage.getItem(SIGNAL_KEY);
@@ -726,6 +817,8 @@
       updatePreview();
       show("Pose tes prix, puis enregistre. Simple et propre.", "warn");
     }
+
+    renderTarifProposals();
   }
 
   init();
@@ -734,5 +827,7 @@
 <script src="./loc-security-mask.js"></script>
 </body>
 </html>
+
+
 
 
