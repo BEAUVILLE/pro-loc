@@ -178,7 +178,7 @@
       const $ = (id) => document.getElementById(id);
       const STORE_INCOMING = ['DIGIY_ACTION_LOC_DRAFT','DIGIY_ACTION_PAYLOAD','DIGIY_ACTION_INCOMING','DIGIY_OREILLE_LOC_DRAFT'];
       const PAY_DRAFT_KEY = 'DIGIY_PAY_INCOMING_DRAFT';
-      const ACTION_VERSION = 'action-loc-filtreur-20260602-v7-planning-tarifs-sync-local';
+      const ACTION_VERSION = 'action-loc-filtreur-20260602-v8-packet-pay-memory-sync';
       const PRESETS = [
         {hot:true, title:'Nouvelle demande', hint:'client · logement · dates', text:'client Awa logement villa Saly arrivée 12 juin départ 15 juin 4 personnes'},
         {title:'Acompte Wave', hint:'montant · preuve à vérifier', text:'client Awa villa Saly acompte 20000 Wave preuve à vérifier'},
@@ -468,26 +468,77 @@
         const original = norm(text);
         const clean = normalizeNumberWords(original);
         const dates = extractDates(clean);
+        const arrival = dates.arrival || '';
+        const departure = dates.departure || '';
+        const arrivalYmd = toYmd(arrival);
+        const departureYmd = toYmd(departure);
+        const price = extractPrice(clean);
+        const deposit = extractDeposit(clean);
+        const balance = extractBalance(clean);
+        const paymentMode = extractPaymentMode(clean);
+        const lodging = extractLodging(clean);
+        const amount = deposit || price || balance || '';
+        const datesLabel = [arrival || arrivalYmd, departure || departureYmd].filter(Boolean).join(' → ');
+        const housekeeping = departureYmd
+          ? 'blanc_si_depart'
+          : (arrivalYmd ? 'arrivee_a_preparer' : 'a_verifier');
+
         return {
           module:'LOC',
+          source_module:'LOC',
           version:ACTION_VERSION,
           original:original,
+          raw_text:original,
+          rawText:original,
           clean_text:clean,
           intent:guessIntent(clean),
+
           client_name:extractClientName(clean),
+          client:extractClientName(clean),
+          clientName:extractClientName(clean),
           client_phone:extractPhone(clean),
-          lodging:extractLodging(clean),
-          arrival:dates.arrival,
-          departure:dates.departure,
+          phone:extractPhone(clean),
+
+          lodging:lodging,
+          logement:lodging,
+          room_name:lodging,
+          property:lodging,
+
+          arrival:arrival,
+          departure:departure,
+          checkin:arrivalYmd,
+          checkout:departureYmd,
+          arrival_ymd:arrivalYmd,
+          departure_ymd:departureYmd,
+          dates:datesLabel,
+          periode:datesLabel,
+
           nights:extractNights(clean),
           guests:extractGuests(clean),
-          price:extractPrice(clean),
-          deposit:extractDeposit(clean),
-          balance:extractBalance(clean),
-          payment_mode:extractPaymentMode(clean),
+
+          price:price,
+          deposit:deposit,
+          balance:balance,
+          amount:amount,
+          amount_fcfa:String(amount || '').replace(/[^\d]/g,''),
+          payment_mode:paymentMode,
+          channel:paymentMode,
+
+          housekeeping_status:housekeeping,
+          housekeeping_label:housekeeping === 'blanc_si_depart' ? 'BLANC si départ confirmé' : housekeeping === 'arrivee_a_preparer' ? 'ARRIVÉE à préparer' : 'À vérifier',
           status:'draft',
+          booking_status:'draft',
+          payment_status: amount ? 'to_verify' : 'due',
           validation_required:true,
-          created_at:todayIso()
+          requiresHumanValidation:true,
+          created_at:todayIso(),
+          createdAt:todayIso(),
+          safety:{
+            noAutoBooking:true,
+            noAutoPayment:true,
+            noAutoPrice:true,
+            humanValidationRequired:true
+          }
         };
       }
 
@@ -780,13 +831,35 @@
       function saveDraft(){
         const d = currentDraft || compactFromTextarea();
         if(!d) return;
-        const payload = Object.assign({}, d, {status:'draft', saved_at:todayIso()});
+
+        const payload = Object.assign({}, d, {
+          module:'LOC',
+          source_module:'LOC',
+          status:'draft',
+          booking_status:'draft',
+          validation_required:true,
+          requiresHumanValidation:true,
+          saved_at:todayIso(),
+          updated_at:todayIso()
+        });
+
         if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.saveDraft === 'function'){
           window.DIGIY_LOC_MEMORY.saveDraft(payload);
-          if(window.DIGIY_LOC_MEMORY.addNote) window.DIGIY_LOC_MEMORY.addNote('Action LOC brouillon : ' + (payload.original || payload.intent), {action_payload:payload});
+          if(window.DIGIY_LOC_MEMORY.addNote){
+            window.DIGIY_LOC_MEMORY.addNote('Action LOC brouillon : ' + (payload.original || payload.intent), {action_payload:payload});
+          }
         }else{
           try{ localStorage.setItem('DIGIY_LOC_MEMORY_V1_draft', JSON.stringify(payload)); }catch(_){ }
         }
+
+        try{
+          [
+            'DIGIY_LOC_LAST_DRAFT',
+            'DIGIY_LOC_ACTION_LATEST',
+            'DIGIY_LOC_GO_LATEST'
+          ].forEach(function(key){ localStorage.setItem(key, JSON.stringify(payload)); });
+        }catch(_){}
+
         renderReceivedStrip();
         setStatus('Brouillon LOC rangé localement. Rien n’est confirmé automatiquement.');
       }
@@ -794,62 +867,149 @@
       function validateBooking(){
         const d = currentDraft || compactFromTextarea();
         if(!d) return;
+
         const missing = missingFields(d);
-        if(missing.length){ setStatus('Validation bloquée : complète d’abord '+missing.join(', ')+'.'); return; }
+        if(missing.length){
+          setStatus('Validation bloquée : complète d’abord '+missing.join(', ')+'.');
+          return;
+        }
+
         const booking = Object.assign({}, d, {
           id:'loc_booking_' + Date.now(),
+          booking_id:'loc_booking_' + Date.now(),
+          module:'LOC',
+          source_module:'LOC',
+          memory_type:'booking',
+          type:'reservation',
           status:'validated_by_owner',
+          booking_status:'validated_by_owner',
+          payment_status:d.amount || d.deposit || d.price ? 'to_verify' : 'due',
           validation_required:false,
+          requiresHumanValidation:false,
           validated_at:todayIso(),
+          updated_at:todayIso(),
           warning:'Réservation rangée après clic humain du propriétaire. Paiement à vérifier séparément dans PAY.'
         });
+
         const planningSync = syncPlanningAfterValidation(booking);
         const tarifSync = booking.price ? saveTarifProposal(booking) : null;
+
         booking.planning_sync = planningSync;
         booking.tarif_sync = tarifSync ? {tarif_id:tarifSync.id, key:'DIGIY_LOC_TARIFS_V1'} : null;
-        booking.arrival_ymd = planningSync.arrival_ymd;
-        booking.departure_ymd = planningSync.departure_ymd;
-        booking.blocked_days = planningSync.blocked_days;
+        booking.arrival_ymd = planningSync.arrival_ymd || booking.arrival_ymd || booking.checkin || '';
+        booking.departure_ymd = planningSync.departure_ymd || booking.departure_ymd || booking.checkout || '';
+        booking.checkin = booking.arrival_ymd || booking.checkin || '';
+        booking.checkout = booking.departure_ymd || booking.checkout || '';
+        booking.room_name = booking.room_name || booking.lodging || booking.logement || '';
+        booking.logement = booking.logement || booking.lodging || booking.room_name || '';
+        booking.amount = booking.amount || booking.deposit || booking.price || booking.balance || 0;
+        booking.blocked_days = planningSync.blocked_days || [];
+
         if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.upsertBooking === 'function'){
           window.DIGIY_LOC_MEMORY.upsertBooking(booking);
         }else{
           try{
             const key='DIGIY_LOC_MEMORY_V1_bookings';
             const arr=JSON.parse(localStorage.getItem(key)||'[]');
-            arr.unshift(booking); localStorage.setItem(key, JSON.stringify(arr.slice(0,500)));
+            arr.unshift(booking);
+            localStorage.setItem(key, JSON.stringify(arr.slice(0,500)));
           }catch(_){ }
         }
+
+        try{
+          [
+            'DIGIY_LOC_LATEST_ACTION',
+            'DIGIY_LOC_ACTION_LATEST',
+            'DIGIY_LOC_GO_LATEST',
+            'DIGIY_LOC_LAST_DRAFT'
+          ].forEach(function(key){ localStorage.setItem(key, JSON.stringify(booking)); });
+        }catch(_){}
+
         renderReceivedStrip();
-        const daysMsg = (booking.blocked_days && booking.blocked_days.length) ? (' Planning local mis à jour : ' + booking.blocked_days.length + ' date(s) bloquée(s).') : ' Planning local créé, mais les dates doivent être vérifiées car elles ne sont pas encore lisibles au format calendrier.';
+
+        const daysMsg = (booking.blocked_days && booking.blocked_days.length)
+          ? (' Planning local mis à jour : ' + booking.blocked_days.length + ' date(s) bloquée(s).')
+          : ' Planning local créé, mais les dates doivent être vérifiées car elles ne sont pas encore lisibles au format calendrier.';
+
         setStatus('Réservation rangée après validation humaine. PAY reste séparé pour l’argent réel.' + daysMsg);
       }
 
       function preparePay(){
         const d = currentDraft || compactFromTextarea();
         if(!d) return;
-        const amount = d.deposit || d.price || '';
-        if(!amount){ setStatus('Aucun acompte ou montant trouvé. Ajoute un montant avant de préparer PAY.'); return; }
+
+        const amount = d.deposit || d.price || d.balance || d.amount || '';
+        if(!amount){
+          setStatus('Aucun acompte ou montant trouvé. Ajoute un montant avant de préparer PAY.');
+          return;
+        }
+
+        const datesLabel = d.dates || [d.arrival || d.arrival_ymd || d.checkin || '', d.departure || d.departure_ymd || d.checkout || ''].filter(Boolean).join(' → ');
+        const lodging = d.lodging || d.logement || d.room_name || 'Logement LOC';
+        const client = d.client_name || d.client || d.clientName || 'Client LOC';
+        const mode = d.payment_mode || d.channel || 'Wave';
+
         const payDraft = {
           module:'PAY',
+          source:'LOC',
           source_module:'LOC',
-          type:'encaissement à vérifier',
-          label:'Acompte location LOC',
-          amount:amount,
-          mode:d.payment_mode || '',
-          client_name:d.client_name || '',
-          client_phone:d.client_phone || '',
-          reference:'LOC · ' + (d.lodging || 'logement') + ' · ' + (d.arrival || 'date à préciser'),
-          original:d.original,
+          type:'income',
+          typeLabel:'Recette',
+          label:'Acompte logement LOC',
+          category:'Acompte logement LOC',
+          amount:String(amount).replace(/[^\d]/g,'') || amount,
+          currency:'XOF',
+          channel:mode,
+          mode:mode,
+          who:client,
+          client:client,
+          clientName:client,
+          client_name:client,
+          client_phone:d.client_phone || d.phone || '',
+          logement:lodging,
+          lodging:lodging,
+          property:lodging,
+          dates:datesLabel,
+          periode:datesLabel,
+          routeLabel:lodging + (datesLabel ? ' · ' + datesLabel : ''),
+          reference:'LOC · ' + lodging + (datesLabel ? ' · ' + datesLabel : ''),
+          rawText:'acompte logement LOC ' + String(amount).replace(/[^\d]/g,'') + ' ' + mode,
+          phrase:'acompte logement LOC ' + String(amount).replace(/[^\d]/g,'') + ' ' + mode,
+          note:'Acompte LOC à vérifier · ' + lodging + (datesLabel ? ' · ' + datesLabel : ''),
+          original:d.original || d.raw_text || '',
           status:'draft',
           only_real_money:true,
           validation_required:true,
+          requiresHumanValidation:true,
           created_at:todayIso(),
-          warning:'PAY doit vérifier la preuve et confirmer le paiement réel avant comptabilisation.'
+          createdAt:todayIso(),
+          safety:{
+            noAutoBooking:true,
+            noAutoPayment:true,
+            noAutoConfirmation:true,
+            humanValidationRequired:true
+          },
+          loc_draft:d
         };
-        try{ localStorage.setItem(PAY_DRAFT_KEY, JSON.stringify(payDraft)); }catch(_){ }
-        setStatus('Brouillon PAY préparé localement. Le paiement réel devra être confirmé dans PAY.');
-        const url = window.DIGIY_PAY_ACTION_URL || '';
-        if(url){ window.location.href = url; }
+
+        try{
+          [
+            PAY_DRAFT_KEY,
+            'DIGIY_LOC_PAY_BRIDGE',
+            'DIGIY_PAY_PENDING_MOVEMENT',
+            'DIGIY_LOC_LATEST_ACTION',
+            'DIGIY_LOC_GO_LATEST',
+            'DIGIY_LOC_ACTION_LATEST',
+            'DIGIY_LOC_LAST_DRAFT'
+          ].forEach(function(key){ localStorage.setItem(key, JSON.stringify(payDraft)); });
+        }catch(_){ }
+
+        setStatus('Brouillon PAY LOC préparé. Ouverture du couloir LOC → PAY : PAY devra vérifier l’argent réel.');
+
+        const url = window.DIGIY_PAY_ACTION_URL || './pay-transition.html?from=LOC';
+        if(url){
+          setTimeout(function(){ window.location.href = url; }, 250);
+        }
       }
 
       $('btnVoice').addEventListener('click', startVoice);
@@ -876,6 +1036,27 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
