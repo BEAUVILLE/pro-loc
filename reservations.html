@@ -18,6 +18,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./guard.js?v=loc-guard-20260531"></script>
+  <script src="./assets/js/digiy-loc-memory.js?v=loc-reservations-memory-sync-20260602"></script>
   <script src="./loc-security-mask.js?v=locpro-reservations-doctrine-large-20260510"></script>
 
   <style>
@@ -739,6 +740,12 @@
     return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
   }
 
+  function parseMoneyValue(value){
+    if(typeof value === "number") return Number.isFinite(value) ? value : 0;
+    const n = Number(String(value || "").replace(/[^\d]/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+
   function fmtDate(x){
     if(!x) return "—";
     try{
@@ -794,24 +801,24 @@
   function normalizeStatus(r){
     const raw = String(r.status || r.reservation_status || "").toLowerCase();
     if(raw.includes("cancel")) return "cancelled";
-    if(raw.includes("pending") || raw.includes("attente") || raw.includes("wait")) return "pending";
-    if(raw.includes("confirm") || raw.includes("ok") || raw.includes("accepted")) return "confirmed";
+    if(raw.includes("pending") || raw.includes("attente") || raw.includes("wait") || raw.includes("draft")) return "pending";
+    if(raw.includes("confirm") || raw.includes("validated") || raw.includes("validé") || raw.includes("valide") || raw.includes("ok") || raw.includes("accepted")) return "confirmed";
     return raw || "confirmed";
   }
 
   function normalizePay(r){
-    const raw = String(r.payment_status || r.pay_status || r.paid_status || "").toLowerCase();
-    if(raw === "paid" || raw.includes("paid") || raw.includes("succeeded") || raw.includes("confirm") || raw.includes("payé")) return "paid";
+    const raw = String(r.payment_status || r.pay_status || r.paid_status || r.payment_mode || r.paiement || "").toLowerCase();
+    if(raw === "paid" || raw.includes("paid") || raw.includes("succeeded") || raw.includes("confirm") || raw.includes("payé") || raw.includes("paye")) return "paid";
     return "due";
   }
 
   function normalizeRow(r){
-    const room = r.room_name || r.nom || r.room_label || r.unit_title || r.place_name || r.logement_title || "Logement";
-    const client = r.client_name || r.customer_name || r.guest_name || r.name || "Client";
+    const room = r.room_name || r.nom || r.room_label || r.unit_title || r.place_name || r.logement_title || r.lodging || r.logement || r.housing || "Logement";
+    const client = r.client_name || r.customer_name || r.guest_name || r.name || r.client || "Client";
     const phone = phoneDigits(r.phone || r.client_phone || r.customer_phone || r.guest_phone || r.whatsapp || "");
-    const checkin = String(r.checkin || r.check_in || r.start_date || r.date_arrivee || "").slice(0,10);
-    const checkout = String(r.checkout || r.check_out || r.end_date || r.date_depart || "").slice(0,10);
-    const amount = Number(r.amount_total || r.total_amount || r.amount || r.price_total || 0) || 0;
+    const checkin = String(r.checkin || r.check_in || r.start_date || r.date_arrivee || r.arrival_ymd || r.arrival || "").slice(0,10);
+    const checkout = String(r.checkout || r.check_out || r.end_date || r.date_depart || r.departure_ymd || r.departure || "").slice(0,10);
+    const amount = parseMoneyValue(r.amount_total || r.total_amount || r.amount || r.price_total || r.price || r.deposit || r.balance || 0);
     const source = normalizeSource(r);
     const status = normalizeStatus(r);
     const pay = normalizePay(r);
@@ -965,28 +972,92 @@
     });
   }
 
-  async function loadReservations(){
-    const S = getSb();
-
-    if(!State.slug) return [];
-
-    const rpcAttempts = [
-      {fn:"digiy_loc_reservations_by_slug", args:{p_slug:State.slug}},
-      {fn:"digiy_loc_get_reservations_by_slug", args:{p_slug:State.slug}},
-      {fn:"digiy_loc_reservations_for_slug", args:{p_slug:State.slug}}
-    ];
-
-    for(const step of rpcAttempts){
-      try{
-        const {data,error} = await S.rpc(step.fn, step.args);
-        if(error) throw error;
-        if(Array.isArray(data)) return data;
-        if(Array.isArray(data?.reservations)) return data.reservations;
-        if(Array.isArray(data?.data)) return data.data;
-      }catch(e){
-        console.warn("[LOC reservations RPC]", step.fn, e?.message || e);
-      }
+  function readLocalJsonArray(key){
+    try{
+      const rows = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(rows) ? rows : [];
+    }catch(_){
+      return [];
     }
+  }
+
+  function localMemoryBookings(){
+    const rows = [];
+    try{
+      if(window.DIGIY_LOC_MEMORY && typeof window.DIGIY_LOC_MEMORY.listBookings === "function"){
+        rows.push(...(window.DIGIY_LOC_MEMORY.listBookings() || []));
+      }
+    }catch(_){}
+
+    [
+      "DIGIY_LOC_MEMORY_V1_bookings",
+      "digiy_loc_bookings",
+      "DIGIY_LOC_RESERVATIONS_V1",
+      "digiy_loc_reservations"
+    ].forEach(key => rows.push(...readLocalJsonArray(key)));
+
+    const seen = new Set();
+    return rows.filter(r => {
+      if(!r || typeof r !== "object") return false;
+      const id = String(r.id || r.booking_id || r.ref || r.reference || JSON.stringify(r).slice(0,120));
+      if(seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }
+
+  function mergeReservationSources(remoteRows, localRows){
+    const all = [];
+    const seen = new Set();
+
+    [...(localRows || []), ...(remoteRows || [])].forEach(r => {
+      if(!r || typeof r !== "object") return;
+      const id = String(r.id || r.booking_id || r.ref || r.reference || [
+        r.client_name || r.client || "",
+        r.lodging || r.logement || r.room_name || "",
+        r.arrival_ymd || r.arrival || r.checkin || "",
+        r.departure_ymd || r.departure || r.checkout || ""
+      ].join("|"));
+      if(seen.has(id)) return;
+      seen.add(id);
+      all.push(r);
+    });
+
+    return all;
+  }
+
+  async function loadReservations(){
+    const localRows = localMemoryBookings();
+    let remoteRows = [];
+
+    if(!State.slug) return localRows;
+
+    try{
+      const S = getSb();
+
+      const rpcAttempts = [
+        {fn:"digiy_loc_reservations_by_slug", args:{p_slug:State.slug}},
+        {fn:"digiy_loc_get_reservations_by_slug", args:{p_slug:State.slug}},
+        {fn:"digiy_loc_reservations_for_slug", args:{p_slug:State.slug}}
+      ];
+
+      for(const step of rpcAttempts){
+        try{
+          const {data,error} = await S.rpc(step.fn, step.args);
+          if(error) throw error;
+          if(Array.isArray(data)){ remoteRows = data; break; }
+          if(Array.isArray(data?.reservations)){ remoteRows = data.reservations; break; }
+          if(Array.isArray(data?.data)){ remoteRows = data.data; break; }
+        }catch(e){
+          console.warn("[LOC reservations RPC]", step.fn, e?.message || e);
+        }
+      }
+    }catch(e){
+      console.warn("[LOC reservations] Supabase indisponible, lecture locale utilisée:", e?.message || e);
+    }
+
+    const merged = mergeReservationSources(remoteRows, localRows);
+    if(merged.length) return merged;
 
     throw new Error("reservations_unavailable");
   }
@@ -1163,6 +1234,13 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
