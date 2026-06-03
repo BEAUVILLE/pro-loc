@@ -6,8 +6,8 @@
   <title>Je loue — Ma fiche logement</title>
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="robots" content="noindex,nofollow"/>
-  <meta name="description" content="Je loue — Ma fiche logement — fiche pro DIGIY avec QR intégré."/>
-  <meta name="digiy-build" content="loc-rail-doctrine-ecriture-20260521"/>
+  <meta name="description" content="DIGIY LOC PRO — fiche logement gérée côté pro avec QR public."/>
+  <meta name="digiy-build" content="loc-fiche-pro-moule-neutre-20260603"/>
 
   <script>
     window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
@@ -15,1020 +15,127 @@
     window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE = "LOC";
     window.DIGIY_LOGIN_URL = "./pin.html";
+    window.DIGIY_PUBLIC_BASE_URL = window.DIGIY_PUBLIC_BASE_URL || "https://loc.digiylyfe.com/";
   </script>
 
-  <link rel="preload" as="image" href="https://digiylyfe.net/wp-content/uploads/2026/05/metier-pro-1.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard.js?v=loc-guard-20260531"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
 
   <style>
-    :root{
-      --bg:#1e7a46;--bg2:#155a34;--bg3:#0e4226;--bar:rgba(8,50,24,.96);
-      --gold:#c4973f;--gold2:#fff0a8;--green:#22c55e;--blue:#38bdf8;
-      --text:#f8fafc;--muted:rgba(248,250,252,.78);--line:rgba(255,255,255,.16);
-      --shadow:0 18px 48px rgba(0,0,0,.30);--r:22px;--hdrH:52px;--barH:78px;--max:980px;
-    }
-
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-
-    body{
-      margin:0;
-      min-height:100dvh;
-      color:var(--text);
-      font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;
-      font-size:19px;
-      font-weight:950;
-      background:
-        radial-gradient(620px 390px at 10% 0%,rgba(196,151,63,.16),transparent 58%),
-        radial-gradient(430px 280px at 92% 10%,rgba(56,189,248,.10),transparent 52%),
-        linear-gradient(180deg,var(--bg) 0%,var(--bg2) 55%,var(--bg3) 100%);
-      padding:calc(var(--hdrH) + 14px) 12px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px);
-    }
-
-    a{color:inherit;text-decoration:none}
-    button,input,textarea,select{font:inherit}
-    button{cursor:pointer;color:inherit}
-
-    .topHeader{
-      position:fixed;
-      top:0;left:0;right:0;
-      height:var(--hdrH);
-      z-index:100;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:0 14px;
-      background:var(--bar);
-      border-bottom:1px solid rgba(196,151,63,.26);
-      backdrop-filter:blur(18px);
-      -webkit-backdrop-filter:blur(18px);
-    }
-
-    .hdrBack{
-      min-height:36px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      color:rgba(248,250,252,.72);
-      font-size:14px;
-      font-weight:1000;
-      white-space:nowrap;
-    }
-
-    .hdrTitle{
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      color:var(--gold2);
-      white-space:nowrap;
-    }
-
-    .hdrPill{
-      min-height:32px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.08);
-      color:var(--muted);
-      font-size:12px;
-      font-weight:1000;
-      white-space:nowrap;
-      max-width:38vw;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .wrap{
-      width:min(var(--max),100%);
-      margin:0 auto;
-      display:grid;
-      gap:16px;
-    }
-
-    .hero,.panel{
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      background:rgba(255,255,255,.07);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .hero{
-      padding:18px;
-      background:
-        radial-gradient(760px 280px at 100% 0%,rgba(196,151,63,.16),transparent 60%),
-        rgba(255,255,255,.065);
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
-    }
-
-    .brand img{
-      width:100px;
-      height:100px;
-      object-fit:contain;
-      border-radius:26px;
-      background:#fff;
-      padding:8px;
-      box-shadow:0 12px 26px rgba(0,0,0,.24);
-      border:1px solid rgba(196,151,63,.34);
-      flex:0 0 auto;
-    }
-
-    .kicker{
-      color:var(--gold2);
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      margin-bottom:8px;
-    }
-
-    h1{
-      margin:0 0 8px;
-      font-size:clamp(36px,8.5vw,58px);
-      font-weight:1000;
-      line-height:.94;
-      letter-spacing:-.05em;
-    }
-
-    .lead{
-      color:var(--muted);
-      font-size:17px;
-      font-weight:900;
-      line-height:1.55;
-      max-width:76ch;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1.02fr .98fr;
-      gap:16px;
-    }
-
-    .cardBody{padding:18px}
-
-    .sectionTitle{
-      margin:0 0 8px;
-      font-size:30px;
-      font-weight:1000;
-      letter-spacing:-.035em;
-      line-height:1.08;
-    }
-
-    .sectionSub{
-      margin:0 0 14px;
-      color:var(--muted);
-      font-size:16px;
-      font-weight:900;
-      line-height:1.5;
-    }
-
-    label{
-      display:block;
-      margin:12px 0 6px;
-      color:#fff8dc;
-      font-size:13px;
-      font-weight:1000;
-      letter-spacing:.04em;
-      text-transform:uppercase;
-    }
-
-    input,textarea,select{
-      width:100%;
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:17px;
-      background:rgba(0,0,0,.18);
-      color:var(--text);
-      padding:14px 14px;
-      outline:none;
-      font-weight:900;
-      line-height:1.45;
-    }
-
-    textarea{
-      min-height:116px;
-      resize:vertical;
-    }
-
-    input:focus,textarea:focus,select:focus{
-      border-color:rgba(196,151,63,.48);
-      box-shadow:0 0 0 4px rgba(196,151,63,.12);
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    .btn{
-      min-height:58px;
-      border-radius:18px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.08);
-      color:var(--text);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding:0 16px;
-      font-size:16px;
-      font-weight:1000;
-      text-align:center;
-    }
-
-    .btn.primary{
-      background:linear-gradient(135deg,var(--green),var(--gold2));
-      color:#13200d;
-      border:none;
-    }
-
-    .btn.blue{
-      background:rgba(56,189,248,.14);
-      color:#d9f4ff;
-      border-color:rgba(56,189,248,.24);
-    }
-
-    .btn.green{
-      background:rgba(34,197,94,.16);
-      color:#dffcea;
-      border-color:rgba(34,197,94,.25);
-    }
-
-    .btn.warn{
-      background:rgba(245,158,11,.14);
-      color:#fef3c7;
-      border-color:rgba(245,158,11,.24);
-    }
-
-    .preview{
-      display:grid;
-      gap:12px;
-    }
-
-    .poster{
-      border-radius:24px;
-      overflow:hidden;
-      border:1px solid rgba(196,151,63,.28);
-      background:rgba(0,0,0,.18);
-      min-height:220px;
-      display:grid;
-      place-items:center;
-      padding:18px;
-      color:var(--muted);
-      font-weight:1000;
-      text-align:center;
-    }
-
-    .poster img{
-      width:100%;
-      height:270px;
-      object-fit:cover;
-      display:block;
-      border-radius:18px;
-    }
-
-    .badgeRow{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:7px;
-      min-height:36px;
-      padding:8px 11px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      font-size:12px;
-      font-weight:1000;
-      color:#fff8dc;
-    }
-
-    .ficheTitle{
-      font-size:32px;
-      font-weight:1000;
-      line-height:1.05;
-      letter-spacing:-.04em;
-    }
-
-    .ficheText{
-      color:var(--muted);
-      font-size:16px;
-      font-weight:900;
-      line-height:1.6;
-    }
-
-    .qrBox{
-      border:1px solid rgba(196,151,63,.32);
-      border-radius:24px;
-      background:
-        radial-gradient(260px 160px at 100% 0%,rgba(196,151,63,.16),transparent 58%),
-        rgba(255,255,255,.055);
-      padding:16px;
-      display:grid;
-      gap:12px;
-    }
-
-    .qrHead{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .qrTitle{
-      font-size:22px;
-      font-weight:1000;
-      line-height:1.1;
-      letter-spacing:-.03em;
-    }
-
-    .qrHint{
-      color:var(--muted);
-      font-size:14px;
-      font-weight:900;
-      line-height:1.45;
-      margin-top:4px;
-    }
-
-    .qrBadge{
-      min-height:34px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:999px;
-      padding:7px 11px;
-      background:#fff0a8;
-      color:#3a2a05;
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:.07em;
-      text-transform:uppercase;
-    }
-
-    .qrPreview{
-      width:100%;
-      min-height:248px;
-      border-radius:22px;
-      background:#fff;
-      display:grid;
-      place-items:center;
-      padding:14px;
-      box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
-    }
-
-    .qrPreview img{
-      width:220px;
-      height:220px;
-      object-fit:contain;
-      display:block;
-    }
-
-    .qrEmpty{
-      color:#13200d;
-      text-align:center;
-      font-size:15px;
-      font-weight:1000;
-      line-height:1.35;
-      max-width:28ch;
-    }
-
-    .qrLinkText{
-      padding:11px 12px;
-      border-radius:16px;
-      background:rgba(0,0,0,.16);
-      border:1px solid rgba(255,255,255,.10);
-      color:rgba(248,250,252,.82);
-      font-size:13px;
-      font-weight:900;
-      line-height:1.45;
-      word-break:break-all;
-    }
-
-
-
-    .suggestBox{
-      margin:12px 0 14px;
-      padding:14px;
-      border-radius:22px;
-      border:1px solid rgba(196,151,63,.28);
-      background:
-        radial-gradient(420px 160px at 100% 0%,rgba(196,151,63,.17),transparent 58%),
-        rgba(0,0,0,.13);
-    }
-
-    .suggestHead{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
-    }
-
-    .suggestTitle{
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:-.03em;
-      line-height:1.1;
-    }
-
-    .suggestSub{
-      color:var(--muted);
-      font-size:14px;
-      font-weight:900;
-      line-height:1.4;
-      margin-top:3px;
-    }
-
-    .suggestPill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:32px;
-      padding:7px 10px;
-      border-radius:999px;
-      background:#fff0a8;
-      color:#3a2a05;
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:.07em;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
-
-    .chipGrid,.noteTools,.inlineTools{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .chipGrid{margin:8px 0 10px}
-    .chipGrid.compact{margin:0}
-    .chipGrid.mini{margin-top:8px}
-    .noteTools{margin-top:9px}
-    .inlineTools{margin-top:8px}
-
-    .chip,.miniBtn{
-      border:1px solid rgba(255,255,255,.13);
-      background:rgba(255,255,255,.08);
-      color:#fff8dc;
-      min-height:42px;
-      border-radius:999px;
-      padding:9px 12px;
-      font-size:13px;
-      font-weight:1000;
-      line-height:1.15;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      box-shadow:0 8px 18px rgba(0,0,0,.12);
-    }
-
-    .chip.wide{
-      border-radius:17px;
-      min-height:48px;
-      text-align:left;
-      justify-content:flex-start;
-      flex:1 1 170px;
-    }
-
-    .chip.isActive{
-      background:linear-gradient(135deg,var(--green),var(--gold2));
-      border-color:transparent;
-      color:#13200d;
-    }
-
-    .miniBtn{
-      min-height:38px;
-      font-size:12px;
-      background:rgba(56,189,248,.12);
-      color:#d9f4ff;
-      border-color:rgba(56,189,248,.22);
-    }
-
-    .status{
-      padding:13px 14px;
-      border-radius:18px;
-      border:1px solid rgba(34,197,94,.28);
-      background:rgba(34,197,94,.08);
-      color:#d7ffe1;
-      font-size:14px;
-      font-weight:1000;
-      line-height:1.45;
-      display:none;
-      margin-top:12px;
-    }
-
-    .bottomBar{
-      position:fixed;
-      left:0;
-      right:0;
-      bottom:0;
-      height:var(--barH);
-      z-index:100;
-      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
-      background:rgba(6,38,18,.97);
-      border-top:1px solid rgba(196,151,63,.18);
-      backdrop-filter:blur(18px);
-      -webkit-backdrop-filter:blur(18px);
-    }
-
-    .bottomInner{
-      width:min(760px,100%);
-      height:100%;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:6px;
-    }
-
-    .bottomInner a{
-      min-height:58px;
-      border-radius:16px;
-      display:grid;
-      place-items:center;
-      align-content:center;
-      gap:3px;
-      color:rgba(248,250,252,.65);
-      font-size:11px;
-      font-weight:1000;
-      text-align:center;
-      background:rgba(255,255,255,.04);
-    }
-
-    .bottomInner a.active{
-      color:#13200d;
-      background:linear-gradient(135deg,var(--green),var(--gold2));
-    }
-
-    @media(max-width:760px){
-      .grid{grid-template-columns:1fr}
-      .brand img{width:88px;height:88px}
-      .actions .btn{width:100%}
-      .chip.wide{flex-basis:100%}
-    }
-
-    @media(max-width:520px){
-      body{font-size:19px}
-      .hero,.cardBody{padding:16px}
-      h1{font-size:38px}
-      .ficheTitle{font-size:29px}
-      .brand{align-items:flex-start}
-    }
-  
-    .digiyWriteDoctrine{
-      margin:12px 0;
-      padding:14px 16px;
-      border-radius:22px;
-      border:1px solid rgba(250,204,21,.30);
-      background:
-        radial-gradient(520px 180px at 100% 0%,rgba(250,204,21,.13),transparent 62%),
-        rgba(255,255,255,.055);
-      color:#fde68a;
-      box-shadow:0 14px 34px rgba(0,0,0,.16);
-      font-size:1rem;
-      font-weight:1000;
-      line-height:1.45;
-    }
-    .digiyWriteDoctrine strong{color:#fff7cc}
-    .digiyWriteDoctrine span{
-      display:block;
-      margin-top:5px;
-      color:rgba(244,255,247,.84);
-      font-size:.92rem;
-      font-weight:950;
-      line-height:1.45;
-    }
-
+    :root{--bg:#1e7a46;--bg2:#155a34;--bg3:#0e4226;--bar:rgba(8,50,24,.96);--gold:#c4973f;--gold2:#fff0a8;--green:#22c55e;--blue:#38bdf8;--red:#fb7185;--text:#f0fff5;--muted:rgba(240,255,245,.76);--line:rgba(255,255,255,.18);--card:rgba(255,255,255,.09);--shadow:0 16px 40px rgba(0,0,0,.22);--r:18px;--max:1040px;--hdrH:52px;--barH:78px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    body{margin:0;min-height:100dvh;color:var(--text);font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:19px;font-weight:950;background:radial-gradient(600px 390px at 16% 0%,rgba(74,222,128,.18),transparent 58%),radial-gradient(420px 280px at 92% 8%,rgba(196,151,63,.15),transparent 52%),linear-gradient(180deg,var(--bg) 0%,var(--bg2) 60%,var(--bg3) 100%);padding:calc(var(--hdrH) + 14px) 12px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 18px)}
+    a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}button{color:inherit;cursor:pointer}
+    .topHeader{position:fixed;top:0;left:0;right:0;height:var(--hdrH);z-index:100;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;background:var(--bar);border-bottom:1px solid rgba(196,151,63,.26);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    .hdrBack{min-height:36px;display:inline-flex;align-items:center;justify-content:center;color:rgba(240,255,245,.72);font-size:14px;font-weight:1000;white-space:nowrap}.hdrTitle{font-size:12px;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);white-space:nowrap}.hdrPill{min-height:32px;display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--muted);font-size:12px;font-weight:1000;white-space:nowrap;max-width:42vw;overflow:hidden;text-overflow:ellipsis}.hdrPill.ok{color:#bbf7d0;border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12)}.hdrPill.warn{color:#fde68a;border-color:rgba(245,158,11,.38);background:rgba(245,158,11,.12)}
+    .wrap{width:min(var(--max),100%);margin:0 auto;display:grid;gap:16px}.hero{padding:2px 2px 4px}.eyebrow{color:#fff0a8;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:1000;margin-bottom:8px}h1{margin:0 0 8px;font-size:clamp(34px,8.5vw,54px);font-weight:1000;line-height:.94;letter-spacing:-.05em}.sub{color:var(--muted);font-size:17px;font-weight:1000;line-height:1.38;max-width:860px}.rule{margin-top:10px;padding:12px 14px;border-radius:18px;border:1px dashed rgba(255,255,255,.22);background:rgba(5,31,17,.32);color:rgba(240,255,245,.90);font-size:14px;font-weight:1000;line-height:1.35}.rule b{color:#fff0a8}
+    .grid{display:grid;grid-template-columns:1fr .86fr;gap:14px;align-items:start}.card{border:1px solid rgba(255,255,255,.15);background:var(--card);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}.cardHead{padding:15px;border-bottom:1px solid rgba(255,255,255,.13);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.cardTitle{font-size:22px;font-weight:1000;line-height:1.06;color:#fff}.cardSub{margin-top:5px;color:var(--muted);font-size:14px;font-weight:1000;line-height:1.35}.tag{min-height:30px;display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;border-radius:999px;border:1px solid rgba(196,151,63,.35);background:rgba(196,151,63,.12);color:#fff0a8;font-size:10px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+    .form{padding:15px;display:grid;gap:13px}.formGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{display:grid;gap:7px}.field label{color:#fff;font-size:14px;font-weight:1000}.field input,.field textarea,.field select{width:100%;min-height:54px;border-radius:17px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18);color:var(--text);padding:13px 14px;outline:none;font-size:16px;font-weight:950}.field textarea{min-height:108px;resize:vertical;line-height:1.45}.field input:focus,.field textarea:focus{border-color:rgba(250,204,21,.46);box-shadow:0 0 0 4px rgba(250,204,21,.10)}.hint{color:rgba(240,255,245,.62);font-size:12.5px;font-weight:900;line-height:1.35}
+    .chipGrid,.inlineTools,.noteTools{display:flex;gap:8px;flex-wrap:wrap}.chipGrid{margin-top:8px}.chip,.miniBtn{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.08);color:#fff8dc;min-height:42px;border-radius:999px;padding:9px 12px;font-size:13px;font-weight:1000;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 8px 18px rgba(0,0,0,.12)}.chip.wide{border-radius:17px;min-height:48px;text-align:left;justify-content:flex-start;flex:1 1 170px}.chip.isActive{background:linear-gradient(135deg,var(--green),var(--gold2));border-color:transparent;color:#13200d}.miniBtn{min-height:38px;font-size:12px;background:rgba(56,189,248,.12);color:#d9f4ff;border-color:rgba(56,189,248,.22)}
+    .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:2px}.btn{min-height:56px;border-radius:18px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text);font-size:16px;font-weight:1000;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.13)}.btn.primary{color:#052215;border-color:rgba(34,197,94,.38);background:linear-gradient(135deg,#22c55e,#bbf7d0)}.btn.gold{color:#241a0d;border-color:rgba(196,151,63,.38);background:linear-gradient(135deg,#c4973f,#fff0a8)}.btn.blue{border-color:rgba(56,189,248,.32);background:rgba(56,189,248,.12)}.btn.danger{border-color:rgba(251,113,133,.34);background:rgba(251,113,133,.10);color:#fecaca}
+    .preview{display:grid;gap:12px;padding:15px}.photoBox{min-height:240px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:radial-gradient(400px 180px at 30% 0%,rgba(250,204,21,.18),transparent 60%),linear-gradient(135deg,rgba(34,197,94,.20),rgba(0,0,0,.20));position:relative;display:grid;place-items:center;text-align:center;color:rgba(240,255,245,.78);font-size:17px;font-weight:1000;padding:18px}.photoBox img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}.photoBadge{position:absolute;left:12px;bottom:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:2}.pill{min-height:32px;display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(5,31,17,.70);color:#fff;font-size:12px;font-weight:1000;backdrop-filter:blur(8px)}.publicCard{border-radius:24px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.18);padding:15px;display:grid;gap:10px}.publicName{color:#fff;font-size:29px;font-weight:1000;line-height:.98;letter-spacing:-.04em}.publicMeta,.publicBio{color:var(--muted);font-size:15px;font-weight:1000;line-height:1.42;white-space:pre-wrap}.linkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.publicLink{min-height:48px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:1000;color:var(--text);text-align:center;padding:10px;overflow:hidden;text-overflow:ellipsis}.qrBox{border-radius:24px;border:1px solid rgba(196,151,63,.32);background:rgba(196,151,63,.10);padding:15px;display:grid;grid-template-columns:132px 1fr;gap:14px;align-items:center}.qrImg{width:132px;height:132px;border-radius:18px;background:#fff;padding:8px;object-fit:contain}.qrText{display:grid;gap:6px}.qrTitle{color:#fff;font-size:19px;font-weight:1000;line-height:1.1}.qrUrl{color:var(--muted);font-size:13px;font-weight:900;line-height:1.35;word-break:break-word}.note{display:none;padding:13px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:var(--muted);font-size:14px;font-weight:1000;line-height:1.45;white-space:pre-wrap}.note.show{display:block}.note.ok{border-color:rgba(34,197,94,.32);background:rgba(34,197,94,.11);color:#bbf7d0}.note.warn{border-color:rgba(245,158,11,.32);background:rgba(245,158,11,.11);color:#fde68a}.note.bad{border-color:rgba(251,113,133,.32);background:rgba(251,113,133,.11);color:#fecaca}
+    .bottomBar{position:fixed;left:0;right:0;bottom:0;height:var(--barH);z-index:100;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(6,38,18,.97);border-top:1px solid rgba(196,151,63,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.bottomInner{width:min(100%,760px);height:100%;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.bottomInner a{min-height:58px;border-radius:16px;display:grid;place-items:center;align-content:center;gap:3px;color:rgba(240,255,245,.56);font-size:11px;font-weight:1000;text-align:center;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.04)}.bottomInner a.active{color:#052215;background:linear-gradient(135deg,#22c55e,#fff0a8);border-color:rgba(34,197,94,.32)}.bottomInner .bi{font-size:19px;line-height:1}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}@media(max-width:620px){body{padding:calc(var(--hdrH) + 12px) 10px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 16px);font-size:19px}.topHeader{padding:0 10px;gap:7px}.hdrBack{font-size:13px}.hdrTitle{font-size:11px;letter-spacing:.12em}.hdrPill{font-size:11px;padding:6px 8px;max-width:34vw}h1{font-size:34px}.sub{font-size:16px}.formGrid{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.linkGrid{grid-template-columns:1fr}.qrBox{grid-template-columns:1fr;text-align:center}.qrImg{margin:0 auto}.cardTitle{font-size:20px}.chip.wide{flex-basis:100%}}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-guard-20260531"></script>
-  <script src="./assets/js/digiy-module-bridge.js?v=loc-rail-doctrine-ecriture-20260521"></script>
-  <script src="./assets/js/digiy-loc-memory.js?v=loc-rail-doctrine-ecriture-20260521"></script>
 </head>
-
 <body>
   <header class="topHeader">
-    <a class="hdrBack" href="./hub.html">← HUB</a>
+    <a class="hdrBack" id="hdrBack" href="./hub.html">← HUB</a>
     <div class="hdrTitle">LOC · FICHE</div>
-    <div class="hdrPill" id="savePill">mode clic</div>
+    <div class="hdrPill warn" id="sessionPill">session…</div>
   </header>
 
   <main class="wrap">
     <section class="hero">
-      <div class="brand">
-        <img src="https://digiylyfe.net/wp-content/uploads/2026/05/metier-pro-1.png" alt="DIGIYLYFE — Métiers pro"/>
-        <div>
-          <div class="kicker">🏠 JE LOUE</div>
-          <h1>Ma fiche logement.</h1>
-          <div class="lead">Une fiche claire, mais surtout facile : le pro clique sur des réponses suggérées, DIGIY prépare le texte, puis le terrain ajuste avec sa vérité. Le client scanne, voit le logement et contacte directement.</div>
-        </div>
-      </div>
+      <div class="eyebrow">🏠 JE LOUE</div>
+      <h1>Ma fiche logement.</h1>
+      <div class="sub">Ici le pro prépare la fiche que le client comprend vite : logement, zone, capacité, photo, contact direct, lien public et QR.</div>
+      <div class="rule"><b>Côté PRO :</b> si le slug LOC n’est pas reconnu, retour PIN. <b>Côté client :</b> seulement une fiche publique propre.</div>
     </section>
 
     <section class="grid">
-      <article class="panel">
-        <div class="cardBody">
-          <h2 class="sectionTitle">Remplir en cliquant</h2>
-          <p class="sectionSub">Moins d’écriture, plus de choix. Les champs restent libres, mais le pro peut partir de réponses prêtes.</p>
-
-          <div class="suggestBox" aria-label="Réponses suggérées rapides">
-            <div class="suggestHead">
-              <div>
-                <div class="suggestTitle">⚡ Réponses suggérées</div>
-                <div class="suggestSub">Choisis d’abord. DIGIY écrit proprement. Tu ajustes après.</div>
-              </div>
-              <span class="suggestPill">moins d’écrit</span>
-            </div>
-            <div class="chipGrid compact">
-              <button class="chip" type="button" data-fill="activity" data-value="Villa">Villa</button>
-              <button class="chip" type="button" data-fill="activity" data-value="Appartement">Appartement</button>
-              <button class="chip" type="button" data-fill="activity" data-value="Studio">Studio</button>
-              <button class="chip" type="button" data-fill="activity" data-value="Chambre">Chambre</button>
-              <button class="chip" type="button" data-fill="activity" data-value="Résidence">Résidence</button>
-              <button class="chip" type="button" data-fill="activity" data-value="Case / logement local">Case locale</button>
-            </div>
-          </div>
-
-          <label for="proName">Nom logement</label>
-          <input id="proName" placeholder="Ex : Villa Saly Soleil"/>
-          <label for="activity">Type de logement</label>
-          <input id="activity" placeholder="Ex : Chambre, appartement, villa, studio"/>
-          <div class="chipGrid mini" aria-label="Choix type de logement">
-            <button class="chip" type="button" data-fill="activity" data-value="Villa">Villa</button>
-            <button class="chip" type="button" data-fill="activity" data-value="Appartement">Appartement</button>
-            <button class="chip" type="button" data-fill="activity" data-value="Studio">Studio</button>
-            <button class="chip" type="button" data-fill="activity" data-value="Chambre">Chambre</button>
-          </div>
-          <label for="zone">Ville / quartier</label>
-          <input id="zone" placeholder="Ex : Saly Niakh-Niakhal"/>
-          <div class="chipGrid mini" aria-label="Choix zone">
-            <button class="chip" type="button" data-fill="zone" data-value="Saly">Saly</button>
-            <button class="chip" type="button" data-fill="zone" data-value="Ngaparou">Ngaparou</button>
-            <button class="chip" type="button" data-fill="zone" data-value="Somone">Somone</button>
-            <button class="chip" type="button" data-fill="zone" data-value="Mbour">Mbour</button>
-            <button class="chip" type="button" data-fill="zone" data-value="Dakar">Dakar</button>
-            <button class="chip" type="button" data-fill="zone" data-value="Rufisque">Rufisque</button>
-          </div>
-          <label for="vehicle">Capacité / info utile</label>
-          <input id="vehicle" placeholder="Ex : 2 chambres · piscine · proche plage"/>
-          <div class="chipGrid mini" aria-label="Choix capacité et équipements">
-            <button class="chip" type="button" data-add="vehicle" data-value="1 chambre">1 chambre</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="2 chambres">2 chambres</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="3 chambres">3 chambres</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="piscine">Piscine</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="proche plage">Proche plage</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="Wi-Fi">Wi-Fi</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="climatisation">Clim</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="cuisine équipée">Cuisine</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="parking">Parking</button>
-            <button class="chip" type="button" data-add="vehicle" data-value="gardien">Gardien</button>
-          </div>
-          <label for="contact">WhatsApp / téléphone</label>
-          <input id="contact" placeholder="+221..."/>
-          <div class="inlineTools">
-            <button class="miniBtn" type="button" data-paste="contact">📋 Coller le numéro</button>
-          </div>
-          <label for="publicUrl">Lien public de la fiche</label>
-          <input id="publicUrl" placeholder="https://..."/>
-          <div class="inlineTools">
-            <button class="miniBtn" type="button" data-paste="publicUrl">📋 Coller le lien</button>
-            <button class="miniBtn" type="button" id="usePageBtn">🔗 Utiliser cette page</button>
-          </div>
-          <label for="photoUrl">Photo logement URL</label>
-          <input id="photoUrl" placeholder="https://..."/>
-          <div class="inlineTools">
-            <button class="miniBtn" type="button" data-paste="photoUrl">📋 Coller la photo</button>
-          </div>
-
-          <label for="note">Présentation courte</label>
-          <textarea id="note" placeholder="Ex : Logement calme, propre, proche des commodités, réservation directe par WhatsApp."></textarea>
-          <div class="noteTools" aria-label="Présentations suggérées">
-            <button class="chip wide" type="button" id="composeNoteBtn">✨ Créer avec mes choix</button>
-            <button class="chip wide" type="button" data-note="Logement calme, propre et bien situé, idéal pour un séjour simple et agréable. Réservation directe par WhatsApp.">Calme & propre</button>
-            <button class="chip wide" type="button" data-note="Logement adapté aux familles, avec les repères essentiels pour séjourner tranquillement et contacter directement le propriétaire.">Famille</button>
-            <button class="chip wide" type="button" data-note="Logement pratique pour un court séjour, proche des commodités, avec contact direct pour vérifier la disponibilité.">Court séjour</button>
-            <button class="chip wide" type="button" data-note="Logement confortable pour plusieurs jours, avec informations claires, contact direct et réservation sans détour.">Long séjour</button>
-            <button class="chip wide" type="button" data-note="Logement avec bon confort, accès simple, accueil direct et informations utiles pour réserver rapidement.">Confort direct</button>
-          </div>
-
-          <div class="actions">
-            <button class="btn primary" id="saveBtn" type="button">💾 Enregistrer</button>
-            <button class="btn green" id="previewBtn" type="button">👁️ Actualiser</button>
-            <button class="btn warn" id="clearBtn" type="button">🧹 Vider</button>
-          </div>
-
-          <div class="status" id="statusBox"></div>
+      <section class="card" aria-label="Réglages de la fiche LOC">
+        <div class="cardHead"><div><div class="cardTitle">📝 Renseignements logement</div><div class="cardSub">Le moule reste neutre. Les données viennent de la session ou de Supabase.</div></div><span class="tag">Moule</span></div>
+        <div class="form">
+          <div class="formGrid"><div class="field"><label for="proName">Nom visible</label><input id="proName" autocomplete="organization" placeholder="Nom du logement"/></div><div class="field"><label for="activity">Type de logement</label><input id="activity" placeholder="Villa, appartement, chambre, studio"/></div></div>
+          <div class="chipGrid"><button class="chip" type="button" data-fill="activity" data-value="Villa">Villa</button><button class="chip" type="button" data-fill="activity" data-value="Appartement">Appartement</button><button class="chip" type="button" data-fill="activity" data-value="Studio">Studio</button><button class="chip" type="button" data-fill="activity" data-value="Chambre">Chambre</button><button class="chip" type="button" data-fill="activity" data-value="Résidence">Résidence</button></div>
+          <div class="formGrid"><div class="field"><label for="city">Ville / zone</label><input id="city" placeholder="Saly, Dakar, Mbour..."/></div><div class="field"><label for="hours">Règle utile</label><input id="hours" placeholder="Check-in, séjour minimum, disponibilité"/></div></div>
+          <div class="chipGrid"><button class="chip" type="button" data-fill="city" data-value="Saly">Saly</button><button class="chip" type="button" data-fill="city" data-value="Ngaparou">Ngaparou</button><button class="chip" type="button" data-fill="city" data-value="Somone">Somone</button><button class="chip" type="button" data-fill="city" data-value="Mbour">Mbour</button><button class="chip" type="button" data-fill="city" data-value="Dakar">Dakar</button></div>
+          <div class="field"><label for="address">Adresse / repère</label><input id="address" placeholder="Repère utile pour trouver le logement"/></div>
+          <div class="field"><label for="capacity">Capacité / équipements</label><input id="capacity" placeholder="2 chambres · piscine · proche plage · Wi-Fi"/></div>
+          <div class="chipGrid"><button class="chip" type="button" data-add="capacity" data-value="1 chambre">1 chambre</button><button class="chip" type="button" data-add="capacity" data-value="2 chambres">2 chambres</button><button class="chip" type="button" data-add="capacity" data-value="3 chambres">3 chambres</button><button class="chip" type="button" data-add="capacity" data-value="piscine">Piscine</button><button class="chip" type="button" data-add="capacity" data-value="proche plage">Proche plage</button><button class="chip" type="button" data-add="capacity" data-value="Wi-Fi">Wi-Fi</button><button class="chip" type="button" data-add="capacity" data-value="climatisation">Clim</button><button class="chip" type="button" data-add="capacity" data-value="parking">Parking</button></div>
+          <div class="field"><label for="photoUrl">Photo logement URL</label><input id="photoUrl" inputmode="url" placeholder="https://..."/><div class="hint">Le moule ne porte pas d’image en dur. On colle une URL publique.</div></div>
+          <div class="field"><label for="bio">Présentation courte</label><textarea id="bio" placeholder="Présente le logement en deux phrases simples."></textarea></div>
+          <div class="noteTools"><button class="chip wide" type="button" id="composeNoteBtn">✨ Créer avec mes choix</button><button class="chip wide" type="button" data-note="Logement calme, propre et bien situé, idéal pour un séjour simple et agréable. Contact direct par WhatsApp.">Calme & propre</button><button class="chip wide" type="button" data-note="Logement adapté aux familles, avec les repères essentiels pour séjourner tranquillement et contacter directement le propriétaire.">Famille</button><button class="chip wide" type="button" data-note="Logement pratique pour un court séjour, proche des commodités, avec contact direct pour vérifier la disponibilité.">Court séjour</button></div>
+          <div class="formGrid"><div class="field"><label for="whatsapp">WhatsApp client</label><input id="whatsapp" inputmode="tel" placeholder="Indicatif + numéro public"/></div><div class="field"><label for="publicUrl">Lien public / fiche</label><input id="publicUrl" inputmode="url" placeholder="https://loc.digiylyfe.com/fiche.html?slug=..."/></div></div>
+          <div class="formGrid"><div class="field"><label for="publicSlug">Slug public client</label><input id="publicSlug" placeholder="ex : mon-logement"/></div><div class="field"><label for="internalSlug">Slug interne LOC</label><input id="internalSlug" placeholder="session LOC" readonly/></div></div>
+          <div class="formGrid"><div class="field"><label for="mapsUrl">Google Maps</label><input id="mapsUrl" inputmode="url" placeholder="https://..."/></div><div class="field"><label for="otherUrl">Autre lien utile</label><input id="otherUrl" inputmode="url" placeholder="https://..."/></div></div>
+          <div class="actions"><button class="btn primary" id="btnSave" type="button">💾 Enregistrer</button><button class="btn gold" id="btnCopy" type="button">📋 Copier résumé</button><button class="btn blue" id="btnOpenPublic" type="button">🌍 Ouvrir fiche client</button><button class="btn" id="btnReset" type="button">🧹 Vider champs</button></div>
+          <div class="note" id="notice"></div>
         </div>
-      </article>
+      </section>
 
-      <aside class="panel">
-        <div class="cardBody preview">
-          <h2 class="sectionTitle">Aperçu client</h2>
-
-          <div class="poster" id="posterBox">Photo ou visuel métier</div>
-
-          <div class="badgeRow">
-            <span class="badge" id="badgeActivity">Logement</span>
-            <span class="badge" id="badgeZone">Zone</span>
-            <span class="badge" id="badgeExtra">Info utile</span>
-          </div>
-
-          <div class="ficheTitle" id="previewName">Nom professionnel</div>
-          <div class="ficheText" id="previewText">La présentation courte apparaîtra ici.</div>
-
-          <div class="qrBox">
-            <div class="qrHead">
-              <div>
-                <div class="qrTitle">QR de la fiche</div>
-                <div class="qrHint">Le client scanne et ouvre directement cette fiche.</div>
-              </div>
-              <div class="qrBadge">QR PRO</div>
-            </div>
-            <div class="qrPreview" id="qrPreview">
-              <div class="qrEmpty">Ajoute un lien public pour afficher le QR.</div>
-            </div>
-            <div class="qrLinkText" id="qrLinkText">Lien public non renseigné.</div>
-          </div>
-
-          <div class="actions">
-            <a class="btn green" id="contactLink" href="#" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
-            <a class="btn blue" id="qrDirectLink" href="./qr.html">🔳 Ouvrir QR</a>
-            <button class="btn" id="copyQrLinkBtn" type="button">📋 Copier lien</button>
-            <a class="btn" href="./app.html">🏠 Accueil</a>
-          </div>
+      <aside class="card" aria-label="Aperçu fiche LOC">
+        <div class="cardHead"><div><div class="cardTitle">👁️ Aperçu client</div><div class="cardSub">Ce que le client voit vite, sans entrer dans l’espace pro.</div></div><span class="tag">QR</span></div>
+        <div class="preview">
+          <div class="photoBox" id="photoBox"><span id="photoFallback">🏠 Photo logement</span><div class="photoBadge"><span class="pill" id="pvCityPill">Ville</span><span class="pill" id="pvActivityPill">Logement</span></div></div>
+          <div class="publicCard"><div class="publicName" id="pvName">Mon logement</div><div class="publicMeta" id="pvMeta">Ville · logement · capacité</div><div class="publicBio" id="pvBio">Présentation courte du logement.</div><div class="linkGrid" id="linksBox"></div></div>
+          <div class="qrBox"><img class="qrImg" id="qrImg" alt="QR fiche LOC"/><div class="qrText"><div class="qrTitle">QR de la fiche</div><div class="qrUrl" id="qrUrl">https://loc.digiylyfe.com/</div><button class="btn gold" id="btnCopyUrl" type="button">🔗 Copier le lien QR</button></div></div>
         </div>
       </aside>
     </section>
   </main>
 
-  <nav class="bottomBar" aria-label="Navigation rapide LOC">
-    <div class="bottomInner">
-      <a href="./hub.html"><span>🧭</span><span>HUB</span></a>
-      <a href="./app.html"><span>🏠</span><span>Accueil</span></a>
-      <a class="active" href="./fiche.html"><span>🪪</span><span>Fiche</span></a>
-      <a href="./qr.html"><span>🔳</span><span>QR</span></a>
-      <a href="./session.html"><span>🛡️</span><span>Session</span></a>
-    </div>
-  </nav>
+  <nav class="bottomBar" aria-label="Navigation rapide LOC"><div class="bottomInner"><a id="navHub" href="./hub.html"><span class="bi">🧭</span><span>HUB</span></a><a id="navHome" href="./app.html"><span class="bi">🏠</span><span>Accueil</span></a><a class="active" href="./fiche.html"><span class="bi">🪪</span><span>Fiche</span></a><a id="navQr" href="./qr.html"><span class="bi">🔳</span><span>QR</span></a><a id="navSession" href="./session.html"><span class="bi">🛡️</span><span>Session</span></a></div></nav>
 
   <script>
-    (() => {
+    (async function(){
       "use strict";
-
-      const KEY = "digiy_loc_fiche";
-      const SENSITIVE_KEYS = ["slug","phone","tel","owner_phone","owner_id","business_code","access_note","keybox_code","keybox_location","pin","token","session_token","return","from","redirect","url","v","module"];
+      const MODULE = "LOC";
+      const TABLE = "digiy_loc_public_fiches";
+      const PUBLIC_BASE = String(window.DIGIY_PUBLIC_BASE_URL || "https://loc.digiylyfe.com/");
+      const LOGIN_URL = String(window.DIGIY_LOGIN_URL || "./pin.html");
+      const LOCAL_KEY = "DIGIY_LOC_FICHE_PRO_V1";
+      const FIELDS = ["proName","activity","city","hours","address","capacity","photoUrl","bio","whatsapp","publicUrl","publicSlug","internalSlug","mapsUrl","otherUrl"];
+      const SENSITIVE_KEYS = ["phone","tel","p_phone","owner_phone","owner_id","loc_phone","loc_slug","business_phone","whatsapp","msisdn","subscription_phone","checkout_phone","subscription_slug","source_slug","pin","pin4","token","session_token","module","return","redirect","redirect_url","url","from","v"];
       const $ = id => document.getElementById(id);
-
-      function cleanUrl(){
-        try{
-          const url = new URL(location.href);
-          let changed = false;
-          SENSITIVE_KEYS.forEach(k => {
-            if(url.searchParams.has(k)){
-              url.searchParams.delete(k);
-              changed = true;
-            }
-          });
-          if(changed) history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-        }catch(_ ){}
-      }
-
-      function formData(){
-        return {
-          proName: $("proName").value.trim(),
-          activity: $("activity").value.trim(),
-          zone: $("zone").value.trim(),
-          vehicle: $("vehicle").value.trim(),
-          contact: $("contact").value.trim(),
-          publicUrl: $("publicUrl").value.trim(),
-          photoUrl: $("photoUrl").value.trim(),
-          note: $("note").value.trim(),
-          module: "LOC",
-          updated_at: new Date().toISOString()
-        };
-      }
-
-      function setForm(data){
-        $("proName").value = data.proName || "";
-        $("activity").value = data.activity || "";
-        $("zone").value = data.zone || "";
-        $("vehicle").value = data.vehicle || "";
-        $("contact").value = data.contact || "";
-        $("publicUrl").value = data.publicUrl || "";
-        $("photoUrl").value = data.photoUrl || "";
-        $("note").value = data.note || "";
-      }
-
-      function whatsappHref(v){
-        const digits = String(v || "").replace(/[^\d]/g,"");
-        if(!digits) return "#";
-        return "https://wa.me/" + digits;
-      }
-
-      function qrImageUrl(value){
-        return "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=" + encodeURIComponent(value);
-      }
-
-      function showStatus(txt){
-        const box = $("statusBox");
-        box.textContent = txt;
-        box.style.display = "block";
-        setTimeout(() => box.style.display = "none", 2800);
-      }
-
-      function setField(id, value, message){
-        const el = $(id);
-        if(!el) return;
-        el.value = value || "";
-        render();
-        if(message) showStatus(message);
-      }
-
-      function addValue(id, value){
-        const el = $(id);
-        if(!el || !value) return;
-        const raw = el.value.trim();
-        const parts = raw ? raw.split("·").map(v => v.trim()).filter(Boolean) : [];
-        const exists = parts.some(v => v.toLowerCase() === value.toLowerCase());
-        if(!exists) parts.push(value);
-        el.value = parts.join(" · ");
-        render();
-      }
-
-      function composeNote(){
-        const d = formData();
-        const type = d.activity || "Logement";
-        const zone = d.zone ? " à " + d.zone : "";
-        const extra = d.vehicle ? " avec " + d.vehicle : "";
-        return type + zone + extra + ". Présentation claire, contact direct par WhatsApp et réservation sans détour.";
-      }
-
-      async function pasteInto(id){
-        try{
-          const txt = await navigator.clipboard.readText();
-          if(!txt){ showStatus("Presse-papiers vide."); return; }
-          setField(id, txt.trim(), "Collé dans la fiche.");
-        }catch(_){
-          showStatus("Collage non autorisé par le navigateur. Colle manuellement dans le champ.");
-        }
-      }
-
-      function syncChips(data){
-        document.querySelectorAll("[data-fill],[data-add]").forEach(btn => {
-          const target = btn.dataset.fill || btn.dataset.add;
-          const value = btn.dataset.value || "";
-          const current = String((data && data[target]) || "").toLowerCase();
-          const active = btn.dataset.fill
-            ? current === value.toLowerCase()
-            : current.split("·").map(v => v.trim()).includes(value.toLowerCase());
-          btn.classList.toggle("isActive", !!active);
-        });
-      }
-
-      function renderQr(value){
-        const publicUrl = String(value || "").trim();
-        const box = $("qrPreview");
-        const txt = $("qrLinkText");
-        const direct = $("qrDirectLink");
-
-        if(!publicUrl){
-          box.innerHTML = '<div class="qrEmpty">Ajoute un lien public pour afficher le QR.</div>';
-          txt.textContent = "Lien public non renseigné.";
-          direct.href = "./qr.html";
-          return;
-        }
-
-        box.innerHTML = '<img src="' + qrImageUrl(publicUrl).replace(/"/g,"&quot;") + '" alt="QR de la fiche LOC"/>';
-        txt.textContent = publicUrl;
-        direct.href = "./qr.html?url=" + encodeURIComponent(publicUrl);
-      }
-
-      function render(data){
-        const d = data || formData();
-
-        $("previewName").textContent = d.proName || "Nom professionnel";
-        $("previewText").textContent = d.note || "La présentation courte apparaîtra ici.";
-        $("badgeActivity").textContent = d.activity || "Logement";
-        $("badgeZone").textContent = d.zone || "Zone";
-        $("badgeExtra").textContent = d.vehicle || "Info utile";
-
-        const poster = $("posterBox");
-        if(d.photoUrl){
-          poster.innerHTML = '<img src="' + d.photoUrl.replace(/"/g,"&quot;") + '" alt="Visuel fiche LOC" onerror="this.parentNode.textContent=\'Photo non chargée\';"/>';
-        }else{
-          poster.textContent = "Photo ou visuel métier";
-        }
-
-        const contact = $("contactLink");
-        contact.href = whatsappHref(d.contact);
-        contact.style.opacity = d.contact ? "1" : ".55";
-
-        renderQr(d.publicUrl);
-        syncChips(d);
-      }
-
-      function save(){
-        const data = formData();
-        localStorage.setItem(KEY, JSON.stringify(data));
-        render(data);
-        $("savePill").textContent = "fiche gardée";
-        showStatus("Fiche LOC gardée sur ce téléphone.");
-      }
-
-      function load(){
-        try{
-          const data = JSON.parse(localStorage.getItem(KEY) || "{}");
-          setForm(data);
-          render(data);
-          if(data.proName) $("savePill").textContent = "fiche trouvée";
-        }catch(_ ){ render({}); }
-      }
-
-      function clear(){
-        localStorage.removeItem(KEY);
-        setForm({});
-        render({});
-        $("savePill").textContent = "fiche locale";
-        showStatus("Fiche locale vidée.");
-      }
-
-
-
-      document.querySelectorAll("[data-fill]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          setField(btn.dataset.fill, btn.dataset.value || "", "Réponse ajoutée à la fiche.");
-        });
-      });
-
-      document.querySelectorAll("[data-add]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          addValue(btn.dataset.add, btn.dataset.value || "");
-          showStatus("Détail ajouté.");
-        });
-      });
-
-      document.querySelectorAll("[data-note]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          setField("note", btn.dataset.note || "", "Présentation suggérée posée.");
-        });
-      });
-
-      document.querySelectorAll("[data-paste]").forEach(btn => {
-        btn.addEventListener("click", () => pasteInto(btn.dataset.paste));
-      });
-
-      $("composeNoteBtn").addEventListener("click", () => {
-        setField("note", composeNote(), "Présentation créée avec les choix.");
-      });
-
-      $("usePageBtn").addEventListener("click", () => {
-        try{
-          const clean = location.origin + location.pathname;
-          setField("publicUrl", clean, "Lien de cette page posé.");
-        }catch(_){
-          setField("publicUrl", location.href.split("?")[0], "Lien de cette page posé.");
-        }
-      });
-
-      cleanUrl();
-      $("saveBtn").addEventListener("click", save);
-      $("previewBtn").addEventListener("click", () => render());
-      $("clearBtn").addEventListener("click", clear);
-      $("copyQrLinkBtn").addEventListener("click", async () => {
-        const url = $("publicUrl").value.trim();
-        if(!url){ showStatus("Ajoute d’abord le lien public de la fiche."); return; }
-        try{
-          await navigator.clipboard.writeText(url);
-          showStatus("Lien QR copié.");
-        }catch(_){
-          showStatus("Lien à copier : " + url);
-        }
-      });
-
-      ["proName","activity","zone","vehicle","contact","publicUrl","photoUrl","note"].forEach(id => {
-        $(id).addEventListener("input", () => render());
-      });
-
-      load();
+      const safe = v => String(v || "").trim();
+      const digits = v => String(v || "").replace(/\D/g,"");
+      function esc(v){return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+      function normalizeSlug(v){return String(v || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-+/g,"-").replace(/^-|-$/g,"");}
+      function isPublicSlugSensitive(v){const s=safe(v); if(!s) return true; if(/\d{7,}/.test(s)) return true; if(/token|session|pin|phone|tel|whatsapp/i.test(s)) return true; return false;}
+      function isAccessOk(st){return !!(st && [st.access_ok,st.access,st.ok,st.pin_session_ok].some(v => v === true || String(v).toLowerCase() === "true" || String(v) === "1"));}
+      function show(msg,type){const el=$("notice"); if(!el) return; el.className="note show "+(type||"warn"); el.textContent=msg||"";}
+      function goPin(reason){try{sessionStorage.setItem("DIGIY_LOC_RETURN_AFTER_PIN","fiche.html"); if(reason) sessionStorage.setItem("DIGIY_LOC_PIN_REASON",reason);}catch(_){} document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#07140f;color:#ecfff4;font-family:system-ui,sans-serif;text-align:center"><div><h1>🔐 Retour PIN</h1><p style="font-weight:800">Session ou slug LOC absent. On repasse par le coffre.</p></div></main>'; setTimeout(()=>location.replace(LOGIN_URL),250);}
+      function storageGet(k){try{return sessionStorage.getItem(k)||localStorage.getItem(k)||"";}catch(_){return "";}}
+      function readParam(name){try{return safe(new URL(location.href).searchParams.get(name));}catch(_){return "";}}
+      function cleanVisibleUrl(){try{const url=new URL(location.href);let changed=false;SENSITIVE_KEYS.forEach(k=>{if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;}});const s=normalizeSlug(url.searchParams.get("slug")||"");if(s && isPublicSlugSensitive(s)){url.searchParams.delete("slug");changed=true;}if(changed) history.replaceState({},document.title,url.pathname+url.search+url.hash);}catch(_){}}
+      function cleanInternalLinks(){try{document.querySelectorAll("a[href]").forEach(link=>{const href=link.getAttribute("href")||""; if(!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return; const url=new URL(href,location.href); if(url.origin!==location.origin) return; SENSITIVE_KEYS.forEach(k=>url.searchParams.delete(k)); const file=url.pathname.split("/").pop()||"index.html"; link.setAttribute("href","./"+file+(url.search||"")+(url.hash||""));});}catch(_){}}
+      async function waitGuard(){try{const guard=window.DIGIY_GUARD; if(!guard) return {}; if(typeof guard.ready==="function"){const out=guard.ready({redirect:false,preserve_validation:true}); if(out && typeof out.then==="function") await out;}else if(guard.ready && typeof guard.ready.then==="function"){await guard.ready;} if(typeof guard.getSession==="function") return guard.getSession() || guard.state || {}; return guard.state || {};}catch(e){console.warn("[LOC FICHE] guard",e);return {};}}
+      function readSession(st){const raw=st||{};const internalSlug=normalizeSlug(readParam("slug")||raw.loc_slug||raw.slug||raw.internal_slug||raw.subscription_slug||storageGet("digiy_loc_slug")||storageGet("digiy_loc_last_slug")||storageGet("DIGIY_LOC_SLUG")||storageGet("DIGIY_SLUG"));const publicSlug=normalizeSlug(readParam("public_slug")||raw.public_slug||raw.slug_public||raw.fiche_slug||storageGet("digiy_loc_public_slug")||storageGet("DIGIY_LOC_PUBLIC_SLUG"));const phone=digits(raw.phone||raw.tel||raw.whatsapp||raw.loc_phone||storageGet("digiy_loc_phone")||storageGet("DIGIY_LOC_PHONE")||storageGet("DIGIY_PHONE"));return{access:isAccessOk(raw),internalSlug,publicSlug,phone};}
+      function publicFicheUrl(slug){const s=normalizeSlug(slug); if(!s || isPublicSlugSensitive(s)) return ""; const u=new URL("fiche.html",PUBLIC_BASE); u.searchParams.set("slug",s); return u.toString();}
+      function qrApi(value){return "https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=14&data="+encodeURIComponent(value || PUBLIC_BASE);}
+      function cleanHttps(v){const raw=safe(v); if(!raw) return ""; if(!/^https:\/\//i.test(raw)) return ""; return raw;}
+      function mapRow(row, session){const publicSlug=normalizeSlug(row?.public_slug||row?.slug||session.publicSlug||""); const internalSlug=normalizeSlug(row?.internal_slug||row?.loc_slug||session.internalSlug||""); const publicUrl=cleanHttps(row?.fiche_url)||publicFicheUrl(publicSlug); return {proName:safe(row?.business_name||row?.name||""),activity:safe(row?.lodging_type||row?.activity||""),city:safe(row?.city||row?.zone||""),hours:safe(row?.hours||row?.rules||""),address:safe(row?.address||""),capacity:safe(row?.capacity||row?.equipment||""),photoUrl:cleanHttps(row?.cover_url||row?.photo_url||row?.logo_url||""),bio:safe(row?.summary||row?.description||""),whatsapp:digits(row?.whatsapp||row?.phone||session.phone||""),publicUrl,publicSlug,internalSlug,mapsUrl:cleanHttps(row?.maps_url||""),otherUrl:cleanHttps(row?.booking_url||row?.other_url||"")};}
+      function getData(){const d={};FIELDS.forEach(id=>d[id]=safe($(id)?.value));d.whatsapp=digits(d.whatsapp);d.publicSlug=normalizeSlug(d.publicSlug);d.internalSlug=normalizeSlug(d.internalSlug);d.publicUrl=cleanHttps(d.publicUrl)||publicFicheUrl(d.publicSlug)||PUBLIC_BASE;d.photoUrl=cleanHttps(d.photoUrl);d.mapsUrl=cleanHttps(d.mapsUrl);d.otherUrl=cleanHttps(d.otherUrl);return d;}
+      function setForm(d){FIELDS.forEach(id=>{if($(id)) $(id).value=d?.[id]||"";});}
+      function saveSessionHints(d){try{if(d.internalSlug){localStorage.setItem("digiy_loc_slug",d.internalSlug);localStorage.setItem("digiy_loc_last_slug",d.internalSlug);} if(d.publicSlug) localStorage.setItem("digiy_loc_public_slug",d.publicSlug); if(d.whatsapp) localStorage.setItem("digiy_loc_phone",d.whatsapp);}catch(_){}}
+      function whatsappHref(v){const n=digits(v); return n?"https://wa.me/"+encodeURIComponent(n):"#";}
+      function link(label,url,icon){if(!url) return ""; return `<a class="publicLink" href="${esc(url)}" target="_blank" rel="noopener">${esc(icon||"🔗")} ${esc(label)}</a>`;}
+      function render(){const d=getData();const name=d.proName||"Mon logement";const activity=d.activity||"Logement";const city=d.city||"Ville";const capacity=d.capacity||"Capacité / équipements";const bio=d.bio||"Présentation courte du logement.";$("pvName").textContent=name;$("pvMeta").textContent=[city,activity,capacity,d.hours,d.address].filter(Boolean).join(" · ");$("pvBio").textContent=bio;$("pvCityPill").textContent=city;$("pvActivityPill").textContent=activity;const photoBox=$("photoBox");const old=photoBox.querySelector("img");if(old) old.remove();if(d.photoUrl){const img=document.createElement("img");img.src=d.photoUrl;img.alt=name;img.onerror=()=>img.remove();photoBox.prepend(img);}$("linksBox").innerHTML=[link("WhatsApp",whatsappHref(d.whatsapp),"💬"),link("Google Maps",d.mapsUrl,"🗺️"),link("Lien utile",d.otherUrl,"🔗")].filter(Boolean).join("") || `<div class="publicMeta">Ajoute WhatsApp, Maps ou un lien utile.</div>`;$("qrUrl").textContent=d.publicUrl;$("qrImg").src=qrApi(d.publicUrl);document.querySelectorAll("[data-fill],[data-add]").forEach(btn=>{const target=btn.dataset.fill||btn.dataset.add;const value=btn.dataset.value||"";const current=String(d[target]||"").toLowerCase();const active=btn.dataset.fill?current===value.toLowerCase():current.split("·").map(v=>v.trim()).includes(value.toLowerCase());btn.classList.toggle("isActive",!!active);});}
+      function setPill(ok, label){const el=$("sessionPill"); if(ok){el.textContent=label||"session LOC ouverte";el.className="hdrPill ok";}else{el.textContent="retour PIN";el.className="hdrPill warn";}}
+      async function fetchRemote(session){if(!window.supabase?.createClient) return null;const client=window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON);const candidates=[session.internalSlug,session.publicSlug,session.phone].filter(Boolean);for(const c of candidates){let query=client.from(TABLE).select("*").eq("module",MODULE).eq("is_active",true).in("status",["published","active"]); if(/^\d+$/.test(c)){query=query.or(`phone.eq.${c},whatsapp.eq.${c}`);}else{query=query.or(`slug.eq.${c},public_slug.eq.${c},internal_slug.eq.${c},loc_slug.eq.${c}`);} const {data,error}=await query.limit(1).maybeSingle(); if(!error && data) return data;}return null;}
+      function applyRow(row, session){const d=mapRow(row, session);setForm(d);try{localStorage.setItem(LOCAL_KEY,JSON.stringify(d));}catch(_){}saveSessionHints(d);render();}
+      function addValue(id,value){const el=$(id); if(!el||!value) return;const parts=el.value.trim()?el.value.split("·").map(v=>v.trim()).filter(Boolean):[];if(!parts.some(v=>v.toLowerCase()===value.toLowerCase())) parts.push(value);el.value=parts.join(" · ");render();}
+      function composeNote(){const d=getData();const type=d.activity||"Logement";const zone=d.city?" à "+d.city:"";const extra=d.capacity?" avec "+d.capacity:"";return type+zone+extra+". Présentation claire, contact direct par WhatsApp et demande sans détour.";}
+      async function copyText(text){if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy");}catch(_){}ta.remove();if(!ok) throw new Error("copy_failed");}
+      function summary(){const d=getData();return ["FICHE LOC","Logement : "+(d.proName||"—"),"Type : "+(d.activity||"—"),"Ville / zone : "+(d.city||"—"),"Adresse : "+(d.address||"—"),"Capacité : "+(d.capacity||"—"),"WhatsApp : "+(d.whatsapp?"renseigné":"—"),"Lien public : "+(d.publicUrl||"—"),"Slug public : "+(d.publicSlug||"—"),"Slug interne : "+(d.internalSlug||"—"),"","Description :",d.bio||"—"].join("\n");}
+      async function boot(){cleanVisibleUrl();cleanInternalLinks();const state=await waitGuard();const session=readSession(state);if(!session.internalSlug && !session.publicSlug){goPin("slug_absent");return;}setPill(session.access,"slug LOC reconnu");let local={};try{local=JSON.parse(localStorage.getItem(LOCAL_KEY)||"{}");}catch(_){}if(local.proName) setForm(local);const remote=await fetchRemote(session);if(remote){applyRow(remote,session);show("✅ Fiche LOC reliée à Supabase. Slug public et téléphone chargés depuis la base.","ok");}else{const publicSlug=session.publicSlug && !isPublicSlugSensitive(session.publicSlug) ? session.publicSlug : "";const d=Object.assign({},local,{internalSlug:session.internalSlug||local.internalSlug||"",publicSlug:publicSlug||local.publicSlug||"",whatsapp:session.phone||local.whatsapp||""});d.publicUrl=d.publicUrl||publicFicheUrl(d.publicSlug);setForm(d);render();if(!d.publicSlug || isPublicSlugSensitive(d.publicSlug)){show("⚠️ Slug public LOC absent. Exécute le SQL pour relier le slug interne à un slug client propre.","warn");}else{show("Lecture locale LOC. La fiche peut fonctionner, mais Supabase n’a pas encore confirmé la donnée.","warn");}}FIELDS.forEach(id=>{$(id)?.addEventListener("input",render);$(id)?.addEventListener("change",render);});document.querySelectorAll("[data-fill]").forEach(btn=>btn.addEventListener("click",()=>{const el=$(btn.dataset.fill);if(el){el.value=btn.dataset.value||"";render();}}));document.querySelectorAll("[data-add]").forEach(btn=>btn.addEventListener("click",()=>addValue(btn.dataset.add,btn.dataset.value||"")));document.querySelectorAll("[data-note]").forEach(btn=>btn.addEventListener("click",()=>{const el=$("bio");el.value=btn.dataset.note||"";render();}));$("composeNoteBtn")?.addEventListener("click",()=>{$("bio").value=composeNote();render();});$("btnSave")?.addEventListener("click",()=>{const d=getData();try{localStorage.setItem(LOCAL_KEY,JSON.stringify(d));}catch(_){}saveSessionHints(d);show("✅ Fiche LOC gardée sur cet appareil.","ok");render();});$("btnReset")?.addEventListener("click",()=>{try{localStorage.removeItem(LOCAL_KEY);}catch(_){}FIELDS.forEach(id=>{if($(id)) $(id).value="";});render();show("Champs vidés sur cet appareil.","warn");});$("btnCopy")?.addEventListener("click",async()=>{try{await copyText(summary());show("✅ Résumé fiche copié.","ok");}catch(_){show(summary(),"warn");}});$("btnCopyUrl")?.addEventListener("click",async()=>{try{await copyText(getData().publicUrl);show("✅ Lien QR copié.","ok");}catch(_){show("Impossible de copier automatiquement. Le lien est visible sous le QR.","warn");}});$("btnOpenPublic")?.addEventListener("click",()=>{const url=getData().publicUrl;if(url) window.open(url,"_blank","noopener,noreferrer");});render();cleanVisibleUrl();cleanInternalLinks();}
+      boot();
     })();
   </script>
 </body>
