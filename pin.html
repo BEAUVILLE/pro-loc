@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Accès BUILD • DIGIY</title>
+  <title>Accès • DIGIY</title>
   <meta name="theme-color" content="#020617"/>
 
   <!-- CONFIG — changer ces 5 lignes par module -->
@@ -11,11 +11,11 @@
     window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
-   window.DIGIY_MODULE       = "BUILD";
-window.DIGIY_MODULE_LABEL = "Je bâtis";
-window.DIGIY_MODULE_ICON  = "🧰";
+   window.DIGIY_MODULE       = "LOC";
+window.DIGIY_MODULE_LABEL = "Je loue";
+window.DIGIY_MODULE_ICON  = "🏠";
 window.DIGIY_INDEX_URL    = "./index.html";
-window.DIGIY_SLUG_PREFIX  = "build";
+window.DIGIY_SLUG_PREFIX  = "loc";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -81,9 +81,9 @@ window.DIGIY_SLUG_PREFIX  = "build";
 <div class="card">
 
   <div class="header">
-    <span class="ico" id="moduleIcon">🧰</span>
+    <span class="ico" id="moduleIcon">🏠</span>
     <div class="badge">🔑 Accès DIGIY</div>
-    <div class="title" id="moduleLabel">Je bâtis</div>
+    <div class="title" id="moduleLabel">Je loue</div>
   </div>
 
   <div class="steps">
@@ -140,7 +140,7 @@ window.DIGIY_SLUG_PREFIX  = "build";
     <div class="status" id="status2"></div>
   </div>
 
-  <div class="note">Ton numéro et ton code ne sont jamais partagés.<br>DIGIY BUILD · artisans tout corps de métiers · 100% indépendance ∞</div>
+  <div class="note">Ton numéro et ton code ne sont jamais partagés.<br>DIGIY · 0% commission · 100% indépendance ∞</div>
 </div>
 
 <script>
@@ -191,28 +191,16 @@ function writeSession(phone,sl,token){
   const now=Date.now();
   const sess=JSON.stringify({slug:sl,phone,module:MODULE,validated_at:now,expires_at:now+MAX_AGE,session_token:token||"",access:true,access_ok:true});
   SKEYS.forEach(k=>{ls(k,sess);ss(k,sess)});
-
-  // Compatibilité rail commun DIGIY : utile pour guard.js, QR, fiche, HUB.
-  [
-    "DIGIY_BUILD_ACCESS",
-    "DIGIY_PRO_BUILD_ACCESS",
-    "DIGIY_ACCESS",
-    "DIGIY_MODULE_ACCESS"
-  ].forEach(k=>{ls(k,sess);ss(k,sess)});
-
   PKEYS.forEach(k=>{ls(k,phone);ss(k,phone)});
-  ["DIGIY_BUILD_PHONE","digiy_build_phone","DIGIY_PHONE"].forEach(k=>{ls(k,phone);ss(k,phone)});
-
   if(sl){
-    SLKEYS.forEach(k=>{ls(k,sl);ss(k,sl)});
-    ["DIGIY_BUILD_SLUG","DIGIY_CURRENT_SLUG","DIGIY_SLUG","digiy_build_slug","digiy_slug"].forEach(k=>{ls(k,sl);ss(k,sl)});
+    SLKEYS.forEach(k=>ls(k,sl));
     try{const m=JSON.parse(ls("digiy_module_slugs")||"{}")||{};m[MODULE]=sl;ls("digiy_module_slugs",JSON.stringify(m))}catch(_){}
     ls("digiy_slug",sl);
   }
 }
 
 function redirect(sl){
-  /* DIGIY BUILD : ne jamais mettre slug (= téléphone) dans l'URL.
+  /* patch audit 20260530 : ne jamais mettre slug (= téléphone) dans l'URL.
      La session est déjà écrite dans localStorage/sessionStorage par writeSession().
      On redirige vers hub.html sans aucun paramètre sensible. */
   try{ location.replace("./hub.html"); }
@@ -314,6 +302,31 @@ async function doLogin(){
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
