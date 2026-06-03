@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#061b14"/>
 <meta name="robots" content="noindex,nofollow"/>
-<title>Je loue • QR public neutre</title>
+<title>Je loue • Mon QR</title>
+
+<script>
+  window.DIGIY_MODULE = "LOC";
+  window.DIGIY_LOGIN_URL = "./pin.html";
+  window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
+  window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+  window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -16,7 +25,7 @@
   --bg:#061b14;--bg2:#0a2820;--card:rgba(255,255,255,.055);--line:rgba(255,255,255,.14);
   --text:#eafff1;--muted:rgba(234,255,241,.78);--gold:#facc15;--ok:#22c55e;
   --bad:#ef4444;--blue:#38bdf8;--shadow:0 18px 42px rgba(0,0,0,.36);
-  --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bottom:86px;--font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -28,11 +37,11 @@ body{
     radial-gradient(900px 520px at 12% -8%,rgba(250,204,21,.14),transparent 58%),
     radial-gradient(900px 520px at 92% 0%,rgba(34,197,94,.16),transparent 58%),
     linear-gradient(180deg,#03120d,var(--bg));
-  padding:14px;
+  padding:14px 14px calc(var(--bottom) + env(safe-area-inset-bottom,0px) + 18px);
 }
 a{color:inherit;text-decoration:none}
-button,input{font:inherit}
-.wrap{max-width:760px;margin:0 auto}
+button{font:inherit}
+.wrap{max-width:860px;margin:0 auto}
 .hero,.card{
   border:1px solid var(--line);
   border-radius:26px;
@@ -41,13 +50,7 @@ button,input{font:inherit}
   padding:18px;
 }
 .card{margin-top:14px}
-.top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:14px;
-  flex-wrap:wrap;
-}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
 .brand{display:flex;gap:12px;align-items:center;min-width:0}
 .logo{
   width:58px;height:58px;border-radius:20px;display:grid;place-items:center;
@@ -58,25 +61,16 @@ h1{
   margin:0;font-size:clamp(30px,6vw,46px);line-height:1.02;
   font-weight:1000;letter-spacing:-.045em;color:#fff7cc;
 }
-.sub{margin-top:8px;color:var(--muted);font-size:17px;line-height:1.5;font-weight:850;max-width:62ch}
+.sub{margin-top:8px;color:var(--muted);font-size:17px;line-height:1.5;font-weight:850;max-width:64ch}
+.pillRow{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
 .pill{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;
   padding:9px 13px;border-radius:999px;border:1px solid rgba(148,163,184,.26);
-  background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:1000;
+  background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:1000;white-space:nowrap;
 }
 .pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
 .pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
 .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
-label{
-  display:block;margin:16px 0 7px;color:#fff7cc;font-size:13px;
-  letter-spacing:.06em;text-transform:uppercase;font-weight:1000;
-}
-input{
-  width:100%;min-height:58px;border-radius:18px;border:1px solid rgba(255,255,255,.14);
-  background:rgba(0,0,0,.18);color:var(--text);padding:14px 15px;outline:none;
-  font-size:16px;font-weight:900;
-}
-input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,21,.10)}
 .btn{
   appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:18px;min-height:58px;
   padding:14px 16px;background:rgba(255,255,255,.055);color:var(--text);font-size:16px;
@@ -88,19 +82,29 @@ input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,
 .btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.38);color:#fde68a}
 .btn.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.36);color:#bbf7d0}
 .btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
-.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.btn.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.32);color:#fecaca}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
 .qrBox{
-  margin-top:14px;min-height:320px;border-radius:24px;border:1px dashed rgba(250,204,21,.38);
+  margin-top:14px;min-height:330px;border-radius:24px;border:1px dashed rgba(250,204,21,.38);
   background:rgba(0,0,0,.14);display:grid;place-items:center;padding:18px;text-align:center;
 }
 .qrImg{
   width:min(360px,100%);height:auto;border-radius:18px;background:#fff;padding:12px;
   border:1px solid rgba(148,163,184,.24);display:none;
 }
-.empty{color:#13200d;background:#fff;border-radius:18px;padding:20px;font-weight:1000;line-height:1.4}
+.empty{
+  color:#13200d;background:#fff;border-radius:18px;padding:20px;
+  font-weight:1000;line-height:1.4;max-width:34ch;
+}
+.sectionTitle{font-size:24px;font-weight:1000;color:#fde68a;margin:0 0 8px;letter-spacing:-.02em}
+.safeText{color:var(--muted);font-size:16px;line-height:1.55;font-weight:850}
 .linkBox{margin-top:14px;padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.22);background:rgba(0,0,0,.16)}
 .linkLabel{color:#fde68a;font-weight:1000;font-size:15px;margin-bottom:8px}
 .linkValue{color:#dbeafe;font-size:14px;line-height:1.45;font-weight:850;word-break:break-all}
+.doctrine{
+  margin-top:14px;border:1px solid rgba(34,197,94,.28);border-radius:22px;background:rgba(34,197,94,.08);
+  padding:14px;color:#bbf7d0;font-size:16px;line-height:1.55;font-weight:900;
+}
 .note{
   display:none;margin-top:12px;padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.25);
   background:rgba(255,255,255,.035);color:var(--muted);font-size:15px;line-height:1.45;font-weight:950;white-space:pre-wrap;
@@ -108,12 +112,24 @@ input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,
 .note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
 .note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
 .note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
-.doctrine{
-  margin-top:14px;border:1px solid rgba(34,197,94,.28);border-radius:22px;background:rgba(34,197,94,.08);
-  padding:14px;color:#bbf7d0;font-size:16px;line-height:1.55;font-weight:900;
+.bottomNav{
+  position:fixed;left:0;right:0;bottom:0;z-index:70;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,rgba(6,27,20,0),rgba(6,27,20,.96) 28%);
 }
+.bottomInner{
+  max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(6,27,20,.94);
+  backdrop-filter:blur(10px);border-radius:22px;padding:7px;box-shadow:0 16px 44px rgba(0,0,0,.38);
+}
+.navItem{
+  min-height:60px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;color:rgba(234,255,241,.76);font-size:12px;font-weight:1000;border:1px solid transparent;text-align:center;
+}
+.navItem strong{font-size:21px;line-height:1}
+.navItem.active{color:#fde68a;background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.24)}
 @media(max-width:620px){
-  body{padding:10px}
+  body{padding-left:10px;padding-right:10px}
   .hero,.card{padding:15px;border-radius:22px}
   .actions{grid-template-columns:1fr}
   .sub{font-size:16px}
@@ -121,8 +137,8 @@ input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,
   .qrBox{min-height:280px}
 }
 @media print{
-  body{background:#fff;color:#111}
-  .hero,.actions,.note,.linkBox,.doctrine,label,input,.pill{display:none!important}
+  body{background:#fff;color:#111;padding:0}
+  .hero,.actions,.note,.linkBox,.doctrine,.bottomNav,.safeText,.sectionTitle{display:none!important}
   .card{box-shadow:none;border:0;background:#fff}
   .qrBox{border:0;background:#fff}
   .qrImg{display:block!important;width:420px;max-width:100%;margin:auto}
@@ -137,23 +153,32 @@ input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,
       <div class="brand">
         <div class="logo">🔳</div>
         <div>
-          <h1>QR public neutre</h1>
+          <h1>Mon QR logement</h1>
           <div class="sub">
-            Ce moule ne contient aucun nom, aucun téléphone, aucun slug et aucune fiche écrite en dur.
-            Il reçoit un lien public et fabrique le QR. Pas de PIN, pas de guard, pas de cockpit.
+            Page PRO neutre : elle ne porte aucun nom, aucun téléphone, aucune URL en dur.
+            Elle lit le slug/téléphone LOC déjà gardés dans le téléphone, retrouve la fiche publique, puis fabrique le QR client.
           </div>
         </div>
       </div>
-      <span class="pill warn" id="statePill">lien à lire…</span>
+      <div>
+        <div class="pill warn" id="pillIdentity">identité LOC…</div>
+        <div class="pill warn" id="pillState" style="margin-top:8px">préparation…</div>
+      </div>
     </div>
 
-    <label for="targetInput">Lien public client</label>
-    <input id="targetInput" inputmode="url" autocomplete="off" placeholder="https://..."/>
+    <div class="pillRow">
+      <span class="pill ok">Côté PRO</span>
+      <span class="pill">Storage LOC</span>
+      <span class="pill">Supabase</span>
+      <span class="pill">QR public</span>
+    </div>
 
     <div class="actions">
-      <button class="btn green" id="btnMake" type="button">🔳 Générer QR</button>
-      <button class="btn gold" id="btnCopy" type="button">📋 Copier lien</button>
-      <button class="btn blue" id="btnOpen" type="button">↗️ Ouvrir lien</button>
+      <button class="btn green" id="btnOpen" type="button">↗️ Ouvrir la fiche client</button>
+      <button class="btn gold" id="btnCopy" type="button">📋 Copier le lien</button>
+      <button class="btn blue" id="btnRefresh" type="button">🔄 Relire storage</button>
+      <a class="btn" id="btnDownload" href="#" target="_blank" rel="noopener">⬇️ Ouvrir QR</a>
+      <a class="btn red" id="btnPin" href="./pin.html">🔐 Repasser par PIN</a>
       <button class="btn" id="btnPrint" type="button">🖨️ Imprimer</button>
     </div>
 
@@ -161,208 +186,481 @@ input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,
   </section>
 
   <section class="card">
-    <div class="qrBox" id="qrBox">
-      <img id="qrImg" class="qrImg" alt="QR public DIGIY LOC"/>
-      <div class="empty" id="emptyBox">Ajoute ou transmets un lien public pour fabriquer le QR.</div>
+    <h2 class="sectionTitle">QR prêt à partager</h2>
+    <div class="safeText">
+      Le QR généré doit ouvrir une fiche publique client. Il ne doit jamais pointer vers PIN, cockpit, dashboard, session ou page de gestion.
+    </div>
+
+    <div class="qrBox">
+      <a id="qrAnchor" href="#" target="_blank" rel="noopener" aria-label="Ouvrir la fiche publique LOC">
+        <img id="qrImg" class="qrImg" alt="QR public DIGIY LOC"/>
+      </a>
+      <div class="empty" id="emptyBox">Lecture du storage LOC…</div>
     </div>
 
     <div class="linkBox">
       <div class="linkLabel">Lien contenu dans le QR</div>
-      <div class="linkValue" id="linkValue">Aucun lien public pour le moment.</div>
+      <div class="linkValue" id="linkValue">Préparation…</div>
     </div>
 
     <div class="doctrine">
-      Règle du moule : <b>qr.html?url=LIEN_PUBLIC</b> fabrique un QR public.
-      Si le lien est absent ou pointe vers une page PRO, le QR est bloqué proprement.
-      Il ne renvoie jamais au PIN automatiquement.
+      Moule correct : <b>le fichier reste neutre</b>, mais il utilise le storage du PRO
+      pour retrouver la fiche publique. Le client scanne seulement la porte publique.
     </div>
   </section>
 </div>
 
+<nav class="bottomNav" aria-label="Navigation LOC">
+  <div class="bottomInner">
+    <a class="navItem" id="navHome" href="./app.html"><strong>🏠</strong><span>Accueil</span></a>
+    <a class="navItem" id="navReservations" href="./reservations.html"><strong>📋</strong><span>Réserv.</span></a>
+    <a class="navItem" id="navPlanning" href="./planning.html"><strong>📅</strong><span>Dispos</span></a>
+    <a class="navItem" id="navNotes" href="./notes.html"><strong>📝</strong><span>Notes</span></a>
+    <a class="navItem active" id="navPlus" href="./manage-links.html"><strong>⋯</strong><span>Plus</span></a>
+  </div>
+</nav>
+
 <script>
-(function(){
+(async function(){
   "use strict";
 
-  const STORAGE_KEYS = [
-    "DIGIY_LOC_PUBLIC_URL",
-    "digiy_loc_public_url",
-    "digiy_loc_qr_url",
-    "digiy_loc_fiche_url"
-  ];
-
-  const FICHE_STORAGE_KEYS = [
-    "digiy_loc_fiche",
-    "DIGIY_LOC_FICHE_V1"
-  ];
-
-  const SENSITIVE_PRO_PATHS = [
+  const TABLE = "digiy_loc_public_fiches";
+  const PRO_BLOCKED_PATHS = [
     "pin.html","cockpit.html","dashboard","dashboard-pro","app.html","hub.html",
     "session.html","manage-links","reservations.html","planning.html","notes.html",
     "admin","abos","pay.html"
   ];
 
-  const $ = (id) => document.getElementById(id);
-  const targetInput = $("targetInput");
-  const linkValue = $("linkValue");
-  const qrImg = $("qrImg");
-  const emptyBox = $("emptyBox");
-  const statePill = $("statePill");
+  const STORAGE_KEYS = {
+    slug: [
+      "digiy_loc_slug","digiy_loc_last_slug","DIGIY_LOC_SLUG","DIGIY_LOC_LAST_SLUG",
+      "loc_slug","LOC_SLUG","digiy_last_slug","DIGIY_SLUG"
+    ],
+    phone: [
+      "digiy_loc_phone","digiy_loc_last_phone","DIGIY_LOC_PHONE","DIGIY_PHONE",
+      "loc_phone","LOC_PHONE","digiy_phone","phone"
+    ],
+    publicUrl: [
+      "DIGIY_LOC_PUBLIC_URL","digiy_loc_public_url","digiy_loc_qr_url",
+      "digiy_loc_fiche_url","DIGIY_LOC_FICHE_URL"
+    ],
+    fiche: [
+      "digiy_loc_fiche","DIGIY_LOC_FICHE_V1","DIGIY_LOC_FICHE"
+    ]
+  };
 
-  let currentUrl = "";
+  const $ = (id)=>document.getElementById(id);
 
-  function readParam(name){
-    try{
-      return new URL(location.href).searchParams.get(name) || "";
-    }catch(_){
-      return "";
-    }
+  const State = {
+    slug:"",
+    phone:"",
+    publicUrl:"",
+    row:null,
+    qrUrl:"",
+    source:""
+  };
+
+  function note(msg, type="warn"){
+    const el = $("note");
+    el.className = "note " + type;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
   }
 
   function storageGet(key){
     try{
-      return localStorage.getItem(key) || sessionStorage.getItem(key) || "";
+      return sessionStorage.getItem(key) || localStorage.getItem(key) || "";
     }catch(_){
       return "";
     }
   }
 
-  function readFichePublicUrl(){
-    for(const key of FICHE_STORAGE_KEYS){
-      try{
-        const raw = storageGet(key);
-        if(!raw) continue;
-        const obj = JSON.parse(raw);
-        const url = obj.publicUrl || obj.public_url || obj.fiche_url || obj.ficheUrl || obj.booking_url || obj.bookingUrl || "";
-        if(url) return url;
-      }catch(_){}
-    }
-    return "";
+  function storageSet(key,value){
+    try{ localStorage.setItem(key, value); }catch(_){}
   }
 
-  function cleanPublicUrl(raw){
-    const value = String(raw || "").trim();
-    if(!value) return "";
+  function normalizeSlug(v){
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9\-_]/g,"")
+      .replace(/-+/g,"-")
+      .replace(/^[-_]+|[-_]+$/g,"");
+  }
+
+  function onlyDigits(v){
+    return String(v || "").replace(/\D/g,"");
+  }
+
+  function isProUrl(url){
     try{
-      const u = new URL(value, location.href);
-      if(!/^https?:$/i.test(u.protocol)) return "";
-
+      const u = new URL(url, location.href);
       const low = (u.pathname + " " + u.search + " " + u.hash).toLowerCase();
-      if(SENSITIVE_PRO_PATHS.some(p => low.includes(p.toLowerCase()))) return "";
+      return PRO_BLOCKED_PATHS.some(p => low.includes(p.toLowerCase()));
+    }catch(_){
+      return true;
+    }
+  }
 
+  function cleanPublicUrl(v){
+    const raw = String(v || "").trim();
+    if(!raw) return "";
+    try{
+      const u = new URL(raw, location.href);
+      if(!/^https?:$/i.test(u.protocol)) return "";
+      if(isProUrl(u.toString())) return "";
       return u.toString();
     }catch(_){
       return "";
     }
   }
 
-  function note(msg,type){
-    const el = $("note");
-    el.className = "note " + (type || "warn");
-    el.textContent = msg || "";
-    el.style.display = msg ? "block" : "none";
-  }
-
-  function qrServerUrl(value){
-    return "https://api.qrserver.com/v1/create-qr-code/?size=620x620&margin=18&data=" + encodeURIComponent(value);
-  }
-
-  function quickChartUrl(value){
-    return "https://quickchart.io/qr?size=620&margin=2&text=" + encodeURIComponent(value);
-  }
-
-  function savePublicUrl(value){
+  function cleanVisibleUrl(){
     try{
-      localStorage.setItem("DIGIY_LOC_PUBLIC_URL", value);
-      localStorage.setItem("digiy_loc_public_url", value);
-      localStorage.setItem("digiy_loc_qr_url", value);
+      const u = new URL(location.href);
+      let changed = false;
+      [
+        "phone","tel","p_phone","owner_phone","owner_id","whatsapp","msisdn",
+        "slug","pro_slug","source_slug","pin","token","session_token",
+        "module","return","redirect","redirect_url","from","v"
+      ].forEach(k=>{
+        if(u.searchParams.has(k)){
+          u.searchParams.delete(k);
+          changed = true;
+        }
+      });
+      if(changed) history.replaceState({}, document.title, u.pathname + u.search + u.hash);
     }catch(_){}
   }
 
-  function setState(ok, text){
-    statePill.textContent = text || (ok ? "QR prêt" : "lien absent");
-    statePill.className = "pill " + (ok ? "ok" : "bad");
+  function readUrlParamPublic(){
+    try{
+      const u = new URL(location.href);
+      return cleanPublicUrl(
+        u.searchParams.get("url") ||
+        u.searchParams.get("u") ||
+        u.searchParams.get("target") ||
+        u.searchParams.get("link") ||
+        ""
+      );
+    }catch(_){
+      return "";
+    }
   }
 
-  function render(value, shouldSave){
-    const clean = cleanPublicUrl(value);
-    currentUrl = clean;
+  function readFicheLocalPublicUrl(){
+    for(const key of STORAGE_KEYS.fiche){
+      try{
+        const raw = storageGet(key);
+        if(!raw) continue;
+        const obj = JSON.parse(raw);
+        const url = obj.publicUrl || obj.public_url || obj.fiche_url || obj.ficheUrl || obj.booking_url || obj.bookingUrl || "";
+        const clean = cleanPublicUrl(url);
+        if(clean) return clean;
+      }catch(_){}
+    }
+    return "";
+  }
 
+  function scanJsonStorage(){
+    const out = { slug:"", phone:"", publicUrl:"" };
+    const sources = [localStorage, sessionStorage];
+
+    for(const store of sources){
+      try{
+        for(let i=0;i<store.length;i++){
+          const key = store.key(i) || "";
+          const raw = store.getItem(key) || "";
+          if(!raw || raw.length > 6000) continue;
+          if(!/loc|digiy/i.test(key + " " + raw.slice(0,200))) continue;
+
+          try{
+            const obj = JSON.parse(raw);
+            if(!out.slug){
+              out.slug = normalizeSlug(obj.slug || obj.pro_slug || obj.source_slug || obj.loc_slug || obj.workspace_slug || obj.public_slug || "");
+            }
+            if(!out.phone){
+              out.phone = onlyDigits(obj.phone || obj.tel || obj.owner_phone || obj.whatsapp || obj.msisdn || obj.p_phone || "");
+            }
+            if(!out.publicUrl){
+              out.publicUrl = cleanPublicUrl(obj.publicUrl || obj.public_url || obj.fiche_url || obj.ficheUrl || obj.booking_url || obj.bookingUrl || "");
+            }
+          }catch(_){}
+        }
+      }catch(_){}
+    }
+
+    return out;
+  }
+
+  function readIdentity(){
+    const json = scanJsonStorage();
+
+    const slug = normalizeSlug(
+      STORAGE_KEYS.slug.map(storageGet).find(Boolean) ||
+      json.slug ||
+      ""
+    );
+
+    const phone = onlyDigits(
+      STORAGE_KEYS.phone.map(storageGet).find(Boolean) ||
+      json.phone ||
+      ""
+    );
+
+    const publicUrl =
+      readUrlParamPublic() ||
+      readFicheLocalPublicUrl() ||
+      STORAGE_KEYS.publicUrl.map(storageGet).map(cleanPublicUrl).find(Boolean) ||
+      json.publicUrl ||
+      "";
+
+    return { slug, phone, publicUrl };
+  }
+
+  function getSupabase(){
+    if(!window.supabase?.createClient) return null;
+    const url = window.DIGIY_SUPABASE_URL;
+    const key = window.DIGIY_SUPABASE_ANON_KEY || window.DIGIY_SUPABASE_ANON;
+    if(!url || !key) return null;
+    return window.supabase.createClient(url, key, {
+      auth: { persistSession:false, autoRefreshToken:false }
+    });
+  }
+
+  async function queryBySlug(client, slug){
+    if(!client || !slug) return null;
+    const safeSlug = normalizeSlug(slug);
+    if(!safeSlug) return null;
+
+    const { data, error } = await client
+      .from(TABLE)
+      .select("public_slug,slug,pro_slug,phone,owner_phone,whatsapp,public_url,fiche_url,booking_url,name,title,property_name,contact_label,is_published,is_active,updated_at")
+      .or("slug.eq." + safeSlug + ",pro_slug.eq." + safeSlug + ",public_slug.eq." + safeSlug)
+      .order("updated_at", { ascending:false })
+      .limit(1);
+
+    if(error){
+      console.warn("[LOC QR] query slug:", error);
+      return null;
+    }
+
+    return Array.isArray(data) && data.length ? data[0] : null;
+  }
+
+  async function queryByPhone(client, phone){
+    if(!client || !phone) return null;
+    const p = onlyDigits(phone);
+    if(!p) return null;
+
+    const { data, error } = await client
+      .from(TABLE)
+      .select("public_slug,slug,pro_slug,phone,owner_phone,whatsapp,public_url,fiche_url,booking_url,name,title,property_name,contact_label,is_published,is_active,updated_at")
+      .or("phone.eq." + p + ",owner_phone.eq." + p + ",whatsapp.eq." + p)
+      .order("updated_at", { ascending:false })
+      .limit(1);
+
+    if(error){
+      console.warn("[LOC QR] query phone:", error);
+      return null;
+    }
+
+    return Array.isArray(data) && data.length ? data[0] : null;
+  }
+
+  function pickPublicUrl(row){
+    if(!row) return "";
+    return cleanPublicUrl(row.public_url || row.fiche_url || row.booking_url || "");
+  }
+
+  function qrServerUrl(value, size=620){
+    return "https://api.qrserver.com/v1/create-qr-code/?size=" + size + "x" + size + "&margin=18&data=" + encodeURIComponent(value);
+  }
+
+  function quickChartUrl(value, size=620){
+    return "https://quickchart.io/qr?size=" + size + "&margin=2&text=" + encodeURIComponent(value);
+  }
+
+  function setBusy(on){
+    ["btnOpen","btnCopy","btnRefresh","btnPrint"].forEach(id=>{
+      const b = $(id);
+      if(b) b.disabled = !!on;
+    });
+
+    const dl = $("btnDownload");
+    if(dl){
+      dl.style.pointerEvents = on ? "none" : "";
+      dl.style.opacity = on ? ".55" : "";
+    }
+  }
+
+  function setStatus(identityOk, urlOk, msg){
+    const id = $("pillIdentity");
+    const st = $("pillState");
+
+    id.textContent = identityOk ? "identité LOC reconnue" : "identité LOC absente";
+    id.className = "pill " + (identityOk ? "ok" : "bad");
+
+    st.textContent = msg || (urlOk ? "QR prêt" : "lien public absent");
+    st.className = "pill " + (urlOk ? "ok" : "warn");
+  }
+
+  function syncNav(){
+    [
+      ["navHome","./app.html"],
+      ["navReservations","./reservations.html"],
+      ["navPlanning","./planning.html"],
+      ["navNotes","./notes.html"],
+      ["navPlus","./manage-links.html"]
+    ].forEach(([id,path])=>{
+      const el = $(id);
+      if(el) el.href = path;
+    });
+  }
+
+  function renderEmpty(message, type="warn"){
+    $("qrImg").style.display = "none";
+    $("qrImg").removeAttribute("src");
+    $("qrAnchor").href = "#";
+    $("emptyBox").style.display = "block";
+    $("emptyBox").textContent = message || "Lien public non trouvé.";
+    $("linkValue").textContent = "Lien public non trouvé.";
+    $("btnDownload").href = "#";
+    note(message || "Lien public non trouvé.", type);
+  }
+
+  function renderQr(url){
+    const clean = cleanPublicUrl(url);
     if(!clean){
-      qrImg.style.display = "none";
-      qrImg.removeAttribute("src");
-      emptyBox.style.display = "block";
-      linkValue.textContent = "Lien absent ou lien PRO refusé.";
-      setState(false, "lien absent");
-      note("⚠️ Ajoute un vrai lien public client. Le QR neutre ne fabrique pas de QR vers PIN, cockpit, dashboard ou session.", "warn");
+      renderEmpty("Lien public absent ou refusé : le QR ne doit jamais pointer vers une page PRO.", "bad");
+      setStatus(!!(State.slug || State.phone), false, "lien refusé");
       return false;
     }
 
-    targetInput.value = clean;
-    linkValue.textContent = clean;
-    emptyBox.style.display = "none";
-    qrImg.style.display = "block";
-    qrImg.src = qrServerUrl(clean);
-    qrImg.onerror = () => {
-      const fallback = quickChartUrl(clean);
-      if(qrImg.src !== fallback){
-        qrImg.src = fallback;
-        note("✅ QR généré avec le serveur de secours.", "ok");
+    State.publicUrl = clean;
+    State.qrUrl = qrServerUrl(clean, 620);
+
+    $("emptyBox").style.display = "none";
+    $("qrImg").style.display = "block";
+    $("qrImg").src = State.qrUrl;
+    $("qrImg").onerror = () => {
+      const fallback = quickChartUrl(clean, 620);
+      if($("qrImg").src !== fallback){
+        $("qrImg").src = fallback;
+        $("btnDownload").href = fallback;
       }
     };
 
-    if(shouldSave) savePublicUrl(clean);
+    $("qrAnchor").href = clean;
+    $("linkValue").textContent = clean;
+    $("btnDownload").href = qrServerUrl(clean, 900);
 
-    setState(true, "QR public prêt");
-    note("✅ QR public généré. Le scan ouvre exactement le lien affiché, sans passer par le PIN.", "ok");
+    storageSet("DIGIY_LOC_PUBLIC_URL", clean);
+    storageSet("digiy_loc_public_url", clean);
+    storageSet("digiy_loc_qr_url", clean);
+
+    note("✅ QR public LOC prêt. Il contient uniquement le lien client affiché.", "ok");
+    setStatus(!!(State.slug || State.phone), true, "QR public prêt");
     return true;
   }
 
-  function firstAvailableUrl(){
-    return cleanPublicUrl(readParam("url")) ||
-      cleanPublicUrl(readParam("u")) ||
-      cleanPublicUrl(readParam("target")) ||
-      cleanPublicUrl(readParam("link")) ||
-      cleanPublicUrl(readFichePublicUrl()) ||
-      STORAGE_KEYS.map(storageGet).map(cleanPublicUrl).find(Boolean) ||
-      "";
+  async function boot(){
+    cleanVisibleUrl();
+    syncNav();
+    setBusy(true);
+    renderEmpty("Lecture du storage LOC…", "warn");
+
+    const identity = readIdentity();
+    State.slug = identity.slug;
+    State.phone = identity.phone;
+
+    if(identity.publicUrl){
+      State.source = "storage-url";
+      renderQr(identity.publicUrl);
+      setBusy(false);
+      return;
+    }
+
+    if(!State.slug && !State.phone){
+      setStatus(false, false, "storage vide");
+      renderEmpty("Aucun slug/téléphone LOC trouvé dans le storage. Repasse par le PIN pour recréer la session PRO.", "bad");
+      setBusy(false);
+      return;
+    }
+
+    note("⏳ Identité LOC trouvée dans le storage. Recherche de la fiche publique…", "warn");
+
+    const client = getSupabase();
+    if(!client){
+      setStatus(true, false, "Supabase absent");
+      renderEmpty("Supabase n'est pas disponible sur cette page. Le QR ne peut pas résoudre la fiche publique.", "bad");
+      setBusy(false);
+      return;
+    }
+
+    let row = null;
+
+    try{
+      row = await queryBySlug(client, State.slug);
+      if(!row) row = await queryByPhone(client, State.phone);
+    }catch(e){
+      console.error(e);
+    }
+
+    State.row = row;
+
+    const publicUrl = pickPublicUrl(row);
+    if(!publicUrl){
+      setStatus(true, false, "fiche introuvable");
+      renderEmpty("Identité LOC reconnue, mais aucune public_url / fiche_url / booking_url trouvée en base.", "bad");
+      setBusy(false);
+      return;
+    }
+
+    State.source = "supabase";
+    renderQr(publicUrl);
+    setBusy(false);
   }
 
-  $("btnMake").addEventListener("click", () => render(targetInput.value, true));
+  $("btnOpen").addEventListener("click", ()=>{
+    if(!State.publicUrl){
+      note("Aucun lien public prêt à ouvrir.", "warn");
+      return;
+    }
+    window.open(State.publicUrl, "_blank", "noopener,noreferrer");
+  });
 
-  $("btnCopy").addEventListener("click", async () => {
-    if(!currentUrl && !render(targetInput.value, true)) return;
+  $("btnCopy").addEventListener("click", async ()=>{
+    if(!State.publicUrl){
+      note("Aucun lien public prêt à copier.", "warn");
+      return;
+    }
+
     try{
-      await navigator.clipboard.writeText(currentUrl);
-      note("✅ Lien copié : " + currentUrl, "ok");
+      await navigator.clipboard.writeText(State.publicUrl);
+      note("✅ Lien public copié : " + State.publicUrl, "ok");
     }catch(_){
-      note("Lien à copier : " + currentUrl, "warn");
+      note("Lien à copier : " + State.publicUrl, "warn");
     }
   });
 
-  $("btnOpen").addEventListener("click", () => {
-    if(!currentUrl && !render(targetInput.value, true)) return;
-    window.open(currentUrl, "_blank", "noopener,noreferrer");
-  });
+  $("btnRefresh").addEventListener("click", boot);
 
-  $("btnPrint").addEventListener("click", () => {
-    if(!currentUrl && !render(targetInput.value, true)) return;
+  $("btnPrint").addEventListener("click", ()=>{
+    if(!State.publicUrl){
+      note("QR pas encore prêt.", "warn");
+      return;
+    }
     window.print();
   });
 
-  targetInput.addEventListener("input", () => {
-    note("", "warn");
-  });
-
-  const bootUrl = firstAvailableUrl();
-  if(bootUrl){
-    render(bootUrl, true);
-  }else{
-    setState(false, "lien absent");
-  }
+  boot();
 })();
 </script>
 </body>
 </html>
+
 
 
 
