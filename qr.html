@@ -55,26 +55,202 @@
       const $ = id => document.getElementById(id);
       const safe = v => String(v || "").trim();
       const digits = v => String(v || "").replace(/\D/g,"");
-      function normalizeSlug(v){return String(v||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-+/g,"-").replace(/^-|-$/g,"");}
-      function isPublicSlugSensitive(v){const s=safe(v); if(!s) return true; if(/\d{7,}/.test(s)) return true; if(/token|session|pin|phone|tel|whatsapp/i.test(s)) return true; return false;}
-      function note(msg,type){$("note").className="note "+(type||"warn");$("note").textContent=msg||"";$("note").style.display=msg?"block":"none";}
-      function qrApi(value,size){const s=Math.max(160,Number(size)||520);return "https://api.qrserver.com/v1/create-qr-code/?size="+s+"x"+s+"&margin=18&data="+encodeURIComponent(value);}
-      function publicFicheUrl(slug){const s=normalizeSlug(slug);if(!s||isPublicSlugSensitive(s)) return "";const u=new URL("fiche.html",PUBLIC_BASE);u.searchParams.set("slug",s);return u.toString();}
-      function isAccessOk(st){return !!(st && [st.access_ok,st.access,st.ok,st.pin_session_ok].some(v=>v===true||String(v).toLowerCase()==="true"||String(v)==="1"));}
-      function storageGet(k){try{return sessionStorage.getItem(k)||localStorage.getItem(k)||"";}catch(_){return "";}}
-      function readParam(name){try{return safe(new URL(location.href).searchParams.get(name));}catch(_){return "";}}
-      function cleanVisibleUrl(){try{const url=new URL(location.href);let changed=false;["phone","tel","p_phone","owner_phone","owner_id","loc_phone","whatsapp","msisdn","pin","pin4","token","session_token","module","return","redirect","redirect_url","url","from","v"].forEach(k=>{if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;}});const s=normalizeSlug(url.searchParams.get("slug")||"");if(s&&isPublicSlugSensitive(s)){url.searchParams.delete("slug");changed=true;}if(changed) history.replaceState({},document.title,url.pathname+url.search+url.hash);}catch(_){}}
-      function goPin(reason){try{sessionStorage.setItem("DIGIY_LOC_RETURN_AFTER_PIN","qr.html");if(reason) sessionStorage.setItem("DIGIY_LOC_PIN_REASON",reason);}catch(_){}document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#07140f;color:#ecfff4;font-family:system-ui,sans-serif;text-align:center"><div><h1>🔐 Retour PIN</h1><p style="font-weight:800">Session ou slug LOC absent. On repasse par le coffre.</p></div></main>';setTimeout(()=>location.replace(LOGIN_URL),250);}
-      async function waitGuard(){try{const guard=window.DIGIY_GUARD;if(!guard) return {};if(typeof guard.ready==="function"){const out=guard.ready({redirect:false,preserve_validation:true});if(out&&typeof out.then==="function") await out;}else if(guard.ready&&typeof guard.ready.then==="function"){await guard.ready;}if(typeof guard.getSession==="function") return guard.getSession()||guard.state||{};return guard.state||{};}catch(e){console.warn("[LOC QR] guard",e);return {};}}
-      function readSession(st){const raw=st||{};const internalSlug=normalizeSlug(readParam("slug")||raw.loc_slug||raw.slug||raw.internal_slug||raw.subscription_slug||storageGet("digiy_loc_slug")||storageGet("digiy_loc_last_slug")||storageGet("DIGIY_LOC_SLUG")||storageGet("DIGIY_SLUG"));const publicSlug=normalizeSlug(readParam("public_slug")||raw.public_slug||raw.slug_public||raw.fiche_slug||storageGet("digiy_loc_public_slug")||storageGet("DIGIY_LOC_PUBLIC_SLUG"));const phone=digits(raw.phone||raw.tel||raw.whatsapp||raw.loc_phone||storageGet("digiy_loc_phone")||storageGet("DIGIY_LOC_PHONE")||storageGet("DIGIY_PHONE"));return{access:isAccessOk(raw),internalSlug,publicSlug,phone};}
-      async function fetchRemote(session){if(!window.supabase?.createClient) return null;const client=window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY||window.DIGIY_SUPABASE_ANON);const candidates=[session.internalSlug,session.publicSlug,session.phone].filter(Boolean);for(const c of candidates){let query=client.from(TABLE).select("*").eq("module",MODULE).eq("is_active",true).in("status",["published","active"]);if(/^\d+$/.test(c)){query=query.or(`phone.eq.${c},whatsapp.eq.${c}`);}else{query=query.or(`slug.eq.${c},public_slug.eq.${c},internal_slug.eq.${c},loc_slug.eq.${c}`);}const {data,error}=await query.limit(1).maybeSingle();if(!error&&data) return data;}return null;}
-      function setPills(access, publicSlug){$("sessionPill").textContent=access?"session LOC ouverte":"slug LOC reconnu";$("publicPill").textContent=publicSlug?"public : "+publicSlug:"public absent";}
-      async function copyText(text){if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy");}catch(_){}ta.remove();if(!ok) throw new Error("copy_failed");}
-      function saveHints(row, session, publicSlug){try{if(session.internalSlug){localStorage.setItem("digiy_loc_slug",session.internalSlug);localStorage.setItem("digiy_loc_last_slug",session.internalSlug);}if(publicSlug)localStorage.setItem("digiy_loc_public_slug",publicSlug);const phone=digits(row?.phone||row?.whatsapp||session.phone||"");if(phone)localStorage.setItem("digiy_loc_phone",phone);}catch(_){}}
-      async function boot(){cleanVisibleUrl();const state=await waitGuard();const session=readSession(state);if(!session.internalSlug&&!session.publicSlug){goPin("slug_absent");return;}const row=await fetchRemote(session);let publicSlug=normalizeSlug(row?.public_slug||row?.slug||session.publicSlug||"");if(!publicSlug && session.internalSlug && !isPublicSlugSensitive(session.internalSlug)) publicSlug=session.internalSlug;if(!publicSlug || isPublicSlugSensitive(publicSlug)){goPin("public_slug_absent");return;}const target=safe(row?.fiche_url)||publicFicheUrl(publicSlug);if(!target){goPin("target_absent");return;}const label=safe(row?.business_name||row?.name)||"Mon logement";$("qrLabel").textContent=label;$("title").textContent="QR " + label;$("targetUrl").textContent=target;$("openFiche").href=target;$("openProFiche").href="./fiche.html"+(session.internalSlug?"?slug="+encodeURIComponent(session.internalSlug):"");$("qrImg").src=qrApi(target,520);setPills(session.access,publicSlug);saveHints(row,session,publicSlug);note(row?"✅ QR LOC prêt depuis Supabase. Il ouvre la fiche client propre.":"⚠️ QR LOC prêt en lecture locale. Supabase n’a pas confirmé la fiche.",row?"ok":"warn");$("printBtn").addEventListener("click",()=>window.print());$("copyBtn").addEventListener("click",async()=>{try{await copyText(target);note("✅ Lien fiche LOC copié.","ok");}catch(_){note("Copie bloquée. Copie le lien affiché à la main.","warn");}});}
+
+      function normalizeSlug(v){
+        return String(v||"").trim().toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+          .replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")
+          .replace(/-+/g,"-").replace(/^-|-$/g,"");
+      }
+      function isPublicSlugSensitive(v){
+        const s=safe(v);
+        if(!s) return true;
+        if(/\d{7,}/.test(s)) return true;
+        if(/token|session|pin|phone|tel|whatsapp/i.test(s)) return true;
+        return false;
+      }
+      function isAccessOk(st){
+        return !!(st && [st.access_ok,st.access,st.ok,st.pin_session_ok].some(v=>v===true||String(v).toLowerCase()==="true"||String(v)==="1"));
+      }
+      function note(msg,type){
+        $("note").className="note "+(type||"warn");
+        $("note").textContent=msg||"";
+        $("note").style.display=msg?"block":"none";
+      }
+      function qrApi(value,size){
+        const s=Math.max(160,Number(size)||520);
+        return "https://api.qrserver.com/v1/create-qr-code/?size="+s+"x"+s+"&margin=18&data="+encodeURIComponent(value);
+      }
+      function publicFicheUrl(slug){
+        const s=normalizeSlug(slug);
+        if(!s||isPublicSlugSensitive(s)) return "";
+        const u=new URL("fiche.html",PUBLIC_BASE);
+        u.searchParams.set("slug",s);
+        return u.toString();
+      }
+      function storageGet(k){
+        try{return sessionStorage.getItem(k)||localStorage.getItem(k)||"";}catch(_){return "";}
+      }
+      function readParam(name){
+        try{return safe(new URL(location.href).searchParams.get(name));}catch(_){return "";}
+      }
+
+      /* Acceptation spéciale : ?url=... est autorisé seulement si c'est une fiche publique LOC propre.
+         Cela permet à la fiche PRO d'ouvrir qr.html?url=https://loc.digiylyfe.com/fiche.html?slug=...
+         sans retomber au PIN. Un téléphone/token/PIN dans l'URL reste refusé. */
+      function readSafePublicUrlParam(){
+        const raw = readParam("url") || readParam("public_url") || readParam("target");
+        if(!raw) return "";
+        try{
+          const candidate = new URL(raw);
+          const base = new URL(PUBLIC_BASE);
+          if(candidate.protocol !== "https:") return "";
+          if(candidate.hostname !== base.hostname) return "";
+          const file = (candidate.pathname.split("/").pop() || "").toLowerCase();
+          if(file !== "fiche.html" && file !== "fiche-loc.html") return "";
+          const slug = normalizeSlug(candidate.searchParams.get("slug") || candidate.searchParams.get("public_slug") || "");
+          if(!slug || isPublicSlugSensitive(slug)) return "";
+          const clean = new URL("fiche.html", base.origin + "/");
+          clean.searchParams.set("slug", slug);
+          return clean.toString();
+        }catch(_){ return ""; }
+      }
+
+      function cleanVisibleUrl(){
+        try{
+          const url=new URL(location.href);
+          let changed=false;
+          /* On retire les paramètres sensibles, mais on laisse url/public_url si c'est déjà public.
+             Après lecture, on nettoie même url pour ne pas laisser un long lien dans la barre. */
+          ["phone","tel","p_phone","owner_phone","owner_id","loc_phone","whatsapp","msisdn","pin","pin4","token","session_token","module","return","redirect","redirect_url","from","v"].forEach(k=>{
+            if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;}
+          });
+          const s=normalizeSlug(url.searchParams.get("slug")||"");
+          if(s&&isPublicSlugSensitive(s)){url.searchParams.delete("slug");changed=true;}
+          const publicUrl = readSafePublicUrlParam();
+          if(publicUrl){
+            ["url","public_url","target"].forEach(k=>{ if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;} });
+          }
+          if(changed) history.replaceState({},document.title,url.pathname+url.search+url.hash);
+        }catch(_){}
+      }
+      function goPin(reason){
+        try{
+          sessionStorage.setItem("DIGIY_LOC_RETURN_AFTER_PIN","qr.html");
+          if(reason) sessionStorage.setItem("DIGIY_LOC_PIN_REASON",reason);
+        }catch(_){}
+        document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#07140f;color:#ecfff4;font-family:system-ui,sans-serif;text-align:center"><div><h1>🔐 Retour PIN</h1><p style="font-weight:800">Session ou slug LOC absent. On repasse par le coffre.</p></div></main>';
+        setTimeout(()=>location.replace(LOGIN_URL),250);
+      }
+      async function waitGuard(){
+        try{
+          const guard=window.DIGIY_GUARD;
+          if(!guard) return {};
+          if(typeof guard.ready==="function"){
+            const out=guard.ready({redirect:false,preserve_validation:true});
+            if(out&&typeof out.then==="function") await out;
+          }else if(guard.ready&&typeof guard.ready.then==="function"){
+            await guard.ready;
+          }
+          if(typeof guard.getSession==="function") return guard.getSession()||guard.state||{};
+          return guard.state||{};
+        }catch(e){console.warn("[LOC QR] guard",e);return {};}
+      }
+      function readSession(st){
+        const raw=st||{};
+        const internalSlug=normalizeSlug(
+          readParam("slug")||raw.loc_slug||raw.slug||raw.internal_slug||raw.subscription_slug||
+          storageGet("digiy_loc_slug")||storageGet("digiy_loc_last_slug")||storageGet("DIGIY_LOC_SLUG")||storageGet("DIGIY_SLUG")
+        );
+        const publicSlug=normalizeSlug(
+          readParam("public_slug")||raw.public_slug||raw.slug_public||raw.fiche_slug||
+          storageGet("digiy_loc_public_slug")||storageGet("DIGIY_LOC_PUBLIC_SLUG")
+        );
+        const phone=digits(raw.phone||raw.tel||raw.whatsapp||raw.loc_phone||storageGet("digiy_loc_phone")||storageGet("DIGIY_LOC_PHONE")||storageGet("DIGIY_PHONE"));
+        return{access:isAccessOk(raw),internalSlug,publicSlug,phone};
+      }
+      async function fetchRemote(session){
+        if(!window.supabase?.createClient) return null;
+        const client=window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY||window.DIGIY_SUPABASE_ANON);
+        const candidates=[session.internalSlug,session.publicSlug,session.phone].filter(Boolean);
+        for(const c of candidates){
+          let query=client.from(TABLE).select("*").eq("module",MODULE).eq("is_active",true).in("status",["published","active"]);
+          if(/^\d+$/.test(c)){
+            query=query.or(`phone.eq.${c},whatsapp.eq.${c}`);
+          }else{
+            query=query.or(`slug.eq.${c},public_slug.eq.${c},internal_slug.eq.${c},loc_slug.eq.${c}`);
+          }
+          const {data,error}=await query.limit(1).maybeSingle();
+          if(!error&&data) return data;
+        }
+        return null;
+      }
+      function setPills(access, publicSlug, mode){
+        $("sessionPill").textContent = mode === "public_url" ? "lien public reçu" : (access ? "session LOC ouverte" : "slug LOC reconnu");
+        $("publicPill").textContent=publicSlug?"public : "+publicSlug:"public absent";
+      }
+      async function copyText(text){
+        if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+        const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy");}catch(_){}ta.remove();if(!ok) throw new Error("copy_failed");
+      }
+      function saveHints(row, session, publicSlug){
+        try{
+          if(session.internalSlug){localStorage.setItem("digiy_loc_slug",session.internalSlug);localStorage.setItem("digiy_loc_last_slug",session.internalSlug);}
+          if(publicSlug)localStorage.setItem("digiy_loc_public_slug",publicSlug);
+          const phone=digits(row?.phone||row?.whatsapp||session.phone||"");
+          if(phone)localStorage.setItem("digiy_loc_phone",phone);
+        }catch(_){}
+      }
+      function extractSlugFromPublicUrl(url){
+        try{return normalizeSlug(new URL(url).searchParams.get("slug") || "");}catch(_){return "";}
+      }
+      function renderQr(target, label, publicSlug, mode){
+        $("qrLabel").textContent=label||"Mon logement";
+        $("title").textContent="QR " + (label||"logement");
+        $("targetUrl").textContent=target;
+        $("openFiche").href=target;
+        $("qrImg").src=qrApi(target,520);
+        setPills(true, publicSlug, mode);
+        note("✅ QR LOC prêt. Il ouvre la fiche client publique, pas le PIN.","ok");
+        $("printBtn").addEventListener("click",()=>window.print());
+        $("copyBtn").addEventListener("click",async()=>{try{await copyText(target);note("✅ Lien fiche LOC copié.","ok");}catch(_){note("Copie bloquée. Copie le lien affiché à la main.","warn");}});
+      }
+      async function boot(){
+        const directPublicUrl = readSafePublicUrlParam();
+        cleanVisibleUrl();
+
+        /* Cas 1 : la fiche PRO appelle qr.html?url=fiche publique.
+           On fabrique le QR immédiatement, sans demander PIN, car le lien est déjà public et validé. */
+        if(directPublicUrl){
+          const slug = extractSlugFromPublicUrl(directPublicUrl);
+          renderQr(directPublicUrl, "Mon logement", slug, "public_url");
+          $("openProFiche").href="./fiche.html";
+          return;
+        }
+
+        /* Cas 2 : ouverture directe de qr.html côté PRO.
+           Là, il faut une session/slug LOC. Sinon PIN. */
+        const state=await waitGuard();
+        const session=readSession(state);
+        if(!session.internalSlug&&!session.publicSlug){goPin("slug_absent");return;}
+
+        const row=await fetchRemote(session);
+        let publicSlug=normalizeSlug(row?.public_slug||row?.slug||session.publicSlug||"");
+        if(!publicSlug && session.internalSlug && !isPublicSlugSensitive(session.internalSlug)) publicSlug=session.internalSlug;
+        if(!publicSlug || isPublicSlugSensitive(publicSlug)){goPin("public_slug_absent");return;}
+
+        const target=safe(row?.fiche_url)||publicFicheUrl(publicSlug);
+        if(!target){goPin("target_absent");return;}
+
+        const label=safe(row?.business_name||row?.name)||"Mon logement";
+        $("openProFiche").href="./fiche.html"+(session.internalSlug?"?slug="+encodeURIComponent(session.internalSlug):"");
+        saveHints(row,session,publicSlug);
+        renderQr(target,label,publicSlug,row?"supabase":"local");
+        if(!row) note("⚠️ QR LOC prêt en lecture locale. Supabase n’a pas confirmé la fiche, mais le lien client est propre.","warn");
+      }
       boot();
     })();
-  </script>
+  </script>  </script>
 </body>
 </html>
 
