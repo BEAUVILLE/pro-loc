@@ -95,24 +95,36 @@
         try{return safe(new URL(location.href).searchParams.get(name));}catch(_){return "";}
       }
 
-      /* Acceptation spéciale : ?url=... est autorisé seulement si c'est une fiche publique LOC propre.
-         Cela permet à la fiche PRO d'ouvrir qr.html?url=https://loc.digiylyfe.com/fiche.html?slug=...
-         sans retomber au PIN. Un téléphone/token/PIN dans l'URL reste refusé. */
+      /* Acceptation spéciale : ?url=... est autorisé seulement si c'est une vraie URL publique DIGIYLYFE.
+         Cas validé : https://part-chez-baptiste.digiylyfe.com/
+         Un téléphone/token/PIN dans l'URL reste refusé. */
       function readSafePublicUrlParam(){
         const raw = readParam("url") || readParam("public_url") || readParam("target");
         if(!raw) return "";
         try{
           const candidate = new URL(raw);
           const base = new URL(PUBLIC_BASE);
+          const host = candidate.hostname.toLowerCase();
+          const baseHost = base.hostname.toLowerCase();
+          const allowedHost = host === baseHost || host === "digiylyfe.com" || host.endsWith(".digiylyfe.com");
           if(candidate.protocol !== "https:") return "";
-          if(candidate.hostname !== base.hostname) return "";
-          const file = (candidate.pathname.split("/").pop() || "").toLowerCase();
-          if(file !== "fiche.html" && file !== "fiche-loc.html") return "";
+          if(!allowedHost) return "";
+
+          const forbiddenKeys = [
+            "phone","tel","p_phone","owner_phone","owner_id","loc_phone",
+            "whatsapp","msisdn","pin","pin4","token","session_token",
+            "return","redirect","redirect_url","from","module","v"
+          ];
+          for(const k of forbiddenKeys){
+            if(candidate.searchParams.has(k)) return "";
+          }
+
           const slug = normalizeSlug(candidate.searchParams.get("slug") || candidate.searchParams.get("public_slug") || "");
-          if(!slug || isPublicSlugSensitive(slug)) return "";
-          const clean = new URL("fiche.html", base.origin + "/");
-          clean.searchParams.set("slug", slug);
-          return clean.toString();
+          if(slug && isPublicSlugSensitive(slug)) return "";
+
+          /* On garde le vrai domaine public. Pour part-chez-baptiste.digiylyfe.com,
+             la fiche publique peut être à la racine, donc on ne force pas fiche.html. */
+          return candidate.toString();
         }catch(_){ return ""; }
       }
 
@@ -253,6 +265,7 @@
   </script>  </script>
 </body>
 </html>
+
 
 
 
