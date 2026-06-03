@@ -1,268 +1,366 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="robots" content="noindex,nofollow"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#07140f" />
-  <title>DIGIY LOC — QR logement</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#061b14"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Je loue • QR public neutre</title>
 
-  <script>
-    window.DIGIY_MODULE       = "LOC";
-    window.DIGIY_ABOS_MODULE  = "LOC";
-    window.DIGIY_MODULE_LABEL = "Je loue";
-    window.DIGIY_LOGIN_URL    = "./pin.html";
-    window.DIGIY_PUBLIC_BASE_URL = window.DIGIY_PUBLIC_BASE_URL || "https://loc.digiylyfe.com/";
-    window.DIGIY_SUPABASE_URL      = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-guard-20260531"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet"/>
 
-  <style>
-    body{margin:0;font-family:Arial,system-ui,sans-serif;background:#07140f;color:#ecfff4;padding:16px;text-align:center;font-weight:800}
-    .card{max-width:560px;margin:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:26px;padding:22px;box-shadow:0 22px 70px rgba(0,0,0,.38)}
-    h1{font-size:34px;margin:10px 0;line-height:1}.top{color:#facc15;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:900}
-    p{color:rgba(236,255,244,.75);line-height:1.5}.qr{background:white;border-radius:22px;padding:18px;margin:18px auto;color:#07140f}.qr img{width:100%;max-width:340px;border-radius:16px}
-    .btn{display:block;margin:10px 0;padding:15px;border-radius:18px;background:#22c55e;color:#041b12;font-weight:900;text-decoration:none;border:0;width:100%;box-sizing:border-box;font-size:16px}.btn.gold{background:#facc15;color:#241a00}.btn.blue{background:#38bdf8;color:#061826}.btn.dark{background:rgba(255,255,255,.08);color:#ecfff4;border:1px solid rgba(255,255,255,.14)}
-    .small{font-size:13px;color:rgba(236,255,244,.65);word-break:break-all}.pill{display:inline-block;margin:4px 3px;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-size:12px;color:#fff0a8}.note{display:none;margin-top:12px;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fde68a;font-size:14px;line-height:1.45;white-space:pre-wrap;text-align:left}.note.ok{display:block;color:#bbf7d0;border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.10)}.note.warn{display:block}.note.bad{display:block;color:#fecaca;border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.10)}
-    @media print{body{background:#fff;color:#111}.card{box-shadow:none;border:0}.btn,.small,.top,p,.note,.pillRow{display:none}.qr{padding:0}.qr img{max-width:430px}}
-  </style>
+<style>
+:root{
+  --bg:#061b14;--bg2:#0a2820;--card:rgba(255,255,255,.055);--line:rgba(255,255,255,.14);
+  --text:#eafff1;--muted:rgba(234,255,241,.78);--gold:#facc15;--ok:#22c55e;
+  --bad:#ef4444;--blue:#38bdf8;--shadow:0 18px 42px rgba(0,0,0,.36);
+  --font:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:var(--font);
+  color:var(--text);
+  background:
+    radial-gradient(900px 520px at 12% -8%,rgba(250,204,21,.14),transparent 58%),
+    radial-gradient(900px 520px at 92% 0%,rgba(34,197,94,.16),transparent 58%),
+    linear-gradient(180deg,#03120d,var(--bg));
+  padding:14px;
+}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit}
+.wrap{max-width:760px;margin:0 auto}
+.hero,.card{
+  border:1px solid var(--line);
+  border-radius:26px;
+  background:var(--card);
+  box-shadow:var(--shadow);
+  padding:18px;
+}
+.card{margin-top:14px}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.brand{display:flex;gap:12px;align-items:center;min-width:0}
+.logo{
+  width:58px;height:58px;border-radius:20px;display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(34,197,94,.20));
+  border:1px solid rgba(250,204,21,.36);font-size:28px;flex:0 0 auto;
+}
+h1{
+  margin:0;font-size:clamp(30px,6vw,46px);line-height:1.02;
+  font-weight:1000;letter-spacing:-.045em;color:#fff7cc;
+}
+.sub{margin-top:8px;color:var(--muted);font-size:17px;line-height:1.5;font-weight:850;max-width:62ch}
+.pill{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;
+  padding:9px 13px;border-radius:999px;border:1px solid rgba(148,163,184,.26);
+  background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:1000;
+}
+.pill.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10);color:#bbf7d0}
+.pill.warn{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.10);color:#fde68a}
+.pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#fecaca}
+label{
+  display:block;margin:16px 0 7px;color:#fff7cc;font-size:13px;
+  letter-spacing:.06em;text-transform:uppercase;font-weight:1000;
+}
+input{
+  width:100%;min-height:58px;border-radius:18px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.18);color:var(--text);padding:14px 15px;outline:none;
+  font-size:16px;font-weight:900;
+}
+input:focus{border-color:rgba(250,204,21,.42);box-shadow:0 0 0 4px rgba(250,204,21,.10)}
+.btn{
+  appearance:none;border:1px solid rgba(148,163,184,.24);border-radius:18px;min-height:58px;
+  padding:14px 16px;background:rgba(255,255,255,.055);color:var(--text);font-size:16px;
+  font-weight:1000;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  gap:10px;text-align:center;touch-action:manipulation;
+}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.gold{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.38);color:#fde68a}
+.btn.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.36);color:#bbf7d0}
+.btn.blue{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.34);color:#bae6fd}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.qrBox{
+  margin-top:14px;min-height:320px;border-radius:24px;border:1px dashed rgba(250,204,21,.38);
+  background:rgba(0,0,0,.14);display:grid;place-items:center;padding:18px;text-align:center;
+}
+.qrImg{
+  width:min(360px,100%);height:auto;border-radius:18px;background:#fff;padding:12px;
+  border:1px solid rgba(148,163,184,.24);display:none;
+}
+.empty{color:#13200d;background:#fff;border-radius:18px;padding:20px;font-weight:1000;line-height:1.4}
+.linkBox{margin-top:14px;padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.22);background:rgba(0,0,0,.16)}
+.linkLabel{color:#fde68a;font-weight:1000;font-size:15px;margin-bottom:8px}
+.linkValue{color:#dbeafe;font-size:14px;line-height:1.45;font-weight:850;word-break:break-all}
+.note{
+  display:none;margin-top:12px;padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.035);color:var(--muted);font-size:15px;line-height:1.45;font-weight:950;white-space:pre-wrap;
+}
+.note.ok{display:block;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.09);color:#bbf7d0}
+.note.warn{display:block;border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.09);color:#fde68a}
+.note.bad{display:block;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.09);color:#fecaca}
+.doctrine{
+  margin-top:14px;border:1px solid rgba(34,197,94,.28);border-radius:22px;background:rgba(34,197,94,.08);
+  padding:14px;color:#bbf7d0;font-size:16px;line-height:1.55;font-weight:900;
+}
+@media(max-width:620px){
+  body{padding:10px}
+  .hero,.card{padding:15px;border-radius:22px}
+  .actions{grid-template-columns:1fr}
+  .sub{font-size:16px}
+  .btn{font-size:16px;min-height:60px}
+  .qrBox{min-height:280px}
+}
+@media print{
+  body{background:#fff;color:#111}
+  .hero,.actions,.note,.linkBox,.doctrine,label,input,.pill{display:none!important}
+  .card{box-shadow:none;border:0;background:#fff}
+  .qrBox{border:0;background:#fff}
+  .qrImg{display:block!important;width:420px;max-width:100%;margin:auto}
+}
+</style>
 </head>
+
 <body>
-  <main class="card">
-    <div class="top">DIGIY LOC · QR TERRAIN</div>
-    <h1 id="title">QR logement</h1>
-    <p id="subtitle">Scanne le QR pour ouvrir la fiche logement côté client. Le lien public reste propre ; l’espace PRO reste protégé par PIN.</p>
-    <div class="pillRow"><span class="pill" id="sessionPill">session…</span><span class="pill" id="publicPill">slug public…</span></div>
-    <div class="qr"><img id="qrImg" alt="QR logement DIGIY LOC" src="" /><strong id="qrLabel">Mon logement</strong><br><span>BY DIGIYLYFE</span></div>
-    <a class="btn" id="openFiche" href="#" target="_blank" rel="noopener">🏠 Ouvrir fiche client</a>
-    <a class="btn blue" id="openProFiche" href="./fiche.html">🪪 Ouvrir ma fiche PRO</a>
-    <button class="btn gold" id="printBtn" type="button">🖨️ Imprimer le QR</button>
-    <button class="btn gold" id="copyBtn" type="button">📋 Copier lien fiche</button>
-    <a class="btn dark" href="./app.html">← Retour accueil</a>
-    <p class="small" id="targetUrl"></p><div class="note warn" id="note"></div>
-  </main>
+<div class="wrap">
+  <section class="hero">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">🔳</div>
+        <div>
+          <h1>QR public neutre</h1>
+          <div class="sub">
+            Ce moule ne contient aucun nom, aucun téléphone, aucun slug et aucune fiche écrite en dur.
+            Il reçoit un lien public et fabrique le QR. Pas de PIN, pas de guard, pas de cockpit.
+          </div>
+        </div>
+      </div>
+      <span class="pill warn" id="statePill">lien à lire…</span>
+    </div>
 
-  <script>
-    (async function(){
-      "use strict";
-      const MODULE = "LOC";
-      const TABLE = "digiy_loc_public_fiches";
-      const PUBLIC_BASE = String(window.DIGIY_PUBLIC_BASE_URL || "https://loc.digiylyfe.com/");
-      const LOGIN_URL = String(window.DIGIY_LOGIN_URL || "./pin.html");
-      const $ = id => document.getElementById(id);
-      const safe = v => String(v || "").trim();
-      const digits = v => String(v || "").replace(/\D/g,"");
+    <label for="targetInput">Lien public client</label>
+    <input id="targetInput" inputmode="url" autocomplete="off" placeholder="https://..."/>
 
-      function normalizeSlug(v){
-        return String(v||"").trim().toLowerCase()
-          .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-          .replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")
-          .replace(/-+/g,"-").replace(/^-|-$/g,"");
-      }
-      function isPublicSlugSensitive(v){
-        const s=safe(v);
-        if(!s) return true;
-        if(/\d{7,}/.test(s)) return true;
-        if(/token|session|pin|phone|tel|whatsapp/i.test(s)) return true;
-        return false;
-      }
-      function isAccessOk(st){
-        return !!(st && [st.access_ok,st.access,st.ok,st.pin_session_ok].some(v=>v===true||String(v).toLowerCase()==="true"||String(v)==="1"));
-      }
-      function note(msg,type){
-        $("note").className="note "+(type||"warn");
-        $("note").textContent=msg||"";
-        $("note").style.display=msg?"block":"none";
-      }
-      function qrApi(value,size){
-        const s=Math.max(160,Number(size)||520);
-        return "https://api.qrserver.com/v1/create-qr-code/?size="+s+"x"+s+"&margin=18&data="+encodeURIComponent(value);
-      }
-      function publicFicheUrl(slug){
-        const s=normalizeSlug(slug);
-        if(!s||isPublicSlugSensitive(s)) return "";
-        const u=new URL("fiche.html",PUBLIC_BASE);
-        u.searchParams.set("slug",s);
-        return u.toString();
-      }
-      function storageGet(k){
-        try{return sessionStorage.getItem(k)||localStorage.getItem(k)||"";}catch(_){return "";}
-      }
-      function readParam(name){
-        try{return safe(new URL(location.href).searchParams.get(name));}catch(_){return "";}
-      }
+    <div class="actions">
+      <button class="btn green" id="btnMake" type="button">🔳 Générer QR</button>
+      <button class="btn gold" id="btnCopy" type="button">📋 Copier lien</button>
+      <button class="btn blue" id="btnOpen" type="button">↗️ Ouvrir lien</button>
+      <button class="btn" id="btnPrint" type="button">🖨️ Imprimer</button>
+    </div>
 
-      /* Acceptation spéciale : ?url=... est autorisé seulement si c'est une vraie URL publique DIGIYLYFE.
-         Cas validé : https://part-chez-baptiste.digiylyfe.com/
-         Un téléphone/token/PIN dans l'URL reste refusé. */
-      function readSafePublicUrlParam(){
-        const raw = readParam("url") || readParam("public_url") || readParam("target");
-        if(!raw) return "";
-        try{
-          const candidate = new URL(raw);
-          const base = new URL(PUBLIC_BASE);
-          const host = candidate.hostname.toLowerCase();
-          const baseHost = base.hostname.toLowerCase();
-          const allowedHost = host === baseHost || host === "digiylyfe.com" || host.endsWith(".digiylyfe.com");
-          if(candidate.protocol !== "https:") return "";
-          if(!allowedHost) return "";
+    <div class="note" id="note"></div>
+  </section>
 
-          const forbiddenKeys = [
-            "phone","tel","p_phone","owner_phone","owner_id","loc_phone",
-            "whatsapp","msisdn","pin","pin4","token","session_token",
-            "return","redirect","redirect_url","from","module","v"
-          ];
-          for(const k of forbiddenKeys){
-            if(candidate.searchParams.has(k)) return "";
-          }
+  <section class="card">
+    <div class="qrBox" id="qrBox">
+      <img id="qrImg" class="qrImg" alt="QR public DIGIY LOC"/>
+      <div class="empty" id="emptyBox">Ajoute ou transmets un lien public pour fabriquer le QR.</div>
+    </div>
 
-          const slug = normalizeSlug(candidate.searchParams.get("slug") || candidate.searchParams.get("public_slug") || "");
-          if(slug && isPublicSlugSensitive(slug)) return "";
+    <div class="linkBox">
+      <div class="linkLabel">Lien contenu dans le QR</div>
+      <div class="linkValue" id="linkValue">Aucun lien public pour le moment.</div>
+    </div>
 
-          /* On garde le vrai domaine public. Pour part-chez-baptiste.digiylyfe.com,
-             la fiche publique peut être à la racine, donc on ne force pas fiche.html. */
-          return candidate.toString();
-        }catch(_){ return ""; }
-      }
+    <div class="doctrine">
+      Règle du moule : <b>qr.html?url=LIEN_PUBLIC</b> fabrique un QR public.
+      Si le lien est absent ou pointe vers une page PRO, le QR est bloqué proprement.
+      Il ne renvoie jamais au PIN automatiquement.
+    </div>
+  </section>
+</div>
 
-      function cleanVisibleUrl(){
-        try{
-          const url=new URL(location.href);
-          let changed=false;
-          /* On retire les paramètres sensibles, mais on laisse url/public_url si c'est déjà public.
-             Après lecture, on nettoie même url pour ne pas laisser un long lien dans la barre. */
-          ["phone","tel","p_phone","owner_phone","owner_id","loc_phone","whatsapp","msisdn","pin","pin4","token","session_token","module","return","redirect","redirect_url","from","v"].forEach(k=>{
-            if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;}
-          });
-          const s=normalizeSlug(url.searchParams.get("slug")||"");
-          if(s&&isPublicSlugSensitive(s)){url.searchParams.delete("slug");changed=true;}
-          const publicUrl = readSafePublicUrlParam();
-          if(publicUrl){
-            ["url","public_url","target"].forEach(k=>{ if(url.searchParams.has(k)){url.searchParams.delete(k);changed=true;} });
-          }
-          if(changed) history.replaceState({},document.title,url.pathname+url.search+url.hash);
-        }catch(_){}
-      }
-      function goPin(reason){
-        try{
-          sessionStorage.setItem("DIGIY_LOC_RETURN_AFTER_PIN","qr.html");
-          if(reason) sessionStorage.setItem("DIGIY_LOC_PIN_REASON",reason);
-        }catch(_){}
-        document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#07140f;color:#ecfff4;font-family:system-ui,sans-serif;text-align:center"><div><h1>🔐 Retour PIN</h1><p style="font-weight:800">Session ou slug LOC absent. On repasse par le coffre.</p></div></main>';
-        setTimeout(()=>location.replace(LOGIN_URL),250);
-      }
-      async function waitGuard(){
-        try{
-          const guard=window.DIGIY_GUARD;
-          if(!guard) return {};
-          if(typeof guard.ready==="function"){
-            const out=guard.ready({redirect:false,preserve_validation:true});
-            if(out&&typeof out.then==="function") await out;
-          }else if(guard.ready&&typeof guard.ready.then==="function"){
-            await guard.ready;
-          }
-          if(typeof guard.getSession==="function") return guard.getSession()||guard.state||{};
-          return guard.state||{};
-        }catch(e){console.warn("[LOC QR] guard",e);return {};}
-      }
-      function readSession(st){
-        const raw=st||{};
-        const internalSlug=normalizeSlug(
-          readParam("slug")||raw.loc_slug||raw.slug||raw.internal_slug||raw.subscription_slug||
-          storageGet("digiy_loc_slug")||storageGet("digiy_loc_last_slug")||storageGet("DIGIY_LOC_SLUG")||storageGet("DIGIY_SLUG")
-        );
-        const publicSlug=normalizeSlug(
-          readParam("public_slug")||raw.public_slug||raw.slug_public||raw.fiche_slug||
-          storageGet("digiy_loc_public_slug")||storageGet("DIGIY_LOC_PUBLIC_SLUG")
-        );
-        const phone=digits(raw.phone||raw.tel||raw.whatsapp||raw.loc_phone||storageGet("digiy_loc_phone")||storageGet("DIGIY_LOC_PHONE")||storageGet("DIGIY_PHONE"));
-        return{access:isAccessOk(raw),internalSlug,publicSlug,phone};
-      }
-      async function fetchRemote(session){
-        if(!window.supabase?.createClient) return null;
-        const client=window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY||window.DIGIY_SUPABASE_ANON);
-        const candidates=[session.internalSlug,session.publicSlug,session.phone].filter(Boolean);
-        for(const c of candidates){
-          let query=client.from(TABLE).select("*").eq("module",MODULE).eq("is_active",true).in("status",["published","active"]);
-          if(/^\d+$/.test(c)){
-            query=query.or(`phone.eq.${c},whatsapp.eq.${c}`);
-          }else{
-            query=query.or(`slug.eq.${c},public_slug.eq.${c},internal_slug.eq.${c},loc_slug.eq.${c}`);
-          }
-          const {data,error}=await query.limit(1).maybeSingle();
-          if(!error&&data) return data;
-        }
-        return null;
-      }
-      function setPills(access, publicSlug, mode){
-        $("sessionPill").textContent = mode === "public_url" ? "lien public reçu" : (access ? "session LOC ouverte" : "slug LOC reconnu");
-        $("publicPill").textContent=publicSlug?"public : "+publicSlug:"public absent";
-      }
-      async function copyText(text){
-        if(navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
-        const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy");}catch(_){}ta.remove();if(!ok) throw new Error("copy_failed");
-      }
-      function saveHints(row, session, publicSlug){
-        try{
-          if(session.internalSlug){localStorage.setItem("digiy_loc_slug",session.internalSlug);localStorage.setItem("digiy_loc_last_slug",session.internalSlug);}
-          if(publicSlug)localStorage.setItem("digiy_loc_public_slug",publicSlug);
-          const phone=digits(row?.phone||row?.whatsapp||session.phone||"");
-          if(phone)localStorage.setItem("digiy_loc_phone",phone);
-        }catch(_){}
-      }
-      function extractSlugFromPublicUrl(url){
-        try{return normalizeSlug(new URL(url).searchParams.get("slug") || "");}catch(_){return "";}
-      }
-      function renderQr(target, label, publicSlug, mode){
-        $("qrLabel").textContent=label||"Mon logement";
-        $("title").textContent="QR " + (label||"logement");
-        $("targetUrl").textContent=target;
-        $("openFiche").href=target;
-        $("qrImg").src=qrApi(target,520);
-        setPills(true, publicSlug, mode);
-        note("✅ QR LOC prêt. Il ouvre la fiche client publique, pas le PIN.","ok");
-        $("printBtn").addEventListener("click",()=>window.print());
-        $("copyBtn").addEventListener("click",async()=>{try{await copyText(target);note("✅ Lien fiche LOC copié.","ok");}catch(_){note("Copie bloquée. Copie le lien affiché à la main.","warn");}});
-      }
-      async function boot(){
-        const directPublicUrl = readSafePublicUrlParam();
-        cleanVisibleUrl();
+<script>
+(function(){
+  "use strict";
 
-        /* Cas 1 : la fiche PRO appelle qr.html?url=fiche publique.
-           On fabrique le QR immédiatement, sans demander PIN, car le lien est déjà public et validé. */
-        if(directPublicUrl){
-          const slug = extractSlugFromPublicUrl(directPublicUrl);
-          renderQr(directPublicUrl, "Mon logement", slug, "public_url");
-          $("openProFiche").href="./fiche.html";
-          return;
-        }
+  const STORAGE_KEYS = [
+    "DIGIY_LOC_PUBLIC_URL",
+    "digiy_loc_public_url",
+    "digiy_loc_qr_url",
+    "digiy_loc_fiche_url"
+  ];
 
-        /* Cas 2 : ouverture directe de qr.html côté PRO.
-           Là, il faut une session/slug LOC. Sinon PIN. */
-        const state=await waitGuard();
-        const session=readSession(state);
-        if(!session.internalSlug&&!session.publicSlug){goPin("slug_absent");return;}
+  const FICHE_STORAGE_KEYS = [
+    "digiy_loc_fiche",
+    "DIGIY_LOC_FICHE_V1"
+  ];
 
-        const row=await fetchRemote(session);
-        let publicSlug=normalizeSlug(row?.public_slug||row?.slug||session.publicSlug||"");
-        if(!publicSlug && session.internalSlug && !isPublicSlugSensitive(session.internalSlug)) publicSlug=session.internalSlug;
-        if(!publicSlug || isPublicSlugSensitive(publicSlug)){goPin("public_slug_absent");return;}
+  const SENSITIVE_PRO_PATHS = [
+    "pin.html","cockpit.html","dashboard","dashboard-pro","app.html","hub.html",
+    "session.html","manage-links","reservations.html","planning.html","notes.html",
+    "admin","abos","pay.html"
+  ];
 
-        const target=safe(row?.fiche_url)||publicFicheUrl(publicSlug);
-        if(!target){goPin("target_absent");return;}
+  const $ = (id) => document.getElementById(id);
+  const targetInput = $("targetInput");
+  const linkValue = $("linkValue");
+  const qrImg = $("qrImg");
+  const emptyBox = $("emptyBox");
+  const statePill = $("statePill");
 
-        const label=safe(row?.business_name||row?.name)||"Mon logement";
-        $("openProFiche").href="./fiche.html"+(session.internalSlug?"?slug="+encodeURIComponent(session.internalSlug):"");
-        saveHints(row,session,publicSlug);
-        renderQr(target,label,publicSlug,row?"supabase":"local");
-        if(!row) note("⚠️ QR LOC prêt en lecture locale. Supabase n’a pas confirmé la fiche, mais le lien client est propre.","warn");
+  let currentUrl = "";
+
+  function readParam(name){
+    try{
+      return new URL(location.href).searchParams.get(name) || "";
+    }catch(_){
+      return "";
+    }
+  }
+
+  function storageGet(key){
+    try{
+      return localStorage.getItem(key) || sessionStorage.getItem(key) || "";
+    }catch(_){
+      return "";
+    }
+  }
+
+  function readFichePublicUrl(){
+    for(const key of FICHE_STORAGE_KEYS){
+      try{
+        const raw = storageGet(key);
+        if(!raw) continue;
+        const obj = JSON.parse(raw);
+        const url = obj.publicUrl || obj.public_url || obj.fiche_url || obj.ficheUrl || obj.booking_url || obj.bookingUrl || "";
+        if(url) return url;
+      }catch(_){}
+    }
+    return "";
+  }
+
+  function cleanPublicUrl(raw){
+    const value = String(raw || "").trim();
+    if(!value) return "";
+    try{
+      const u = new URL(value, location.href);
+      if(!/^https?:$/i.test(u.protocol)) return "";
+
+      const low = (u.pathname + " " + u.search + " " + u.hash).toLowerCase();
+      if(SENSITIVE_PRO_PATHS.some(p => low.includes(p.toLowerCase()))) return "";
+
+      return u.toString();
+    }catch(_){
+      return "";
+    }
+  }
+
+  function note(msg,type){
+    const el = $("note");
+    el.className = "note " + (type || "warn");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function qrServerUrl(value){
+    return "https://api.qrserver.com/v1/create-qr-code/?size=620x620&margin=18&data=" + encodeURIComponent(value);
+  }
+
+  function quickChartUrl(value){
+    return "https://quickchart.io/qr?size=620&margin=2&text=" + encodeURIComponent(value);
+  }
+
+  function savePublicUrl(value){
+    try{
+      localStorage.setItem("DIGIY_LOC_PUBLIC_URL", value);
+      localStorage.setItem("digiy_loc_public_url", value);
+      localStorage.setItem("digiy_loc_qr_url", value);
+    }catch(_){}
+  }
+
+  function setState(ok, text){
+    statePill.textContent = text || (ok ? "QR prêt" : "lien absent");
+    statePill.className = "pill " + (ok ? "ok" : "bad");
+  }
+
+  function render(value, shouldSave){
+    const clean = cleanPublicUrl(value);
+    currentUrl = clean;
+
+    if(!clean){
+      qrImg.style.display = "none";
+      qrImg.removeAttribute("src");
+      emptyBox.style.display = "block";
+      linkValue.textContent = "Lien absent ou lien PRO refusé.";
+      setState(false, "lien absent");
+      note("⚠️ Ajoute un vrai lien public client. Le QR neutre ne fabrique pas de QR vers PIN, cockpit, dashboard ou session.", "warn");
+      return false;
+    }
+
+    targetInput.value = clean;
+    linkValue.textContent = clean;
+    emptyBox.style.display = "none";
+    qrImg.style.display = "block";
+    qrImg.src = qrServerUrl(clean);
+    qrImg.onerror = () => {
+      const fallback = quickChartUrl(clean);
+      if(qrImg.src !== fallback){
+        qrImg.src = fallback;
+        note("✅ QR généré avec le serveur de secours.", "ok");
       }
-      boot();
-    })();
-  </script>  </script>
+    };
+
+    if(shouldSave) savePublicUrl(clean);
+
+    setState(true, "QR public prêt");
+    note("✅ QR public généré. Le scan ouvre exactement le lien affiché, sans passer par le PIN.", "ok");
+    return true;
+  }
+
+  function firstAvailableUrl(){
+    return cleanPublicUrl(readParam("url")) ||
+      cleanPublicUrl(readParam("u")) ||
+      cleanPublicUrl(readParam("target")) ||
+      cleanPublicUrl(readParam("link")) ||
+      cleanPublicUrl(readFichePublicUrl()) ||
+      STORAGE_KEYS.map(storageGet).map(cleanPublicUrl).find(Boolean) ||
+      "";
+  }
+
+  $("btnMake").addEventListener("click", () => render(targetInput.value, true));
+
+  $("btnCopy").addEventListener("click", async () => {
+    if(!currentUrl && !render(targetInput.value, true)) return;
+    try{
+      await navigator.clipboard.writeText(currentUrl);
+      note("✅ Lien copié : " + currentUrl, "ok");
+    }catch(_){
+      note("Lien à copier : " + currentUrl, "warn");
+    }
+  });
+
+  $("btnOpen").addEventListener("click", () => {
+    if(!currentUrl && !render(targetInput.value, true)) return;
+    window.open(currentUrl, "_blank", "noopener,noreferrer");
+  });
+
+  $("btnPrint").addEventListener("click", () => {
+    if(!currentUrl && !render(targetInput.value, true)) return;
+    window.print();
+  });
+
+  targetInput.addEventListener("input", () => {
+    note("", "warn");
+  });
+
+  const bootUrl = firstAvailableUrl();
+  if(bootUrl){
+    render(bootUrl, true);
+  }else{
+    setState(false, "lien absent");
+  }
+})();
+</script>
 </body>
 </html>
 
