@@ -3,253 +3,1143 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Je loue — Menu LOC</title>
+  <title>DIGIY LOC PRO — Cockpit location</title>
   <meta name="theme-color" content="#1e7a46"/>
   <meta name="robots" content="noindex,nofollow,noarchive,nosnippet"/>
-  <meta name="description" content="DIGIY LOC PRO — menu compact terrain : gérer, parler, dates, réservations, QR, PAY et session."/>
-  <meta name="digiy-build" content="loc-menu-compact-plus-20260612"/>
+  <meta name="description" content="DIGIY LOC PRO V2 — cockpit mono-fichier : Oreille LOC, logement, disponibilités, PAY, fiche QR et Plus."/>
+  <meta name="digiy-build" content="loc-pro-mono-fichier-oreille-v2-pay-plus-20260613"/>
 
-  <!-- CONFIG — Je loue / LOC -->
   <script>
     window.DIGIY_SUPABASE_URL      = "https://wesqmwjjtsefyjnluosj.supabase.co";
     window.DIGIY_SUPABASE_ANON_KEY = "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
     window.DIGIY_SUPABASE_ANON     = window.DIGIY_SUPABASE_ANON_KEY;
+    window.DIGIY_SUPABASE_KEY      = window.DIGIY_SUPABASE_ANON_KEY;
     window.DIGIY_MODULE            = "LOC";
     window.DIGIY_ABOS_MODULE       = "LOC";
     window.DIGIY_MODULE_LABEL      = "Je loue";
     window.DIGIY_LOGIN_URL         = "./pin.html";
+    window.DIGIY_PAY_URL           = "https://pay.digiylyfe.com/";
   </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard.js?v=loc-guard-20260531"></script>
+  <script src="./guard.js?v=loc-pro-v2-20260613"></script>
 
   <style>
     :root{
-      --bg:#1e7a46;--bg2:#155a34;--bg3:#0e4226;--bar:rgba(6,38,18,.97);
-      --gold:#c4973f;--gold2:#fff0a8;--green:#22c55e;--text:#f0fff5;
-      --muted:rgba(240,255,245,.78);--line:rgba(255,255,255,.18);
-      --shadow:0 16px 40px rgba(0,0,0,.22);--r:18px;--hdrH:54px;--barH:76px;--max:940px;
+      --bg:#f4efe2;
+      --paper:#fffaf0;
+      --ink:#10251c;
+      --muted:#66746e;
+      --green:#1e7a46;
+      --green2:#155a34;
+      --green3:#0e4226;
+      --gold:#c4973f;
+      --gold2:#fff0a8;
+      --danger:#b42318;
+      --ok:#15803d;
+      --line:rgba(16,37,28,.13);
+      --shadow:0 22px 62px rgba(6,59,43,.17);
+      --shadow2:0 12px 30px rgba(6,59,43,.10);
+      --max:1080px;
+      --nav:92px;
+      --top:78px;
     }
+
     *{box-sizing:border-box}
-    html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
     body{
-      margin:0;min-height:100dvh;color:var(--text);
+      margin:0;
+      min-height:100vh;
       font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-      font-size:18px;font-weight:950;
+      color:var(--ink);
       background:
-        radial-gradient(620px 390px at 12% 0%,rgba(74,222,128,.18),transparent 58%),
-        radial-gradient(420px 280px at 92% 8%,rgba(196,151,63,.15),transparent 52%),
-        linear-gradient(180deg,var(--bg),var(--bg2) 60%,var(--bg3));
-      padding:calc(var(--hdrH) + 12px) 12px calc(var(--barH) + env(safe-area-inset-bottom,0px) + 14px);
+        radial-gradient(900px 520px at 6% -8%,rgba(196,151,63,.22),transparent 58%),
+        radial-gradient(900px 520px at 105% 0%,rgba(30,122,70,.16),transparent 54%),
+        linear-gradient(180deg,#fff8ea 0%,#f3ecd9 55%,#eadfc8 100%);
+      font-size:18px;
+      font-weight:780;
+      padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 14px);
     }
+
     a{color:inherit;text-decoration:none}
-    button{font:inherit;color:inherit;cursor:pointer}
-    .top{
-      position:fixed;top:0;left:0;right:0;height:var(--hdrH);z-index:50;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:0 12px;background:var(--bar);border-bottom:1px solid rgba(196,151,63,.24);
-      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .wrap{width:min(var(--max),calc(100% - 24px));margin:0 auto}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:90;
+      background:rgba(255,248,234,.93);
+      border-bottom:1px solid rgba(16,37,28,.10);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
     }
-    .top a{font-size:14px;color:rgba(240,255,245,.76);font-weight:1000;white-space:nowrap}
-    .topTitle{font-size:12px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
-    .pill{border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#fde68a;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:1000;white-space:nowrap}
-    .pill.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.12);color:#bbf7d0}
-    main{width:min(var(--max),100%);margin:0 auto;display:grid;gap:12px}
-    .hero{display:grid;gap:6px}
-    .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:1000}
-    h1{margin:0;font-size:clamp(31px,8vw,48px);line-height:.94;letter-spacing:-.05em;font-weight:1000;color:#fff}
-    .sub{color:var(--muted);font-size:16px;line-height:1.32;font-weight:950;max-width:720px}
-    .quick,.panel{
-      border:1px solid rgba(255,255,255,.15);border-radius:22px;
-      background:rgba(255,255,255,.09);box-shadow:var(--shadow);padding:12px;
+    .top-inner{
+      min-height:var(--top);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:10px 0;
     }
-    .label{font-size:11px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:rgba(240,255,245,.58);margin-bottom:9px}
-    .quickGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-    .quickBtn{
-      min-height:88px;border-radius:19px;border:1px solid rgba(255,255,255,.16);
-      background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.07));
-      padding:12px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;
+    .brand{min-width:0}
+    .brand-title{
+      font-size:1.14rem;
+      font-weight:1000;
+      letter-spacing:-.03em;
+      line-height:1.03;
+      color:var(--green);
     }
-    .quickBtn.hot{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.16)}
-    .quickBtn.gold{border-color:rgba(196,151,63,.42);background:rgba(196,151,63,.15)}
-    .quickBtn b{font-size:20px;line-height:1.02;color:#fff}
-    .quickBtn span{font-size:13px;line-height:1.18;color:var(--muted);font-weight:950}
-    .tileGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-    .tile{
-      min-height:108px;border-radius:19px;border:1px solid rgba(255,255,255,.15);
-      background:rgba(255,255,255,.085);padding:12px;display:flex;flex-direction:column;justify-content:space-between;gap:9px;
+    .brand-sub{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:.84rem;
+      font-weight:880;
+      line-height:1.22;
     }
-    .tileTop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-    .ico{width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;font-size:22px}
-    .tag{min-height:24px;padding:4px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:var(--gold2);font-size:9px;font-weight:1000;letter-spacing:.06em;text-transform:uppercase}
-    .tile b{display:block;font-size:18px;line-height:1.05;color:#fff;font-weight:1000}
-    .tile span{display:block;margin-top:4px;font-size:12.5px;line-height:1.22;color:var(--muted);font-weight:950}
-    .tile.gold{border-color:rgba(196,151,63,.42);background:rgba(196,151,63,.12)}
-    .tile.pay{border-color:rgba(250,204,21,.44);background:linear-gradient(180deg,rgba(250,204,21,.17),rgba(255,255,255,.08))}
-    details.panel{padding:0;overflow:hidden}
-    details summary{
-      list-style:none;min-height:58px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
-      font-size:18px;font-weight:1000;color:#fff;cursor:pointer;
+    .session-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(30,122,70,.08);
+      border:1px solid rgba(30,122,70,.12);
+      color:var(--green);
+      font-size:.82rem;
+      font-weight:1000;
+      white-space:nowrap;
     }
-    details summary::-webkit-details-marker{display:none}
-    .moreBody{padding:0 12px 12px;display:grid;gap:10px}
-    .moreGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .moreLink{min-height:58px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;padding:10px;font-size:14px;font-weight:1000}
-    .reader{border:1px dashed rgba(255,255,255,.22);border-radius:18px;padding:12px;background:rgba(0,0,0,.15)}
-    .reader p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.35;font-weight:950}
-    .readerActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
-    .readerActions button{min-height:46px;border:1px solid rgba(255,255,255,.15);border-radius:16px;background:rgba(255,255,255,.08);font-weight:1000}
-    .readerActions .main{background:linear-gradient(135deg,#22c55e,#c4973f);color:#102014}
-    .status{color:#fff0a8;font-size:12px;font-weight:1000;margin-top:8px}
-    nav{
-      position:fixed;left:0;right:0;bottom:0;z-index:60;
-      height:var(--barH);padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px));
-      background:var(--bar);border-top:1px solid rgba(196,151,63,.20);
-      display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
+    .session-pill.ok{
+      background:rgba(21,128,61,.10);
+      color:var(--ok);
+      border-color:rgba(21,128,61,.18);
     }
-    nav a{border-radius:15px;display:grid;place-items:center;align-content:center;gap:2px;text-align:center;background:rgba(255,255,255,.06);color:rgba(240,255,245,.72);font-size:10.5px;font-weight:1000}
-    nav a.on{background:linear-gradient(135deg,#22c55e,#fff0a8);color:#062612}
-    nav strong{display:block;font-size:18px}
-    @media(max-width:720px){
-      .quickGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
-      .tileGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+    .btn{
+      border:1px solid rgba(30,122,70,.13);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      min-height:50px;
+      padding:0 16px;
+      border-radius:999px;
+      font-weight:1000;
+      background:#fff;
+      color:var(--green);
+      box-shadow:var(--shadow2);
+      text-align:center;
     }
-    @media(max-width:520px){
-      body{padding-left:10px;padding-right:10px}
-      .quickBtn{min-height:82px;padding:10px}
-      .quickBtn b{font-size:17px}
-      .quickBtn span{font-size:12px}
-      .tile{min-height:100px;padding:10px}
-      .tile b{font-size:16px}
-      .tile span{font-size:12px}
-      .ico{width:36px;height:36px;font-size:20px}
-      .moreGrid{grid-template-columns:1fr}
+    .btn-main{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;border:0}
+    .btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2d2308;border:0}
+    .btn-soft{background:rgba(255,255,255,.78);box-shadow:none}
+    .btn-danger{background:rgba(180,35,24,.09);color:var(--danger);box-shadow:none}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .hero{padding:18px 0 10px}
+    .hero-card{
+      position:relative;
+      overflow:hidden;
+      border-radius:34px;
+      padding:24px;
+      color:#fff;
+      box-shadow:var(--shadow);
+      background:
+        radial-gradient(circle at 88% 12%,rgba(196,151,63,.34),transparent 25%),
+        linear-gradient(135deg,#104024,#1e7a46 58%,#22a663);
+    }
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      width:max-content;
+      max-width:100%;
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(255,255,255,.13);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:.8rem;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .hero h1{
+      margin:14px 0 8px;
+      font-size:clamp(2.05rem,6vw,4.3rem);
+      line-height:.96;
+      letter-spacing:-.055em;
+      font-weight:1000;
+    }
+    .hero p{
+      margin:0;
+      color:rgba(255,255,255,.88);
+      line-height:1.58;
+      font-weight:800;
+      max-width:76ch;
+    }
+    .stats{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+    }
+    .stat{
+      padding:13px;
+      border-radius:20px;
+      background:rgba(255,255,255,.90);
+      border:1px solid rgba(16,37,28,.08);
+      color:var(--ink);
+    }
+    .stat b{
+      display:block;
+      color:var(--green);
+      font-size:1.42rem;
+      font-weight:1000;
+      line-height:1;
+    }
+    .stat span{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:.78rem;
+      font-weight:900;
+      line-height:1.25;
+    }
+
+    .oreille{
+      margin:0 0 10px;
+      border-radius:30px;
+      padding:16px;
+      background:rgba(255,255,255,.84);
+      border:1px solid rgba(16,37,28,.09);
+      box-shadow:var(--shadow2);
+    }
+    .oreille-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .oreille-title{
+      font-size:1.24rem;
+      color:var(--green);
+      font-weight:1000;
+      line-height:1.05;
+    }
+    .oreille-sub{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:.9rem;
+      font-weight:880;
+      line-height:1.36;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:32px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(30,122,70,.08);
+      border:1px solid rgba(30,122,70,.10);
+      color:var(--green);
+      font-size:.78rem;
+      font-weight:1000;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      white-space:nowrap;
+    }
+    .command{
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      gap:9px;
+    }
+    .field,.command-input,textarea.field,select.field{
+      width:100%;
+      min-height:54px;
+      border-radius:22px;
+      border:1px solid rgba(16,37,28,.13);
+      background:#fff;
+      color:var(--ink);
+      outline:none;
+      padding:0 15px;
+      font-weight:900;
+      box-shadow:0 8px 22px rgba(6,59,43,.08);
+    }
+    textarea.field{
+      min-height:112px;
+      padding:14px 15px;
+      resize:vertical;
+      line-height:1.45;
+    }
+    .result{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:20px;
+      background:rgba(30,122,70,.07);
+      border:1px solid rgba(30,122,70,.10);
+      font-size:.88rem;
+      font-weight:900;
+      color:#31483d;
+      line-height:1.45;
+      display:none;
+    }
+    .result.show{display:block}
+
+    .tabs{
+      position:sticky;
+      top:var(--top);
+      z-index:80;
+      background:rgba(255,248,234,.90);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(16,37,28,.08);
+      padding:8px 0;
+    }
+    .tabs-inner{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:7px;
+    }
+    .tab{
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid rgba(30,122,70,.11);
+      background:rgba(255,255,255,.72);
+      color:var(--green);
+      font-weight:1000;
+      display:grid;
+      place-items:center;
+      gap:2px;
+      padding:6px;
+      font-size:.78rem;
+    }
+    .tab strong{font-size:1.18rem;line-height:1}
+    .tab.active{
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      color:#2d2308;
+      border:0;
+      box-shadow:0 12px 28px rgba(196,151,63,.24);
+    }
+
+    .section{display:none;padding:18px 0}
+    .section.active{display:block}
+    .panel{
+      background:rgba(255,255,255,.84);
+      border:1px solid rgba(16,37,28,.09);
+      border-radius:32px;
+      box-shadow:var(--shadow2);
+      padding:18px;
+      margin-bottom:14px;
+    }
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:16px;
+    }
+    .section-head h2{
+      margin:6px 0 0;
+      color:var(--green);
+      font-size:clamp(1.65rem,4vw,2.7rem);
+      line-height:1;
+      letter-spacing:-.045em;
+      font-weight:1000;
+    }
+    .section-head p{
+      margin:7px 0 0;
+      color:var(--muted);
+      line-height:1.55;
+      font-weight:820;
+      max-width:720px;
+    }
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .wide{grid-column:1/-1}
+    .label{
+      display:grid;
+      gap:6px;
+      color:var(--green);
+      font-size:.84rem;
+      font-weight:1000;
+    }
+    .cards-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+    .card,.move,.mini-card{
+      border-radius:24px;
+      background:#fff;
+      border:1px solid rgba(16,37,28,.09);
+      box-shadow:0 12px 30px rgba(6,59,43,.08);
+      padding:15px;
+    }
+    .card h3,.mini-card h3{
+      margin:0;
+      color:var(--green);
+      font-size:1.22rem;
+      line-height:1.05;
+      font-weight:1000;
+    }
+    .card p,.mini-card p{
+      margin:8px 0 0;
+      color:#4f5f58;
+      line-height:1.42;
+      font-size:.9rem;
+      font-weight:820;
+    }
+    .meta-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+    .meta{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:0 9px;
+      border-radius:999px;
+      background:rgba(30,122,70,.06);
+      border:1px solid rgba(30,122,70,.08);
+      color:#31483d;
+      font-size:.75rem;
+      font-weight:950;
+    }
+    .card-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-top:12px;
+    }
+    .card-actions .btn{
+      min-height:44px;
+      padding:0 10px;
+      box-shadow:none;
+      font-size:.82rem;
+    }
+
+    .pay-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:14px}
+    .movement-list{display:grid;gap:9px}
+    .move{display:flex;justify-content:space-between;gap:10px}
+    .move b{color:var(--green)}
+    .move.in b{color:var(--ok)}
+    .move.out b{color:var(--danger)}
+    .move small{display:block;color:var(--muted);font-weight:850;margin-top:3px}
+    .pay-temp{
+      padding:16px;
+      border-radius:24px;
+      background:linear-gradient(135deg,rgba(30,122,70,.08),rgba(196,151,63,.13));
+      border:1px solid rgba(30,122,70,.10);
+      font-weight:900;
+      line-height:1.5;
+      color:#31483d;
+    }
+
+    .link-box{
+      border-radius:24px;
+      padding:15px;
+      background:rgba(30,122,70,.07);
+      border:1px solid rgba(30,122,70,.10);
+      word-break:break-word;
+      color:#31483d;
+      line-height:1.5;
+      font-weight:930;
+    }
+    .more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .mini-card .btn{margin-top:12px;box-shadow:none;width:100%}
+
+    .bottom-actions{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:100;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+      background:rgba(14,66,38,.96);
+      border-top:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+    }
+    .bottom-inner{
+      width:min(100%,760px);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+    }
+    .bottom-inner button{
+      min-height:62px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.08);
+      color:#f0fff5;
+      font-size:.74rem;
+      font-weight:1000;
+      display:grid;
+      place-items:center;
+      padding:6px 3px;
+    }
+    .bottom-inner button strong{font-size:1.24rem;line-height:1}
+    .bottom-inner button.active{
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      color:#2d2308;
+      border:0;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(var(--nav) + 16px);
+      transform:translateX(-50%) translateY(20px);
+      z-index:140;
+      max-width:min(520px,calc(100% - 28px));
+      border-radius:999px;
+      padding:12px 16px;
+      background:#10251c;
+      color:#fff;
+      font-size:.9rem;
+      font-weight:1000;
+      box-shadow:0 18px 44px rgba(0,0,0,.24);
+      opacity:0;
+      pointer-events:none;
+      transition:.18s;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    @media(max-width:760px){
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .form-grid,.pay-grid,.cards-grid,.more-grid{grid-template-columns:1fr}
+      .section-head{display:block}
+      .tabs{display:none}
+      .hero-card{padding:20px}
+      .command{grid-template-columns:1fr}
+      .command .btn{width:100%}
+    }
+    @media(max-width:420px){
+      body{font-size:17px}
+      .top-inner{min-height:72px}
+      .brand-title{font-size:1rem}
+      .bottom-inner{gap:5px}
+      .bottom-inner button{font-size:.68rem;border-radius:15px}
+      .bottom-inner button strong{font-size:1.12rem}
     }
   </style>
 </head>
+
 <body>
-  <header class="top">
-    <a href="./index.html">← Entrée</a>
-    <div class="topTitle">JE LOUE</div>
-    <a class="pill" id="sessionPill" href="./session.html">session…</a>
+  <header class="topbar">
+    <div class="wrap top-inner">
+      <a class="btn btn-soft" href="https://digiy-hub.digiylyfe.com/" style="min-height:40px;padding:0 12px;box-shadow:none">← HUB</a>
+      <div class="brand">
+        <div class="brand-title">DIGIY LOC PRO</div>
+        <div class="brand-sub">Cockpit mono-fichier · logement · dates · PAY · fiche QR · Plus</div>
+      </div>
+      <a class="session-pill" id="sessionPill" href="./pin.html">session…</a>
+    </div>
   </header>
 
   <main>
     <section class="hero">
-      <div class="eyebrow">🏠 LOC · menu direct</div>
-      <h1>Que veux-tu faire maintenant ?</h1>
-      <div class="sub">Le loueur ouvre le bon geste : travail du jour, parole client, dates, réservations, QR ou argent.</div>
-    </section>
+      <div class="wrap">
+        <div class="hero-card">
+          <span class="kicker">🏠 Je loue · LOC V2</span>
+          <h1>Le client voit. Le pro bloque.</h1>
+          <p>Oreille LOC capte une demande, prépare un logement, une disponibilité, une réservation ou une trace PAY. DIGIY prépare. Le loueur corrige et valide.</p>
 
-    <section class="quick" aria-label="Départ rapide LOC">
-      <div class="label">Départ rapide</div>
-      <div class="quickGrid">
-        <a class="quickBtn hot" href="./app.html"><b>🏠 Travail</b><span>Logements, demandes, suivi.</span></a>
-        <a class="quickBtn gold" href="./oreille.html?mode=demande"><b>🎙️ Parler</b><span>Client, dates, acompte.</span></a>
-        <a class="quickBtn" href="./planning.html"><b>🗓️ Dates</b><span>Ouvrir, bloquer, vérifier.</span></a>
-      </div>
-    </section>
-
-    <section class="panel" aria-label="Portes utiles LOC">
-      <div class="label">Portes utiles</div>
-      <div class="tileGrid">
-        <a class="tile" href="./reservations.html"><div class="tileTop"><div class="ico">📋</div><div class="tag">Résa</div></div><div><b>Réservations</b><span>Demandes et statuts.</span></div></a>
-        <a class="tile gold" href="./today.html"><div class="tileTop"><div class="ico">📅</div><div class="tag">Jour</div></div><div><b>Aujourd’hui</b><span>Arrivées, départs, urgence.</span></div></a>
-        <a class="tile" href="./generator.html"><div class="tileTop"><div class="ico">🏡</div><div class="tag">Fiche</div></div><div><b>Fiche logement</b><span>Présenter le bien.</span></div></a>
-        <a class="tile" href="./qr.html"><div class="tileTop"><div class="ico">🔳</div><div class="tag">QR</div></div><div><b>Mon QR</b><span>Partager la bonne porte.</span></div></a>
-        <a class="tile pay" href="https://pay.digiylyfe.com/"><div class="tileTop"><div class="ico">💳</div><div class="tag">PAY</div></div><div><b>Mon argent</b><span>Acomptes, soldes, traces.</span></div></a>
-        <a class="tile gold" href="https://loc.digiylyfe.com/lexique-loc.html?v=lexique-loc-v2-mobile-20260607"><div class="tileTop"><div class="ico">🇸🇳</div><div class="tag">Wolof</div></div><div><b>Wolof LOC</b><span>Accueil, clés, acompte.</span></div></a>
-      </div>
-    </section>
-
-    <details class="panel">
-      <summary><span>➕ Plus</span><span>ouvrir</span></summary>
-      <div class="moreBody">
-        <div class="moreGrid">
-          <a class="moreLink" href="./action.html">🎙️ DIGIY GO LOC</a>
-          <a class="moreLink" href="./tarifs.html">💰 Tarifs</a>
-          <a class="moreLink" href="./photos.html">🖼️ Photos</a>
-          <a class="moreLink" href="./listing.html">📖 Lecture du jour</a>
-          <a class="moreLink" href="./manage-links.html">🔗 Liens utiles</a>
-          <a class="moreLink" href="./pin-wave.html">🌊 Code Wave</a>
-          <a class="moreLink" href="./notes.html">📝 Notes rapides</a>
-          <a class="moreLink" href="./pin.html">🔐 Mon accès</a>
-          <a class="moreLink" href="./session.html">🛡️ Session</a>
-          <a class="moreLink" href="./go-pin-public.html">👁️ Fiche publique</a>
-        </div>
-        <div class="reader">
-          <p><b>Comprendre LOC.</b> LOC prépare les demandes, dates, logements, acomptes et messages. Le client voit, le pro valide, PAY trace seulement l’argent réel.</p>
-          <div class="readerActions">
-            <button class="main" id="digiyLocAudioPlay" type="button">▶ Écouter</button>
-            <button id="digiyLocAudioStop" type="button">⏹ Stop</button>
+          <div class="stats">
+            <div class="stat"><b id="statRooms">0</b><span>Logements</span></div>
+            <div class="stat"><b id="statBookings">0</b><span>Réservations</span></div>
+            <div class="stat"><b id="statIn">0</b><span>Entrées FCFA</span></div>
+            <div class="stat"><b id="statOut">0</b><span>Sorties FCFA</span></div>
           </div>
-          <div class="status" id="digiyLocAudioStatus">Lecteur rangé dans Plus.</div>
         </div>
       </div>
-    </details>
+    </section>
+
+    <section class="wrap oreille" id="oreille">
+      <div class="oreille-head">
+        <div>
+          <div class="oreille-title">👂 Oreille LOC V2</div>
+          <div class="oreille-sub">Parle ou écris : “client veut studio Saly du 12 au 15”, “acompte 20000 Wave”, “dépense ménage 5000”, “bloque villa week-end”.</div>
+        </div>
+        <span class="pill">Le pro valide</span>
+      </div>
+      <div class="command">
+        <input class="command-input" id="voiceText" placeholder="Ex : client Fatou veut villa Ngaparou du 20 au 23 acompte 30000"/>
+        <button class="btn btn-main" id="btnPrepare" type="button">⚡ Préparer</button>
+        <button class="btn btn-soft" id="btnListen" type="button">🎙️ Parler</button>
+      </div>
+      <div class="result" id="intentResult">Action prête.</div>
+    </section>
+
+    <nav class="tabs" aria-label="Gestes LOC PRO">
+      <div class="wrap tabs-inner">
+        <button class="tab active" data-tab="room" type="button"><strong>🏠</strong>Logement</button>
+        <button class="tab" data-tab="dates" type="button"><strong>📅</strong>Dates</button>
+        <button class="tab" data-tab="pay" type="button"><strong>💳</strong>PAY</button>
+        <button class="tab" data-tab="share" type="button"><strong>🔗</strong>Fiche QR</button>
+        <button class="tab" data-tab="more" type="button"><strong>⋯</strong>Plus</button>
+      </div>
+    </nav>
+
+    <section class="section active" id="tab-room">
+      <div class="wrap">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <span class="pill">Geste 1</span>
+              <h2>Ajouter un logement.</h2>
+              <p>Le minimum utile : nom, zone, prix nuit, capacité, note client.</p>
+            </div>
+            <button class="btn btn-soft" id="btnSeedRoom" type="button">Exemple</button>
+          </div>
+          <form id="roomForm" class="form-grid">
+            <label class="label">Nom logement<input class="field" id="rName" placeholder="Studio Saly centre"/></label>
+            <label class="label">Zone<input class="field" id="rZone" placeholder="Saly, Mbour, Ngaparou…"/></label>
+            <label class="label">Prix nuit FCFA<input class="field" id="rPrice" inputmode="numeric" placeholder="25000"/></label>
+            <label class="label">Capacité<input class="field" id="rCapacity" inputmode="numeric" placeholder="2"/></label>
+            <label class="label wide">Description courte<textarea class="field" id="rDesc" placeholder="Clim, cuisine, piscine, proche plage, règles…"></textarea></label>
+            <div class="wide" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-main" type="submit">✅ Enregistrer logement</button>
+              <button class="btn btn-soft" id="btnClearRoom" type="button">🧹 Effacer</button>
+            </div>
+          </form>
+        </div>
+        <div class="cards-grid" id="roomsGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="tab-dates">
+      <div class="wrap">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <span class="pill">Geste 2</span>
+              <h2>Dates et réservations.</h2>
+              <p>Prépare une demande client : logement, arrivée, départ, acompte, statut.</p>
+            </div>
+          </div>
+          <form id="bookingForm" class="form-grid">
+            <label class="label">Client<input class="field" id="bClient" placeholder="Client à préciser"/></label>
+            <label class="label">Logement<input class="field" id="bRoom" placeholder="Studio / villa / chambre…"/></label>
+            <label class="label">Arrivée<input class="field" id="bStart" placeholder="20 juin"/></label>
+            <label class="label">Départ<input class="field" id="bEnd" placeholder="23 juin"/></label>
+            <label class="label">Acompte FCFA<input class="field" id="bDeposit" inputmode="numeric" placeholder="30000"/></label>
+            <label class="label">Statut<select class="field" id="bStatus"><option>À confirmer</option><option>Confirmée</option><option>Bloquée</option><option>Terminée</option></select></label>
+            <label class="label wide">Note<textarea class="field" id="bNote" placeholder="WhatsApp, Wave, heure arrivée, remise clés…"></textarea></label>
+            <button class="btn btn-main wide" type="submit">📅 Enregistrer demande</button>
+          </form>
+        </div>
+        <div class="cards-grid" id="bookingsGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="tab-pay">
+      <div class="wrap pay-grid">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <span class="pill">Geste 3</span>
+              <h2>PAY en 2 clics.</h2>
+              <p>Acompte, solde, ménage, réparation, transport. LOC prépare, PAY trace, le pro valide.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label class="label">Type<select class="field" id="mType"><option value="in">Entrée</option><option value="out">Sortie</option></select></label>
+            <label class="label">Montant FCFA<input class="field" id="mAmount" inputmode="numeric" placeholder="20000"/></label>
+            <label class="label wide">Note / référence<textarea class="field" id="mNote" placeholder="Acompte client · Wave · Studio Saly"></textarea></label>
+            <button class="btn btn-gold" id="btnPreparePay" type="button">1️⃣ Préparer PAY</button>
+            <button class="btn btn-main" id="btnConfirmPay" type="button" disabled>2️⃣ Valider</button>
+          </div>
+          <div class="result show" id="payPreview">Aucun mouvement préparé.</div>
+        </div>
+        <div class="panel">
+          <div class="pay-temp" id="payAdvice">Conseiller PAY : en attente de mouvements LOC.</div>
+          <div class="movement-list" id="movementList" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tab-share">
+      <div class="wrap">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <span class="pill">Geste 4</span>
+              <h2>Fiche logement / QR.</h2>
+              <p>Le lien public et le QR sont la carte de visite détaillée du loueur.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label class="label">Nom public<input class="field" id="sName" placeholder="Chez Baptiste Saly"/></label>
+            <label class="label">Téléphone WhatsApp<input class="field" id="sPhone" inputmode="tel" placeholder="22177…"/></label>
+            <label class="label">Slug public<input class="field" id="sSlug" placeholder="loc-22177…"/></label>
+            <label class="label">Zone principale<input class="field" id="sZone" placeholder="Saly / Ngaparou / Mbour"/></label>
+            <label class="label wide">Présentation<textarea class="field" id="sDesc" placeholder="Location courte durée, accueil, règles, proximité, services…"></textarea></label>
+            <div class="wide" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-gold" id="btnSaveShop" type="button">💾 Sauver fiche</button>
+              <button class="btn btn-main" id="btnCopyShop" type="button">📋 Copier lien</button>
+              <button class="btn btn-soft" id="btnOpenShop" type="button">🌍 Ouvrir public</button>
+            </div>
+          </div>
+          <div class="link-box" id="shopLinkBox" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tab-more">
+      <div class="wrap">
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <span class="pill">Tiroir propre</span>
+              <h2>Plus LOC.</h2>
+              <p>Le bruit reste ici. Le travail quotidien reste devant.</p>
+            </div>
+          </div>
+          <div class="more-grid">
+            <div class="mini-card"><h3>📅 Planning ancien</h3><p>Calendrier complet si besoin.</p><a class="btn btn-soft" href="./planning.html">Ouvrir</a></div>
+            <div class="mini-card"><h3>📋 Réservations</h3><p>Ancienne liste détaillée des demandes.</p><a class="btn btn-soft" href="./reservations.html">Ouvrir</a></div>
+            <div class="mini-card"><h3>🏠 Travail LOC</h3><p>Ancien app.html utile en secours.</p><a class="btn btn-soft" href="./app.html">Ouvrir</a></div>
+            <div class="mini-card"><h3>🏡 Fiche ancienne</h3><p>Générateur / fiche logement.</p><a class="btn btn-soft" href="./generator.html">Ouvrir</a></div>
+            <div class="mini-card"><h3>🔳 QR ancien</h3><p>Partager la porte LOC.</p><a class="btn btn-soft" href="./qr.html">Ouvrir</a></div>
+            <div class="mini-card"><h3>🇸🇳 Wolof LOC</h3><p>Accueil, clés, acompte, séjour.</p><a class="btn btn-soft" href="https://loc.digiylyfe.com/lexique-loc.html?v=lexique-loc-v2-mobile-20260607">Ouvrir</a></div>
+            <div class="mini-card"><h3>🔐 Accès</h3><p>PIN, guard et session.</p><a class="btn btn-soft" href="./pin.html">Ouvrir</a></div>
+            <div class="mini-card"><h3>🌍 Vitrine LOC</h3><p>Ce que le public voit.</p><a class="btn btn-main" href="https://loc.digiylyfe.com/">Voir public</a></div>
+            <div class="mini-card"><h3>📤 Export</h3><p>Sauvegarde locale LOC PRO en JSON.</p><button class="btn btn-soft" id="btnExport" type="button">Exporter</button></div>
+            <div class="mini-card"><h3>📥 Import</h3><p>Restaurer un export LOC PRO.</p><input class="field" id="importFile" type="file" accept="application/json"/></div>
+            <div class="mini-card"><h3>🧭 HUB général</h3><p>Retour au rond-point DIGIY.</p><a class="btn btn-soft" href="https://digiy-hub.digiylyfe.com/">Ouvrir</a></div>
+            <div class="mini-card"><h3>🦅 DIGIYLYFE</h3><p>Retour à la maison du Club Entreprises.</p><a class="btn btn-gold" href="https://digiylyfe.com/">Maison</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <nav aria-label="Navigation rapide LOC">
-    <a class="on" href="./hub.html"><strong>🧭</strong>Menu</a>
-    <a href="./app.html"><strong>🏠</strong>Travail</a>
-    <a href="./oreille.html"><strong>🎙️</strong>Parler</a>
-    <a href="./planning.html"><strong>🗓️</strong>Dates</a>
-    <a href="./session.html"><strong>🛡️</strong>Session</a>
-  </nav>
+  <div class="bottom-actions" aria-label="Navigation basse LOC PRO">
+    <div class="bottom-inner">
+      <button class="active" data-tab="room" type="button"><strong>🏠</strong>Logement</button>
+      <button data-tab="dates" type="button"><strong>📅</strong>Dates</button>
+      <button data-tab="pay" type="button"><strong>💳</strong>PAY</button>
+      <button data-tab="share" type="button"><strong>🔗</strong>Fiche QR</button>
+      <button data-tab="more" type="button"><strong>⋯</strong>Plus</button>
+    </div>
+  </div>
 
-  <script>
-  (() => {
-    "use strict";
-    const pill = document.getElementById("sessionPill");
-    async function waitGuard(){
+  <div class="toast" id="toast">Action prête</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const STORE="digiy_loc_pro_v2";
+  const PUBLIC_ORIGIN="https://loc.digiylyfe.com";
+  const $=id=>document.getElementById(id);
+  const clean=v=>String(v||"").trim();
+  const digits=v=>String(v||"").replace(/[^\d]/g,"");
+  const money=n=>Number(n||0).toLocaleString("fr-FR");
+  const uuid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+  let pendingPay=null;
+  let state=load();
+
+  function load(){try{return JSON.parse(localStorage.getItem(STORE)||"{}")}catch(_){return {}}}
+  function ensure(){
+    state.rooms=Array.isArray(state.rooms)?state.rooms:[];
+    state.bookings=Array.isArray(state.bookings)?state.bookings:[];
+    state.moves=Array.isArray(state.moves)?state.moves:[];
+    state.profile=state.profile||{};
+  }
+  function save(){ensure();localStorage.setItem(STORE,JSON.stringify(state));renderAll()}
+  function escapeHtml(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+  function toast(t){
+    const el=$("toast");
+    el.textContent=t||"Action prête";
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t=setTimeout(()=>el.classList.remove("show"),2200);
+  }
+
+  function setTab(name){
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    const sec=$("tab-"+name);
+    if(sec) sec.classList.add("active");
+    document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
+    if(sec) window.scrollTo({top:Math.max(0,sec.offsetTop-150),behavior:"smooth"});
+  }
+
+  function fillRoom(o={}){
+    $("rName").value=o.name||"";
+    $("rZone").value=o.zone||"";
+    $("rPrice").value=o.price||"";
+    $("rCapacity").value=o.capacity||"";
+    $("rDesc").value=o.desc||"";
+    setTab("room");
+  }
+
+  function fillBooking(o={}){
+    $("bClient").value=o.client||"Client à préciser";
+    $("bRoom").value=o.room||"Logement à préciser";
+    $("bStart").value=o.start||"";
+    $("bEnd").value=o.end||"";
+    $("bDeposit").value=o.deposit||"";
+    $("bStatus").value=o.status||"À confirmer";
+    $("bNote").value=o.note||"";
+    setTab("dates");
+  }
+
+  function fillPay(type,amount,note){
+    $("mType").value=type||"in";
+    $("mAmount").value=amount||"";
+    $("mNote").value=note||"";
+    setTab("pay");
+    if(amount) preparePay();
+  }
+
+  function detectZone(txt){
+    const s=String(txt||"").toLowerCase();
+    const zones=["saly","mbour","ngaparou","somone","popenguine","dakar","thiès","thies","touba","aibd","sarlat","arcachon"];
+    return zones.find(z=>s.includes(z))||"";
+  }
+
+  function detectRoom(txt){
+    const s=String(txt||"").toLowerCase();
+    if(s.includes("villa")) return "Villa";
+    if(s.includes("studio")) return "Studio";
+    if(s.includes("appartement")) return "Appartement";
+    if(s.includes("chambre")) return "Chambre";
+    if(s.includes("maison")) return "Maison";
+    return "";
+  }
+
+  function prepareIntent(){
+    const raw=clean($("voiceText").value);
+    if(!raw){toast("Écris ou parle une demande");return}
+    const txt=raw.toLowerCase();
+    const amount=Number((txt.match(/(\d[\d\s\.]*)/)||[])[1]?.replace(/[^\d]/g,"")||0);
+    const zone=detectZone(raw);
+    const room=detectRoom(raw);
+
+    let msg="";
+    if(/dépense|depense|sortie|ménage|menage|réparation|reparation|linge|transport|gasoil|achat|commission/.test(txt)){
+      fillPay("out",amount||"",raw);
+      msg="Sortie PAY LOC préparée. Le loueur vérifie puis valide.";
+    }else if(/acompte|solde|payé|paye|reçu|recu|wave|cash|entrée|entree|client/.test(txt) && amount){
+      fillPay("in",amount||"",raw);
+      msg="Entrée PAY LOC préparée. Le pro valide au deuxième clic.";
+    }else if(/réserve|reserve|réservation|reservation|bloque|bloquer|arrive|arrivée|depart|départ|nuit|client|dates?|du | au /.test(txt)){
+      fillBooking({
+        client: raw.match(/client\s+([^,\.]+)/i)?.[1] || "Client à préciser",
+        room: room || "Logement à préciser",
+        start: raw.match(/du\s+([^,\.]+?)\s+(au|à|a)\s+/i)?.[1] || "",
+        end: raw.match(/\s+(au|à|a)\s+([^,\.]+)/i)?.[2] || "",
+        deposit: amount || "",
+        note: raw
+      });
+      msg="Demande de réservation préparée. Vérifie les dates, l’acompte et le statut.";
+    }else if(/ajoute|logement|studio|villa|appartement|chambre|maison|prix|capacité|capacite/.test(txt)){
+      fillRoom({
+        name: room ? room+" "+(zone||"LOC") : "Logement LOC",
+        zone: zone || "",
+        price: amount || "",
+        capacity: (txt.match(/(\d+)\s*(personnes|pers|places)/)||[])[1] || "",
+        desc: raw
+      });
+      msg="Logement préparé. Vérifie puis enregistre.";
+    }else{
+      msg="Intention entendue. Dis par exemple : client veut villa Saly du 20 au 23, acompte reçu, dépense ménage, ou ajoute studio.";
+    }
+
+    $("intentResult").textContent=msg;
+    $("intentResult").classList.add("show");
+  }
+
+  function listen(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){toast("Reconnaissance vocale non disponible ici");return}
+    const rec=new SR();
+    rec.lang="fr-FR";
+    rec.interimResults=false;
+    rec.maxAlternatives=1;
+    $("btnListen").disabled=true;
+    $("btnListen").textContent="🎧 Écoute…";
+    rec.onresult=e=>{$("voiceText").value=e.results[0][0].transcript;prepareIntent()};
+    rec.onerror=()=>toast("Écoute interrompue");
+    rec.onend=()=>{$("btnListen").disabled=false;$("btnListen").textContent="🎙️ Parler"};
+    rec.start();
+  }
+
+  function addRoom(){
+    const name=clean($("rName").value);
+    if(!name){toast("Nom logement nécessaire");return}
+    state.rooms.unshift({
+      id:uuid(),
+      name,
+      zone:clean($("rZone").value)||"Zone à préciser",
+      price:Number(digits($("rPrice").value)||0),
+      capacity:Number(digits($("rCapacity").value)||0),
+      desc:clean($("rDesc").value),
+      created_at:new Date().toISOString()
+    });
+    $("roomForm").reset();
+    save();
+    toast("Logement enregistré");
+  }
+
+  function addBooking(){
+    const client=clean($("bClient").value)||"Client à préciser";
+    const room=clean($("bRoom").value)||"Logement à préciser";
+    state.bookings.unshift({
+      id:uuid(),
+      client,
+      room,
+      start:clean($("bStart").value),
+      end:clean($("bEnd").value),
+      deposit:Number(digits($("bDeposit").value)||0),
+      status:clean($("bStatus").value)||"À confirmer",
+      note:clean($("bNote").value),
+      created_at:new Date().toISOString()
+    });
+    $("bookingForm").reset();
+    save();
+    toast("Demande LOC enregistrée");
+  }
+
+  function deleteRoom(id){state.rooms=state.rooms.filter(x=>x.id!==id);save();toast("Logement retiré")}
+  function deleteBooking(id){state.bookings=state.bookings.filter(x=>x.id!==id);save();toast("Réservation retirée")}
+
+  function bookingToPay(id){
+    const b=state.bookings.find(x=>x.id===id);
+    if(!b)return;
+    fillPay("in",b.deposit||"","Acompte LOC · "+b.client+" · "+b.room);
+  }
+
+  async function shareRoom(id){
+    const r=state.rooms.find(x=>x.id===id);
+    if(!r)return;
+    const text=`${r.name} — ${r.zone}. ${r.price?money(r.price)+" FCFA/nuit. ":""}${r.desc||"Logement disponible."}`;
+    try{await navigator.clipboard.writeText(text);toast("Texte logement copié")}catch(_){toast(text)}
+  }
+
+  function preparePay(){
+    const type=$("mType").value;
+    const amount=Number(digits($("mAmount").value)||0);
+    const note=clean($("mNote").value);
+    if(!amount){toast("Montant nécessaire");return}
+    pendingPay={id:uuid(),type,amount,note:note||"Mouvement LOC",created_at:new Date().toISOString()};
+    $("payPreview").textContent=(type==="in"?"Entrée":"Sortie")+" préparée : "+money(amount)+" FCFA · "+pendingPay.note;
+    $("btnConfirmPay").disabled=false;
+    toast("PAY préparé · reste validation");
+  }
+
+  function confirmPay(){
+    if(!pendingPay){toast("Prépare d’abord PAY");return}
+    state.moves.unshift(pendingPay);
+    pendingPay=null;
+    $("btnConfirmPay").disabled=true;
+    $("payPreview").textContent="Mouvement validé et tracé localement.";
+    $("mAmount").value="";
+    $("mNote").value="";
+    save();
+    toast("PAY validé");
+  }
+
+  function publicUrl(){
+    const slug=clean(state.profile.slug)||("loc-"+digits(state.profile.phone||""));
+    const u=new URL("/",PUBLIC_ORIGIN);
+    if(slug) u.searchParams.set("slug",slug);
+    return u.toString();
+  }
+
+  function saveProfile(){
+    state.profile={
+      name:clean($("sName").value),
+      phone:digits($("sPhone").value),
+      slug:clean($("sSlug").value),
+      zone:clean($("sZone").value),
+      desc:clean($("sDesc").value)
+    };
+    save();
+    toast("Fiche LOC sauvée");
+  }
+
+  async function copyProfile(){
+    try{await navigator.clipboard.writeText(publicUrl());toast("Lien LOC copié")}catch(_){toast(publicUrl())}
+  }
+
+  function openProfile(){window.open(publicUrl(),"_blank","noopener,noreferrer")}
+
+  function renderStats(){
+    ensure();
+    const moves=state.moves;
+    $("statRooms").textContent=String(state.rooms.length);
+    $("statBookings").textContent=String(state.bookings.length);
+    $("statIn").textContent=money(moves.filter(m=>m.type==="in").reduce((a,m)=>a+Number(m.amount||0),0));
+    $("statOut").textContent=money(moves.filter(m=>m.type==="out").reduce((a,m)=>a+Number(m.amount||0),0));
+    const inSum=moves.filter(m=>m.type==="in").reduce((a,m)=>a+Number(m.amount||0),0);
+    const outSum=moves.filter(m=>m.type==="out").reduce((a,m)=>a+Number(m.amount||0),0);
+    const solde=inSum-outSum;
+    $("payAdvice").textContent=solde>=0
+      ? `Conseiller PAY : réserve positive ${money(solde)} FCFA. Protège la réserve avant d’accélérer.`
+      : `Conseiller PAY : tension de ${money(Math.abs(solde))} FCFA. Vérifie acomptes, soldes et dépenses.`;
+  }
+
+  function renderRooms(){
+    const grid=$("roomsGrid");
+    if(!state.rooms.length){
+      grid.innerHTML='<div class="card" style="grid-column:1/-1"><h3>Aucun logement</h3><p>Ajoute un logement ou utilise Oreille LOC.</p></div>';
+      return;
+    }
+    grid.innerHTML=state.rooms.map(r=>`
+      <article class="card">
+        <h3>${escapeHtml(r.name)}</h3>
+        <p>${escapeHtml(r.desc||"Logement prêt à présenter au client.")}</p>
+        <div class="meta-row">
+          <span class="meta">${escapeHtml(r.zone||"Zone")}</span>
+          <span class="meta">${money(r.price)} FCFA/nuit</span>
+          <span class="meta">${money(r.capacity)} pers.</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-main" data-share-room="${r.id}">Partager</button>
+          <button class="btn btn-danger" data-del-room="${r.id}">Retirer</button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  function renderBookings(){
+    const grid=$("bookingsGrid");
+    if(!state.bookings.length){
+      grid.innerHTML='<div class="card" style="grid-column:1/-1"><h3>Aucune réservation</h3><p>Prépare une demande client avec dates et acompte.</p></div>';
+      return;
+    }
+    grid.innerHTML=state.bookings.map(b=>`
+      <article class="card">
+        <h3>${escapeHtml(b.client)}</h3>
+        <p>${escapeHtml(b.room)} · ${escapeHtml(b.start||"?")} → ${escapeHtml(b.end||"?")}</p>
+        <div class="meta-row">
+          <span class="meta">${escapeHtml(b.status)}</span>
+          <span class="meta">Acompte ${money(b.deposit)} FCFA</span>
+        </div>
+        <p>${escapeHtml(b.note||"Demande LOC préparée.")}</p>
+        <div class="card-actions">
+          <button class="btn btn-main" data-book-pay="${b.id}">PAY</button>
+          <button class="btn btn-danger" data-del-book="${b.id}">Retirer</button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  function renderMoves(){
+    const list=$("movementList");
+    if(!state.moves.length){
+      list.innerHTML='<div class="pay-temp">Aucun mouvement PAY validé.</div>';
+      return;
+    }
+    list.innerHTML=state.moves.slice(0,10).map(m=>`
+      <div class="move ${m.type==="in"?"in":"out"}">
+        <div><b>${m.type==="in"?"Entrée":"Sortie"} · ${money(m.amount)} FCFA</b><small>${escapeHtml(m.note||"Mouvement LOC")}</small></div>
+        <small>${new Date(m.created_at).toLocaleDateString("fr-FR")}</small>
+      </div>
+    `).join("");
+  }
+
+  function renderProfile(){
+    const p=state.profile||{};
+    $("sName").value=p.name||"";
+    $("sPhone").value=p.phone||"";
+    $("sSlug").value=p.slug||"";
+    $("sZone").value=p.zone||"";
+    $("sDesc").value=p.desc||"";
+    $("shopLinkBox").innerHTML=`<strong>Lien public :</strong><br>${escapeHtml(publicUrl())}<br><br><strong>Doctrine :</strong> le client voit, le pro bloque, PAY trace seulement l’argent réel.`;
+  }
+
+  function renderAll(){ensure();renderStats();renderRooms();renderBookings();renderMoves();renderProfile()}
+
+  function exportData(){
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="digiy-loc-pro-export.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Export préparé");
+  }
+
+  function importData(file){
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
       try{
-        const g = window.DIGIY_GUARD;
-        if(!g) return {};
-        if(typeof g.ready === "function"){
-          const out = g.ready({redirect:false,preserve_validation:true});
-          if(out && typeof out.then === "function") await out;
-        }else if(g.ready && typeof g.ready.then === "function"){
-          await g.ready;
-        }
-        if(typeof g.getSession === "function") return g.getSession() || g.state || {};
-        return g.state || {};
-      }catch(_){ return {}; }
-    }
-    async function boot(){
-      const st = await waitGuard();
-      const ok = !!(st && (st.access_ok || st.access || st.pin_session_ok));
-      if(pill){
-        pill.textContent = ok ? (st.pin_session_ok ? "session ouverte" : "accès ouvert") : "session";
-        pill.className = "pill " + (ok ? "ok" : "");
+        state=JSON.parse(String(reader.result||"{}"));
+        save();
+        toast("Import restauré");
+      }catch(_){toast("Import impossible")}
+    };
+    reader.readAsText(file);
+  }
+
+  async function bootGuard(){
+    try{
+      const g=window.DIGIY_GUARD;
+      if(!g)return;
+      if(typeof g.ready==="function"){
+        const out=g.ready({redirect:false,preserve_validation:true});
+        if(out && typeof out.then==="function") await out;
+      }else if(g.ready && typeof g.ready.then==="function"){
+        await g.ready;
       }
-    }
-    boot();
+      const st=typeof g.getSession==="function" ? (g.getSession()||g.state||{}) : (g.state||{});
+      const ok=!!(st.access_ok||st.access||st.pin_session_ok);
+      const pill=$("sessionPill");
+      if(pill){
+        pill.textContent=ok ? (st.pin_session_ok?"session ouverte":"accès ouvert") : "accès";
+        pill.className="session-pill"+(ok?" ok":"");
+      }
+    }catch(_){}
+  }
 
-    const SPEAK = "Bienvenue dans LOC, le module Je loue de DIGIYLYFE. Le loueur gère ses logements, dates, réservations, tarifs, QR, preuves et traces vers PAY. DIGIY prépare. Le pro confirme. PAY garde seulement l'argent réel.";
-    const play = document.getElementById("digiyLocAudioPlay");
-    const stop = document.getElementById("digiyLocAudioStop");
-    const status = document.getElementById("digiyLocAudioStatus");
+  document.addEventListener("click",e=>{
+    const tab=e.target.closest("[data-tab]");
+    if(tab){setTab(tab.dataset.tab);return}
 
-    function setStatus(v){ if(status) status.textContent = v; }
-    function canSpeak(){ return "speechSynthesis" in window; }
-    function stopSpeech(){ if(canSpeak()) window.speechSynthesis.cancel(); if(play) play.textContent = "▶ Écouter"; setStatus("Lecture arrêtée"); }
-    function speak(){
-      if(!canSpeak()){ setStatus("Lecture vocale non disponible ici"); return; }
-      if(window.speechSynthesis.speaking){ stopSpeech(); return; }
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(SPEAK);
-      u.lang = "fr-FR"; u.rate = .86; u.pitch = 1.02; u.volume = 1;
-      u.onstart = () => { if(play) play.textContent = "⏹ Stop"; setStatus("DIGIY explique LOC…"); };
-      u.onend = () => { if(play) play.textContent = "▶ Écouter"; setStatus("Lecture terminée"); };
-      u.onerror = () => { if(play) play.textContent = "▶ Écouter"; setStatus("Lecture interrompue"); };
-      window.speechSynthesis.speak(u);
-    }
-    if(play) play.addEventListener("click", speak);
-    if(stop) stop.addEventListener("click", stopSpeech);
-    window.addEventListener("pagehide", stopSpeech);
-  })();
-  </script>
+    const delRoom=e.target.closest("[data-del-room]");
+    if(delRoom){deleteRoom(delRoom.dataset.delRoom);return}
+
+    const shareRoomBtn=e.target.closest("[data-share-room]");
+    if(shareRoomBtn){shareRoom(shareRoomBtn.dataset.shareRoom);return}
+
+    const delBook=e.target.closest("[data-del-book]");
+    if(delBook){deleteBooking(delBook.dataset.delBook);return}
+
+    const bookPay=e.target.closest("[data-book-pay]");
+    if(bookPay){bookingToPay(bookPay.dataset.bookPay);return}
+  });
+
+  $("roomForm").addEventListener("submit",e=>{e.preventDefault();addRoom()});
+  $("bookingForm").addEventListener("submit",e=>{e.preventDefault();addBooking()});
+  $("btnPrepare").addEventListener("click",prepareIntent);
+  $("btnListen").addEventListener("click",listen);
+  $("btnPreparePay").addEventListener("click",preparePay);
+  $("btnConfirmPay").addEventListener("click",confirmPay);
+  $("btnSaveShop").addEventListener("click",saveProfile);
+  $("btnCopyShop").addEventListener("click",copyProfile);
+  $("btnOpenShop").addEventListener("click",openProfile);
+  $("btnExport").addEventListener("click",exportData);
+  $("importFile").addEventListener("change",e=>importData(e.target.files&&e.target.files[0]));
+  $("btnClearRoom").addEventListener("click",()=>{$("roomForm").reset();toast("Formulaire logement vidé")});
+  $("btnSeedRoom").addEventListener("click",()=>fillRoom({name:"Studio Saly centre",zone:"Saly",price:"25000",capacity:"2",desc:"Clim, cuisine, proche plage. Idéal court séjour."}));
+
+  ensure();
+  renderAll();
+  bootGuard();
+})();
+</script>
 </body>
 </html>
+
 
 
 
