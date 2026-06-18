@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DIGIY LOC PRO — Dispatch Hôtel</title>
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="theme-color" content="#06140f">
+<style>
+:root{
+  --bg:#03120d;
+  --ink:#fffaf0;
+  --soft:rgba(255,250,240,.78);
+  --muted:rgba(255,250,240,.58);
+  --gold:#f6c453;
+  --gold2:#fff1bd;
+  --green:#00a651;
+  --red:#e31b23;
+  --card:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.14);
+  --lineGold:rgba(246,196,83,.38);
+  --shadow:0 24px 70px rgba(0,0,0,.42);
+  --font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  min-height:100svh;
+  color:var(--ink);
+  font-family:var(--font);
+  background:
+    radial-gradient(900px 460px at 12% -8%,rgba(0,166,81,.32),transparent 62%),
+    radial-gradient(720px 360px at 92% 0%,rgba(246,196,83,.18),transparent 58%),
+    linear-gradient(180deg,#075f32 0%,#062a1d 36%,#03120d 100%);
+}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{
+  width:min(100%,980px);
+  margin:0 auto;
+  padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 28px);
+}
+.top{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.brand strong{
+  display:block;
+  font-size:clamp(23px,6vw,42px);
+  line-height:.95;
+  font-weight:1000;
+  letter-spacing:-.045em;
+}
+.brand small{
+  display:block;
+  margin-top:5px;
+  color:var(--soft);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.pill{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--lineGold);
+  border-radius:999px;
+  padding:0 13px;
+  background:rgba(246,196,83,.10);
+  color:#fff3cf;
+  font-size:12px;
+  font-weight:1000;
+}
+.hero{
+  border:1px solid var(--lineGold);
+  border-radius:30px;
+  background:
+    radial-gradient(420px 180px at 12% 0%,rgba(246,196,83,.18),transparent 65%),
+    radial-gradient(380px 180px at 88% 0%,rgba(0,166,81,.16),transparent 64%),
+    rgba(255,255,255,.078);
+  box-shadow:var(--shadow);
+  padding:18px;
+}
+.hero h1{
+  margin:0;
+  font-size:clamp(34px,8.5vw,68px);
+  line-height:.92;
+  letter-spacing:-.06em;
+  font-weight:1000;
+}
+.hero p{
+  margin:12px 0 0;
+  color:var(--soft);
+  font-size:clamp(15px,4vw,19px);
+  line-height:1.42;
+  font-weight:850;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.card{
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:var(--card);
+  padding:14px;
+  box-shadow:0 14px 34px rgba(0,0,0,.18);
+}
+.card h2{
+  margin:0 0 10px;
+  font-size:21px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:-.03em;
+}
+.field{
+  margin-top:10px;
+}
+label{
+  display:block;
+  margin:0 0 5px;
+  color:#fff3cf;
+  font-size:12px;
+  font-weight:1000;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+input,textarea,select{
+  width:100%;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:18px;
+  background:rgba(0,0,0,.24);
+  color:var(--ink);
+  padding:13px 14px;
+  outline:none;
+  font-size:15px;
+}
+textarea{
+  min-height:104px;
+  resize:vertical;
+  line-height:1.42;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:rgba(246,196,83,.75);
+  box-shadow:0 0 0 4px rgba(246,196,83,.12);
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+.btn{
+  min-height:52px;
+  border:1px solid rgba(246,196,83,.42);
+  border-radius:18px;
+  background:rgba(255,255,255,.08);
+  color:#fff3cf;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:9px 10px;
+  font-size:13px;
+  font-weight:1000;
+}
+.btn.gold{
+  background:linear-gradient(135deg,#fff1bd,#f6c453,#22c55e);
+  color:#06140f;
+  border-color:rgba(246,196,83,.75);
+}
+.btn.red{
+  background:rgba(227,27,35,.18);
+}
+.dispatchGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+.dispatchBtn{
+  min-height:64px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:20px;
+  background:rgba(255,255,255,.078);
+  color:var(--ink);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:10px;
+  gap:4px;
+}
+.dispatchBtn i{
+  font-style:normal;
+  font-size:25px;
+  line-height:1;
+}
+.dispatchBtn strong{
+  font-size:13px;
+  font-weight:1000;
+}
+.dispatchBtn small{
+  color:var(--soft);
+  font-size:10.5px;
+  font-weight:850;
+}
+.preview{
+  white-space:pre-wrap;
+  border:1px solid rgba(246,196,83,.28);
+  border-radius:22px;
+  background:rgba(0,0,0,.22);
+  color:#fff3cf;
+  padding:14px;
+  font-size:14px;
+  line-height:1.45;
+  font-weight:850;
+  min-height:190px;
+}
+.historyList{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+.historyItem{
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  background:rgba(0,0,0,.18);
+  padding:10px;
+  color:var(--soft);
+  font-size:12px;
+  line-height:1.35;
+}
+.historyItem strong{
+  display:block;
+  color:#fff3cf;
+  font-size:13px;
+  margin-bottom:4px;
+}
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  transform:translate(-50%,18px);
+  opacity:0;
+  pointer-events:none;
+  z-index:20;
+  border:1px solid rgba(246,196,83,.42);
+  border-radius:999px;
+  background:rgba(4,19,13,.96);
+  color:#fff3cf;
+  box-shadow:0 18px 44px rgba(0,0,0,.38);
+  padding:12px 16px;
+  font-size:13px;
+  font-weight:1000;
+  transition:.18s ease;
+}
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+.footer{
+  text-align:center;
+  margin:18px 0 0;
+  color:rgba(255,250,240,.62);
+  font-size:12px;
+  font-weight:850;
+  line-height:1.45;
+}
+.footer a{
+  color:#fff3cf;
+  font-weight:1000;
+}
+@media(max-width:760px){
+  .top{grid-template-columns:1fr}
+  .pill{justify-self:start}
+  .grid{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr}
+  .actions{grid-template-columns:1fr}
+  .dispatchGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dispatchBtn{min-height:72px}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand">
+      <strong>Dispatch Hôtel</strong>
+      <small>DIGIY LOC PRO · demandes, équipe, WhatsApp terrain</small>
+    </div>
+    <a class="pill" href="./index.html">↩ Retour LOC PRO</a>
+  </header>
+
+  <section class="hero">
+    <h1>Le patron garde la main.</h1>
+    <p>
+      La demande client arrive ici. DIGIY la transforme en message propre,
+      puis le responsable l’envoie au bon couloir : réception, chambres, ménage,
+      petit déjeuner, restaurant, caisse, maintenance ou chauffeur.
+    </p>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>🧾 Demande client</h2>
+
+      <div class="field">
+        <label for="clientName">Nom du client</label>
+        <input id="clientName" placeholder="Ex : Mme Diop">
+      </div>
+
+      <div class="field">
+        <label for="clientPhone">Téléphone client</label>
+        <input id="clientPhone" placeholder="Ex : +221 77 000 00 00">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="arrival">Arrivée</label>
+          <input id="arrival" type="date">
+        </div>
+        <div class="field">
+          <label for="departure">Départ</label>
+          <input id="departure" type="date">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="people">Personnes</label>
+          <input id="people" type="number" min="1" placeholder="2">
+        </div>
+        <div class="field">
+          <label for="roomType">Type de chambre</label>
+          <select id="roomType">
+            <option value="Chambre standard">Chambre standard</option>
+            <option value="Chambre double">Chambre double</option>
+            <option value="Suite">Suite</option>
+            <option value="Appartement">Appartement</option>
+            <option value="Villa">Villa</option>
+            <option value="À préciser">À préciser</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="status">Statut</label>
+        <select id="status">
+          <option value="À vérifier">À vérifier</option>
+          <option value="Disponible à confirmer">Disponible à confirmer</option>
+          <option value="Confirmé">Confirmé</option>
+          <option value="Complet / proposer alternative">Complet / proposer alternative</option>
+          <option value="Acompte demandé">Acompte demandé</option>
+          <option value="Payé">Payé</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="notes">Notes / besoin client</label>
+        <textarea id="notes" placeholder="Ex : chambre calme, petit déjeuner inclus, table au restaurant samedi soir, transfert AIBD..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn gold" type="button" onclick="generateMessage()">Préparer message</button>
+        <button class="btn" type="button" onclick="clearForm()">Nettoyer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📲 Message préparé</h2>
+      <div class="preview" id="preview">Remplis la demande puis clique sur “Préparer message”.</div>
+
+      <div class="actions">
+        <button class="btn gold" type="button" onclick="copyMessage()">Copier message</button>
+        <button class="btn" type="button" onclick="saveDemand()">Sauver demande</button>
+      </div>
+
+      <div class="dispatchGrid" aria-label="Dispatch équipe hôtel">
+        <button class="dispatchBtn" type="button" onclick="sendTo('reception')">
+          <i>🛎️</i><strong>Réception</strong><small>Réservation / client</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('chambres')">
+          <i>🛏️</i><strong>Chambres</strong><small>Planning / dispo</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('menage')">
+          <i>🧹</i><strong>Ménage</strong><small>Préparer chambre</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('petitdej')">
+          <i>☕</i><strong>Petit déjeuner</strong><small>Cuisine / service</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('resto')">
+          <i>🍽️</i><strong>Resto</strong><small>Table / dîner</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('caisse')">
+          <i>💳</i><strong>Caisse</strong><small>Acompte / paiement</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('maintenance')">
+          <i>🔧</i><strong>Maintenance</strong><small>Problème chambre</small>
+        </button>
+        <button class="dispatchBtn" type="button" onclick="sendTo('chauffeur')">
+          <i>🚗</i><strong>Chauffeur</strong><small>Transfert client</small>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>📚 Historique local</h2>
+    <p style="margin:0;color:var(--soft);font-size:14px;line-height:1.4;font-weight:850">
+      Historique gardé dans ce téléphone / navigateur. Pour une vraie équipe multi-téléphones,
+      on branchera ensuite Supabase ou un compte pro protégé.
+    </p>
+    <div class="actions">
+      <button class="btn" type="button" onclick="renderHistory()">Afficher historique</button>
+      <button class="btn red" type="button" onclick="clearHistory()">Vider historique</button>
+    </div>
+    <div class="historyList" id="historyList"></div>
+  </section>
+
+  <footer class="footer">
+    <strong>DIGIY LOC PRO</strong><br>
+    Demande claire · dispatch équipe · confirmation humaine · 0% commission.<br>
+    <a href="https://digiylyfe.com/">DIGIYLYFE</a>
+  </footer>
+</main>
+
+<div class="toast" id="toast">Message prêt ✅</div>
+
+<script>
+/*
+  À REMPLACER PAR LES NUMÉROS DE L'HÔTEL.
+  Format conseillé WhatsApp : indicatif pays sans +, ex Sénégal 221770000000
+*/
+const HOTEL_CONFIG = {
+  hotelName: "Hôtel / Résidence Saly",
+  reception: "221770000000",
+  chambres: "221770000000",
+  menage: "221770000000",
+  petitdej: "221770000000",
+  resto: "221770000000",
+  caisse: "221770000000",
+  maintenance: "221770000000",
+  chauffeur: "221770000000"
+};
+
+const DISPATCH_LABELS = {
+  reception: "Réception",
+  chambres: "Planning chambres",
+  menage: "Femmes de ménage",
+  petitdej: "Petit déjeuner",
+  resto: "Restaurant",
+  caisse: "Caisse / paiement",
+  maintenance: "Maintenance",
+  chauffeur: "Chauffeur / transfert"
+};
+
+const STORAGE_KEY = "digiy_loc_dispatch_hotel_history_v1";
+
+function $(id){ return document.getElementById(id); }
+
+function toast(msg){
+  const el = $("toast");
+  el.textContent = msg || "OK ✅";
+  el.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+}
+
+function clean(v){
+  return String(v || "").trim();
+}
+
+function frDate(value){
+  if(!value) return "À préciser";
+  try{
+    const d = new Date(value + "T12:00:00");
+    return d.toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit", year:"numeric"});
+  }catch(e){
+    return value;
+  }
+}
+
+function buildBaseMessage(targetLabel){
+  const clientName = clean($("clientName").value) || "Client à préciser";
+  const clientPhone = clean($("clientPhone").value) || "Téléphone à préciser";
+  const arrival = frDate($("arrival").value);
+  const departure = frDate($("departure").value);
+  const people = clean($("people").value) || "À préciser";
+  const roomType = clean($("roomType").value) || "À préciser";
+  const status = clean($("status").value) || "À vérifier";
+  const notes = clean($("notes").value) || "Aucune note complémentaire.";
+
+  return [
+    "DIGIY LOC PRO · Dispatch Hôtel",
+    "Hôtel : " + HOTEL_CONFIG.hotelName,
+    targetLabel ? "Couloir : " + targetLabel : "Couloir : Direction / général",
+    "",
+    "Client : " + clientName,
+    "Téléphone : " + clientPhone,
+    "Arrivée : " + arrival,
+    "Départ : " + departure,
+    "Personnes : " + people,
+    "Type : " + roomType,
+    "Statut : " + status,
+    "",
+    "Besoin / notes :",
+    notes,
+    "",
+    "Action demandée : vérifier, confirmer, puis répondre au responsable.",
+    "Réservation non définitive tant qu’un responsable autorisé n’a pas confirmé."
+  ].join("\n");
+}
+
+function generateMessage(){
+  const msg = buildBaseMessage("");
+  $("preview").textContent = msg;
+  toast("Message préparé ✅");
+  return msg;
+}
+
+async function copyMessage(){
+  const msg = $("preview").textContent.includes("Remplis la demande")
+    ? generateMessage()
+    : $("preview").textContent;
+
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(msg);
+    }else{
+      const ta = document.createElement("textarea");
+      ta.value = msg;
+      ta.setAttribute("readonly","");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    toast("Message copié ✅");
+  }catch(e){
+    toast("Copie impossible");
+  }
+}
+
+function sendTo(role){
+  const phone = HOTEL_CONFIG[role];
+  const label = DISPATCH_LABELS[role] || "Équipe";
+  const msg = buildBaseMessage(label);
+
+  $("preview").textContent = msg;
+  saveDemand(role, false);
+
+  if(!phone || phone === "221770000000"){
+    toast("Numéro " + label + " à remplacer");
+    return;
+  }
+
+  const url = "https://wa.me/" + encodeURIComponent(phone) + "?text=" + encodeURIComponent(msg);
+  window.open(url, "_blank", "noopener");
+}
+
+function getHistory(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  }catch(e){
+    return [];
+  }
+}
+
+function setHistory(items){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0,50)));
+}
+
+function saveDemand(role, show){
+  const msg = $("preview").textContent.includes("Remplis la demande")
+    ? generateMessage()
+    : $("preview").textContent;
+
+  const item = {
+    id: Date.now(),
+    date: new Date().toLocaleString("fr-FR"),
+    role: role ? (DISPATCH_LABELS[role] || role) : "Direction / général",
+    client: clean($("clientName").value) || "Client à préciser",
+    arrival: frDate($("arrival").value),
+    departure: frDate($("departure").value),
+    status: clean($("status").value) || "À vérifier",
+    message: msg
+  };
+
+  const items = getHistory();
+  items.unshift(item);
+  setHistory(items);
+
+  if(show !== false){
+    toast("Demande sauvée ✅");
+    renderHistory();
+  }
+}
+
+function renderHistory(){
+  const wrap = $("historyList");
+  const items = getHistory();
+
+  if(!items.length){
+    wrap.innerHTML = '<div class="historyItem"><strong>Aucune demande sauvée</strong>Les demandes sauvées apparaîtront ici.</div>';
+    return;
+  }
+
+  wrap.innerHTML = items.map(item => `
+    <div class="historyItem">
+      <strong>${escapeHtml(item.client)} · ${escapeHtml(item.role)}</strong>
+      ${escapeHtml(item.date)}<br>
+      Arrivée : ${escapeHtml(item.arrival)} · Départ : ${escapeHtml(item.departure)}<br>
+      Statut : ${escapeHtml(item.status)}
+    </div>
+  `).join("");
+}
+
+function clearHistory(){
+  if(confirm("Vider l’historique local de ce téléphone ?")){
+    localStorage.removeItem(STORAGE_KEY);
+    renderHistory();
+    toast("Historique vidé");
+  }
+}
+
+function clearForm(){
+  ["clientName","clientPhone","arrival","departure","people","notes"].forEach(id => $(id).value = "");
+  $("roomType").value = "Chambre standard";
+  $("status").value = "À vérifier";
+  $("preview").textContent = "Remplis la demande puis clique sur “Préparer message”.";
+  toast("Formulaire nettoyé");
+}
+
+function escapeHtml(str){
+  return String(str || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+renderHistory();
+</script>
+</body>
+</html>
