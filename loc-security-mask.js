@@ -4,6 +4,13 @@
 (function(){
   "use strict";
   var PRO_CARNET_SIGNUP_URL="https://digiy-carnet-pro.digiylyfe.com/inscription-pay.html";
+  var LEGACY_QR_URL_KEYS=[
+    "DIGIY_LOC_PUBLIC_URL",
+    "digiy_loc_public_url",
+    "digiy_loc_qr_url",
+    "digiy_loc_fiche_url",
+    "DIGIY_LOC_FICHE_URL"
+  ];
   function isSensitiveSlug(v){ return /loc-\d{7,}/i.test(String(v||"")); }
   function maskText(text){
     return String(text||"")
@@ -39,6 +46,12 @@
       }catch(e){}
     });
   }
+  function clearLegacyQrCache(){
+    LEGACY_QR_URL_KEYS.forEach(function(key){
+      try{ localStorage.removeItem(key); }catch(e){}
+      try{ sessionStorage.removeItem(key); }catch(e){}
+    });
+  }
   function fixOfficialLinks(){
     var button=document.getElementById('btnMonArgent');
     if(!button) return;
@@ -55,7 +68,7 @@
       if(changed) history.replaceState({}, document.title, u.pathname+u.search+u.hash);
     }catch(e){}
   }
-  function run(){ cleanUrl(); scrubNode(document.body); scrubLinks(); fixOfficialLinks(); }
+  function run(){ clearLegacyQrCache(); cleanUrl(); scrubNode(document.body); scrubLinks(); fixOfficialLinks(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', run); else run();
   new MutationObserver(function(){ run(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
 })();
