@@ -5,41 +5,68 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
 <meta name="theme-color" content="#061b14">
-<meta name="digiy-build" content="loc-qr-strict-pin8h-20260716">
-<title>PRO LOC — QR sécurisé</title>
+<meta name="digiy-build" content="loc-qr-supabase-identity-20260722">
+<title>PRO LOC — Mon QR logement</title>
 <script>
 window.DIGIY_MODULE="LOC";
 window.DIGIY_ABOS_MODULE="LOC";
 window.DIGIY_MODULE_LABEL="Je loue";
 window.DIGIY_LOGIN_URL="./pin.html";
+window.DIGIY_SUPABASE_URL="https://wesqmwjjtsefyjnluosj.supabase.co";
+window.DIGIY_SUPABASE_ANON_KEY="sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+window.DIGIY_SUPABASE_ANON=window.DIGIY_SUPABASE_ANON_KEY;
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./guard.js?v=loc-strict-pin8h-20260716" onerror="location.replace('./pin.html')"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:20px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f4fff8;background:linear-gradient(180deg,#0b2a1d,#061b14)}.box{width:min(520px,100%);padding:24px;border:1px solid rgba(255,255,255,.14);border-radius:24px;background:rgba(255,255,255,.06);text-align:center}.ico{font-size:34px}.msg{margin-top:10px;font-weight:900;color:#fde68a;line-height:1.45}.fallback{display:none;margin-top:14px}.fallback a{display:flex;min-height:52px;align-items:center;justify-content:center;border-radius:16px;background:#22c55e;color:#04160e;text-decoration:none;font-weight:1000}
+:root{--bg:#061b14;--bg2:#0b2a1d;--gold:#f4d27a;--green:#22c55e;--ink:#f4fff8;--muted:rgba(244,255,248,.76);--line:rgba(255,255,255,.14);--red:#fca5a5}*{box-sizing:border-box}body{margin:0;min-height:100dvh;padding:14px 12px calc(28px + env(safe-area-inset-bottom,0px));font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:radial-gradient(760px 430px at 8% -8%,rgba(244,210,122,.18),transparent 60%),radial-gradient(680px 380px at 100% 0%,rgba(34,197,94,.14),transparent 58%),linear-gradient(180deg,var(--bg2),var(--bg))}.wrap{width:min(620px,100%);margin:0 auto}.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.top a,.top button{min-height:46px;padding:9px 13px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:#fff;text-decoration:none;font:inherit;font-weight:950}.head,.card{padding:20px;border:1px solid rgba(244,210,122,.27);border-radius:26px;background:rgba(255,255,255,.06);box-shadow:0 18px 46px rgba(0,0,0,.26)}.card{margin-top:14px;text-align:center}.kicker{color:var(--gold);font-size:12px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase}h1{margin:6px 0 7px;font-size:clamp(36px,9vw,56px);line-height:.98;letter-spacing:-.05em}.lead{margin:0;color:var(--muted);font-weight:800;line-height:1.48}.qrBox{margin:16px auto 0;width:min(360px,100%);padding:14px;border-radius:24px;background:#fff}.qrBox img{display:block;width:100%;height:auto}.linkLabel{margin-top:15px;color:var(--gold);font-size:13px;font-weight:1000}.linkValue{margin-top:6px;color:#dbeafe;font-size:14px;font-weight:850;line-height:1.45;word-break:break-all}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}.actions a,.actions button{min-height:54px;border-radius:17px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 13px;color:#fff;text-decoration:none;font:inherit;font-weight:1000;background:rgba(255,255,255,.075)}.actions .main{background:linear-gradient(135deg,var(--gold),var(--green));color:#07150f;border:0}.status{margin-top:14px;padding:12px 14px;border-radius:16px;border:1px solid rgba(244,210,122,.27);background:rgba(0,0,0,.18);color:#fde68a;font-weight:900;line-height:1.45}.status.err{border-color:rgba(239,68,68,.34);color:var(--red)}.status.ok{border-color:rgba(34,197,94,.34);color:#bbf7d0}.status[hidden]{display:none}.foot{margin-top:15px;text-align:center;color:var(--muted);font-size:12px;font-weight:800;line-height:1.45}@media(max-width:500px){body{padding:0}.wrap{width:100%}.head,.card{border-radius:0}.actions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<main class="box">
-  <div class="ico">🔳</div>
-  <div class="msg" id="message">Préparation du QR logement…</div>
-  <div class="fallback" id="fallback"><a href="./accueil.html">Retour à l’accueil LOC</a></div>
+<main class="wrap">
+  <div class="top"><a href="./accueil.html">← Accueil LOC</a><button id="reload" type="button">Recharger</button></div>
+  <section class="head">
+    <div class="kicker">PRO LOC · QR dynamique</div>
+    <h1>Mon QR logement</h1>
+    <p class="lead">La fiche publique est retrouvée depuis le compte validé par PIN et la base Supabase. Le moule ne contient aucun nom, téléphone ou lien partenaire en dur.</p>
+    <p class="status" id="status" role="status" aria-live="polite">Recherche de ta fiche publique…</p>
+  </section>
+  <section class="card" id="result" hidden>
+    <div class="qrBox"><a id="qrAnchor" href="#" target="_blank" rel="noopener noreferrer"><img id="qrImg" alt="QR public du logement"></a></div>
+    <div class="linkLabel">Lien contenu dans le QR</div>
+    <div class="linkValue" id="linkValue"></div>
+    <div class="actions">
+      <a class="main" id="openLink" href="#" target="_blank" rel="noopener noreferrer">Ouvrir la fiche client</a>
+      <button id="copyLink" type="button">Copier le lien</button>
+      <a id="downloadQr" href="#" target="_blank" rel="noopener noreferrer">Ouvrir le QR</a>
+      <button id="printQr" type="button">Imprimer</button>
+    </div>
+  </section>
+  <p class="foot">Le client arrive uniquement sur une fiche publique. Jamais sur le PIN ni sur l’espace PRO.</p>
 </main>
 <script>
 (async()=>{
-  "use strict";
-  const session=await window.DIGIY_GUARD.requireSession();
-  if(!session)return;
-  const source="https://raw.githubusercontent.com/BEAUVILLE/pro-loc/111726dac698f9d553543be586c8b78e6e7a0694/qr.html";
-  const response=await fetch(source,{cache:"no-store",credentials:"omit"});
-  if(!response.ok)throw new Error("qr source "+response.status);
-  const html=await response.text();
-  document.open();document.write(html);document.close();
-})().catch(error=>{
-  console.error("[PRO LOC qr]",error);
-  document.documentElement.style.visibility="visible";
-  document.getElementById("message").textContent="Le QR reste protégé, mais son moteur n’a pas pu être chargé.";
-  document.getElementById("fallback").style.display="block";
-});
+"use strict";
+const $=id=>document.getElementById(id);
+const PUBLIC_FICHE_BASE="https://loc.digiylyfe.com/fiche.html";
+let currentUrl="";
+const digits=value=>String(value||"").replace(/\D/g,"");
+const slug=value=>String(value||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/[^a-z0-9-_]/g,"").replace(/-+/g,"-").replace(/^[-_]+|[-_]+$/g,"");
+const sensitiveSlug=value=>/\d{7,}/.test(slug(value));
+function safePublic(value){const raw=String(value||"").trim();if(!raw)return "";try{const url=new URL(raw,location.href);const low=(url.hostname+url.pathname).toLowerCase();if(url.protocol!=="https:")return "";if(url.hostname.startsWith("pro-")||["pin.html","app.html","accueil.html","planning.html","reservations.html","session.html","cockpit","dashboard","admin"].some(part=>low.includes(part)))return "";["phone","tel","owner_phone","whatsapp","pin","code","token","session","session_token"].forEach(key=>url.searchParams.delete(key));return url.toString()}catch(_){return ""}}
+function ficheFromRoom(room){if(!room||typeof room!=="object")return "";const direct=safePublic(room.public_url||room.fiche_url||room.booking_url||room.url||"");if(direct)return direct;const roomSlug=slug(room.slug||room.room_slug||room.public_slug||"");if(!roomSlug||sensitiveSlug(roomSlug))return "";const url=new URL(PUBLIC_FICHE_BASE);url.searchParams.set("slug",roomSlug);return url.toString()}
+function getSb(){if(!window.supabase?.createClient)throw new Error("Supabase indisponible");return window.supabase.createClient(window.DIGIY_SUPABASE_URL,window.DIGIY_SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}})}
+async function resolveByPublicRpc(client,identitySlug){if(!identitySlug)return "";try{const {data,error}=await client.rpc("digiy_loc_public_room_by_slug",{p_slug:identitySlug});if(error)return "";return ficheFromRoom(data?.room||data?.data?.room||data)}catch(_){return ""}}
+async function resolveByFichesTable(client,identitySlug,phone){try{let query=client.from("digiy_loc_public_fiches").select("public_slug,slug,pro_slug,phone,owner_phone,whatsapp,public_url,fiche_url,booking_url,is_published,is_active,updated_at");const s=slug(identitySlug),p=digits(phone);if(s)query=query.or("slug.eq."+s+",pro_slug.eq."+s+",public_slug.eq."+s);else if(p)query=query.or("phone.eq."+p+",owner_phone.eq."+p+",whatsapp.eq."+p);else return "";const {data,error}=await query.order("updated_at",{ascending:false}).limit(1);if(error||!Array.isArray(data)||!data[0])return "";return safePublic(data[0].public_url||data[0].fiche_url||data[0].booking_url||"")}catch(_){return ""}}
+async function resolveByRoomsTable(client,identitySlug,phone){try{const s=slug(identitySlug),p=digits(phone);let query=client.from("digiy_loc_rooms").select("slug,public_url,fiche_url,booking_url,owner_phone,whatsapp_phone,call_phone,updated_at");if(s&&!sensitiveSlug(s))query=query.eq("slug",s);else if(p)query=query.or("owner_phone.eq."+p+",whatsapp_phone.eq."+p+",call_phone.eq."+p);else return "";const {data,error}=await query.order("updated_at",{ascending:false}).limit(1);if(error||!Array.isArray(data)||!data[0])return "";return ficheFromRoom(data[0])}catch(_){return ""}}
+function qrUrl(value,size){return "https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&margin=18&data="+encodeURIComponent(value)}
+function render(url){currentUrl=safePublic(url);if(!currentUrl)throw new Error("fiche_publique_absente");$("result").hidden=false;$("qrImg").src=qrUrl(currentUrl,620);$("qrAnchor").href=currentUrl;$("linkValue").textContent=currentUrl;$("openLink").href=currentUrl;$("downloadQr").href=qrUrl(currentUrl,900);$("status").textContent="QR public prêt pour ce compte LOC.";$("status").className="status ok"}
+async function load(){const status=$("status");status.hidden=false;status.className="status";status.textContent="Recherche de ta fiche publique…";$("result").hidden=true;$("reload").disabled=true;try{const session=await window.DIGIY_GUARD.requireSession({redirect:true,to:"./pin.html"});if(!session)return;const client=getSb(),identitySlug=slug(session.slug),phone=digits(session.phone);let url=await resolveByPublicRpc(client,identitySlug);if(!url)url=await resolveByFichesTable(client,identitySlug,phone);if(!url)url=await resolveByRoomsTable(client,identitySlug,phone);render(url)}catch(error){currentUrl="";status.hidden=false;status.className="status err";status.textContent="Aucune fiche publique n’est reliée à ce compte LOC. Le QR n’est pas généré afin d’éviter un mauvais lien partenaire.";console.error("[PRO LOC QR]",error)}finally{$("reload").disabled=false}}
+$("reload").addEventListener("click",load);
+$("copyLink").addEventListener("click",async()=>{if(!currentUrl)return;try{await navigator.clipboard.writeText(currentUrl);$("status").textContent="Lien public copié.";$("status").className="status ok"}catch(_){$("status").textContent=currentUrl}});
+$("printQr").addEventListener("click",()=>{if(currentUrl)window.print()});
+await load();
+})();
 </script>
 </body>
 </html>
