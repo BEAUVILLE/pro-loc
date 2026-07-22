@@ -3,6 +3,7 @@
    Le moteur garde les données en session, mais l'écran ne les crie pas. */
 (function(){
   "use strict";
+  var PRO_CARNET_SIGNUP_URL="https://digiy-carnet-pro.digiylyfe.com/inscription-pay.html";
   function isSensitiveSlug(v){ return /loc-\d{7,}/i.test(String(v||"")); }
   function maskText(text){
     return String(text||"")
@@ -38,6 +39,13 @@
       }catch(e){}
     });
   }
+  function fixOfficialLinks(){
+    var button=document.getElementById('btnMonArgent');
+    if(!button) return;
+    button.setAttribute('href',PRO_CARNET_SIGNUP_URL);
+    button.setAttribute('aria-label','S’inscrire à PRO CARNET');
+    button.removeAttribute('target');
+  }
   function cleanUrl(){
     try{
       var u=new URL(location.href); var changed=false;
@@ -47,7 +55,7 @@
       if(changed) history.replaceState({}, document.title, u.pathname+u.search+u.hash);
     }catch(e){}
   }
-  function run(){ cleanUrl(); scrubNode(document.body); scrubLinks(); }
+  function run(){ cleanUrl(); scrubNode(document.body); scrubLinks(); fixOfficialLinks(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', run); else run();
   new MutationObserver(function(){ run(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
 })();
