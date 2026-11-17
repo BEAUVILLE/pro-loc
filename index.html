@@ -18,6 +18,7 @@ p{color:#dbe9e0;line-height:1.6;font-weight:670}
 .note{margin-top:16px;padding:14px;background:#ffffff0e;border:1px solid #ffffff25;border-radius:16px;font-size:13px}
 .btn{width:100%;min-height:54px;margin-top:17px;border-radius:999px;padding:13px 16px;background:linear-gradient(135deg,#fff1bd,#f6c453,#2dd4bf);color:#06140f;font:900 15px system-ui;text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center}
 .btn.alt{background:#ffffff0a;color:#fff;border:1px solid #ffffff33}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -29,11 +30,15 @@ p{color:#dbe9e0;line-height:1.6;font-weight:670}
 </select>
 </div>
 <h1 data-i18n="heading">Votre espace propriétaire LOC.</h1>
-<p data-i18n="intro">Votre fiche professionnelle ouvre déjà le bon calendrier. Utilisez ce même accès sécurisé pour gérer vos hébergements, disponibilités, tarifs et réservations.</p>
-<a id="ownerLink" class="btn" href="https://pro-espace.digiylyfe.com/?module=loc" data-i18n="open">🔐 OUVRIR MON ESPACE PROPRIÉTAIRE</a>
-<p class="note" data-i18n="security">La connexion et les droits d’accès sont vérifiés dans l’espace propriétaire. Cette page n’envoie plus de second Magic Link et ne crée aucun compte.</p>
+<p data-i18n="intro">Depuis votre fiche PRO, le bouton Propriétaire est le bon chemin. Choisissez ci-dessous la fiche voulue pour conserver son identifiant.</p>
+<p class="note" data-i18n="choose">Choisissez votre fiche professionnelle pour ouvrir le bon calendrier. Ne passez pas par une entrée générale sans logement.</p>
+<a id="ownerLink" class="btn" href="https://pro-espace.digiylyfe.com/?site=saly-chez-baptiste" data-i18n="saly">🔐 CHEZ BAPTISTE · SALY — ACCÈS PROPRIÉTAIRE</a>
+<a id="sarlatLink" class="btn alt" href="https://pro-espace.digiylyfe.com/?site=sarlat-chez-baptiste" data-i18n="sarlat">🔐 CHEZ BAPTISTE · SARLAT — ACCÈS PROPRIÉTAIRE</a>
+<a id="customOwnerLink" class="btn alt" hidden data-i18n="site">🔐 OUVRIR CET HÉBERGEMENT</a>
+<p class="note" data-i18n="other">Autre hébergement : passez par le bouton 🔐 Propriétaire de votre fiche PRO pour conserver son identifiant.</p>
+<p class="note" data-i18n="security">La connexion et les droits d’accès sont vérifiés dans l’espace propriétaire. Cette page n’envoie pas de second Magic Link et ne crée aucun compte.</p>
 <a class="btn alt" href="https://digiylyfe.com/" data-i18n="back">← RETOUR DIGIYLYFE</a>
 </main>
-<script src="./world10-owner.js?v=20261117-canonical-owner" defer></script>
+<script src="./world10-owner.js?v=20261117-owner-site-required" defer></script>
 </body>
 </html>
