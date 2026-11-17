@@ -1,68 +1,68 @@
-const test=require('node:test');
-const assert=require('node:assert/strict');
+const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const script=fs.readFileSync(path.join(__dirname,'../world10-owner.js'),'utf8');
+const source=fs.readFileSync(path.join(__dirname,'../world10-owner.js'),'utf8');
+
 function screen(query){
-  const boxes=new Map();
-  for(const k of ['heading','intro','open','security','back'])boxes.set(k,{
-    key:k,textContent:'',
-    getAttribute(n){return n==='data-i18n'?this.key:null}
-  });
-  const picker={value:'fr',listeners:{},addEventListener(name,cb){this.listeners[name]=cb}};
-  const anchor={href:''};
-  const doc={
-    documentElement:{lang:'fr',dir:'ltr'},
-    getElementById(n){return n==='locWorld10Picker'?picker:n==='ownerLink'?anchor:null},
-    querySelectorAll(s){return s==='[data-i18n]'?[...boxes.values()]:[]}
-  };
-  const storage=new Map();
-  const changes=[];
-  const href='https://pro-loc.digiylyfe.com/'+query;
-  const u=new URL(href);
-  const ctx={
-    document:doc,URL,URLSearchParams,
-    location:{search:u.search,href:u.href,pathname:u.pathname,hash:u.hash},
-    history:{replaceState(...args){changes.push(args[2])}},
-    localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}
-  };
-  vm.runInNewContext(script,ctx,{timeout:4000});
-  return{boxes,picker,anchor,doc,storage,changes,
-    choose(lang){picker.value=lang;picker.listeners.change()}};
+ const els=new Map();
+ for(const key of ['heading','intro','open','security','back','choose','saly','sarlat','other','site']){
+   els.set(key,{key,textContent:'',getAttribute(x){return x==='data-i18n'?this.key:null}});
+ }
+ const picker={value:'fr',callbacks:{},addEventListener(t,fn){this.callbacks[t]=fn}};
+ const makeAnchor=()=>({href:'',hidden:false,removeAttribute(name){if(name==='href')this.href=''}});
+ const main=makeAnchor(),sarlat=makeAnchor(),custom=makeAnchor();
+ const document={
+  documentElement:{lang:'fr',dir:'ltr'},
+  getElementById(id){return {
+    locWorld10Picker:picker,ownerLink:main,sarlatLink:sarlat,customOwnerLink:custom
+  }[id]||null},
+  querySelectorAll(s){return s==='[data-i18n]'?[...els.values()]:[]}
+ };
+ const u=new URL('https://pro-loc.digiylyfe.com/'+query),memory=new Map();
+ const ctx={document,URL,URLSearchParams,location:{search:u.search,href:u.href,pathname:u.pathname,hash:u.hash},
+   history:{replaceState(){}},localStorage:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)}};
+ vm.runInNewContext(source,ctx,{timeout:3000});
+ return{document,main,sarlat,custom,els,memory,change(lang){picker.value=lang;picker.callbacks.change()}};
 }
-test('owner slug from working professional fiche reaches actual LOC owner portal',()=>{
- const p=screen('?site=saly-chez-baptiste&lang=fr');
- const u=new URL(p.anchor.href);
+test('public entry Saly exactly retains the site the working PRO fiche passes',()=>{
+ const p=screen('?lang=fr');
+ const u=new URL(p.main.href);
  assert.equal(u.origin,'https://pro-espace.digiylyfe.com');
- assert.equal(u.searchParams.get('module'),'loc');
  assert.equal(u.searchParams.get('site'),'saly-chez-baptiste');
+ assert.equal(u.searchParams.get('module'),null);
  assert.equal(u.searchParams.get('lang'),'fr');
- assert.match(p.boxes.get('open').textContent,/OUVRIR MON ESPACE/);
- p.choose('en');
- const next=new URL(p.anchor.href);
- assert.equal(next.searchParams.get('site'),'saly-chez-baptiste');
- assert.equal(next.searchParams.get('lang'),'en');
- assert.match(p.boxes.get('heading').textContent,/Your LOC owner/);
- assert.equal(p.storage.get('digiy_loc_owner_lang'),'en');
+ assert.equal(new URL(p.sarlat.href).searchParams.get('site'),'sarlat-chez-baptiste');
+ assert.equal(p.custom.hidden,true);
+ p.change('en');
+ assert.equal(new URL(p.main.href).searchParams.get('site'),'saly-chez-baptiste');
+ assert.equal(new URL(p.main.href).searchParams.get('lang'),'en');
+ assert.match(p.els.get('saly').textContent,/OWNER ACCESS/);
+ assert.equal(p.memory.get('digiy_loc_owner_lang'),'en');
 });
-test('unsafe site identifier is dropped and never becomes a redirect URL',()=>{
- const p=screen('?site=https://phishing.example/&lang=zh');
- const u=new URL(p.anchor.href);
+test('known site scoped Saly, Sarlat never loses slug and no generic landing',()=>{
+ const a=screen('?site=saly-chez-baptiste');
+ assert.equal(new URL(a.main.href).searchParams.get('site'),'saly-chez-baptiste');
+ assert.equal(a.custom.hidden,true);
+ const b=screen('?site=sarlat-chez-baptiste');
+ assert.equal(new URL(b.sarlat.href).searchParams.get('site'),'sarlat-chez-baptiste');
+ assert.equal(b.custom.hidden,true);
+});
+test('new tenant slug from a professional fiche gets its own link but no arbitrary domain',()=>{
+ const p=screen('?site=ngaparou-villa-2026&lang=wo');
+ assert.equal(p.custom.hidden,false);
+ const u=new URL(p.custom.href);
  assert.equal(u.origin,'https://pro-espace.digiylyfe.com');
- assert.equal(u.searchParams.get('site'),null);
- assert.equal(u.searchParams.get('lang'),'zh');
- assert.equal(p.doc.documentElement.lang,'zh');
- p.choose('ar');
- assert.equal(p.doc.documentElement.dir,'rtl');
- assert.match(p.boxes.get('heading').textContent,/[\u0600-\u06ff]/);
+ assert.equal(u.searchParams.get('site'),'ngaparou-villa-2026');
+ assert.equal(u.searchParams.get('lang'),'wo');
+ assert.equal(p.document.documentElement.lang,'wo');
+ p.change('ar');
+ assert.equal(p.document.documentElement.dir,'rtl');
+ assert.equal(new URL(p.custom.href).searchParams.get('lang'),'ar');
 });
-test('unscoped LOC link opens proprietor list, not an arbitrary rental or public vitrine',()=>{
- const p=screen('?lang=wo');
- const u=new URL(p.anchor.href);
- assert.equal(u.searchParams.get('site'),null);
- assert.equal(u.searchParams.get('module'),'loc');
- assert.equal(p.doc.documentElement.lang,'wo');
- assert.match(p.boxes.get('heading').textContent,/boroom LOC/);
- p.choose('fr');
- assert.equal(p.doc.documentElement.dir,'ltr');
- assert.equal(new URL(p.anchor.href).searchParams.get('lang'),'fr');
+test('unsafe site slug cannot redirect to arbitrary URL',()=>{
+ const p=screen('?site=https://phishing.example/%2F&lang=zh');
+ assert.equal(p.custom.hidden,true);
+ assert.equal(new URL(p.main.href).origin,'https://pro-espace.digiylyfe.com');
+ assert.equal(p.document.documentElement.lang,'zh');
+ p.change('fr');
+ assert.equal(p.document.documentElement.dir,'ltr');
 });
