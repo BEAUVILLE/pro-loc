@@ -32,7 +32,7 @@ class ProLocOwnerWorld10(unittest.TestCase):
         self.assertIn("body:JSON.stringify({email:em})",PAGE)
         self.assertIn("if(!r.ok||!j.ok)throw Error",PAGE)
         self.assertIn("$('#fiche').href=j.professional_url",PAGE)
-        self.assertIn("if(el.closest(\"input,textarea,script,style,#meta,#locWorld10Picker\"))return",I18N)
+        self.assertIn('parent.closest("input,textarea,script,style,#meta,#locWorld10Picker")',I18N)
         self.assertNotIn(".rpc(",I18N)
         self.assertNotIn("fetch(",I18N)
         self.assertNotIn("supabase.createClient",I18N)
