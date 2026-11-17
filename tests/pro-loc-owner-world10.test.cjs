@@ -3,8 +3,8 @@ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../world10-owner.js'),'utf8');
 function screen(){
  const nodes=[{text:'ACCÈS PROPRIÉTAIRE'},
-              {text:'Contrôle de votre accès sécurisé…'},
-              {text:'bon à tirer est accepté'},
+              {text:'Vérification de votre session sécurisée…'},
+              {text:'La connexion est indépendante de l’activation de votre offre LOC.'},
               {text:'Période active jusqu’au 17/11/2027',kind:'private'},
               {text:'Jean Baptiste Beauville',kind:'private'}].map(e=>({
    nodeValue:e.text,
@@ -41,7 +41,7 @@ test('owner sees 10 locale options and can switch FR EN AR WO ZH without alterin
  const p=screen();assert.equal(p.api.locales.length,10);
  p.selector.change('en');
  assert.equal(p.nodes[0].nodeValue,'OWNER ACCESS');
- assert.equal(p.nodes[1].nodeValue,'Checking your secure access…');
+ assert.equal(p.nodes[1].nodeValue,'Checking your secure session…');
  assert.equal(p.nodes[3].nodeValue,'Période active jusqu’au 17/11/2027');
  assert.equal(p.nodes[4].nodeValue,'Jean Baptiste Beauville');
  assert.equal(p.api.t('Période active jusqu’au '),'Active until ');
@@ -54,16 +54,16 @@ test('owner sees 10 locale options and can switch FR EN AR WO ZH without alterin
  assert.match(p.nodes[0].nodeValue,/[\u4e00-\u9fff]/);
  p.selector.change('fr');
  assert.equal(p.nodes[0].nodeValue,'ACCÈS PROPRIÉTAIRE');
- assert.equal(p.nodes[1].nodeValue,'Contrôle de votre accès sécurisé…');
+ assert.equal(p.nodes[1].nodeValue,'Vérification de votre session sécurisée…');
  assert.equal(p.storage.get('digiy_loc_owner_lang'),'fr');
 });
 test('login errors localize but server detail and access logic are not changed',()=>{
  const p=screen();
  p.api.setLang('es');
- assert.equal(p.api.t('Aucun accès LOC actif pour cet e-mail. Aucun lien envoyé.'),
-  'No hay acceso LOC activo para este correo. No se envió enlace.');
- assert.equal(p.api.t('Envoi temporairement impossible. server_error'),
-  'No se puede enviar ahora. server_error');
+ assert.equal(p.api.t('✅ Compte connecté. ⚠️ Aucun droit LOC actif reconnu pour les outils réservés aux adhérents.'),
+  '✅ Cuenta conectada. ⚠️ Sin derechos LOC activos para las funciones de miembros.');
+ assert.equal(p.api.t('Envoi temporairement impossible. Réessayez plus tard.'),
+  'Envío no disponible ahora. Inténtalo más tarde.');
  p.api.setLang('ar');
  assert.equal(p.api.locale(),'ar-SA');
  assert.equal(p.doc.documentElement.dir,'rtl');
