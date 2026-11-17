@@ -13,6 +13,10 @@
 <body>
 <main class="card">
 <div class="ey">DIGIYLYFE · DIGIY LOC</div>
+<div style="display:flex;justify-content:flex-end;margin:9px 0 15px">
+<select id="locWorld10Picker" aria-label="Langue / Language" style="max-width:148px;width:100%;min-height:45px;border:2px solid #f6c453;border-radius:12px;background:#fff;color:#073f32;padding:8px;font:900 13px system-ui;direction:ltr">
+<option value="fr">🇫🇷 FR</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option><option value="pt">🇵🇹 PT</option><option value="de">🇩🇪 DE</option><option value="it">🇮🇹 IT</option><option value="nl">🇳🇱 NL</option><option value="ar">🇸🇦 AR</option><option value="wo">🇸🇳 WO</option><option value="zh">🇨🇳 ZH</option>
+</select></div>
 <h1>ACCÈS PROPRIÉTAIRE</h1>
 <p>Cette porte est réservée aux adhérents LOC dont le <strong>bon à tirer est accepté</strong> et le <strong>règlement annuel confirmé</strong>.</p>
 <div id="status" class="status warn">Contrôle de votre accès sécurisé…</div>
@@ -29,16 +33,17 @@
 </section>
 <a class="btn alt" href="https://digiylyfe.com/">← RETOUR DIGIYLYFE</a>
 </main>
+<script src="./world10-owner.js?v=20261117-loc-door"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (()=>{'use strict';
 const U='https://wesqmwjjtsefyjnluosj.supabase.co',K='sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3',ACCESS=U+'/functions/v1/digiy-loc-owner-access',MAGIC=U+'/functions/v1/digiy-loc-magic-link',sb=supabase.createClient(U,K,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}),$=s=>document.querySelector(s),status=$('#status'),login=$('#login'),inside=$('#inside');
-function st(t,k='warn'){status.textContent=t;status.className='status '+k}
+function st(t,k='warn'){status.textContent=window.DIGIY_LOC_OWNER_WORLD10?.t?.(t)||t;status.className='status '+k}
 function showLogin(){login.hidden=false;inside.hidden=true}
 async function verify(){
  const {data:{session}}=await sb.auth.getSession();if(!session){showLogin();st('Aucune session LOC active. Recevez votre magic link après confirmation de votre règlement.','warn');return}
  try{const r=await fetch(ACCESS,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':K},body:'{}'}),j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw Error(j.error||'access_denied');
-  login.hidden=true;inside.hidden=false;st('✅ MAGIC LINK AUTHENTIFIÉ · ✅ DROIT LOC ACTIF','ok');$('#meta').innerHTML='<strong>'+String(j.business||'DIGIY LOC')+'</strong><span>'+[j.zone,j.plan].filter(Boolean).join(' · ')+'</span><span>Période active jusqu’au '+new Date(j.paid_until).toLocaleDateString('fr-FR')+'</span>';if(j.professional_url){$('#fiche').href=j.professional_url;$('#fiche').hidden=false}
+  login.hidden=true;inside.hidden=false;st('✅ MAGIC LINK AUTHENTIFIÉ · ✅ DROIT LOC ACTIF','ok');$('#meta').innerHTML='<strong>'+String(j.business||'DIGIY LOC')+'</strong><span>'+[j.zone,j.plan].filter(Boolean).join(' · ')+'</span><span>'+(window.DIGIY_LOC_OWNER_WORLD10?.t?.('Période active jusqu’au ')||'Période active jusqu’au ')+new Date(j.paid_until).toLocaleDateString(window.DIGIY_LOC_OWNER_WORLD10?.locale?.()||'fr-FR')+'</span>';if(j.professional_url){$('#fiche').href=j.professional_url;$('#fiche').hidden=false}
  }catch(e){await sb.auth.signOut();showLogin();st('Accès LOC refusé : le BAT et le règlement annuel doivent être validés et la période doit être active.','bad')}
 }
 $('#send').onclick=async()=>{const em=String($('#email').value||'').trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(em)){st('Indiquez un e-mail valide.','warn');return}$('#send').disabled=true;st('Vérification du droit LOC avant envoi…','warn');try{const r=await fetch(MAGIC,{method:'POST',headers:{'Content-Type':'application/json','apikey':K},body:JSON.stringify({email:em})}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'send_failed');st(j.sent?'✅ Magic link envoyé. Consultez votre e-mail.':'Aucun accès LOC actif pour cet e-mail. Aucun lien envoyé.',j.sent?'ok':'warn')}catch(e){st('Envoi temporairement impossible. '+String(e?.message||e),'bad')}finally{$('#send').disabled=false}};
