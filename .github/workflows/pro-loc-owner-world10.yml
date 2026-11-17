@@ -6,6 +6,7 @@ on:
       - 'world10-owner.js'
       - 'tests/test_pro_loc_owner_world10.py'
       - 'tests/pro-loc-owner-world10.test.cjs'
+      - 'tests/pro-loc-auth-entitlement.test.cjs'
       - '.github/workflows/pro-loc-owner-world10.yml'
   push:
     branches: [main]
@@ -14,6 +15,7 @@ on:
       - 'world10-owner.js'
       - 'tests/test_pro_loc_owner_world10.py'
       - 'tests/pro-loc-owner-world10.test.cjs'
+      - 'tests/pro-loc-auth-entitlement.test.cjs'
       - '.github/workflows/pro-loc-owner-world10.yml'
 permissions:
   contents: read
@@ -26,4 +28,4 @@ jobs:
       - name: Vérifier 10 langues et gardes Magic Link LOC
         run: python3 -m unittest discover -s tests -p 'test_pro_loc_owner_world10.py' -v
       - name: Simuler le sélecteur et la confidentialité des données propriétaires
-        run: node --test tests/pro-loc-owner-world10.test.cjs
+        run: node --test tests/pro-loc-owner-world10.test.cjs tests/pro-loc-auth-entitlement.test.cjs
