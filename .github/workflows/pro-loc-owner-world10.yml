@@ -1,0 +1,29 @@
+name: DIGIY LOC Owner · WORLD10 Magic Link
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'world10-owner.js'
+      - 'tests/test_pro_loc_owner_world10.py'
+      - 'tests/pro-loc-owner-world10.test.cjs'
+      - '.github/workflows/pro-loc-owner-world10.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'world10-owner.js'
+      - 'tests/test_pro_loc_owner_world10.py'
+      - 'tests/pro-loc-owner-world10.test.cjs'
+      - '.github/workflows/pro-loc-owner-world10.yml'
+permissions:
+  contents: read
+jobs:
+  owner-gate-world10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier 10 langues et gardes Magic Link LOC
+        run: python3 -m unittest discover -s tests -p 'test_pro_loc_owner_world10.py' -v
+      - name: Simuler le sélecteur et la confidentialité des données propriétaires
+        run: node --test tests/pro-loc-owner-world10.test.cjs
