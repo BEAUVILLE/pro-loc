@@ -1,4 +1,4 @@
-name: DIGIY LOC Owner · WORLD10 Magic Link
+name: DIGIY LOC Owner · canonical route WORLD10
 on:
   pull_request:
     paths:
@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Vérifier 10 langues et gardes Magic Link LOC
+      - name: Vérifier 10 langues et destination du logiciel propriétaire
         run: python3 -m unittest discover -s tests -p 'test_pro_loc_owner_world10.py' -v
-      - name: Simuler le sélecteur et la confidentialité des données propriétaires
+      - name: Simuler l'aiguillage propriétaire et les 10 langues
         run: node --test tests/pro-loc-owner-world10.test.cjs tests/pro-loc-auth-entitlement.test.cjs

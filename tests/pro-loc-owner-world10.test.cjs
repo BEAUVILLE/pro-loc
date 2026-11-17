@@ -1,70 +1,68 @@
-const test=require('node:test'), assert=require('node:assert/strict');
+const test=require('node:test');
+const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const source=fs.readFileSync(path.join(__dirname,'../world10-owner.js'),'utf8');
-function screen(){
- const nodes=[{text:'ACCÈS PROPRIÉTAIRE'},
-              {text:'Vérification de votre session sécurisée…'},
-              {text:'La connexion est indépendante de l’activation de votre offre LOC.'},
-              {text:'Période active jusqu’au 17/11/2027',kind:'private'},
-              {text:'Jean Baptiste Beauville',kind:'private'}].map(e=>({
-   nodeValue:e.text,
-   parentElement:{
-     closest(sel){return e.kind==='private'&&sel.includes('#meta')?{}:null}
-   }
- }));
- const selector={
-   value:'fr',handlers:{},
-   addEventListener(name,cb){this.handlers[name]=cb},
-   change(v){this.value=v;this.handlers.change()}
- };
- const doc={
-   body:{},title:'DIGIY LOC — Accès propriétaire',
-   documentElement:{lang:'fr',dir:'ltr'},
-   getElementById(id){return id==='locWorld10Picker'?selector:null},
-   createTreeWalker(){
-     let index=-1;
-     return {currentNode:null,nextNode(){index++;if(index>=nodes.length)return false;this.currentNode=nodes[index];return true}};
-   }
- };
- const storage=new Map(),loc='https://pro-loc.digiylyfe.com/?site=saly';
- const ctx={document:doc,location:{search:'?site=saly',href:loc,pathname:'/',hash:''},
-   URL,URLSearchParams,NodeFilter:{SHOW_TEXT:4},
-   history:{replaceState(){}},
-   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
-   MutationObserver:class{observe(){}}
- };
- ctx.window=ctx;
- vm.runInNewContext(source,ctx,{timeout:3000});
- return {api:ctx.DIGIY_LOC_OWNER_WORLD10,selector,doc,nodes,storage};
+const script=fs.readFileSync(path.join(__dirname,'../world10-owner.js'),'utf8');
+function screen(query){
+  const boxes=new Map();
+  for(const k of ['heading','intro','open','security','back'])boxes.set(k,{
+    key:k,textContent:'',
+    getAttribute(n){return n==='data-i18n'?this.key:null}
+  });
+  const picker={value:'fr',listeners:{},addEventListener(name,cb){this.listeners[name]=cb}};
+  const anchor={href:''};
+  const doc={
+    documentElement:{lang:'fr',dir:'ltr'},
+    getElementById(n){return n==='locWorld10Picker'?picker:n==='ownerLink'?anchor:null},
+    querySelectorAll(s){return s==='[data-i18n]'?[...boxes.values()]:[]}
+  };
+  const storage=new Map();
+  const changes=[];
+  const href='https://pro-loc.digiylyfe.com/'+query;
+  const u=new URL(href);
+  const ctx={
+    document:doc,URL,URLSearchParams,
+    location:{search:u.search,href:u.href,pathname:u.pathname,hash:u.hash},
+    history:{replaceState(...args){changes.push(args[2])}},
+    localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}
+  };
+  vm.runInNewContext(script,ctx,{timeout:4000});
+  return{boxes,picker,anchor,doc,storage,changes,
+    choose(lang){picker.value=lang;picker.listeners.change()}};
 }
-test('owner sees 10 locale options and can switch FR EN AR WO ZH without altering private data',()=>{
- const p=screen();assert.equal(p.api.locales.length,10);
- p.selector.change('en');
- assert.equal(p.nodes[0].nodeValue,'OWNER ACCESS');
- assert.equal(p.nodes[1].nodeValue,'Checking your secure session…');
- assert.equal(p.nodes[3].nodeValue,'Période active jusqu’au 17/11/2027');
- assert.equal(p.nodes[4].nodeValue,'Jean Baptiste Beauville');
- assert.equal(p.api.t('Période active jusqu’au '),'Active until ');
- p.selector.change('ar');
- assert.equal(p.doc.documentElement.dir,'rtl');
- assert.match(p.nodes[0].nodeValue,/[\u0600-\u06FF]/);
- p.selector.change('wo');
- assert.equal(p.nodes[0].nodeValue,'DUGGUB BOROOM');
- p.selector.change('zh');
- assert.match(p.nodes[0].nodeValue,/[\u4e00-\u9fff]/);
- p.selector.change('fr');
- assert.equal(p.nodes[0].nodeValue,'ACCÈS PROPRIÉTAIRE');
- assert.equal(p.nodes[1].nodeValue,'Vérification de votre session sécurisée…');
- assert.equal(p.storage.get('digiy_loc_owner_lang'),'fr');
+test('owner slug from working professional fiche reaches actual LOC owner portal',()=>{
+ const p=screen('?site=saly-chez-baptiste&lang=fr');
+ const u=new URL(p.anchor.href);
+ assert.equal(u.origin,'https://pro-espace.digiylyfe.com');
+ assert.equal(u.searchParams.get('module'),'loc');
+ assert.equal(u.searchParams.get('site'),'saly-chez-baptiste');
+ assert.equal(u.searchParams.get('lang'),'fr');
+ assert.match(p.boxes.get('open').textContent,/OUVRIR MON ESPACE/);
+ p.choose('en');
+ const next=new URL(p.anchor.href);
+ assert.equal(next.searchParams.get('site'),'saly-chez-baptiste');
+ assert.equal(next.searchParams.get('lang'),'en');
+ assert.match(p.boxes.get('heading').textContent,/Your LOC owner/);
+ assert.equal(p.storage.get('digiy_loc_owner_lang'),'en');
 });
-test('login errors localize but server detail and access logic are not changed',()=>{
- const p=screen();
- p.api.setLang('es');
- assert.equal(p.api.t('✅ Compte connecté. ⚠️ Aucun droit LOC actif reconnu pour les outils réservés aux adhérents.'),
-  '✅ Cuenta conectada. ⚠️ Sin derechos LOC activos para las funciones de miembros.');
- assert.equal(p.api.t('Envoi temporairement impossible. Réessayez plus tard.'),
-  'Envío no disponible ahora. Inténtalo más tarde.');
- p.api.setLang('ar');
- assert.equal(p.api.locale(),'ar-SA');
+test('unsafe site identifier is dropped and never becomes a redirect URL',()=>{
+ const p=screen('?site=https://phishing.example/&lang=zh');
+ const u=new URL(p.anchor.href);
+ assert.equal(u.origin,'https://pro-espace.digiylyfe.com');
+ assert.equal(u.searchParams.get('site'),null);
+ assert.equal(u.searchParams.get('lang'),'zh');
+ assert.equal(p.doc.documentElement.lang,'zh');
+ p.choose('ar');
  assert.equal(p.doc.documentElement.dir,'rtl');
+ assert.match(p.boxes.get('heading').textContent,/[\u0600-\u06ff]/);
+});
+test('unscoped LOC link opens proprietor list, not an arbitrary rental or public vitrine',()=>{
+ const p=screen('?lang=wo');
+ const u=new URL(p.anchor.href);
+ assert.equal(u.searchParams.get('site'),null);
+ assert.equal(u.searchParams.get('module'),'loc');
+ assert.equal(p.doc.documentElement.lang,'wo');
+ assert.match(p.boxes.get('heading').textContent,/boroom LOC/);
+ p.choose('fr');
+ assert.equal(p.doc.documentElement.dir,'ltr');
+ assert.equal(new URL(p.anchor.href).searchParams.get('lang'),'fr');
 });
