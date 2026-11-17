@@ -38,7 +38,7 @@
 <script>
 (()=>{'use strict';
 const U='https://wesqmwjjtsefyjnluosj.supabase.co',K='sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3',ACCESS=U+'/functions/v1/digiy-loc-owner-access',MAGIC=U+'/functions/v1/digiy-loc-magic-link',sb=supabase.createClient(U,K,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}),$=s=>document.querySelector(s),status=$('#status'),login=$('#login'),inside=$('#inside');
-function st(t,k='warn'){status.textContent=window.DIGIY_LOC_OWNER_WORLD10?.t?.(t)||t;status.className='status '+k}
+function st(t,k='warn'){status.textContent=t;status.className='status '+k}
 function showLogin(){login.hidden=false;inside.hidden=true}
 async function verify(){
  const {data:{session}}=await sb.auth.getSession();if(!session){showLogin();st('Aucune session LOC active. Recevez votre magic link après confirmation de votre règlement.','warn');return}
